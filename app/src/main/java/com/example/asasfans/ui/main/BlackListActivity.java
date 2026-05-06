@@ -25,14 +25,14 @@ import com.example.asasfans.ui.main.adapter.BlackListAdapter;
 import com.example.asasfans.ui.main.adapter.PubdateVideoAdapter;
 import com.example.asasfans.util.ACache;
 import com.google.android.material.appbar.AppBarLayout;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BlackListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private RefreshLayout refreshLayout;
+    private SwipeRefreshLayout refreshLayout;
     private List<VideoDataStoragedInMemory> videoDataStoragedInMemoryList = new ArrayList<>();
     private PubdateVideoAdapter pubdateVideoAdapter;
 

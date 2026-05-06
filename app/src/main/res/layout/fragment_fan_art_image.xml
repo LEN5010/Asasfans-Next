@@ -82,9 +82,7 @@
         android:layout_height="wrap_content"
         android:background="@color/backgroundGray"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        <com.scwang.smart.refresh.layout.SmartRefreshLayout
-            app:srlPrimaryColor="@color/lightGray"
-            app:srlAccentColor="@color/tab_text_normal"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/fan_art_image_refreshLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -95,7 +93,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-        </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </androidx.core.widget.NestedScrollView>
 
 

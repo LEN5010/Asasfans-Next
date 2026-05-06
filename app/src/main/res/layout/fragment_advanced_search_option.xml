@@ -19,7 +19,7 @@
             android:text="TAG组合（精确匹配B站TAG）"
             android:textColor="@color/cardBlack"
             android:layout_marginLeft="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:layout_marginTop="8dp"
             />
         <View
@@ -34,7 +34,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.chaychan.viewlib.PowerfulEditText
+            <EditText
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -44,8 +44,8 @@
                 android:imeOptions="actionDone"
                 android:singleLine="true"
                 android:background="@drawable/edit_text_shape"
-                app:funcType="canClear"
-                android:textSize="16dp"
+
+                android:textSize="16sp"
                 android:hint="输入一个TAG后点击添加"
                 android:layout_width="0dp"
                 android:layout_height="40dp"/>
@@ -76,7 +76,7 @@
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-                <RadioButton
+                <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/tag_is_or"
                     android:text="或"
                     android:checked="true"
@@ -84,7 +84,7 @@
                     android:onClick="onTagRadioButtonClicked"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
-                <RadioButton
+                <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/tag_is_and"
                     android:text="与"
                     android:layout_marginLeft="8dp"
@@ -115,7 +115,7 @@
             android:text="时间区间（默认为全部）"
             android:textColor="@color/cardBlack"
             android:layout_marginLeft="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:layout_marginTop="8dp"
             />
         <View
@@ -134,7 +134,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 android:id="@+id/start_time"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 android:textColor="@color/cardBlack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -145,7 +145,7 @@
                 android:id="@+id/start_time_pick"
                 android:text="-/-/-"
                 android:gravity="center"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 android:layout_marginLeft="8dp"
                 android:background="@drawable/four_round_stroke_grey"
                 android:layout_width="160dp"
@@ -154,7 +154,7 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/start_time"
                 android:id="@+id/end_time"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 android:textColor="@color/cardBlack"
                 android:layout_marginTop="8dp"
                 android:layout_width="wrap_content"
@@ -163,7 +163,7 @@
             <TextView
                 android:text="-/-/-"
                 android:gravity="center"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 android:layout_marginTop="8dp"
                 android:layout_marginLeft="8dp"
                 app:layout_constraintLeft_toRightOf="@+id/end_time"
@@ -194,7 +194,7 @@
             android:text="UP主UID组合（数字UID）"
             android:textColor="@color/cardBlack"
             android:layout_marginLeft="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:layout_marginTop="8dp"
             />
         <View
@@ -209,7 +209,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.chaychan.viewlib.PowerfulEditText
+            <EditText
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -219,8 +219,8 @@
                 android:background="@drawable/edit_text_shape"
                 android:imeOptions="actionDone"
                 android:singleLine="true"
-                app:funcType="canClear"
-                android:textSize="16dp"
+
+                android:textSize="16sp"
                 android:hint="输入一个UID后点击添加"
                 android:layout_width="0dp"
                 android:layout_height="40dp"/>
@@ -249,7 +249,7 @@
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-                <RadioButton
+                <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/uid_is_or"
                     android:text="或"
                     android:checked="true"
@@ -257,7 +257,7 @@
                     android:theme="@style/MyCheckBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
-                <RadioButton
+                <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/uid_is_and"
                     android:visibility="gone"
                     android:text="与"

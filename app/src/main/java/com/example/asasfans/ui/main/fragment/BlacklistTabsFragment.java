@@ -21,7 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.chaychan.viewlib.PowerfulEditText;
+import android.widget.EditText;
 import com.example.asasfans.R;
 import com.example.asasfans.data.DBOpenHelper;
 import com.example.asasfans.ui.customcomponent.RecyclerViewDecoration;
@@ -29,7 +29,7 @@ import com.example.asasfans.util.ApiConfig;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.orhanobut.dialogplus.DialogPlus;
 import com.orhanobut.dialogplus.ViewHolder;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class BlacklistTabsFragment extends Fragment {
     private RecyclerView recyclerView;
     private BlacklistTabsAdapter blacklistTabsAdapter;
     private List<String> info = new ArrayList<>();
-    private RefreshLayout refreshLayout;
+    private SwipeRefreshLayout refreshLayout;
     private FloatingActionButton fabAdd;
     private DialogPlus dialog;
     private View dialogView;
@@ -84,8 +84,7 @@ public class BlacklistTabsFragment extends Fragment {
 
         fabAdd = view.findViewById(R.id.fab_add);
         fabAdd.setVisibility(View.VISIBLE);
-        refreshLayout.setEnableRefresh(false);
-        refreshLayout.setEnableLoadMore(false);
+        refreshLayout.setEnabled(false);
         info.clear();
         for (String s : blacklist.split(",")){
             info.add(s);
@@ -105,7 +104,7 @@ public class BlacklistTabsFragment extends Fragment {
                 TextView export_to_clip = dialogView.findViewById(R.id.export_to_clip);
                 TextView copy_from_clip = dialogView.findViewById(R.id.copy_from_clip);
                 TextView import_from_edittext = dialogView.findViewById(R.id.import_from_edittext);
-                PowerfulEditText edittext = dialogView.findViewById(R.id.edittext);
+                EditText edittext = dialogView.findViewById(R.id.edittext);
 
                 //点击软键盘外部，收起软键盘
                 edittext.setOnFocusChangeListener(new View.OnFocusChangeListener() {

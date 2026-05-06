@@ -11,6 +11,7 @@
     <color name="cardButtonDeepBlue">#2c63a3</color>
     <color name="backgroundGray">#F4F4F4</color>
     <color name="lightGray">#E3E3E3</color>
+    <color name="light_gray">#E3E3E3</color>
     <color name="cardWhite">#ffffff</color>
 
     <color name="tab_text_selected">#0084e8</color>
@@ -29,5 +30,7 @@
 
     <color name="transparent">#00000000</color>
 
+    <!-- Material 3 active indicator -->
+    <color name="md_active_indicator">#30576691</color>
 
 </resources>

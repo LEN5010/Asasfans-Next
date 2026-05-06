@@ -24,7 +24,7 @@ import androidx.fragment.app.Fragment;
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.listener.OnTimeSelectListener;
 import com.bigkoo.pickerview.view.TimePickerView;
-import com.chaychan.viewlib.PowerfulEditText;
+import android.widget.EditText;
 import com.example.asasfans.R;
 import com.example.asasfans.ui.main.AdvancedSearchActivity;
 import com.example.asasfans.ui.main.adapter.PubdateVideoAdapter;
@@ -39,7 +39,7 @@ import java.util.Date;
  * @date :2022/4/9 16:11
  */
 public class AdvancedSearchOptionFragment extends Fragment {
-    private PowerfulEditText tag_edittext;
+    private EditText tag_edittext;
     private ImageButton tag_add;
     private ImageView tag_reset;
 
@@ -47,7 +47,7 @@ public class AdvancedSearchOptionFragment extends Fragment {
     private TextView end_time_pick;
     private ImageView time_reset;
 
-    private PowerfulEditText uid_edittext;
+    private EditText uid_edittext;
     private ImageView uid_add;
     private ImageView uid_reset;
 

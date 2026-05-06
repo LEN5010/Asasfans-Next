@@ -29,7 +29,8 @@ import com.example.asasfans.data.AdvancedSearchDataBean;
 import com.example.asasfans.data.DBOpenHelper;
 import com.example.asasfans.data.VideoDataStoragedInMemory;
 import com.google.android.flexbox.FlexboxLayout;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import coil.Coil;
+import coil.request.ImageRequest;
 import com.orhanobut.dialogplus.DialogPlus;
 import com.orhanobut.dialogplus.ViewHolder;
 
@@ -420,7 +421,10 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
         }
         Log.i("onBindViewHolder", resultBeans.get(position).getTitle());
         holder.videoTitle.setText(resultBeans.get(position).getTitle());
-        ImageLoader.getInstance().displayImage(resultBeans.get(position).getPic() + "@480w_300h_1e_1c.jpg", holder.imageView);
+        Coil.imageLoader(mContext).enqueue(new ImageRequest.Builder(mContext)
+                .data(resultBeans.get(position).getPic() + "@480w_300h_1e_1c.jpg")
+                .target(holder.imageView)
+                .build());
         holder.videoAuthor.setText(resultBeans.get(position).getName());
         holder.videoDuration.setText(secondsToTime(Integer.valueOf(resultBeans.get(position).getDuration())));
         holder.videoLike.setText(viewNumFormat(resultBeans.get(position).getLike()));
@@ -442,7 +446,10 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                         if ((singleVideoBean.getData() != null)) {
                             holder.videoTitle.setText(singleVideoBean.getData().getTitle());
                             videoDataStoragedInMemoryList.get(position).setTitle(singleVideoBean.getData().getTitle());
-                            ImageLoader.getInstance().displayImage(singleVideoBean.getData().getPic() + "@480w_300h_1e_1c.jpg", holder.imageView);
+                            Coil.imageLoader(mContext).enqueue(new ImageRequest.Builder(mContext)
+                                    .data(singleVideoBean.getData().getPic() + "@480w_300h_1e_1c.jpg")
+                                    .target(holder.imageView)
+                                    .build());
                             videoDataStoragedInMemoryList.get(position).setPicUrl(singleVideoBean.getData().getPic() + "@480w_300h_1e_1c.jpg");
                             holder.videoAuthor.setText(singleVideoBean.getData().getOwner().getName());
                             videoDataStoragedInMemoryList.get(position).setAuthor(singleVideoBean.getData().getOwner().getName());
@@ -505,7 +512,10 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
             cachedThreadPool.execute(networkTask);
         }else {
             holder.videoTitle.setText(videoDataStoragedInMemoryList.get(position).getTitle());
-            ImageLoader.getInstance().displayImage(videoDataStoragedInMemoryList.get(position).getPicUrl(), holder.imageView);
+            Coil.imageLoader(mContext).enqueue(new ImageRequest.Builder(mContext)
+                    .data(videoDataStoragedInMemoryList.get(position).getPicUrl())
+                    .target(holder.imageView)
+                    .build());
             holder.videoAuthor.setText(videoDataStoragedInMemoryList.get(position).getAuthor());
             holder.videoDuration.setText(secondsToTime(videoDataStoragedInMemoryList.get(position).getDuration()));
             holder.videoLike.setText(viewNumFormat(videoDataStoragedInMemoryList.get(position).getLike()) + " 点赞");

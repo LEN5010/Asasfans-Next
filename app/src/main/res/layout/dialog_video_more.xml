@@ -19,7 +19,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             android:textColor="@color/cardBlack"
             android:layout_marginLeft="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:layout_marginTop="8dp"
             />
         <TextView
@@ -31,7 +31,7 @@
             android:text="@string/release_date"
             android:id="@+id/video_update_time"
             android:layout_marginRight="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:layout_marginTop="8dp"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -61,7 +61,7 @@
             android:textColorHighlight="@color/tab_text_normal"
             android:textIsSelectable="true"
             android:lineSpacingExtra="4dp"
-            android:textSize="15dp"
+            android:textSize="15sp"
             />
     </ScrollView>
 
@@ -82,7 +82,7 @@
         android:text="@string/block_options"
         android:textColor="@color/cardBlack"
         android:layout_marginLeft="8dp"
-        android:textSize="16dp"
+        android:textSize="16sp"
         />
     <View
         android:layout_width="match_parent"

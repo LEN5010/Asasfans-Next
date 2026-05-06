@@ -2,6 +2,7 @@ package com.example.asasfans.service;
 
 import static androidx.core.app.NotificationCompat.PRIORITY_MAX;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -14,6 +15,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -28,6 +31,7 @@ import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.Observer;
@@ -197,28 +201,31 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
         int importance = NotificationManager.IMPORTANCE_HIGH;
         manager = (NotificationManager) getSystemService(
                 NOTIFICATION_SERVICE);
-//        createNotificationChannel(channelId, channelName, importance);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {//适配一下高版本
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
             channel.enableLights(false);
             channel.enableVibration(false);
             channel.setVibrationPattern(new long[]{0});
             channel.setSound(null, null);
-
             manager.createNotificationChannel(channel);
         }
-        //点击整个通知时发送广播
+
+        // Check notification permission on Android 13+
+        boolean hasNotificationPermission = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasNotificationPermission = ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        }
+
         Intent intent = new Intent(getApplicationContext(), NotificationClickReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), NotificationClickReceiver.RequestCode,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        //初始化通知
         notification = new NotificationCompat.Builder(this, "play_control")
                 .setContentIntent(pendingIntent)
                 .setWhen(System.currentTimeMillis())
-                //设置透明底会导致31、32无法正常弹出通知栏，不知道为什么
                 .setSmallIcon(R.mipmap.icon_asasfan_round_logo)
-//                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.icon_asasf_colorful_logo))
                 .setCustomContentView(remoteViews)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setAutoCancel(false)
@@ -226,9 +233,14 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
                 .setOnlyAlertOnce(true)
                 .setOngoing(true)
                 .build();
-//        updateNotificationShow(0);
-//        updateProgress();
-//        startForeground(2479, notification);
+
+        if (hasNotificationPermission) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+            } else {
+                startForeground(NOTIFICATION_ID, notification);
+            }
+        }
         updateProgress();
     }
 
@@ -363,27 +375,19 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
 
         //通知栏控制器上一首按钮广播操作
         Intent intentPrev = new Intent(PREV);
-        PendingIntent prevPendingIntent = PendingIntent.getBroadcast(this, 0, intentPrev, 0);
-        //为prev控件注册事件
+        PendingIntent prevPendingIntent = PendingIntent.getBroadcast(this, 0, intentPrev, PendingIntent.FLAG_IMMUTABLE);
         remoteViews.setOnClickPendingIntent(R.id.btn_notification_previous, prevPendingIntent);
 
-
-        //通知栏控制器播放暂停按钮广播操作  //用于接收广播时过滤意图信息
         Intent intentPlay = new Intent(PLAY);
-        PendingIntent playPendingIntent = PendingIntent.getBroadcast(this, 0, intentPlay, 0);
-        //为play控件注册事件
+        PendingIntent playPendingIntent = PendingIntent.getBroadcast(this, 0, intentPlay, PendingIntent.FLAG_IMMUTABLE);
         remoteViews.setOnClickPendingIntent(R.id.btn_notification_play, playPendingIntent);
 
-        //通知栏控制器下一首按钮广播操作
         Intent intentNext = new Intent(NEXT);
-        PendingIntent nextPendingIntent = PendingIntent.getBroadcast(this, 0, intentNext, 0);
-        //为next控件注册事件
+        PendingIntent nextPendingIntent = PendingIntent.getBroadcast(this, 0, intentNext, PendingIntent.FLAG_IMMUTABLE);
         remoteViews.setOnClickPendingIntent(R.id.btn_notification_next, nextPendingIntent);
 
-        //通知栏控制器关闭按钮广播操作
         Intent intentClose = new Intent(CLOSE);
-        PendingIntent closePendingIntent = PendingIntent.getBroadcast(this, 0, intentClose, 0);
-        //为close控件注册事件
+        PendingIntent closePendingIntent = PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_IMMUTABLE);
         remoteViews.setOnClickPendingIntent(R.id.btn_notification_close, closePendingIntent);
 
     }
@@ -473,7 +477,7 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
         intentFilter.addAction(PREV);
         intentFilter.addAction(NEXT);
         intentFilter.addAction(CLOSE);
-        registerReceiver(musicReceiver, intentFilter);
+        registerReceiver(musicReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
     }
 
     /**
@@ -512,34 +516,26 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
      * @param tag
      */
     private void UIControl(String state, String tag) {
+        if (TestActivity.studioFragment == null) return;
         switch (state) {
             case PLAY:
-                //暂停或继续
-//                pauseOrContinueMusic();
-//                BLog.d(tag, PLAY + " or " + PAUSE);
                 Log.i("PLAY", "UIControl: ");
                 ((WebFragment)TestActivity.studioFragment).clickPlaySong();
                 ((WebFragment)TestActivity.studioFragment).updateName();
                 break;
             case PREV:
                 Log.i("PREV", "UIControl: ");
-//                previousMusic();
-//                BLog.d(tag, PREV);
                 ((WebFragment)TestActivity.studioFragment).clickPreviousSong();
                 ((WebFragment)TestActivity.studioFragment).updateName();
                 break;
             case NEXT:
                 Log.i("NEXT", "UIControl: ");
-                Log.i("NEXT", String.valueOf(TestActivity.studioFragment == null));
                 ((WebFragment)TestActivity.studioFragment).clickNextSong();
                 ((WebFragment)TestActivity.studioFragment).updateName();
-//                nextMusic();
-//                BLog.d(tag, NEXT);
                 break;
             case CLOSE:
                 Log.i("CLOSE", "UIControl: ");
                 closeNotification();
-//                BLog.d(tag, CLOSE);
                 break;
             default:
                 break;
@@ -553,7 +549,9 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
 //            activityLiveData.postValue(PROGRESS);
 //            Log.i(TAG, "MusicHandleMessage: ");
             //更新进度
-            currentSongTime.offer(((WebFragment)TestActivity.studioFragment).getCurrentSongTime());
+            if (TestActivity.studioFragment != null) {
+                currentSongTime.offer(((WebFragment)TestActivity.studioFragment).getCurrentSongTime());
+            }
             if (currentSongTime.size() == 3){
                 String[] tmp = new String[3];
                 int i = 0;
@@ -608,11 +606,11 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
     private void registerHeadsetPlugReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("android.intent.action.HEADSET_PLUG");
-        registerReceiver(headsetPlugReceiver, intentFilter);
+        registerReceiver(headsetPlugReceiver, intentFilter, Context.RECEIVER_EXPORTED);
 
         // for bluetooth headset connection receiver
         IntentFilter bluetoothFilter = new IntentFilter(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
-        registerReceiver(headsetPlugReceiver, bluetoothFilter);
+        registerReceiver(headsetPlugReceiver, bluetoothFilter, Context.RECEIVER_EXPORTED);
     }
 
     private BroadcastReceiver headsetPlugReceiver = new BroadcastReceiver() {
@@ -696,6 +694,7 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+            if (TestActivity.studioFragment == null) return;
             try {
                 if (msg.what == 1) {
                     ((WebFragment)TestActivity.studioFragment).clickPlaySong();

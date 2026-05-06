@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_video"
+        android:icon="@drawable/selector_icon_video"
+        android:title="@string/tab_bottom_1" />
+    <item
+        android:id="@+id/nav_music"
+        android:icon="@drawable/selector_icon_music"
+        android:title="音乐" />
+    <item
+        android:id="@+id/nav_tools"
+        android:icon="@drawable/selector_icon_tools"
+        android:title="工具" />
+</menu>

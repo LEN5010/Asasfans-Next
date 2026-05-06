@@ -17,3 +17,5 @@
 *.aab
 *.keystore
 *.jks
+.claude
+.idea

@@ -33,7 +33,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:textColor="@color/cardWhite"/>
     </LinearLayout>
 
@@ -60,7 +60,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="黑名单"/>
 
         <ImageView
@@ -98,7 +98,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="检查版本更新"/>
         <TextView
             android:id="@+id/config_check_version_number"
@@ -108,7 +108,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="当前版本号"/>
 
         <ImageView
@@ -145,7 +145,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="意见反馈/提交bug"/>
 
         <ImageView
@@ -182,7 +182,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="清理图片缓存"/>
 
         <ImageView
@@ -219,7 +219,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="清理WEB缓存(谨慎清理！)"/>
 
         <ImageView
@@ -256,10 +256,10 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_margin="12dp"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:text="悬浮球开关（用于快速回到app）"/>
 
-        <com.kyleduo.switchbutton.SwitchButton
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/config_floating_ball_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -268,8 +268,7 @@
             app:layout_constraintRight_toRightOf="parent"
             android:layout_marginRight="12dp"
             android:layout_marginTop="12dp"
-            android:layout_marginBottom="12dp"
-            android:src="@drawable/icon_right"/>
+            android:layout_marginBottom="12dp" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

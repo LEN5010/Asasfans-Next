@@ -40,33 +40,20 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.Observer;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
-import com.chaychan.viewlib.bottombarlayout.BottomBarItem;
-import com.chaychan.viewlib.bottombarlayout.BottomBarLayout;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.asasfans.data.GithubVersionBean;
 import com.example.asasfans.data.TabData;
 import com.example.asasfans.service.LiveDataBus;
 import com.example.asasfans.service.MusicService;
-import com.example.asasfans.ui.main.adapter.BottomPagerAdapter;
 import com.example.asasfans.ui.main.adapter.NewBottomPagerAdapter;
 import com.example.asasfans.ui.main.fragment.NewToolsFragment;
 import com.example.asasfans.ui.main.fragment.WebFragment;
 import com.example.asasfans.util.ACache;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
-import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiskCache;
-import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
-import com.nostra13.universalimageloader.cache.memory.impl.UsingFreqLimitedMemoryCache;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
-import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
-import com.nostra13.universalimageloader.core.download.BaseImageDownloader;
 import com.orhanobut.dialogplus.DialogPlus;
 import com.orhanobut.dialogplus.ViewHolder;
 
@@ -102,10 +89,9 @@ public class TestActivity extends AppCompatActivity {
     private static final int QUIT_INTERVAL = 3000;
 
     private TabLayout tabs;
-    public static ViewPager viewPager;
+    public static ViewPager2 viewPager;
     public List<TabData> mFragmentList = new ArrayList<>();
 
-    private BottomPagerAdapter bottomPagerAdapter;
     private Object mCurrentFragment;
 
     private SharedPreferences userInfo;
@@ -114,9 +100,8 @@ public class TestActivity extends AppCompatActivity {
     private DialogPlus dialog;
     private View dialogView;
 
-    private BottomBarLayout bottomBarLayout;
+    private BottomNavigationView bottomNav;
 
-    private RotateAnimation mRotateAnimation;
     private Handler mHandler = new Handler();
 
     private NewBottomPagerAdapter newBottomPagerAdapter;
@@ -126,16 +111,13 @@ public class TestActivity extends AppCompatActivity {
     权限相关
      */
     public String[] permissions = new String[]{
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.INTERNET,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.SYSTEM_ALERT_WINDOW,
             Manifest.permission.REORDER_TASKS,
-            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
-            Manifest.permission.ACCESS_NOTIFICATION_POLICY,
             Manifest.permission.BLUETOOTH,
-            Manifest.permission.WAKE_LOCK
+            Manifest.permission.WAKE_LOCK,
+            Manifest.permission.POST_NOTIFICATIONS
     };
     List<String> mPermissionList = new ArrayList<>();
     private static final int PERMISSION_REQUEST = 1;
@@ -199,7 +181,6 @@ public class TestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.new_activity_bottom_main);
         contextTestActivity = TestActivity.this;
-        initImageLoader();
         checkPermission();
 
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -224,53 +205,30 @@ public class TestActivity extends AppCompatActivity {
 //        viewPager.setOffscreenPageLimit(4);
 //        tabs = findViewById(R.id.tabs_bottom);
 //        tabs.setupWithViewPager(viewPager);
-        bottomBarLayout = findViewById(R.id.bbl);
-        newBottomPagerAdapter = new NewBottomPagerAdapter(getSupportFragmentManager());
+        bottomNav = findViewById(R.id.bottom_nav);
+        newBottomPagerAdapter = new NewBottomPagerAdapter(this);
         viewPager = findViewById(R.id.vp_content);
         viewPager.setAdapter(newBottomPagerAdapter);
-        viewPager.setOffscreenPageLimit(4);
-        bottomBarLayout.setViewPager(viewPager);
+        viewPager.setOffscreenPageLimit(3);
 
+        // Sync BottomNavigationView <-> ViewPager
+        bottomNav.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_video) {
+                viewPager.setCurrentItem(0, false);
+            } else if (itemId == R.id.nav_music) {
+                viewPager.setCurrentItem(1, false);
+            } else if (itemId == R.id.nav_tools) {
+                viewPager.setCurrentItem(2, false);
+            }
+            return true;
+        });
 
-
-        bottomBarLayout.setOnItemSelectedListener(new BottomBarLayout.OnItemSelectedListener() {
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
-            public void onItemSelected(BottomBarItem bottomBarItem, int position) {
-                switch (position){
-                    case 0:
-                        BottomBarItem bottomItem = bottomBarLayout.getBottomItem(0);
-                        bottomItem.setIconSelectedResourceId(R.drawable.ic_new_video_pressed);//更换为原来的图标
-
-                        cancelTabLoading(bottomItem);//停止旋转动画
-                        if (bottomBarLayout.getCurrentItem() == position){
-//                            bottomBarItem.setIconSelectedResourceId(R.drawable.ic_loading);//更换成加载图标
-//                            bottomBarItem.setStatus(true);
-//                            //播放旋转动画
-//                            if (mRotateAnimation == null) {
-//                                mRotateAnimation = new RotateAnimation(0, 360,
-//                                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-//                                        0.5f);
-//                                mRotateAnimation.setDuration(800);
-//                                mRotateAnimation.setRepeatCount(-1);
-//                            }
-//                            ImageView bottomImageView = bottomBarItem.getImageView();
-//                            bottomImageView.setAnimation(mRotateAnimation);
-//                            bottomImageView.startAnimation(mRotateAnimation);//播放旋转动画
-//
-//                            //模拟数据刷新完毕
-//                            mHandler.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    bottomBarItem.setIconSelectedResourceId(R.drawable.ic_video_dark);//更换成首页原来图标
-//                                    bottomBarItem.setStatus(true);//刷新图标
-//                                    cancelTabLoading(bottomBarItem);
-//                                }
-//                            },500);
-                            return;
-                        }
-                    default:
-
-                }
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                bottomNav.getMenu().getItem(position).setChecked(true);
             }
         });
 
@@ -323,12 +281,10 @@ public class TestActivity extends AppCompatActivity {
                 }
             }
         }
-        FragmentStatePagerAdapter f = (FragmentStatePagerAdapter) viewPager.getAdapter();
-        if (f != null) {
-            //instantiateItem(pager, position) 方法会返回在position位置的fragment的引用。
-            //如果该fragment 已经实例化了,再次调用instantiateItem(pager,position)的时候，该方法并不会调用
-            //getItem()来再次实例化fragment，而是直接返回引用。
-            studioFragment = f.instantiateItem(viewPager, 2);
+        NewBottomPagerAdapter adapter = (NewBottomPagerAdapter) viewPager.getAdapter();
+        if (adapter != null) {
+            viewPager.setCurrentItem(1, false);
+            studioFragment = getSupportFragmentManager().findFragmentByTag("f" + (1));
         }
         //绑定服务
         serviceIntent = new Intent(contextTestActivity, MusicService.class);
@@ -431,13 +387,6 @@ public class TestActivity extends AppCompatActivity {
     };
 
 
-    private void cancelTabLoading(BottomBarItem bottomItem) {
-        Animation animation = bottomItem.getImageView().getAnimation();
-        if (animation != null){
-            animation.cancel();
-        }
-    }
-
     private void initDialog(Context context){
         dialog = DialogPlus.newDialog(context)
                 .setContentHolder(new ViewHolder(R.layout.dialog_upgrade))
@@ -474,50 +423,6 @@ public class TestActivity extends AppCompatActivity {
         QbSdk.initTbsSettings(map);
     }
 
-
-    private void initImageLoader(){
-//        Log.i("APATH", getApplicationContext().getFilesDir().getAbsolutePath());
-//        Log.i("BPATH", getExternalCacheDir().getPath());
-//        String systemPath;
-        String dirname;
-        try {
-//            systemPath = getExternalCacheDir().getPath();
-            dirname = getExternalCacheDir().getPath() + "/pic";
-        }catch (Exception e){
-            e.printStackTrace();
-            dirname = "/storage/emulated/0/Android/data/com.example.asasfans/cache/pic";
-        }
-
-        // 现在创建目录
-
-        DisplayImageOptions options = new DisplayImageOptions.Builder()
-                .cacheInMemory(false) //设置下载的图片是否缓存在内存中
-                .cacheOnDisk(true)//设置下载的图片是否缓存在SD卡中
-//                .showImageOnLoading(R.mipmap.loading_black)
-                .showImageOnFail(R.mipmap.load_failure)
-                .bitmapConfig(Bitmap.Config.RGB_565)
-                .considerExifParams(true)//是否考虑JPEG图像EXIF参数（旋转，翻转）
-                .resetViewBeforeLoading(true)// 设置图片在下载前是否重置，复位
-                .displayer(new RoundedBitmapDisplayer(80))
-                .displayer(new FadeInBitmapDisplayer(1000))
-                .build();
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
-                .memoryCacheExtraOptions(480, 800) // max width, max height，即保存的每个缓存文件的最大长宽
-                .threadPoolSize(10) //线程池内加载的数量
-                .threadPriority(Thread.NORM_PRIORITY - 2)
-                .denyCacheImageMultipleSizesInMemory()
-                .diskCacheFileNameGenerator(new Md5FileNameGenerator()) //将保存的时候的URI名称用MD5 加密
-                .memoryCache(new UsingFreqLimitedMemoryCache(2 * 1024 * 1024)) // You can pass your own memory cache implementation/你可以通过自己的内存缓存实现
-                .memoryCacheSize(20 * 1024 * 1024) // 内存缓存的最大值
-                .diskCacheSize(500 * 1024 * 1024)  // 50 Mb sd卡(本地)缓存的最大值
-                .tasksProcessingOrder(QueueProcessingType.LIFO)
-                .defaultDisplayImageOptions(options)// 由原先的discCache -> diskCache
-                .diskCache(new UnlimitedDiskCache(new File(dirname)))//自定义缓存路径
-                .imageDownloader(new BaseImageDownloader(this, 5 * 1000, 5 * 1000)) // connectTimeout (5 s), readTimeout (30 s)超时时间
-//                .writeDebugLogs() // Remove for release app
-                .build();
-        ImageLoader.getInstance().init(config);//全局初始化此配置
-    }
 
     public void initFloatingBall(Context context){
         View view =  LayoutInflater.from(contextTestActivity).inflate(R.layout.view_floating_ball, null);

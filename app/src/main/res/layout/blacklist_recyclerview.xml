@@ -14,7 +14,7 @@
         android:layout_marginLeft="12dp"
         android:id="@+id/blacklist_text"
         android:text="17dp"
-        android:textSize="14dp"
+        android:textSize="14sp"
         android:textColor="@color/cardBlack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
@@ -22,7 +22,7 @@
     <TextView
         android:id="@+id/delete"
         android:text="移除"
-        android:textSize="14dp"
+        android:textSize="14sp"
         android:textColor="@color/cardBlack"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

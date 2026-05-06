@@ -9,49 +9,39 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.asasfans.AsApplication;
 import com.example.asasfans.R;
 import com.example.asasfans.ui.main.adapter.BlacklistPagerAdapter;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
-/**
- * @author akarinini
- * @description:
- * @date :2022/4/7 21:37
- */
 public class BlacklistFragment extends Fragment {
     public static BlacklistFragment newInstance() {
-
         Bundle args = new Bundle();
         BlacklistFragment fragment = new BlacklistFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_blacklist, container, false);
-        BlacklistPagerAdapter blacklistPagerAdapter = new BlacklistPagerAdapter(getActivity(), getChildFragmentManager());
-        ViewPager viewPager = view.findViewById(R.id.view_pager);
+        BlacklistPagerAdapter blacklistPagerAdapter = new BlacklistPagerAdapter(this);
+        ViewPager2 viewPager = view.findViewById(R.id.view_pager);
         viewPager.setAdapter(blacklistPagerAdapter);
         viewPager.setOffscreenPageLimit(3);
         TabLayout tabs = view.findViewById(R.id.tabs);
-        tabs.setupWithViewPager(viewPager);
+        new TabLayoutMediator(tabs, viewPager, (tab, position) -> tab.setText(blacklistPagerAdapter.getPageTitle(position))).attach();
 
         View emptyView = view.findViewById(R.id.emptyViewMain);
         CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AsApplication.Companion.getStatusBarHeight());
         emptyView.setLayoutParams(layoutParams);
         AppBarLayout appBarLayout = view.findViewById(R.id.appBar);
-        appBarLayout.setPadding(0,AsApplication.Companion.getStatusBarHeight(),0,0);
+        appBarLayout.setPadding(0, AsApplication.Companion.getStatusBarHeight(), 0, 0);
         return view;
     }
 }

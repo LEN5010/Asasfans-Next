@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.asasfans">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.REORDER_TASKS" />
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".AsApplication"
@@ -21,12 +25,12 @@
         android:supportsRtl="true"
         android:launchMode="singleTask"
         tools:replace="android:allowBackup"
-        android:requestLegacyExternalStorage="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
 
         <activity
             android:name=".LaunchActivity"
+            android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
@@ -39,49 +43,48 @@
         <service
             android:name=".service.MusicService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback" />
         <service
             android:name="com.tencent.smtt.export.external.DexClassLoaderProviderService"
+            android:exported="false"
             android:label="dexopt"
             android:process=":dexopt" >
         </service>
         <activity
             android:name=".TestActivity"
+            android:exported="false"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/MainTheme"></activity>
         <activity
             android:name=".ui.main.AdvancedSearchActivity"
+            android:exported="false"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/MainTheme"></activity>
         <activity
             android:name=".ui.main.ClickJumpActivity"
+            android:exported="false"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/MainTheme"></activity>
         <activity
             android:name=".ui.main.BlackListActivity"
+            android:exported="false"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/MainTheme"></activity>
         <activity
             android:name=".ui.main.ConfigActivity"
+            android:exported="false"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/MainTheme"></activity>
 
         <receiver
-            android:name=".receiver.NotificationClickReceiver">
-<!--            android:exported="true"-->
-<!--            android:process=":player"-->
-
-<!--            <intent-filter>-->
-<!--                <action android:name="play_pre" />-->
-<!--                <action android:name="play_next" />-->
-<!--                <action android:name="play_pause" />-->
-<!--                <action android:name="play_play" />-->
-<!--            </intent-filter>-->
+            android:name=".receiver.NotificationClickReceiver"
+            android:exported="false">
         </receiver>
     </application>
 

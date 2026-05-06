@@ -5,7 +5,7 @@
     android:background="@color/tab_text_normal"
     android:layout_height="match_parent">
     <TextView
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:gravity="center"
         android:textColor="@color/cardWhite"
         android:text="AU的工具箱"
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content" />
     <TextView
         android:id="@+id/tips"
-        android:textSize="12dp"
+        android:textSize="12sp"
         android:gravity="center"
         android:textColor="@color/cardWhite"
         android:layout_width="match_parent"

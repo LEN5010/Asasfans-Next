@@ -19,7 +19,7 @@
                 android:layout_marginLeft="12dp"
                 android:layout_marginRight="12dp"
                 android:hint="不支持手动输入哦，请选择下方选项"
-                android:textSize="12dp"
+                android:textSize="12sp"
                 android:maxLines="1"
                 android:scrollbars="vertical"
                 app:layout_constraintTop_toTopOf="parent"
@@ -41,7 +41,7 @@
                 android:layout_height="28dp"/>
             <TextView
                 android:textColor="@color/cardWhite"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
@@ -64,7 +64,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toLeftOf="@+id/copyright"
                 app:arrowTint="@color/cardGray"
-                android:textSize="12dp"
+                android:textSize="12sp"
                 app:layout_constraintHorizontal_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"/>
@@ -76,7 +76,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_centerHorizontal="true"
                 app:arrowTint="@color/cardGray"
-                android:textSize="12dp"
+                android:textSize="12sp"
                 app:layout_constraintHorizontal_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"/>
@@ -89,7 +89,7 @@
                 android:layout_centerHorizontal="true"
                 app:layout_constraintHorizontal_weight="1"
                 app:arrowTint="@color/cardGray"
-                android:textSize="12dp"
+                android:textSize="12sp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"/>
             <org.angmarch.views.NiceSpinner
@@ -101,7 +101,7 @@
                 android:layout_centerHorizontal="true"
                 app:layout_constraintHorizontal_weight="1"
                 app:arrowTint="@color/cardGray"
-                android:textSize="12dp"
+                android:textSize="12sp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"/>
         </androidx.constraintlayout.widget.ConstraintLayout>

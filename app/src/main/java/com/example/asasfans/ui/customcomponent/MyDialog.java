@@ -113,19 +113,17 @@ public class MyDialog extends Dialog implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.confirm:
-                if (listener != null) {
-                    listener.onClick(true);
-                }
-                this.dismiss();
-                break;
-            case R.id.cancel:
-                if (listener != null) {
-                    listener.onClick(false);
-                }
-                this.dismiss();
-                break;
+        int id = v.getId();
+        if (id == R.id.confirm) {
+            if (listener != null) {
+                listener.onClick(true);
+            }
+            this.dismiss();
+        } else if (id == R.id.cancel) {
+            if (listener != null) {
+                listener.onClick(false);
+            }
+            this.dismiss();
         }
     }
 

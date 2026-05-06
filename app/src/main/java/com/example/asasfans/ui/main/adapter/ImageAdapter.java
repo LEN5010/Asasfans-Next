@@ -18,7 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.asasfans.R;
 import com.example.asasfans.data.ImageDataBean;
 import com.example.asasfans.ui.main.fragment.ImageFanArtFragment;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import coil.Coil;
+import coil.request.ImageRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
 //        holder.fan_art_image.startAnimation(fadeIn);
 //        holder.fan_art_author.startAnimation(fadeIn);
 
-        ImageLoader.getInstance().displayImage(imageDataBean.get(position).getFace() + "@64w_64h_1e_1c.jpg", holder.fan_art_author);
+        Coil.imageLoader(context).enqueue(new ImageRequest.Builder(context)
+                .data(imageDataBean.get(position).getFace() + "@64w_64h_1e_1c.jpg")
+                .target(holder.fan_art_author)
+                .build());
         holder.fan_art_author_name.setText(imageDataBean.get(position).getName());
         double widthImage, heightImage;
         if (imageDataBean.get(position).getPic_url().get(0).getImg_width() >= 480){
@@ -83,7 +87,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             widthImage = imageDataBean.get(position).getPic_url().get(0).getImg_width();
             heightImage = imageDataBean.get(position).getPic_url().get(0).getImg_height();
         }
-        ImageLoader.getInstance().displayImage(imageDataBean.get(position).getPic_url().get(0).getImg_src() + "@"+(int)widthImage+"w_"+(int)heightImage+"h_1e_1c.jpg", holder.fan_art_image);
+        Coil.imageLoader(context).enqueue(new ImageRequest.Builder(context)
+                .data(imageDataBean.get(position).getPic_url().get(0).getImg_src() + "@"+(int)widthImage+"w_"+(int)heightImage+"h_1e_1c.jpg")
+                .target(holder.fan_art_image)
+                .build());
         holder.fan_art_image_num.setText(String.valueOf(imageDataBean.get(position).getPic_url().size()));
         ViewGroup.LayoutParams layoutParams = holder.fan_art_image.getLayoutParams();
 

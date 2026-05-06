@@ -294,29 +294,23 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         boolean checked = ((RadioButton) view).isChecked();
 
         // Check which radio button was clicked
-        switch(view.getId()) {
-            case R.id.tag_is_or:
-                if (checked) {
-                    // Pirates are the best
-                    tagQArray.setType("OR");
-
-                    apiConfig.setQ(getQ());
-
+        int id = view.getId();
+        if (id == R.id.tag_is_or) {
+            if (checked) {
+                tagQArray.setType("OR");
+                apiConfig.setQ(getQ());
+            }
+            Log.i("tag_is_or", apiConfig.getUrl());
+        } else if (id == R.id.tag_is_and) {
+            if (checked) {
+                tagQArray.setType("AND");
+                if (tagQ.size() >= 5){
+                    tagQ = tagQ.subList(0, 4);
+                    Toast.makeText(AdvancedSearchActivity.this,"AND条件下，TAG最多为四个，只保留前四个",Toast.LENGTH_SHORT).show();
                 }
-                Log.i("tag_is_or", apiConfig.getUrl());
-                break;
-            case R.id.tag_is_and:
-                if (checked) {
-                    // Ninjas rule
-                    tagQArray.setType("AND");
-                    if (tagQ.size() >= 5){
-                        tagQ = tagQ.subList(0, 4);
-                        Toast.makeText(AdvancedSearchActivity.this,"AND条件下，TAG最多为四个，只保留前四个",Toast.LENGTH_SHORT).show();
-                    }
-                    apiConfig.setQ(getQ());
-                }
-                Log.i("tag_is_and", apiConfig.getUrl());
-                break;
+                apiConfig.setQ(getQ());
+            }
+            Log.i("tag_is_and", apiConfig.getUrl());
         }
         updateSearchEditText();
     }
@@ -332,23 +326,19 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         boolean checked = ((RadioButton) view).isChecked();
 
         // Check which radio button was clicked
-        switch(view.getId()) {
-            case R.id.uid_is_or:
-                if (checked) {
-                    // Pirates are the best
-                    midQArray.setType("OR");
+        int id = view.getId();
+        if (id == R.id.uid_is_or) {
+            if (checked) {
+                midQArray.setType("OR");
+                apiConfig.setQ(getQ());
+            }
+            Log.i("uid_is_or", apiConfig.getUrl());
+        } else if (id == R.id.uid_is_and) {
+            if (checked) {
+                midQArray.setType("AND");
                     apiConfig.setQ(getQ());
                 }
-                Log.i("uid_is_or", apiConfig.getUrl());
-                break;
-            case R.id.uid_is_and:
-                if (checked) {
-                    // Ninjas rule
-                    midQArray.setType("AND");
-                    apiConfig.setQ(getQ());
-                }
-                Log.i("uid_is_and", apiConfig.getUrl());
-                break;
+            Log.i("uid_is_and", apiConfig.getUrl());
         }
         updateSearchEditText();
     }

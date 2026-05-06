@@ -17,7 +17,7 @@
         <TextView
             android:text="黑名单快速导入与导出"
             android:layout_marginLeft="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -34,7 +34,7 @@
             app:layout_constraintRight_toRightOf="parent"
             android:text="导出至剪贴板"
             android:layout_marginRight="8dp"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:textColor="@color/tab_text_normal"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -73,7 +73,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.chaychan.viewlib.PowerfulEditText
+    <EditText
         android:id="@+id/edittext"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -81,8 +81,8 @@
         android:gravity="top"
         android:imeOptions="actionDone"
         android:lines="5"
-        android:textSize="16dp"
-        app:funcType="canClear" />
+        android:textSize="16sp"
+        />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_marginTop="8dp"
@@ -92,7 +92,7 @@
             android:id="@+id/copy_from_clip"
             android:layout_marginLeft="8dp"
             android:text="从剪贴板导入"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:textColor="@color/tab_text_normal"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -103,7 +103,7 @@
             android:id="@+id/import_from_edittext"
             android:layout_marginRight="8dp"
             android:text="导入文本框中数据"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:textColor="@color/tab_text_normal"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"

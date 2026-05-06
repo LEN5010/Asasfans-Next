@@ -25,7 +25,7 @@
         app:layout_constraintBottom_toTopOf="@+id/fan_art_author"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#CFCFCF" />
+        android:background="@color/lightGray" />
 
     <ImageView
         android:id="@+id/fan_art_author"
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:text="name"
         android:layout_marginLeft="8dp"
-        android:textSize="15dp"
+        android:textSize="15sp"
         android:textStyle="bold"
         android:textColor="@color/cardBlack"
         app:layout_constraintHorizontal_bias="0"

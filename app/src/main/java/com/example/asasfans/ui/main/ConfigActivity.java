@@ -38,8 +38,8 @@ import com.example.asasfans.TestActivity;
 import com.example.asasfans.data.GithubVersionBean;
 import com.example.asasfans.util.ACache;
 import com.google.gson.Gson;
-import com.kyleduo.switchbutton.SwitchButton;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import coil.Coil;
 import com.orhanobut.dialogplus.DialogPlus;
 import com.orhanobut.dialogplus.ViewHolder;
 
@@ -60,7 +60,7 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
     private ConstraintLayout config_clear_web_cache;
     private LinearLayout config;
     private TextView config_check_version_number;
-    private SwitchButton config_floating_ball_switch;
+    private MaterialSwitch config_floating_ball_switch;
     private View emptyView;
     private String latestVersion = "https://api.github.com/repos/jiarandiana0307/as-as-fans/releases/latest";
     private RotateAnimation mRotateAnimation;
@@ -147,46 +147,39 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
     }
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
-            case R.id.config_blacklist:
-                Bundle data = new Bundle();
-                data.putBoolean("isBlacklist", true);
-                Intent intentBlacklist = new Intent(ConfigActivity.this, ClickJumpActivity.class);
-                intentBlacklist.putExtras(data);
-                startActivity(intentBlacklist);
-                break;
-            case R.id.config_check_version:
-                if (mRotateAnimation == null) {
-                    mRotateAnimation = new RotateAnimation(0, 360,
-                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-                            0.5f);
-                    mRotateAnimation.setDuration(800);
-                    mRotateAnimation.setRepeatCount(-1);
-                }
-                config_check_version_icon.setAnimation(mRotateAnimation);
-                config_check_version_icon.startAnimation(mRotateAnimation);
-                new Thread(networkTask).start();
-                break;
-            case R.id.config:
-                ConfigActivity.this.finish();
-                break;
-            case R.id.config_contract_us:
-                Intent intentContractUs = new Intent();
-                intentContractUs.setAction("android.intent.action.VIEW");
-                Uri content_url = Uri.parse("https://github.com/jiarandiana0307/as-as-fans/issues");
-                intentContractUs.setData(content_url);
-                startActivity(intentContractUs);
-                break;
-            case R.id.config_clear_pic_cache:
-                ImageLoader.getInstance().clearDiskCache();//清除磁盘缓存
-                ImageLoader.getInstance().clearMemoryCache();//清除内存缓存
-                Toast.makeText(this, "清除图片缓存成功", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.config_clear_web_cache:
-                new WebView(ConfigActivity.this).clearCache(true);
-                Toast.makeText(this, "清除WEB缓存成功", Toast.LENGTH_SHORT).show();
-                break;
-
+        int id = view.getId();
+        if (id == R.id.config_blacklist) {
+            Bundle data = new Bundle();
+            data.putBoolean("isBlacklist", true);
+            Intent intentBlacklist = new Intent(ConfigActivity.this, ClickJumpActivity.class);
+            intentBlacklist.putExtras(data);
+            startActivity(intentBlacklist);
+        } else if (id == R.id.config_check_version) {
+            if (mRotateAnimation == null) {
+                mRotateAnimation = new RotateAnimation(0, 360,
+                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                        0.5f);
+                mRotateAnimation.setDuration(800);
+                mRotateAnimation.setRepeatCount(-1);
+            }
+            config_check_version_icon.setAnimation(mRotateAnimation);
+            config_check_version_icon.startAnimation(mRotateAnimation);
+            new Thread(networkTask).start();
+        } else if (id == R.id.config) {
+            ConfigActivity.this.finish();
+        } else if (id == R.id.config_contract_us) {
+            Intent intentContractUs = new Intent();
+            intentContractUs.setAction("android.intent.action.VIEW");
+            Uri content_url = Uri.parse("https://github.com/jiarandiana0307/as-as-fans/issues");
+            intentContractUs.setData(content_url);
+            startActivity(intentContractUs);
+        } else if (id == R.id.config_clear_pic_cache) {
+            Coil.imageLoader(ConfigActivity.this).getDiskCache().clear();
+            Coil.imageLoader(ConfigActivity.this).getMemoryCache().clear();
+            Toast.makeText(this, "清除图片缓存成功", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.config_clear_web_cache) {
+            new WebView(ConfigActivity.this).clearCache(true);
+            Toast.makeText(this, "清除WEB缓存成功", Toast.LENGTH_SHORT).show();
         }
     }
 

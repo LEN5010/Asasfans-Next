@@ -24,8 +24,8 @@
             android:paddingLeft="5dp"
             android:paddingRight="5dp"
             android:text="发现新版本"
-            android:textColor="#000000"
-            android:textSize="18dp"/>
+            android:textColor="@color/cardBlack"
+            android:textSize="18sp"/>
 
         <ScrollView
             android:layout_width="match_parent"
@@ -45,10 +45,10 @@
                 android:paddingRight="10dp"
                 android:text="11"
                 android:textColor="@color/tab_text_normal"
-                android:textSize="16dp" />
+                android:textSize="16sp" />
         </ScrollView>
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/cardWhite"
@@ -57,16 +57,16 @@
             android:paddingTop="20dp"
             android:paddingBottom="20dp">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/upgrade"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/upgrade_button_shape"
                 android:text="升级"
-                android:textColor="#ffffff"
-                android:textSize="15sp" />
-        </RelativeLayout>
+                android:textColor="@color/cardWhite"
+                android:textSize="15sp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/cardBlue" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     </LinearLayout>

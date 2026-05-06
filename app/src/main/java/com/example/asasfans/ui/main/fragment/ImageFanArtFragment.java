@@ -33,11 +33,7 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.scwang.smart.refresh.footer.ClassicsFooter;
-import com.scwang.smart.refresh.header.MaterialHeader;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
-import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -73,7 +69,7 @@ public class ImageFanArtFragment extends Fragment {
     private View view;
     private List<ImageDataBean> imageRecyclerViewData = new ArrayList<>();
     private RecyclerView recyclerView;
-    private RefreshLayout refreshLayout;
+    private SwipeRefreshLayout refreshLayout;
     private String[] order = {"最新发布", "B站热门"};
     private String[] date = {"无榜单", "日榜", "周榜", "月榜"};
     private String[] tag = {"全部TAG", "A-SOUL", "向晚AvA", "贝拉Bella", "珈乐Carol", "嘉然Diana",
@@ -131,28 +127,13 @@ public class ImageFanArtFragment extends Fragment {
         initSpinner();
 
         imageUrl = new ImageUrl();
-        refreshLayout = (RefreshLayout)view.findViewById(R.id.fan_art_image_refreshLayout);
-        refreshLayout.setRefreshHeader(new MaterialHeader(getActivity()).setColorSchemeResources(R.color.tab_text_normal,R.color.cardWhite,R.color.cardWhite));
-        refreshLayout.setRefreshFooter(new ClassicsFooter(getActivity()));
-        refreshLayout.setDragRate(1f);
-        refreshLayout.setEnableAutoLoadMore(true);
-        refreshLayout.setHeaderTriggerRate((float) 0.3);
-        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                imageRecyclerViewData.clear();
-                imageAdapter.notifyDataSetChanged();
-                cachedThreadPool.execute(networkTask.setParam(imageUrl.getUrl()));
-                refreshLayout.finishRefresh();
-            }
-        });
-        refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
-            @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                imageUrl.pageSelfAdd();
-                cachedThreadPool.execute(networkTask.setParam(imageUrl.getUrl()));
-                refreshLayout.finishLoadMore(100/*,false*/);
-            }
+        refreshLayout = view.findViewById(R.id.fan_art_image_refreshLayout);
+        refreshLayout.setColorSchemeResources(R.color.tab_text_normal, R.color.cardBlue);
+        refreshLayout.setOnRefreshListener(() -> {
+            imageRecyclerViewData.clear();
+            imageAdapter.notifyDataSetChanged();
+            cachedThreadPool.execute(networkTask.setParam(imageUrl.getUrl()));
+            refreshLayout.setRefreshing(false);
         });
 
         imageRecyclerViewData.clear();

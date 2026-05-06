@@ -28,11 +28,7 @@ import com.example.asasfans.ui.customcomponent.RecyclerViewDecoration;
 import com.example.asasfans.ui.main.adapter.PubdateVideoAdapter;
 import com.example.asasfans.util.ApiConfig;
 import com.google.gson.Gson;
-import com.scwang.smart.refresh.footer.ClassicsFooter;
-import com.scwang.smart.refresh.header.MaterialHeader;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
-import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,7 +57,8 @@ public class BiliVideoFragment extends Fragment {
     public PubdateVideoAdapter pubdateVideoAdapter;
     private RecyclerView recyclerView;
     private int page = 1;
-    private RefreshLayout refreshLayout;
+    private SwipeRefreshLayout refreshLayout;
+    private boolean isLoadingMore = false;
     private ExecutorService cachedThreadPool =  Executors.newCachedThreadPool();;
     private boolean firstOnCreateView = true;
     private ApiConfig apiConfig;
@@ -90,7 +87,7 @@ public class BiliVideoFragment extends Fragment {
     }
 
     public void refreshing(){
-        refreshLayout.autoRefreshAnimationOnly();
+        refreshLayout.setRefreshing(true);
     }
 
     @Nullable
@@ -100,13 +97,9 @@ public class BiliVideoFragment extends Fragment {
         Animation fadeIn = AnimationUtils.loadAnimation(getActivity(), R.anim.fadein);
 
         recyclerView = view.findViewById(R.id.recyclerview);
-        refreshLayout = (RefreshLayout)view.findViewById(R.id.refreshLayout);
-        refreshLayout.setRefreshHeader(new MaterialHeader(getActivity()).setColorSchemeResources(R.color.tab_text_normal,R.color.cardWhite,R.color.cardWhite));
-        refreshLayout.setRefreshFooter(new ClassicsFooter(getActivity()));
-        refreshLayout.setEnableAutoLoadMore(true);
-        refreshLayout.setDisableContentWhenRefresh(false);//是否在刷新的时候禁止列表的操作
-        refreshLayout.setDisableContentWhenLoading(false);//是否在加载的时候禁止列表的操作
-        refreshLayout.setEnableLoadMoreWhenContentNotFull(true);
+        refreshLayout = view.findViewById(R.id.refreshLayout);
+        refreshLayout.setColorSchemeResources(R.color.tab_text_normal, R.color.cardBlue, R.color.bella);
+        refreshLayout.setProgressBackgroundColorSchemeResource(R.color.cardWhite);
 
         to_top = view.findViewById(R.id.to_top);
 
@@ -154,38 +147,43 @@ public class BiliVideoFragment extends Fragment {
         linearLayoutManager.setInitialPrefetchItemCount(2);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.addItemDecoration(new RecyclerViewDecoration(12, 12));
-        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                apiConfig.setPage(1);
-                resultBeans.clear();
-                pubdateVideoAdapter.notifyDataSetChanged();
-                try {
-                    cachedThreadPool.execute(networkTask.setParam(apiConfig.getUrl()));
-                }catch (Exception e){
-                    e.printStackTrace();
-                    Toast.makeText(getActivity(),"刷新失败，再试一次",Toast.LENGTH_SHORT).show();
-                }
-
-                refreshLayout.finishRefresh(100/*,false*/);
+        refreshLayout.setOnRefreshListener(() -> {
+            apiConfig.setPage(1);
+            resultBeans.clear();
+            pubdateVideoAdapter.notifyDataSetChanged();
+            try {
+                cachedThreadPool.execute(networkTask.setParam(apiConfig.getUrl()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getActivity(), "刷新失败，再试一次", Toast.LENGTH_SHORT).show();
             }
+            refreshLayout.setRefreshing(false);
         });
-        refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
+
+        // Load-more via RecyclerView scroll detection
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                apiConfig.pageSelfAdd();
-                try {
-                    cachedThreadPool.execute(networkTask.setParam(apiConfig.getUrl()));
-                }catch (Exception e){
-                    e.printStackTrace();
-                    apiConfig.pageSelfDecrement();
-                    Toast.makeText(getActivity(),"加载失败，再试一次",Toast.LENGTH_SHORT).show();
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0 && !isLoadingMore) {
+                    LinearLayoutManager manager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    if (manager != null && manager.findLastVisibleItemPosition() >= manager.getItemCount() - 2) {
+                        isLoadingMore = true;
+                        apiConfig.pageSelfAdd();
+                        try {
+                            cachedThreadPool.execute(networkTask.setParam(apiConfig.getUrl()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            apiConfig.pageSelfDecrement();
+                            isLoadingMore = false;
+                            Toast.makeText(getActivity(), "加载失败，再试一次", Toast.LENGTH_SHORT).show();
+                        }
+                    }
                 }
-                refreshLayout.finishLoadMore(100/*,false*/);
             }
         });
         if (firstOnCreateView) {
-            refreshLayout.autoRefreshAnimationOnly();
+            refreshLayout.setRefreshing(true);
             cachedThreadPool.execute(networkTask.setParam(apiConfig.getUrl()));
             firstOnCreateView = false;
         }
@@ -201,7 +199,7 @@ public class BiliVideoFragment extends Fragment {
             Gson gson =new Gson();
             switch (msg.what){
                 case GET_DATA_SUCCESS:
-                    refreshLayout.finishRefresh();
+                    refreshLayout.setRefreshing(false);
                     if (val.startsWith("{\"code\":0,\"message\":\"ok\"")) {
                         AdvancedSearchDataBean advancedSearchDataBean = gson.fromJson(val, AdvancedSearchDataBean.class);
                         List<AdvancedSearchDataBean.DataBean.ResultBean> allResultBeans = advancedSearchDataBean.getData().getResult();
@@ -240,7 +238,7 @@ public class BiliVideoFragment extends Fragment {
                         }
                         if (allResultBeans.size() == 0){
                             apiConfig.pageSelfDecrement();
-                            refreshLayout.finishLoadMoreWithNoMoreData();
+                            isLoadingMore = true; // no more data
                             Toast.makeText(getActivity(),"后面没有内容了~",Toast.LENGTH_SHORT).show();
                         }else if (addVideoCount == 0){
                             Toast.makeText(getActivity(),"刚刚有一整页视频都被屏蔽掉了哦",Toast.LENGTH_SHORT).show();
@@ -248,12 +246,12 @@ public class BiliVideoFragment extends Fragment {
                         db.close();
                         dbOpenHelper.close();
                         pubdateVideoAdapter.notifyItemRangeChanged(PastSize, allResultBeans.size());
-                        refreshLayout.finishLoadMore(100);
+                        isLoadingMore = false;
                     }else {
                         if (page > 1){
 
                         }
-                        refreshLayout.finishLoadMoreWithNoMoreData();
+                        isLoadingMore = true; // no more data
                         Toast.makeText(getActivity(),"后面没有内容了~",Toast.LENGTH_SHORT).show();
                     }
                     break;
@@ -261,8 +259,8 @@ public class BiliVideoFragment extends Fragment {
                     //这里因为在高级搜索界面可能会有人快速切换页面，因此在fragment视图消失时手动强制关闭了线程池和handle，
                     // 但是网络请求会报java.io.InterruptedIOException，之前在异常里并没有区分，全走网络错误了，
                     // 先这样办，能解决问题，以后再加异常类型区分
-                    refreshLayout.finishRefresh(100/*,false*/);
-                    refreshLayout.finishLoadMore(100/*,false*/);
+                    refreshLayout.setRefreshing(false);
+                    isLoadingMore = false;
                     if (getActivity() != null) {
                         Toast.makeText(getActivity(), "网络消失了~", Toast.LENGTH_SHORT).show();
                         break;

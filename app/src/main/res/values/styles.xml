@@ -1,10 +1,18 @@
 <resources>
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
+    <!-- Base application theme - Material 3. -->
+    <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/tab_text_normal</item>
-        <item name="colorPrimaryDark">@color/tab_text_normal</item>
-        <item name="colorAccent">@color/tab_text_normal</item>
+        <item name="colorOnPrimary">@color/cardWhite</item>
+        <item name="colorPrimaryContainer">@color/queenLight</item>
+        <item name="colorOnPrimaryContainer">@color/queenDark</item>
+        <item name="colorSecondary">@color/cardBlue</item>
+        <item name="colorOnSecondary">@color/cardWhite</item>
+        <item name="colorSecondaryContainer">@color/avaLight</item>
+        <item name="colorOnSecondaryContainer">@color/avaDark</item>
+        <item name="colorSurface">@color/cardWhite</item>
+        <item name="colorOnSurface">@color/cardBlack</item>
+        <item name="android:colorBackground">@color/backgroundGray</item>
+        <item name="colorOnBackground">@color/cardBlack</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -26,17 +34,14 @@
         <item name="android:windowTranslucentStatus">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
 
     <!--对话框样式-->
-    <style name="mdialog" parent="Theme.AppCompat.Dialog">
-        <!--背景透明-->
+    <style name="mdialog" parent="Theme.Material3.Light.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
-        <!--没有标题-->
         <item name="android:windowNoTitle">true</item>
-        <!--背景昏暗-->
         <item name="android:backgroundDimEnabled">true</item>
     </style>
 
@@ -46,7 +51,7 @@
         <item name="android:textColor">#000000</item>
     </style>
 
-    <style name="MyCheckBox" parent="Theme.AppCompat.Light">
+    <style name="MyCheckBox" parent="Theme.Material3.Light">
         <item name="colorControlNormal">@color/cardBlack</item>
         <item name="colorControlActivated">@color/tab_text_normal</item>
     </style>
@@ -77,5 +82,20 @@
         <item name="android:gravity">center</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@drawable/txt_select_selector</item>
+    </style>
+
+    <style name="BottomNavTextActive" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">10sp</item>
+        <item name="fontWeight">500</item>
+    </style>
+
+    <style name="BottomNavTextInactive" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <style name="BottomNavActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/md_active_indicator</item>
+        <item name="android:width">64dp</item>
+        <item name="android:height">32dp</item>
     </style>
 </resources>

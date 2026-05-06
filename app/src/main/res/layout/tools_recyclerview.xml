@@ -30,6 +30,6 @@
         android:lines="1"
         android:ellipsize="end"
         android:text="111111"
-        android:textSize="13dp"/>
+        android:textSize="13sp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
