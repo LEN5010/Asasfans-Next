@@ -286,6 +286,8 @@ public class TestActivity extends AppCompatActivity {
                 selectPage(1);
             } else if (itemId == R.id.nav_tools) {
                 selectPage(2);
+            } else if (itemId == R.id.nav_calendar) {
+                selectPage(3);
             } else if (itemId == R.id.nav_settings) {
                 drawerLayout.closeDrawer(GravityCompat.START);
                 startActivity(new Intent(TestActivity.this, ConfigActivity.class));
@@ -311,6 +313,9 @@ public class TestActivity extends AppCompatActivity {
         } else if (position == 2) {
             navigationView.setCheckedItem(R.id.nav_tools);
             topAppBar.setTitle(R.string.nav_tools);
+        } else if (position == 3) {
+            navigationView.setCheckedItem(R.id.nav_calendar);
+            topAppBar.setTitle(R.string.nav_calendar);
         }
     }
 

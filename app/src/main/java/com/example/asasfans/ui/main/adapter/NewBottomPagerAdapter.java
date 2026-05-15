@@ -11,7 +11,7 @@ import com.example.asasfans.ui.main.fragment.NullFragment;
 import com.example.asasfans.ui.main.fragment.WebFragment;
 
 public class NewBottomPagerAdapter extends FragmentStateAdapter {
-    private static final int TAB_COUNT = 3;
+    private static final int TAB_COUNT = 4;
     private static Object currentFragment;
 
     public NewBottomPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
@@ -28,6 +28,8 @@ public class NewBottomPagerAdapter extends FragmentStateAdapter {
                 return WebFragment.newInstance("https://studio.asoul.us.kg", true);
             case 2:
                 return NewToolsFragment.newInstance();
+            case 3:
+                return WebFragment.newInstance("https://asoul.love", true);
             default:
                 return NullFragment.newInstance();
         }
