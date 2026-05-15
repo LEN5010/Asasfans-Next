@@ -213,9 +213,10 @@ public class BiliVideoFragment extends Fragment {
                         Cursor cursor = db.query("blackTag",null,null,null,null,null,null);
                         List<String> blackTag = new ArrayList<>();
                         if (cursor.getCount() > 0) {
+                            int tagColumn = cursor.getColumnIndexOrThrow("tag");
                             while (cursor.moveToNext()) {
-                                blackTag.add(cursor.getString(cursor.getColumnIndex("tag")));
-                                Log.i("cursor.getCount()", cursor.getString(cursor.getColumnIndex("tag")));
+                                blackTag.add(cursor.getString(tagColumn));
+                                Log.i("cursor.getCount()", cursor.getString(tagColumn));
                             }
                         }
                         cursor.close();

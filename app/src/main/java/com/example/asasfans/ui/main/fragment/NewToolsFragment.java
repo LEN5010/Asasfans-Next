@@ -20,7 +20,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -30,7 +29,6 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.example.asasfans.AsApplication;
 import com.example.asasfans.R;
 import com.example.asasfans.util.ACache;
-import com.google.android.material.appbar.AppBarLayout;
 import com.orhanobut.dialogplus.DialogPlus;
 import com.orhanobut.dialogplus.ViewHolder;
 
@@ -205,11 +203,6 @@ public class NewToolsFragment extends Fragment {
         }
         updateFragment(currentIndex);
 
-        View emptyView = view.findViewById(R.id.emptyViewTools);
-        CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AsApplication.Companion.getStatusBarHeight());
-        emptyView.setLayoutParams(layoutParams);
-        AppBarLayout appBarLayout = view.findViewById(R.id.appBar);
-        appBarLayout.setPadding(0, AsApplication.Companion.getStatusBarHeight(),0,0);
         return view;
     }
 

@@ -1,27 +1,16 @@
 package com.example.asasfans;
 
-import static com.example.asasfans.service.MusicService.CLOSE;
-import static com.example.asasfans.service.MusicService.NEXT;
-import static com.example.asasfans.service.MusicService.PAUSE;
-import static com.example.asasfans.service.MusicService.PLAY;
-import static com.example.asasfans.service.MusicService.PREV;
-import static com.example.asasfans.service.MusicService.PROGRESS;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -40,18 +29,20 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.asasfans.data.GithubVersionBean;
 import com.example.asasfans.data.TabData;
-import com.example.asasfans.service.LiveDataBus;
-import com.example.asasfans.service.MusicService;
+import com.example.asasfans.ui.main.ConfigActivity;
 import com.example.asasfans.ui.main.adapter.NewBottomPagerAdapter;
 import com.example.asasfans.ui.main.fragment.NewToolsFragment;
 import com.example.asasfans.ui.main.fragment.WebFragment;
 import com.example.asasfans.util.ACache;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 import com.orhanobut.dialogplus.DialogPlus;
@@ -100,7 +91,9 @@ public class TestActivity extends AppCompatActivity {
     private DialogPlus dialog;
     private View dialogView;
 
-    private BottomNavigationView bottomNav;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
+    private MaterialToolbar topAppBar;
 
     private Handler mHandler = new Handler();
 
@@ -116,31 +109,13 @@ public class TestActivity extends AppCompatActivity {
             Manifest.permission.SYSTEM_ALERT_WINDOW,
             Manifest.permission.REORDER_TASKS,
             Manifest.permission.BLUETOOTH,
-            Manifest.permission.WAKE_LOCK,
-            Manifest.permission.POST_NOTIFICATIONS
+            Manifest.permission.WAKE_LOCK
     };
     List<String> mPermissionList = new ArrayList<>();
     private static final int PERMISSION_REQUEST = 1;
     private static final int REQUEST_DIALOG_PERMISSION = 2;
 
     public static Context contextTestActivity;
-
-    private MusicService.MusicBinder musicBinder;
-
-    private MusicService musicService;
-
-    public static Object studioFragment;
-
-    private Intent serviceIntent;
-
-    /**
-     * 当Service中通知栏有变化时接收到消息
-     */
-    private LiveDataBus.BusMutableLiveData<String> activityLiveData;
-    /**
-     * 当在Activity中做出播放状态的改变时，通知做出相应改变
-     */
-    private LiveDataBus.BusMutableLiveData<String> notificationLiveData;
 
     //试图解决锁屏后wlan休眠的问题，无效，寄了
     private PowerManager pm;
@@ -205,30 +180,23 @@ public class TestActivity extends AppCompatActivity {
 //        viewPager.setOffscreenPageLimit(4);
 //        tabs = findViewById(R.id.tabs_bottom);
 //        tabs.setupWithViewPager(viewPager);
-        bottomNav = findViewById(R.id.bottom_nav);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+        topAppBar = findViewById(R.id.top_app_bar);
+        configureTopAppBar();
+
         newBottomPagerAdapter = new NewBottomPagerAdapter(this);
         viewPager = findViewById(R.id.vp_content);
         viewPager.setAdapter(newBottomPagerAdapter);
         viewPager.setOffscreenPageLimit(3);
-
-        // Sync BottomNavigationView <-> ViewPager
-        bottomNav.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_video) {
-                viewPager.setCurrentItem(0, false);
-            } else if (itemId == R.id.nav_music) {
-                viewPager.setCurrentItem(1, false);
-            } else if (itemId == R.id.nav_tools) {
-                viewPager.setCurrentItem(2, false);
-            }
-            return true;
-        });
+        viewPager.setUserInputEnabled(false);
+        configureDrawerNavigation();
 
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
-                bottomNav.getMenu().getItem(position).setChecked(true);
+                updateNavigationState(position);
             }
         });
 
@@ -281,20 +249,7 @@ public class TestActivity extends AppCompatActivity {
                 }
             }
         }
-        NewBottomPagerAdapter adapter = (NewBottomPagerAdapter) viewPager.getAdapter();
-        if (adapter != null) {
-            viewPager.setCurrentItem(1, false);
-            studioFragment = getSupportFragmentManager().findFragmentByTag("f" + (1));
-        }
-        //绑定服务
-        serviceIntent = new Intent(contextTestActivity, MusicService.class);
-//        bindService(serviceIntent, connection, BIND_AUTO_CREATE);
-        startService(serviceIntent);
-//        startForegroundService(serviceIntent);
-        //通知栏的观察者
-        notificationObserver();
-        //控制通知栏
-        notificationLiveData = LiveDataBus.getInstance().with("notification_control", String.class);
+        selectPage(0);
 
     }
 
@@ -312,46 +267,51 @@ public class TestActivity extends AppCompatActivity {
 //        }
 //        RxDownLoadCenter.getInstance(aContext).loadTask();
 //    }
-    /**
-     * 通知栏动作观察者
-     */
-    private void notificationObserver() {
-        activityLiveData = LiveDataBus.getInstance().with("activity_control", String.class);
-        activityLiveData.observe(TestActivity.this, true, new Observer<String>() {
-            @Override
-            public void onChanged(String state) {
+    private void configureTopAppBar() {
+        int statusBarHeight = AsApplication.Companion.getStatusBarHeight();
+        ViewGroup.LayoutParams layoutParams = topAppBar.getLayoutParams();
+        layoutParams.height = (int) (56 * getResources().getDisplayMetrics().density) + statusBarHeight;
+        topAppBar.setLayoutParams(layoutParams);
+        topAppBar.setPadding(topAppBar.getPaddingLeft(), statusBarHeight, topAppBar.getPaddingRight(), topAppBar.getPaddingBottom());
+        topAppBar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+    }
 
-                switch (state) {
-                    case PLAY:
-//                        btnPlay.setIcon(getDrawable(R.mipmap.icon_pause));
-//                        btnPlay.setIconTint(getColorStateList(R.color.gold_color));
-//                        BLog.d(TAG,state);
-//                        changeUI(musicService.getPlayPosition());
-                        break;
-                    case PAUSE:
-                    case CLOSE:
-//                        btnPlay.setIcon(getDrawable(R.mipmap.icon_play));
-//                        btnPlay.setIconTint(getColorStateList(R.color.white));
-//                        changeUI(musicService.getPlayPosition());
-                        break;
-                    case PREV:
-//                        BLog.d(TAG, "上一曲");
-//                        changeUI(musicService.getPlayPosition());
-                        break;
-                    case NEXT:
-//                        BLog.d(TAG, "下一曲");
-//                        changeUI(musicService.getPlayPosition());
-                        break;
-                    case PROGRESS:
-                        //播放进度发生改变时,只改变进度，不改变其他
-//                        musicProgress.setProgress(musicService.mediaPlayer.getCurrentPosition(), musicService.mediaPlayer.getDuration());
-                        break;
-                    default:
-                        break;
-                }
-
+    private void configureDrawerNavigation() {
+        navigationView.setCheckedItem(R.id.nav_video);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_video) {
+                selectPage(0);
+            } else if (itemId == R.id.nav_music) {
+                selectPage(1);
+            } else if (itemId == R.id.nav_tools) {
+                selectPage(2);
+            } else if (itemId == R.id.nav_settings) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+                startActivity(new Intent(TestActivity.this, ConfigActivity.class));
+                return false;
             }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
         });
+    }
+
+    private void selectPage(int position) {
+        viewPager.setCurrentItem(position, false);
+        updateNavigationState(position);
+    }
+
+    private void updateNavigationState(int position) {
+        if (position == 0) {
+            navigationView.setCheckedItem(R.id.nav_video);
+            topAppBar.setTitle(R.string.nav_video);
+        } else if (position == 1) {
+            navigationView.setCheckedItem(R.id.nav_music);
+            topAppBar.setTitle(R.string.nav_music);
+        } else if (position == 2) {
+            navigationView.setCheckedItem(R.id.nav_tools);
+            topAppBar.setTitle(R.string.nav_tools);
+        }
     }
 
 //    public static HttpProxyCacheServer getProxy() {
@@ -364,29 +324,6 @@ public class TestActivity extends AppCompatActivity {
 //                .maxCacheSize(6 * 1024 * 1024)       // 1 Gb for cache
 //                .build();
 //    }
-    private ServiceConnection connection = new ServiceConnection() {
-
-        /**
-         * 连接服务
-         * @param name
-         * @param service
-         */
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            musicBinder = (MusicService.MusicBinder) service;
-            musicService = musicBinder.getService();
-            Log.i("onServiceConnected", "Service与Activity已连接");
-
-        }
-
-        //断开服务
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            musicBinder = null;
-        }
-    };
-
-
     private void initDialog(Context context){
         dialog = DialogPlus.newDialog(context)
                 .setContentHolder(new ViewHolder(R.layout.dialog_upgrade))
@@ -526,7 +463,12 @@ public class TestActivity extends AppCompatActivity {
      */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        mCurrentFragment = newBottomPagerAdapter.getCurrentFragment();
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        }
+
+        mCurrentFragment = getCurrentFragment();
 
         Log.i("instanceof", String.valueOf(mCurrentFragment instanceof WebFragment));
         Log.i("keyCode", String.valueOf(keyCode));
@@ -552,6 +494,14 @@ public class TestActivity extends AppCompatActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Nullable
+    private Fragment getCurrentFragment() {
+        if (viewPager == null) {
+            return null;
+        }
+        return getSupportFragmentManager().findFragmentByTag("f" + viewPager.getCurrentItem());
     }
 
     private void checkPermission() {
@@ -607,8 +557,6 @@ public class TestActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         floatHelper.release();
-        musicService.closeNotification();
-        stopService(serviceIntent);
         wl.release();
         wifiLock.release();
         Log.i("TestActivity", "onDestroy: ");
@@ -618,4 +566,3 @@ public class TestActivity extends AppCompatActivity {
 
 
 }
-

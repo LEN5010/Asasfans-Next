@@ -41,10 +41,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.asasfans.AsApplication;
 import com.example.asasfans.R;
-import com.example.asasfans.TestActivity;
-import com.example.asasfans.service.MusicService;
 import com.example.asasfans.ui.main.VideoProxyManager;
 import com.example.asasfans.util.SystemUtils;
 
@@ -154,9 +151,6 @@ public class WebFragment extends Fragment {
         //兼容状态栏
         if (inBottom) {
             view = inflater.inflate(R.layout.fragment_web, container, false);
-            View emptyView = view.findViewById(R.id.emptyViewWeb);
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AsApplication.Companion.getStatusBarHeight());
-            emptyView.setLayoutParams(layoutParams);
         }else {
             view = inflater.inflate(R.layout.fragment_tools_web, container, false);
         }
@@ -327,7 +321,6 @@ public class WebFragment extends Fragment {
                 super.onPageFinished(view, url);
                 progressBar.setVisibility(View.GONE);
                 if (inBottom){
-//                    MusicService.updateNotificationShow(0);
                     updateName();
                 }
             }
@@ -480,7 +473,6 @@ public class WebFragment extends Fragment {
                     public void onReceiveValue(String value) {
 //                        Log.i(SystemUtils.trimFirstAndLastChar(value, (char) 34), "getCurrentSongTime: ");
 //                        singerName = SystemUtils.trimFirstAndLastChar(value, (char) 34);
-//                        MusicService.updateNotificationShowName(songName, singerName);
                         currentSongTime = value;
                     }
                 });
@@ -494,7 +486,6 @@ public class WebFragment extends Fragment {
                     public void onReceiveValue(String value) {
                         Log.i(SystemUtils.trimFirstAndLastChar(value, (char) 34), "getSingerNameOnReceiveValue: ");
                         singerName = SystemUtils.trimFirstAndLastChar(value, (char) 34);
-                        MusicService.updateNotificationShowName(songName, singerName);
                     }
                 });
         webView.evaluateJavascript("document.getElementsByClassName(\"songName\")[0].childNodes[0].innerHTML;"
@@ -503,7 +494,6 @@ public class WebFragment extends Fragment {
                     public void onReceiveValue(String value) {
                         Log.i(SystemUtils.trimFirstAndLastChar(value, (char) 34), "getSingerNameOnReceiveValue: ");
                         songName = SystemUtils.trimFirstAndLastChar(value, (char) 34);
-                        MusicService.updateNotificationShowName(songName, singerName);
                     }
                 });
     }

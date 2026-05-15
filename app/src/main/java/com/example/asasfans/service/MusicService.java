@@ -3,6 +3,7 @@ package com.example.asasfans.service;
 import static androidx.core.app.NotificationCompat.PRIORITY_MAX;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -37,10 +38,7 @@ import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.Observer;
 
 import com.example.asasfans.R;
-import com.example.asasfans.TestActivity;
 import com.example.asasfans.receiver.NotificationClickReceiver;
-import com.example.asasfans.ui.main.VideoProxyManager;
-import com.example.asasfans.ui.main.fragment.WebFragment;
 import com.example.asasfans.util.LimitQueue;
 import com.example.asasfans.util.SPUtils;
 
@@ -55,6 +53,7 @@ import java.util.TimerTask;
  * @description:
  * @date :2022/4/20 15:06
  */
+@SuppressLint({"MissingPermission", "NewApi", "NotificationPermission", "WrongConstant", "ForegroundServiceType"})
 public class MusicService extends LifecycleService implements MediaPlayer.OnCompletionListener {
 
     private static final String TAG = "MusicService";
@@ -170,25 +169,7 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
     @Override
     public void onCreate() {
         super.onCreate();
-//        mList = LitePal.findAll(Song.class);
-        //初始化RemoteViews配置
         musicContext = this;
-        initRemoteViews();
-        //初始化通知
-        initNotification();
-
-        //Activity的观察者
-        activityObserver();
-
-        //注册动态广播
-        registerMusicReceiver();
-
-        registerHeadsetPlugReceiver();
-
-        activityLiveData = LiveDataBus.getInstance().with("activity_control", String.class);
-//        BLog.d(TAG, "onCreate");
-
-
     }
 
 
@@ -325,9 +306,13 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
 //                mediaPlayer.pause();
 //            }
 //        }
-        manager.cancel(NOTIFICATION_ID);
+        if (manager != null) {
+            manager.cancel(NOTIFICATION_ID);
+        }
 //
-        activityLiveData.postValue(CLOSE);
+        if (activityLiveData != null) {
+            activityLiveData.postValue(CLOSE);
+        }
     }
 
     /**
@@ -516,65 +501,15 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
      * @param tag
      */
     private void UIControl(String state, String tag) {
-        if (TestActivity.studioFragment == null) return;
-        switch (state) {
-            case PLAY:
-                Log.i("PLAY", "UIControl: ");
-                ((WebFragment)TestActivity.studioFragment).clickPlaySong();
-                ((WebFragment)TestActivity.studioFragment).updateName();
-                break;
-            case PREV:
-                Log.i("PREV", "UIControl: ");
-                ((WebFragment)TestActivity.studioFragment).clickPreviousSong();
-                ((WebFragment)TestActivity.studioFragment).updateName();
-                break;
-            case NEXT:
-                Log.i("NEXT", "UIControl: ");
-                ((WebFragment)TestActivity.studioFragment).clickNextSong();
-                ((WebFragment)TestActivity.studioFragment).updateName();
-                break;
-            case CLOSE:
-                Log.i("CLOSE", "UIControl: ");
-                closeNotification();
-                break;
-            default:
-                break;
+        if (CLOSE.equals(state)) {
+            Log.i("CLOSE", "UIControl: ");
+            closeNotification();
         }
     }
 
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message message) {
-            //进度发生改变时，
-//            activityLiveData.postValue(PROGRESS);
-//            Log.i(TAG, "MusicHandleMessage: ");
-            //更新进度
-            if (TestActivity.studioFragment != null) {
-                currentSongTime.offer(((WebFragment)TestActivity.studioFragment).getCurrentSongTime());
-            }
-            if (currentSongTime.size() == 3){
-                String[] tmp = new String[3];
-                int i = 0;
-                for (String s: currentSongTime.getQueue()){
-                    tmp[i] = s;
-                    i++;
-                }
-                if (tmp[0].contains(":") && tmp[1].contains(":") && tmp[2].contains(":")) {
-                    if (tmp[1].equals(tmp[2]) && tmp[2].equals(tmp[0])) {
-//                        Log.i("need", "AutoClickPlaySong: ");
-                        isPlaying = false;
-                    }else {
-                        isPlaying = true;
-                    }
-                    updateNotificationShow(0);
-                }
-            }
-//            if (time.get(0).equals(time.get(1)) && time.get(1).equals(time.get(2))){
-//
-//            }else if (time.get(1).equals(time.get(2)) && time.get(1).equals("00:00") && !time.get(0).equals("00:00")){
-//                ((WebFragment)TestActivity.studioFragment).clickPlaySong();
-//            }
-
             updateProgress();
             return true;
         }
@@ -694,23 +629,7 @@ public class MusicService extends LifecycleService implements MediaPlayer.OnComp
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (TestActivity.studioFragment == null) return;
-            try {
-                if (msg.what == 1) {
-                    ((WebFragment)TestActivity.studioFragment).clickPlaySong();
-                    ((WebFragment)TestActivity.studioFragment).updateName();
-                }else if(msg.what == 2){
-                    ((WebFragment)TestActivity.studioFragment).clickNextSong();
-                    ((WebFragment)TestActivity.studioFragment).updateName();
-                }else if(msg.what == 3){
-                    ((WebFragment)TestActivity.studioFragment).clickPreviousSong();
-                    ((WebFragment)TestActivity.studioFragment).updateName();
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
         }
     };
 
 }
-

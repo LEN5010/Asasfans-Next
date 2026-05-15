@@ -129,14 +129,16 @@ public class BlacklistTabsFragment extends Fragment {
                         Cursor cursor;
                         cursor = sqliteDatabase.query("blackMid",null,null,null,null,null,null);
                         if (cursor.getCount() > 0) {
+                            int midColumn = cursor.getColumnIndexOrThrow("mid");
                             while (cursor.moveToNext()) {
-                                mid.add(cursor.getString(cursor.getColumnIndex("mid")));
+                                mid.add(cursor.getString(midColumn));
                             }
                         }
                         cursor = sqliteDatabase.query("blackTag",null,null,null,null,null,null);
                         if (cursor.getCount() > 0) {
+                            int tagColumn = cursor.getColumnIndexOrThrow("tag");
                             while (cursor.moveToNext()) {
-                                tag.add(cursor.getString(cursor.getColumnIndex("tag")));
+                                tag.add(cursor.getString(tagColumn));
                             }
                         }
                         sqliteDatabase.close();

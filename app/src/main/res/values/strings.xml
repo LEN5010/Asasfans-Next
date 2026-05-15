@@ -10,6 +10,11 @@
     <string name="tab_bottom_1">视频</string>
     <string name="tab_bottom_2">枝网查重</string>
     <string name="tab_bottom_3">暂时没活</string>
+    <string name="nav_video">视频</string>
+    <string name="nav_music">音乐</string>
+    <string name="nav_tools">工具</string>
+    <string name="nav_settings">设置</string>
+    <string name="nav_header_subtitle">视频、音乐和工具</string>
 
 
     <string name="dont_want_to_see_this_up">我不想再看到这个up主</string>

@@ -37,8 +37,9 @@ public class BlacklistPagerAdapter extends FragmentStateAdapter {
                 name = new ArrayList<>();
                 cursor = sqliteDatabase.query("blackBvid",null,null,null,null,null,null);
                 if (cursor.getCount() > 0) {
+                    int titleColumn = cursor.getColumnIndexOrThrow("Title");
                     while (cursor.moveToNext()) {
-                        name.add(cursor.getString(cursor.getColumnIndex("Title")));
+                        name.add(cursor.getString(titleColumn));
                     }
                 }
                 sqliteDatabase.close();
@@ -48,8 +49,9 @@ public class BlacklistPagerAdapter extends FragmentStateAdapter {
                 name = new ArrayList<>();
                 cursor = sqliteDatabase.query("blackMid",null,null,null,null,null,null);
                 if (cursor.getCount() > 0) {
+                    int midColumn = cursor.getColumnIndexOrThrow("mid");
                     while (cursor.moveToNext()) {
-                        name.add(cursor.getString(cursor.getColumnIndex("mid")));
+                        name.add(cursor.getString(midColumn));
                     }
                 }
                 sqliteDatabase.close();
@@ -59,8 +61,9 @@ public class BlacklistPagerAdapter extends FragmentStateAdapter {
                 name = new ArrayList<>();
                 cursor = sqliteDatabase.query("blackTag",null,null,null,null,null,null);
                 if (cursor.getCount() > 0) {
+                    int tagColumn = cursor.getColumnIndexOrThrow("tag");
                     while (cursor.moveToNext()) {
-                        name.add(cursor.getString(cursor.getColumnIndex("tag")));
+                        name.add(cursor.getString(tagColumn));
                     }
                 }
                 sqliteDatabase.close();

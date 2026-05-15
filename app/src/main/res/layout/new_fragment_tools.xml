@@ -3,15 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:id="@+id/emptyViewTools"
-        android:elevation="5dp"
-        android:outlineProvider="none"
-        android:background="@color/tab_text_normal"/>
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
+        android:background="?attr/colorSurface"
         android:theme="@style/AppTheme"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -41,7 +36,7 @@
                 android:id="@+id/title"
                 android:text="标题"
                 android:textSize="18sp"
-                android:textColor="@color/cardWhite"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="4dp"

@@ -60,16 +60,24 @@ public class BlackListActivity extends AppCompatActivity {
         SQLiteDatabase sqliteDatabase = dbOpenHelper.getReadableDatabase();
         Cursor cursor = sqliteDatabase.query("blackBvid",null,null,null,null,null,null);
         if (cursor.getCount() > 0) {
+            int picUrlColumn = cursor.getColumnIndexOrThrow("PicUrl");
+            int titleColumn = cursor.getColumnIndexOrThrow("Title");
+            int durationColumn = cursor.getColumnIndexOrThrow("Duration");
+            int authorColumn = cursor.getColumnIndexOrThrow("Author");
+            int viewNumColumn = cursor.getColumnIndexOrThrow("ViewNum");
+            int likeNumColumn = cursor.getColumnIndexOrThrow("LikeNum");
+            int tnameColumn = cursor.getColumnIndexOrThrow("Tname");
+            int bvidColumn = cursor.getColumnIndexOrThrow("bvid");
             while (cursor.moveToNext()) {
                 videoDataStoragedInMemoryList.add(new VideoDataStoragedInMemory(
-                        cursor.getString(cursor.getColumnIndex("PicUrl")),
-                        cursor.getString(cursor.getColumnIndex("Title")),
-                        cursor.getInt(cursor.getColumnIndex("Duration")),
-                        cursor.getString(cursor.getColumnIndex("Author")),
-                        cursor.getInt(cursor.getColumnIndex("ViewNum")),
-                        cursor.getInt(cursor.getColumnIndex("LikeNum")),
-                        cursor.getString(cursor.getColumnIndex("Tname")),
-                        cursor.getString(cursor.getColumnIndex("bvid")),
+                        cursor.getString(picUrlColumn),
+                        cursor.getString(titleColumn),
+                        cursor.getInt(durationColumn),
+                        cursor.getString(authorColumn),
+                        cursor.getInt(viewNumColumn),
+                        cursor.getInt(likeNumColumn),
+                        cursor.getString(tnameColumn),
+                        cursor.getString(bvidColumn),
                         true
                 ));
             }

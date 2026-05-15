@@ -65,6 +65,10 @@
                 android:textColor="@color/cardWhite"
                 android:textSize="15sp"
                 app:cornerRadius="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 android:backgroundTint="@color/cardBlue" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 

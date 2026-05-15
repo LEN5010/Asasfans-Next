@@ -8,7 +8,6 @@ import android.util.Log;
 import com.danikula.videocache.HttpProxyCacheServer;
 import com.danikula.videocache.file.FileNameGenerator;
 import com.example.asasfans.TestActivity;
-import com.example.asasfans.service.MusicService;
 
 import java.util.List;
 
