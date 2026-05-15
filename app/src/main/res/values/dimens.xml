@@ -5,4 +5,6 @@
     <dimen name="appbar_padding">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="appbar_padding_top">8dp</dimen>
+    <dimen name="bili_detail_title_text_min">14sp</dimen>
+    <dimen name="bili_detail_title_text_max">18sp</dimen>
 </resources>

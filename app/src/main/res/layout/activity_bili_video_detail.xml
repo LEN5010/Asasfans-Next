@@ -12,7 +12,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-        app:navigationIcon="@drawable/icon_back_white"
+        app:navigationIcon="@drawable/ic_arrow_back_24"
         app:navigationIconTint="?attr/colorOnPrimary"
         app:title="@string/bili_video_detail"
         app:titleTextColor="?attr/colorOnPrimary">
@@ -53,10 +53,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:includeFontPadding="false"
             android:maxLines="2"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="@dimen/bili_detail_title_text_max"
+            android:textStyle="bold"
+            app:autoSizeMaxTextSize="@dimen/bili_detail_title_text_max"
+            app:autoSizeMinTextSize="@dimen/bili_detail_title_text_min"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform" />
 
         <LinearLayout
             android:layout_width="match_parent"
