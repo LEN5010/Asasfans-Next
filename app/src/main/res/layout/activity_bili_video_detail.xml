@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/bili_detail_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
+        app:navigationIcon="@drawable/icon_back_white"
+        app:navigationIconTint="?attr/colorOnPrimary"
+        app:title="@string/bili_video_detail"
+        app:titleTextColor="?attr/colorOnPrimary">
+
+        <TextView
+            android:id="@+id/bili_open_external"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:text="@string/bili_open_in_bilibili"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp" />
+    </com.google.android.material.appbar.MaterialToolbar>
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="@android:color/black"
+        app:resize_mode="fit"
+        app:show_buffering="when_playing"
+        app:use_controller="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="14dp"
+        android:paddingTop="12dp"
+        android:paddingRight="14dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/bili_detail_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/bili_detail_owner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/cardGray"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/bili_detail_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/bili_page_spinner"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1" />
+
+            <Spinner
+                android:id="@+id/bili_quality_spinner"
+                android:layout_width="116dp"
+                android:layout_height="42dp"
+                android:layout_marginLeft="10dp" />
+
+            <Spinner
+                android:id="@+id/bili_comment_sort_spinner"
+                android:layout_width="128dp"
+                android:layout_height="42dp"
+                android:layout_marginLeft="10dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/bili_comment_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/bili_comments_loading"
+            android:textColor="@color/cardGray"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/bili_comments_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="12dp" />
+</LinearLayout>
