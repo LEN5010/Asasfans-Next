@@ -94,6 +94,22 @@
         android:background="@color/cardGray"
         />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/dialog_open_bili"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:background="@color/cardWhite"
+        android:text="@string/bili_open_in_bilibili" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/dialog_subscribe_up"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:background="@color/cardWhite"
+        android:text="@string/subscribe_this_up" />
+
     <com.google.android.flexbox.FlexboxLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"

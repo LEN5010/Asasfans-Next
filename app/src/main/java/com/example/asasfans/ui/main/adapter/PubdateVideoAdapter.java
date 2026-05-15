@@ -28,6 +28,7 @@ import com.example.asasfans.R;
 import com.example.asasfans.data.AdvancedSearchDataBean;
 import com.example.asasfans.data.DBOpenHelper;
 import com.example.asasfans.data.VideoDataStoragedInMemory;
+import com.example.asasfans.ui.bili.BiliVideoDetailActivity;
 import com.google.android.flexbox.FlexboxLayout;
 import coil.Coil;
 import coil.request.ImageRequest;
@@ -111,6 +112,68 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
         return res;
     }
 
+    private void openVideoDetail(int position) {
+        if (!isValidPosition(position)) {
+            return;
+        }
+        AdvancedSearchDataBean.DataBean.ResultBean video = resultBeans.get(position);
+        Intent intent = new Intent(mContext, BiliVideoDetailActivity.class);
+        intent.putExtra(BiliVideoDetailActivity.EXTRA_BVID, video.getBvid());
+        intent.putExtra(BiliVideoDetailActivity.EXTRA_TITLE, video.getTitle());
+        intent.putExtra(BiliVideoDetailActivity.EXTRA_COVER, video.getPic());
+        intent.putExtra(BiliVideoDetailActivity.EXTRA_OWNER, video.getName());
+        mContext.startActivity(intent);
+    }
+
+    private void openExternalVideo(int position) {
+        if (!isValidPosition(position)) {
+            return;
+        }
+        String bvid = resultBeans.get(position).getBvid();
+        try {
+            Intent it = new Intent();
+            it.setAction(Intent.ACTION_VIEW);
+            it.setData(Uri.parse("bilibili://video/" + bvid));
+            mContext.startActivity(it);
+        } catch (Exception e) {
+            ClipboardManager cm = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData mClipData = ClipData.newPlainText("bvid", bvid);
+            cm.setPrimaryClip(mClipData);
+            Toast.makeText(mContext, "没有找到或无法用bilibili打开，尝试采用浏览器打开", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent();
+            intent.setAction("android.intent.action.VIEW");
+            Uri contentUrl = Uri.parse("https://www.bilibili.com/video/" + bvid);
+            intent.setData(contentUrl);
+            mContext.startActivity(intent);
+        }
+    }
+
+    private void subscribeUp(int position) {
+        if (!isValidPosition(position)) {
+            return;
+        }
+        AdvancedSearchDataBean.DataBean.ResultBean video = resultBeans.get(position);
+        DBOpenHelper dbOpenHelper = new DBOpenHelper(mContext,"blackList.db",null,DBOpenHelper.DB_VERSION);
+        SQLiteDatabase sqliteDatabase = dbOpenHelper.getWritableDatabase();
+        try {
+            ContentValues values = new ContentValues();
+            values.put("mid", video.getMid());
+            values.put("name", video.getName());
+            values.put("face", "");
+            values.put("note", "");
+            values.put("updatedAt", System.currentTimeMillis() / 1000);
+            sqliteDatabase.insertWithOnConflict("subscribedUp", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            Toast.makeText(mContext, "订阅UP成功", Toast.LENGTH_SHORT).show();
+        } finally {
+            sqliteDatabase.close();
+            dbOpenHelper.close();
+        }
+    }
+
+    private boolean isValidPosition(int position) {
+        return position != RecyclerView.NO_POSITION && position >= 0 && position < resultBeans.size();
+    }
+
 
     @NonNull
     @Override
@@ -123,6 +186,8 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                 AppCompatButton blacklistVideo =  dialogView.findViewById(R.id.dialog_black_list);
                 AppCompatButton blacklistAuthor =  dialogView.findViewById(R.id.dialog_black_list_add_author);
                 AppCompatButton blacklistTag =  dialogView.findViewById(R.id.dialog_black_list_add_tag);
+                AppCompatButton openBili = dialogView.findViewById(R.id.dialog_open_bili);
+                AppCompatButton subscribeUpButton = dialogView.findViewById(R.id.dialog_subscribe_up);
                 FlexboxLayout flexboxLayout = dialogView.findViewById(R.id.dialog_black_list_tag_flexbox);
                 TextView videoUpdateTime = dialogView.findViewById(R.id.video_update_time);
                 TextView dialog_black_list_video_desc = dialogView.findViewById(R.id.dialog_black_list_video_desc);
@@ -182,6 +247,20 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                         dialog.dismiss();
                     }
                 });
+                openBili.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        openExternalVideo(videoViewHolder.getBindingAdapterPosition());
+                        dialog.dismiss();
+                    }
+                });
+                subscribeUpButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        PubdateVideoAdapter.this.subscribeUp(videoViewHolder.getBindingAdapterPosition());
+                        dialog.dismiss();
+                    }
+                });
                 blacklistAuthor.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -221,8 +300,8 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                         }else {
 
                             for (String tmp : tags){
-                                values.put("tag", tmp);
-                                sqliteDatabase.insert("blackTag", null, values);
+                                values.put("word", tmp);
+                                sqliteDatabase.insertWithOnConflict("blackWord", null, values, SQLiteDatabase.CONFLICT_IGNORE);
                                 Log.i("blacklistTag", tmp);
                             }
 
@@ -246,32 +325,7 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(mContext,mResultBean.get(videoViewHolder.getBindingAdapterPosition()).getBvid(),Toast.LENGTH_SHORT).show();
-               //跳转到特定包名app
-//                PackageManager packageManager = mContext.getPackageManager();
-//                Intent intent = packageManager.getLaunchIntentForPackage(PackageName);
-//                if (intent != null) {
-                try {
-                    Intent it = new Intent();
-                    it.setAction(Intent.ACTION_VIEW);
-                    it.setData(Uri.parse("bilibili://video/" + resultBeans.get(videoViewHolder.getBindingAdapterPosition()).getBvid()));
-                    mContext.startActivity(it);
-                }
-//                }else {
-                catch (Exception e){
-//                    Toast.makeText(mContext,"没有找到bilibili，已复制bv号",Toast.LENGTH_SHORT).show();
-                    //获取剪贴板管理器：
-                    ClipboardManager cm = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData mClipData = ClipData.newPlainText("bvid", resultBeans.get(videoViewHolder.getBindingAdapterPosition()).getBvid());
-                    cm.setPrimaryClip(mClipData);
-                    Toast.makeText(mContext,"没有找到或无法用bilibili打开，尝试采用浏览器打开", Toast.LENGTH_LONG).show();
-                    Intent intent= new Intent();
-                    intent.setAction("android.intent.action.VIEW");
-                    Uri content_url = Uri.parse("https://www.bilibili.com/video/" + resultBeans.get(videoViewHolder.getBindingAdapterPosition()).getBvid());
-                    intent.setData(content_url);
-                    mContext.startActivity(intent);
-                }
-
+                openVideoDetail(videoViewHolder.getBindingAdapterPosition());
             }
         });
         view.setOnLongClickListener(new View.OnLongClickListener() {
@@ -285,6 +339,8 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                 AppCompatButton blacklistVideo =  dialogView.findViewById(R.id.dialog_black_list);
                 AppCompatButton blacklistAuthor =  dialogView.findViewById(R.id.dialog_black_list_add_author);
                 AppCompatButton blacklistTag =  dialogView.findViewById(R.id.dialog_black_list_add_tag);
+                AppCompatButton openBili = dialogView.findViewById(R.id.dialog_open_bili);
+                AppCompatButton subscribeUpButton = dialogView.findViewById(R.id.dialog_subscribe_up);
                 FlexboxLayout flexboxLayout = dialogView.findViewById(R.id.dialog_black_list_tag_flexbox);
                 TextView videoUpdateTime = dialogView.findViewById(R.id.video_update_time);
                 TextView dialog_black_list_video_desc = dialogView.findViewById(R.id.dialog_black_list_video_desc);
@@ -344,6 +400,20 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                         dialog.dismiss();
                     }
                 });
+                openBili.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        openExternalVideo(videoViewHolder.getBindingAdapterPosition());
+                        dialog.dismiss();
+                    }
+                });
+                subscribeUpButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        PubdateVideoAdapter.this.subscribeUp(videoViewHolder.getBindingAdapterPosition());
+                        dialog.dismiss();
+                    }
+                });
                 blacklistAuthor.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -383,8 +453,8 @@ public class PubdateVideoAdapter extends RecyclerView.Adapter<VideoViewHolder> {
                         }else {
 
                             for (String tmp : tags){
-                                values.put("tag", tmp);
-                                sqliteDatabase.insert("blackTag", null, values);
+                                values.put("word", tmp);
+                                sqliteDatabase.insertWithOnConflict("blackWord", null, values, SQLiteDatabase.CONFLICT_IGNORE);
                                 Log.i("blacklistTag", tmp);
                             }
 

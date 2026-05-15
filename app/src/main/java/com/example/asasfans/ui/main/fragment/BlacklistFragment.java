@@ -7,14 +7,11 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.example.asasfans.AsApplication;
 import com.example.asasfans.R;
 import com.example.asasfans.ui.main.adapter.BlacklistPagerAdapter;
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -36,12 +33,6 @@ public class BlacklistFragment extends Fragment {
         viewPager.setOffscreenPageLimit(3);
         TabLayout tabs = view.findViewById(R.id.tabs);
         new TabLayoutMediator(tabs, viewPager, (tab, position) -> tab.setText(blacklistPagerAdapter.getPageTitle(position))).attach();
-
-        View emptyView = view.findViewById(R.id.emptyViewMain);
-        CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AsApplication.Companion.getStatusBarHeight());
-        emptyView.setLayoutParams(layoutParams);
-        AppBarLayout appBarLayout = view.findViewById(R.id.appBar);
-        appBarLayout.setPadding(0, AsApplication.Companion.getStatusBarHeight(), 0, 0);
         return view;
     }
 }

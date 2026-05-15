@@ -4,7 +4,7 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace "com.example.asasfans"
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.example.asasfans"
@@ -60,6 +60,12 @@ dependencies {
 
     // Coil - modern image loading
     implementation 'io.coil-kt:coil:2.6.0'
+
+    implementation "androidx.media3:media3-exoplayer:1.10.0"
+    implementation "androidx.media3:media3-ui:1.10.0"
+    implementation "androidx.media3:media3-datasource-okhttp:1.10.0"
+    implementation "androidx.security:security-crypto:1.1.0"
+    implementation "com.google.zxing:core:3.5.4"
 
     implementation 'com.orhanobut:dialogplus:1.11@aar'
 

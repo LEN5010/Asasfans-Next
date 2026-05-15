@@ -5,13 +5,15 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+import com.example.asasfans.ui.bili.BiliAccountFragment;
 import com.example.asasfans.ui.main.fragment.MainFragment;
+import com.example.asasfans.ui.main.fragment.BlacklistFragment;
 import com.example.asasfans.ui.main.fragment.NewToolsFragment;
 import com.example.asasfans.ui.main.fragment.NullFragment;
 import com.example.asasfans.ui.main.fragment.WebFragment;
 
 public class NewBottomPagerAdapter extends FragmentStateAdapter {
-    private static final int TAB_COUNT = 4;
+    private static final int TAB_COUNT = 6;
     private static Object currentFragment;
 
     public NewBottomPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
@@ -30,6 +32,10 @@ public class NewBottomPagerAdapter extends FragmentStateAdapter {
                 return NewToolsFragment.newInstance();
             case 3:
                 return WebFragment.newInstance("https://asoul.love", true);
+            case 4:
+                return BiliAccountFragment.newInstance();
+            case 5:
+                return BlacklistFragment.newInstance();
             default:
                 return NullFragment.newInstance();
         }

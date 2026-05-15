@@ -2,7 +2,6 @@
     <string name="app_name">AsAsFans</string>
     <string name="tab_text_1">AU热门</string>
     <string name="tab_text_2">最新发布</string>
-    <string name="tab_text_3">历史推荐</string>
     <string name="tab_text_4">热门二创</string>
     <string name="tab_text_5">热门切片</string>
 
@@ -14,8 +13,10 @@
     <string name="nav_music">音乐</string>
     <string name="nav_tools">工具</string>
     <string name="nav_calendar">日历</string>
+    <string name="nav_account">账号</string>
+    <string name="nav_lists">名单管理</string>
     <string name="nav_settings">设置</string>
-    <string name="nav_header_subtitle">视频、音乐、工具和日历</string>
+    <string name="nav_header_subtitle">视频、账号、音乐、工具、日历和名单</string>
 
 
     <string name="dont_want_to_see_this_up">我不想再看到这个up主</string>
@@ -25,4 +26,31 @@
     <string name="release_date">发布时间</string>
     <string name="video_description">视频简介</string>
     <string name="block_options">屏蔽选项</string>
+    <string name="subscribe_this_up">订阅该UP</string>
+    <string name="bili_account">Bilibili账号</string>
+    <string name="bili_account_not_logged_in">未登录</string>
+    <string name="bili_account_logged_in">已登录：%1$s</string>
+    <string name="bili_account_expired">登录已过期</string>
+    <string name="bili_scan_login">扫码登录</string>
+    <string name="bili_qr_login">二维码登录</string>
+    <string name="bili_password_login">密码登录</string>
+    <string name="bili_qr_loading">正在获取二维码</string>
+    <string name="bili_qr_wait_scan">请使用哔哩哔哩客户端扫码</string>
+    <string name="bili_qr_wait_confirm">已扫码，请在手机确认登录</string>
+    <string name="bili_qr_expired">二维码已过期，请刷新</string>
+    <string name="bili_login_success">登录成功</string>
+    <string name="bili_login_failed">登录失败</string>
+    <string name="bili_refresh_qr">刷新二维码</string>
+    <string name="bili_logout">退出登录</string>
+    <string name="bili_video_detail">视频详情</string>
+    <string name="bili_open_in_bilibili">用B站打开</string>
+    <string name="bili_open_failed">无法打开外部 B 站</string>
+    <string name="bili_play_loading">正在获取播放地址</string>
+    <string name="bili_play_mp4_fallback">DASH 播放失败，正在尝试 MP4</string>
+    <string name="bili_play_failed">播放地址获取失败</string>
+    <string name="bili_comments_loading">评论加载中</string>
+    <string name="bili_comments_empty">暂无评论</string>
+    <string name="bili_comments_closed">评论区已关闭</string>
+    <string name="bili_comments_load_more">正在加载更多评论</string>
+    <string name="bili_comment_avatar">评论头像</string>
 </resources>

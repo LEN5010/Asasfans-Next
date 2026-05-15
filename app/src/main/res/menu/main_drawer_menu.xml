@@ -8,6 +8,10 @@
             android:icon="@drawable/ic_video_dark"
             android:title="@string/nav_video" />
         <item
+            android:id="@+id/nav_account"
+            android:icon="@drawable/ic_bili_up"
+            android:title="@string/nav_account" />
+        <item
             android:id="@+id/nav_music"
             android:icon="@drawable/ic_music_dark"
             android:title="@string/nav_music" />
@@ -19,6 +23,10 @@
             android:id="@+id/nav_calendar"
             android:icon="@drawable/ic_calendar_24"
             android:title="@string/nav_calendar" />
+        <item
+            android:id="@+id/nav_lists"
+            android:icon="@drawable/icon_blacklist"
+            android:title="@string/nav_lists" />
     </group>
 
     <item

@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class SectionsPagerAdapter extends FragmentStateAdapter {
 
     @StringRes
-    private static final int[] TAB_TITLES = new int[]{ R.string.tab_text_4, R.string.tab_text_5, R.string.tab_text_2, R.string.tab_text_3};
+    private static final int[] TAB_TITLES = new int[]{ R.string.tab_text_4, R.string.tab_text_5, R.string.tab_text_2};
     private final Context mContext;
 
     public SectionsPagerAdapter(Fragment fragment) {
@@ -37,8 +37,6 @@ public class SectionsPagerAdapter extends FragmentStateAdapter {
                         new QConstructor.QArray("pubdate", Arrays.asList(String.valueOf(System.currentTimeMillis()/1000 - 3 * ACache.TIME_DAY), String.valueOf(System.currentTimeMillis()/1000)), "BETWEEN").toString(), "2", "").getUrl());
             case 2:
                 return BiliVideoFragment.newInstance(new ApiConfig("pubdate", 1, "", "", "").getUrl());
-            case 3:
-                return BiliVideoFragment.newInstance(new ApiConfig("score", 1, "", "", "").getUrl());
             default:
                 return NullFragment.newInstance();
         }

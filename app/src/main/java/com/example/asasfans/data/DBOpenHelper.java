@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import androidx.annotation.Nullable;
 
 public class DBOpenHelper extends SQLiteOpenHelper {
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public DBOpenHelper(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -22,6 +22,7 @@ public class DBOpenHelper extends SQLiteOpenHelper {
         //version2 建两个新表
         sqLiteDatabase.execSQL("create table if not exists blackMid(mid integer primary key NOT NULL UNIQUE)");
         sqLiteDatabase.execSQL("create table if not exists blackTag(tag Text primary key NOT NULL UNIQUE)");
+        createVersion3Tables(sqLiteDatabase);
     }
 
     @Override
@@ -30,5 +31,14 @@ public class DBOpenHelper extends SQLiteOpenHelper {
             //建两个新表
             onCreate(sqLiteDatabase);
         }
+        if (i < 3) {
+            createVersion3Tables(sqLiteDatabase);
+            sqLiteDatabase.execSQL("insert or ignore into blackWord(word) select tag from blackTag where tag is not null and tag != ''");
+        }
+    }
+
+    private void createVersion3Tables(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.execSQL("create table if not exists blackWord(word TEXT primary key NOT NULL UNIQUE)");
+        sqLiteDatabase.execSQL("create table if not exists subscribedUp(mid integer primary key NOT NULL UNIQUE, name TEXT, face TEXT, note TEXT, updatedAt integer)");
     }
 }

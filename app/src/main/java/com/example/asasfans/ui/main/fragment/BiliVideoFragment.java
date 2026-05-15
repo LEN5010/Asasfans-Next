@@ -24,6 +24,7 @@ import com.example.asasfans.R;
 import com.example.asasfans.data.AdvancedSearchDataBean;
 import com.example.asasfans.data.DBOpenHelper;
 import com.example.asasfans.data.VideoDataStoragedInMemory;
+import com.example.asasfans.data.VideoListRules;
 import com.example.asasfans.ui.customcomponent.RecyclerViewDecoration;
 import com.example.asasfans.ui.main.adapter.PubdateVideoAdapter;
 import com.example.asasfans.util.ApiConfig;
@@ -32,8 +33,10 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -210,33 +213,41 @@ public class BiliVideoFragment extends Fragment {
                         dbOpenHelper = new DBOpenHelper(getActivity(),
                                 "blackList.db", null, DBOpenHelper.DB_VERSION);
                         db = dbOpenHelper.getReadableDatabase();
-                        Cursor cursor = db.query("blackTag",null,null,null,null,null,null);
-                        List<String> blackTag = new ArrayList<>();
+                        Cursor cursor = db.query("blackWord",null,null,null,null,null,null);
+                        List<String> blackWords = new ArrayList<>();
                         if (cursor.getCount() > 0) {
-                            int tagColumn = cursor.getColumnIndexOrThrow("tag");
+                            int wordColumn = cursor.getColumnIndexOrThrow("word");
                             while (cursor.moveToNext()) {
-                                blackTag.add(cursor.getString(tagColumn));
-                                Log.i("cursor.getCount()", cursor.getString(tagColumn));
+                                blackWords.add(cursor.getString(wordColumn));
+                                Log.i("blackWord", cursor.getString(wordColumn));
+                            }
+                        }
+                        cursor.close();
+                        cursor = db.query("subscribedUp",null,null,null,null,null,null);
+                        Set<Long> subscribedMids = new HashSet<>();
+                        if (cursor.getCount() > 0) {
+                            int midColumn = cursor.getColumnIndexOrThrow("mid");
+                            while (cursor.moveToNext()) {
+                                subscribedMids.add(cursor.getLong(midColumn));
                             }
                         }
                         cursor.close();
                         int addVideoCount = 0;
+                        List<AdvancedSearchDataBean.DataBean.ResultBean> visiblePageBeans = new ArrayList<>();
                         for (int i = 0; i < allResultBeans.size(); i++){
-                            List currentTag = Arrays.asList(PubdateVideoAdapter.tagFormat(allResultBeans.get(i).getTag()));
-                            List<String> tmpBlackTag = new ArrayList<>();
-                            tmpBlackTag.addAll(blackTag);
-                            tmpBlackTag.retainAll(currentTag);
-                            boolean tmp = false;
-                            if (tmpBlackTag.size() > 0){
-                                tmp = true;
-                            }
-                            if (!searchInSQL(db, allResultBeans.get(i).getBvid(), "blackBvid", "bvid") &&
-                                    !searchInSQL(db, String.valueOf(allResultBeans.get(i).getMid()), "blackMid", "mid") &&
-                                    !tmp) {
-                                resultBeans.add(allResultBeans.get(i));
+                            AdvancedSearchDataBean.DataBean.ResultBean bean = allResultBeans.get(i);
+                            boolean matchesBlackWord = VideoListRules.matchesBlackWord(
+                                    bean.getTitle(), bean.getDesc(), bean.getTag(), bean.getTname(), blackWords);
+                            if (!searchInSQL(db, bean.getBvid(), "blackBvid", "bvid") &&
+                                    !searchInSQL(db, String.valueOf(bean.getMid()), "blackMid", "mid") &&
+                                    !matchesBlackWord) {
+                                visiblePageBeans.add(bean);
                                 addVideoCount++;
                             }
                         }
+                        Collections.sort(visiblePageBeans, (left, right) ->
+                                VideoListRules.compareSubscribedUp(left.getMid(), right.getMid(), subscribedMids));
+                        resultBeans.addAll(visiblePageBeans);
                         if (allResultBeans.size() == 0){
                             apiConfig.pageSelfDecrement();
                             isLoadingMore = true; // no more data
@@ -246,7 +257,7 @@ public class BiliVideoFragment extends Fragment {
                         }
                         db.close();
                         dbOpenHelper.close();
-                        pubdateVideoAdapter.notifyItemRangeChanged(PastSize, allResultBeans.size());
+                        pubdateVideoAdapter.notifyItemRangeInserted(PastSize, addVideoCount);
                         isLoadingMore = false;
                     }else {
                         if (page > 1){

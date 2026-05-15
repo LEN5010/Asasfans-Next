@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,8 +21,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.widget.EditText;
 import com.example.asasfans.R;
 import com.example.asasfans.data.DBOpenHelper;
 import com.example.asasfans.ui.customcomponent.RecyclerViewDecoration;
@@ -29,34 +30,24 @@ import com.example.asasfans.util.ApiConfig;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.orhanobut.dialogplus.DialogPlus;
 import com.orhanobut.dialogplus.ViewHolder;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author akarinini
- * @description:
- * @date :2022/4/8 14:41
- */
 public class BlacklistTabsFragment extends Fragment {
-    private String blacklist;
     private String table;
-    private String colName;
-    private RecyclerView recyclerView;
+    private String displayColumn;
+    private String deleteColumn;
+    private final List<Row> rows = new ArrayList<>();
     private BlacklistTabsAdapter blacklistTabsAdapter;
-    private List<String> info = new ArrayList<>();
-    private SwipeRefreshLayout refreshLayout;
-    private FloatingActionButton fabAdd;
     private DialogPlus dialog;
     private View dialogView;
 
-    public static BlacklistTabsFragment newInstance(String blacklist, String table, String colName) {
-
+    public static BlacklistTabsFragment newInstance(String table, String displayColumn, String deleteColumn) {
         Bundle args = new Bundle();
-        args.putString("blacklist", blacklist);
         args.putString("table", table);
-        args.putString("colName", colName);
+        args.putString("displayColumn", displayColumn);
+        args.putString("deleteColumn", deleteColumn);
         BlacklistTabsFragment fragment = new BlacklistTabsFragment();
         fragment.setArguments(args);
         return fragment;
@@ -79,199 +70,242 @@ public class BlacklistTabsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         initDialog();
-        recyclerView = view.findViewById(R.id.recyclerview);
-        refreshLayout = view.findViewById(R.id.refreshLayout);
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
+        SwipeRefreshLayout refreshLayout = view.findViewById(R.id.refreshLayout);
+        FloatingActionButton fabAdd = view.findViewById(R.id.fab_add);
 
-        fabAdd = view.findViewById(R.id.fab_add);
         fabAdd.setVisibility(View.VISIBLE);
         refreshLayout.setEnabled(false);
-        info.clear();
-        for (String s : blacklist.split(",")){
-            info.add(s);
-        }
-        if (info.get(0).equals("")){
-            info.clear();
-        }
-        blacklistTabsAdapter = new BlacklistTabsAdapter(getActivity(), info);
+        loadRowsFromDb();
+        blacklistTabsAdapter = new BlacklistTabsAdapter(requireActivity(), rows);
         recyclerView.setAdapter(blacklistTabsAdapter);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false);
         linearLayoutManager.setInitialPrefetchItemCount(2);
-
-
-        fabAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                TextView export_to_clip = dialogView.findViewById(R.id.export_to_clip);
-                TextView copy_from_clip = dialogView.findViewById(R.id.copy_from_clip);
-                TextView import_from_edittext = dialogView.findViewById(R.id.import_from_edittext);
-                EditText edittext = dialogView.findViewById(R.id.edittext);
-
-                //点击软键盘外部，收起软键盘
-                edittext.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                    @Override
-                    public void onFocusChange(View view, boolean hasFocus) {
-                        if(!hasFocus){
-                            InputMethodManager manager = ((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE));
-                            if (manager != null)
-                                manager.hideSoftInputFromWindow(view.getWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
-                        }
-                    }
-                });
-                export_to_clip.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        List<String> mid = new ArrayList<>();
-                        List<String> tag = new ArrayList<>();
-                        mid.clear();
-                        tag.clear();
-                        DBOpenHelper dbOpenHelper = new DBOpenHelper(getActivity(),"blackList.db",null,DBOpenHelper.DB_VERSION);
-                        SQLiteDatabase sqliteDatabase = dbOpenHelper.getWritableDatabase();
-                        Cursor cursor;
-                        cursor = sqliteDatabase.query("blackMid",null,null,null,null,null,null);
-                        if (cursor.getCount() > 0) {
-                            int midColumn = cursor.getColumnIndexOrThrow("mid");
-                            while (cursor.moveToNext()) {
-                                mid.add(cursor.getString(midColumn));
-                            }
-                        }
-                        cursor = sqliteDatabase.query("blackTag",null,null,null,null,null,null);
-                        if (cursor.getCount() > 0) {
-                            int tagColumn = cursor.getColumnIndexOrThrow("tag");
-                            while (cursor.moveToNext()) {
-                                tag.add(cursor.getString(tagColumn));
-                            }
-                        }
-                        sqliteDatabase.close();
-                        dbOpenHelper.close();
-                        sqliteDatabase.close();
-                        String tmp =  "tag." + ApiConfig.listToString(tag, "+") + ".tag~uid." + ApiConfig.listToString(mid, "+") + ".uid";
-                        ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-                        ClipData mClipData = ClipData.newPlainText("blacklist", tmp);
-                        cm.setPrimaryClip(mClipData);
-
-                        Toast.makeText(getActivity(),"导出成功：" + tmp,Toast.LENGTH_SHORT).show();
-                    }
-                });
-                copy_from_clip.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        ClipboardManager clipboardManager = (ClipboardManager)getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-                        if (null != clipboardManager) {
-                            // 获取剪贴板的剪贴数据集
-                            ClipData clipData = clipboardManager.getPrimaryClip();
-                            if (null != clipData && clipData.getItemCount() > 0) {
-                                // 从数据集中获取（粘贴）第一条文本数据
-                                ClipData.Item item = clipData.getItemAt(0);
-                                if (null != item) {
-                                    String content = item.getText().toString();
-                                    insertStringToSqlite(content);
-                                }else {
-                                    Toast.makeText(getActivity(),"剪贴板内容为空",Toast.LENGTH_SHORT).show();
-                                }
-                            }else {
-                                Toast.makeText(getActivity(),"剪贴板内容为空",Toast.LENGTH_SHORT).show();
-                            }
-                        }else {
-                            Toast.makeText(getActivity(),"获取不到剪贴板",Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-                import_from_edittext.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        insertStringToSqlite(edittext.getText().toString());
-                    }
-                });
-                dialog.show();
-            }
-        });
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.addItemDecoration(new RecyclerViewDecoration(8, 8));
+
+        fabAdd.setOnClickListener(view1 -> showEditDialog());
         return view;
     }
 
-    private void insertStringToSqlite(String s){
-        String[] tags;
-        String[] mids;
-        if (s.startsWith("tag.") && s.endsWith(".uid") && (s.indexOf("") != -1)){
-            String[] s2 = s.split("~");
-            if (s2.length == 2){
-                String[] tagTmp = s2[0].split("\\.");
-                String[] midTmp = s2[1].split("\\.");
-                if (tagTmp.length == 3 && midTmp.length == 3){
-                    tags = tagTmp[1].split("\\+");
-                    mids = midTmp[1].split("\\+");
-                }else {
-                    Toast.makeText(getActivity(),"导入的语句不符合格式要求",Toast.LENGTH_SHORT).show();
-                    return;
+    private void showEditDialog() {
+        TextView exportToClip = dialogView.findViewById(R.id.export_to_clip);
+        TextView copyFromClip = dialogView.findViewById(R.id.copy_from_clip);
+        TextView importFromEdittext = dialogView.findViewById(R.id.import_from_edittext);
+        EditText edittext = dialogView.findViewById(R.id.edittext);
+        edittext.setText("");
+        edittext.setHint(getInputHint());
+
+        edittext.setOnFocusChangeListener((view, hasFocus) -> {
+            if(!hasFocus && getActivity() != null){
+                InputMethodManager manager = ((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE));
+                if (manager != null) {
+                    manager.hideSoftInputFromWindow(view.getWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
                 }
-            }else {
-                Toast.makeText(getActivity(),"导入的语句不符合格式要求",Toast.LENGTH_SHORT).show();
+            }
+        });
+        exportToClip.setOnClickListener(view -> exportToClipboard());
+        copyFromClip.setOnClickListener(view -> {
+            ClipboardManager clipboardManager = (ClipboardManager) requireActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clipData = clipboardManager == null ? null : clipboardManager.getPrimaryClip();
+            if (clipData == null || clipData.getItemCount() == 0 || clipData.getItemAt(0) == null) {
+                Toast.makeText(getActivity(),"剪贴板内容为空",Toast.LENGTH_SHORT).show();
                 return;
             }
-        }else {
+            insertStringToSqlite(String.valueOf(clipData.getItemAt(0).getText()));
+        });
+        importFromEdittext.setOnClickListener(view -> insertStringToSqlite(edittext.getText().toString()));
+        dialog.show();
+    }
+
+    private String getInputHint() {
+        if ("subscribedUp".equals(table)) {
+            return "每行一个：uid 或 uid,昵称 或 uid,昵称,备注";
+        }
+        if ("blackMid".equals(table)) {
+            return "每行一个 UID，也支持逗号或加号分隔";
+        }
+        if ("blackBvid".equals(table)) {
+            return "每行一个 BV 号，也支持逗号或加号分隔";
+        }
+        return "每行一个黑名单词，也支持逗号或加号分隔";
+    }
+
+    private void exportToClipboard() {
+        List<String> values = new ArrayList<>();
+        for (Row row : rows) {
+            values.add(row.deleteValue);
+        }
+        String content = ApiConfig.listToString(values, "\n");
+        ClipboardManager cm = (ClipboardManager) requireActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+        cm.setPrimaryClip(ClipData.newPlainText(table, content));
+        Toast.makeText(getActivity(),"导出成功",Toast.LENGTH_SHORT).show();
+    }
+
+    private void insertStringToSqlite(String input){
+        if (input == null || input.trim().isEmpty()) {
+            Toast.makeText(getActivity(),"请输入内容",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (input.startsWith("tag.") && input.endsWith(".uid")) {
+            importLegacyBlacklist(input);
+            refreshRows();
+            dialog.dismiss();
+            return;
+        }
+        DBOpenHelper dbOpenHelper = new DBOpenHelper(getActivity(),"blackList.db",null,DBOpenHelper.DB_VERSION);
+        SQLiteDatabase sqliteDatabase = dbOpenHelper.getWritableDatabase();
+        try {
+            String[] lines = "subscribedUp".equals(table) ? input.split("\\n") : input.split("[\\n,+，]+");
+            for (String raw : lines) {
+                String value = raw.trim();
+                if (value.isEmpty()) {
+                    continue;
+                }
+                if ("subscribedUp".equals(table)) {
+                    insertSubscribedUp(sqliteDatabase, raw);
+                } else if ("blackMid".equals(table)) {
+                    insertMid(sqliteDatabase, value);
+                } else if ("blackBvid".equals(table)) {
+                    ContentValues values = new ContentValues();
+                    values.put("bvid", value);
+                    values.put("Title", value);
+                    sqliteDatabase.insertWithOnConflict("blackBvid", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                } else {
+                    ContentValues values = new ContentValues();
+                    values.put("word", value);
+                    sqliteDatabase.insertWithOnConflict("blackWord", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                }
+            }
+            Toast.makeText(getActivity(),"添加成功",Toast.LENGTH_SHORT).show();
+        } finally {
+            sqliteDatabase.close();
+            dbOpenHelper.close();
+        }
+        refreshRows();
+        dialog.dismiss();
+    }
+
+    private void insertSubscribedUp(SQLiteDatabase sqliteDatabase, String raw) {
+        String[] fields = raw.split("[,，]", 3);
+        String mid = fields[0].trim();
+        if (!isNumeric(mid)) {
+            Toast.makeText(getActivity(),"UID 需要是纯数字：" + mid,Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ContentValues values = new ContentValues();
+        values.put("mid", Long.valueOf(mid));
+        values.put("name", fields.length > 1 ? fields[1].trim() : "");
+        values.put("face", "");
+        values.put("note", fields.length > 2 ? fields[2].trim() : "");
+        values.put("updatedAt", System.currentTimeMillis() / 1000);
+        sqliteDatabase.insertWithOnConflict("subscribedUp", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    private void insertMid(SQLiteDatabase sqliteDatabase, String value) {
+        if (!isNumeric(value)) {
+            Toast.makeText(getActivity(),"UID 需要是纯数字：" + value,Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ContentValues values = new ContentValues();
+        values.put("mid", Long.valueOf(value));
+        sqliteDatabase.insertWithOnConflict("blackMid", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
+    private void importLegacyBlacklist(String s){
+        String[] s2 = s.split("~");
+        if (s2.length != 2) {
+            Toast.makeText(getActivity(),"导入的语句不符合格式要求",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] tagTmp = s2[0].split("\\.");
+        String[] midTmp = s2[1].split("\\.");
+        if (tagTmp.length != 3 || midTmp.length != 3) {
             Toast.makeText(getActivity(),"导入的语句不符合格式要求",Toast.LENGTH_SHORT).show();
             return;
         }
         DBOpenHelper dbOpenHelper = new DBOpenHelper(getActivity(),"blackList.db",null,DBOpenHelper.DB_VERSION);
         SQLiteDatabase sqliteDatabase = dbOpenHelper.getWritableDatabase();
-        ContentValues valuesTag = new ContentValues();
-        if (tags.length == 1 && tags[0].equals("")){
-
-        }else {
-            for (String tmp : tags) {
-                valuesTag.put("tag", tmp);
-                sqliteDatabase.insert("blackTag", null, valuesTag);
-            }
-        }
-        ContentValues valuesMid = new ContentValues();
-        if (mids.length == 1 && mids[0].equals("")){
-
-        }else {
-            for (String tmp : mids) {
-                try {
-                    valuesMid.put("mid", Integer.valueOf(tmp));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Toast.makeText(getActivity(), "有UID不是纯数字，用户黑名单导入失败，TAG黑名单成功", Toast.LENGTH_SHORT).show();
-                    sqliteDatabase.close();
-                    dbOpenHelper.close();
-                    sqliteDatabase.close();
-                    return;
+        try {
+            for (String tag : tagTmp[1].split("\\+")) {
+                if (!tag.isEmpty()) {
+                    ContentValues values = new ContentValues();
+                    values.put("word", tag);
+                    sqliteDatabase.insertWithOnConflict("blackWord", null, values, SQLiteDatabase.CONFLICT_IGNORE);
                 }
-                sqliteDatabase.insert("blackMid", null, valuesMid);
             }
-
+            for (String mid : midTmp[1].split("\\+")) {
+                if (!mid.isEmpty()) {
+                    insertMid(sqliteDatabase, mid);
+                }
+            }
+            Toast.makeText(getActivity(),"导入成功",Toast.LENGTH_SHORT).show();
+        } finally {
+            sqliteDatabase.close();
+            dbOpenHelper.close();
         }
-        Toast.makeText(getActivity(),"导入成功",Toast.LENGTH_SHORT).show();
-        sqliteDatabase.close();
-        dbOpenHelper.close();
-        sqliteDatabase.close();
     }
+
+    private void refreshRows() {
+        loadRowsFromDb();
+        blacklistTabsAdapter.notifyDataSetChanged();
+    }
+
+    private void loadRowsFromDb() {
+        rows.clear();
+        DBOpenHelper dbOpenHelper = new DBOpenHelper(getActivity(),"blackList.db",null,DBOpenHelper.DB_VERSION);
+        SQLiteDatabase sqliteDatabase = dbOpenHelper.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = sqliteDatabase.query(table,null,null,null,null,null,null);
+            while (cursor.moveToNext()) {
+                rows.add(rowFromCursor(cursor));
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            sqliteDatabase.close();
+            dbOpenHelper.close();
+        }
+    }
+
+    private Row rowFromCursor(Cursor cursor) {
+        if ("subscribedUp".equals(table)) {
+            String mid = cursor.getString(cursor.getColumnIndexOrThrow("mid"));
+            String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+            String note = cursor.getString(cursor.getColumnIndexOrThrow("note"));
+            String display = mid + (name == null || name.isEmpty() ? "" : "  " + name)
+                    + (note == null || note.isEmpty() ? "" : "  " + note);
+            return new Row(display, mid);
+        }
+        String deleteValue = cursor.getString(cursor.getColumnIndexOrThrow(deleteColumn));
+        String display = cursor.getString(cursor.getColumnIndexOrThrow(displayColumn));
+        if (display == null || display.isEmpty()) {
+            display = deleteValue;
+        }
+        return new Row(display, deleteValue);
+    }
+
     public final static boolean isNumeric(String str){
-        if (str != null && !"".equals(str.trim())){
-            return str.matches("^[0-9]*$");
-        }
-        else{
-            return false;
-        }
+        return str != null && !"".equals(str.trim()) && str.matches("^[0-9]*$");
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        blacklist = getArguments().getString("blacklist");
         table = getArguments().getString("table");
-        colName = getArguments().getString("colName");
+        displayColumn = getArguments().getString("displayColumn");
+        deleteColumn = getArguments().getString("deleteColumn");
         super.onCreate(savedInstanceState);
     }
 
     public class BlacklistTabsAdapter extends RecyclerView.Adapter<BlacklistViewHolder> {
         Context context;
-        List<String> name;
+        List<Row> rowList;
 
-        public BlacklistTabsAdapter(Context context, List<String> name) {
+        public BlacklistTabsAdapter(Context context, List<Row> rowList) {
             this.context = context;
-            this.name = name;
+            this.rowList = rowList;
         }
 
         @NonNull
@@ -279,37 +313,41 @@ public class BlacklistTabsFragment extends Fragment {
         public BlacklistViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(context).inflate(R.layout.blacklist_recyclerview, parent,false);
             BlacklistViewHolder blacklistViewHolder = new BlacklistViewHolder(view);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
+            blacklistViewHolder.delete.setOnClickListener(view1 -> {
+                int position = blacklistViewHolder.getBindingAdapterPosition();
+                if (position == RecyclerView.NO_POSITION) {
+                    return;
                 }
-            });
-            blacklistViewHolder.delete.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    DBOpenHelper dbOpenHelper = new DBOpenHelper(context,"blackList.db",null,DBOpenHelper.DB_VERSION);
-                    SQLiteDatabase sqliteDatabase = dbOpenHelper.getWritableDatabase();
-                    sqliteDatabase.delete(table, colName + "=?", new String[]{info.get(blacklistViewHolder.getBindingAdapterPosition())});
-                    sqliteDatabase.close();
-                    dbOpenHelper.close();
-                    info.remove(blacklistViewHolder.getBindingAdapterPosition());
-                    notifyItemRemoved(blacklistViewHolder.getBindingAdapterPosition());
-                    notifyDataSetChanged();
-                    Toast.makeText(context,"解除屏蔽成功",Toast.LENGTH_SHORT).show();
-                }
+                DBOpenHelper dbOpenHelper = new DBOpenHelper(context,"blackList.db",null,DBOpenHelper.DB_VERSION);
+                SQLiteDatabase sqliteDatabase = dbOpenHelper.getWritableDatabase();
+                sqliteDatabase.delete(table, deleteColumn + "=?", new String[]{rowList.get(position).deleteValue});
+                sqliteDatabase.close();
+                dbOpenHelper.close();
+                rowList.remove(position);
+                notifyItemRemoved(position);
+                Toast.makeText(context,"删除成功",Toast.LENGTH_SHORT).show();
             });
             return blacklistViewHolder;
         }
 
         @Override
         public void onBindViewHolder(@NonNull BlacklistViewHolder holder, int position) {
-            holder.name.setText(name.get(position));
+            holder.name.setText(rowList.get(position).display);
         }
 
         @Override
         public int getItemCount() {
-            return name.size();
+            return rowList.size();
+        }
+    }
+
+    public static class Row {
+        final String display;
+        final String deleteValue;
+
+        Row(String display, String deleteValue) {
+            this.display = display;
+            this.deleteValue = deleteValue;
         }
     }
 
@@ -323,5 +361,4 @@ public class BlacklistTabsFragment extends Fragment {
             name = itemView.findViewById(R.id.blacklist_text);
         }
     }
-
 }

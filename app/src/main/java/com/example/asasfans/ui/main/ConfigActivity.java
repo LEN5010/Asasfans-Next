@@ -52,7 +52,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class ConfigActivity extends AppCompatActivity implements View.OnClickListener{
-    private ConstraintLayout config_blacklist;
     private ConstraintLayout config_check_version;
     private ImageView config_check_version_icon;
     private ConstraintLayout config_contract_us;
@@ -71,7 +70,6 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config);
-        config_blacklist = findViewById(R.id.config_blacklist);
         config_check_version = findViewById(R.id.config_check_version);
         config_check_version_icon = findViewById(R.id.config_check_version_icon);
         config_contract_us = findViewById(R.id.config_contract_us);
@@ -85,7 +83,6 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
 
         config_check_version_number.setText("当前版本号:" + getVersionName(ConfigActivity.this));
 
-        config_blacklist.setOnClickListener(this::onClick);
         config_check_version.setOnClickListener(this::onClick);
         config_contract_us.setOnClickListener(this::onClick);
         config_clear_pic_cache.setOnClickListener(this::onClick);
@@ -148,13 +145,7 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if (id == R.id.config_blacklist) {
-            Bundle data = new Bundle();
-            data.putBoolean("isBlacklist", true);
-            Intent intentBlacklist = new Intent(ConfigActivity.this, ClickJumpActivity.class);
-            intentBlacklist.putExtras(data);
-            startActivity(intentBlacklist);
-        } else if (id == R.id.config_check_version) {
+        if (id == R.id.config_check_version) {
             if (mRotateAnimation == null) {
                 mRotateAnimation = new RotateAnimation(0, 360,
                         Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,

@@ -188,7 +188,7 @@ public class TestActivity extends AppCompatActivity {
         newBottomPagerAdapter = new NewBottomPagerAdapter(this);
         viewPager = findViewById(R.id.vp_content);
         viewPager.setAdapter(newBottomPagerAdapter);
-        viewPager.setOffscreenPageLimit(3);
+        viewPager.setOffscreenPageLimit(5);
         viewPager.setUserInputEnabled(false);
         configureDrawerNavigation();
 
@@ -288,6 +288,10 @@ public class TestActivity extends AppCompatActivity {
                 selectPage(2);
             } else if (itemId == R.id.nav_calendar) {
                 selectPage(3);
+            } else if (itemId == R.id.nav_account) {
+                selectPage(4);
+            } else if (itemId == R.id.nav_lists) {
+                selectPage(5);
             } else if (itemId == R.id.nav_settings) {
                 drawerLayout.closeDrawer(GravityCompat.START);
                 startActivity(new Intent(TestActivity.this, ConfigActivity.class));
@@ -316,6 +320,12 @@ public class TestActivity extends AppCompatActivity {
         } else if (position == 3) {
             navigationView.setCheckedItem(R.id.nav_calendar);
             topAppBar.setTitle(R.string.nav_calendar);
+        } else if (position == 4) {
+            navigationView.setCheckedItem(R.id.nav_account);
+            topAppBar.setTitle(R.string.nav_account);
+        } else if (position == 5) {
+            navigationView.setCheckedItem(R.id.nav_lists);
+            topAppBar.setTitle(R.string.nav_lists);
         }
     }
 

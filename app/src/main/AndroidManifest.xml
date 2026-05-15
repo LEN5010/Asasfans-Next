@@ -67,6 +67,12 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/MainTheme"></activity>
+        <activity
+            android:name=".ui.bili.BiliVideoDetailActivity"
+            android:exported="false"
+            android:label="@string/bili_video_detail"
+            android:screenOrientation="portrait"
+            android:theme="@style/MainTheme"></activity>
     </application>
 
 </manifest>
