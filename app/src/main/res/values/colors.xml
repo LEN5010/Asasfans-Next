@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorPrimary">#E799B0</color>
+    <color name="colorPrimaryDark">#B85B78</color>
+    <color name="colorAccent">#E799B0</color>
 
-    <color name="cardBlue">#3700b3</color>
+    <color name="cardBlue">#B85B78</color>
     <color name="cardSubjectBlue">#2b64a9</color>
     <color name="cardBlack">#000000</color>
     <color name="cardGray">#6a6a6a</color>
@@ -14,23 +14,23 @@
     <color name="light_gray">#E3E3E3</color>
     <color name="cardWhite">#ffffff</color>
 
-    <color name="tab_text_selected">#0084e8</color>
-    <color name="tab_text_normal">#576691</color>
+    <color name="tab_text_selected">#B85B78</color>
+    <color name="tab_text_normal">#E799B0</color>
 
     <color name="bella">#DB7D74</color>
     <color name="bellaLight">#b33a67</color>
     <color name="bellaDark">#dc8da3</color>
 
-    <color name="queenDark">#30384f</color>
-    <color name="queenLight">#7885a7</color>
+    <color name="queenDark">#8A3E59</color>
+    <color name="queenLight">#F6D3DD</color>
 
     <color name="ava">#90c1df</color>
-    <color name="avaLight">#a5cde6</color>
-    <color name="avaDark">#387cad</color>
+    <color name="avaLight">#FBE7ED</color>
+    <color name="avaDark">#B85B78</color>
 
     <color name="transparent">#00000000</color>
 
     <!-- Material 3 active indicator -->
-    <color name="md_active_indicator">#30576691</color>
+    <color name="md_active_indicator">#30E799B0</color>
 
 </resources>

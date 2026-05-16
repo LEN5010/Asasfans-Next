@@ -17,7 +17,7 @@
         android:adjustViewBounds="true"
         android:contentDescription="@string/app_name"
         android:scaleType="fitStart"
-        android:src="@drawable/icon_asasf_white_logo" />
+        android:src="@mipmap/icon_asasfans_next_round_logo" />
 
     <TextView
         android:layout_width="match_parent"

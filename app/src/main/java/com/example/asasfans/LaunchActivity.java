@@ -34,7 +34,7 @@ import okhttp3.Response;
  */
 
 public class LaunchActivity extends AppCompatActivity {
-    private String latestVersion = "https://api.github.com/repos/LEN5010/Asasfans/releases/latest";
+    private String latestVersion = "https://api.github.com/repos/LEN5010/Asasfans-Next/releases/latest";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

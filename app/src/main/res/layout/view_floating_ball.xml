@@ -7,7 +7,7 @@
     <ImageView
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@mipmap/icon_asasfan_round_logo"
+        android:src="@mipmap/icon_asasfans_next_round_logo"
         />
 
 </LinearLayout>

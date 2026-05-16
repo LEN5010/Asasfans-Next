@@ -2,7 +2,7 @@
     <!-- Base application theme - Material 3. -->
     <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/tab_text_normal</item>
-        <item name="colorOnPrimary">@color/cardWhite</item>
+        <item name="colorOnPrimary">@color/cardBlack</item>
         <item name="colorPrimaryContainer">@color/queenLight</item>
         <item name="colorOnPrimaryContainer">@color/queenDark</item>
         <item name="colorSecondary">@color/cardBlue</item>

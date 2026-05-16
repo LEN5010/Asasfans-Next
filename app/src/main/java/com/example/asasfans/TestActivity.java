@@ -384,7 +384,7 @@ public class TestActivity extends AppCompatActivity {
     }
 
     private void tintTopAppBarActionIcons() {
-        int tint = ContextCompat.getColor(this, R.color.cardWhite);
+        int tint = ContextCompat.getColor(this, R.color.cardBlack);
         tintMenuItemIcon(R.id.action_web_refresh, tint);
         tintMenuItemIcon(R.id.action_web_open_browser, tint);
         tintMenuItemIcon(R.id.action_web_copy_link, tint);
@@ -473,7 +473,7 @@ public class TestActivity extends AppCompatActivity {
                             TextView confirm = dialogViewP.findViewById(R.id.confirm);
                             TextView cancel = dialogViewP.findViewById(R.id.cancel);
                             title.setText("需要悬浮窗权限");
-                            content.setText("通过悬浮球可以在其他应用快速回到AsAsFans，需要去开启悬浮窗权限，悬浮窗只会在其他界面显示出来哦");
+                            content.setText("通过悬浮球可以在其他应用快速回到Asasfans Next，需要去开启悬浮窗权限，悬浮窗只会在其他界面显示出来哦");
                             confirm.setText("去开启");
                             cancel.setText("不再提醒");
                             cancel.setOnClickListener(new View.OnClickListener() {

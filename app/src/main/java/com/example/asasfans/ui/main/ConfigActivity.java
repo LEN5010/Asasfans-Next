@@ -61,7 +61,7 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
     private TextView config_check_version_number;
     private MaterialSwitch config_floating_ball_switch;
     private View emptyView;
-    private String latestVersion = "https://api.github.com/repos/LEN5010/Asasfans/releases/latest";
+    private String latestVersion = "https://api.github.com/repos/LEN5010/Asasfans-Next/releases/latest";
     private RotateAnimation mRotateAnimation;
     private Handler mHandler = new Handler();
 
@@ -161,7 +161,7 @@ public class ConfigActivity extends AppCompatActivity implements View.OnClickLis
         } else if (id == R.id.config_contract_us) {
             Intent intentContractUs = new Intent();
             intentContractUs.setAction("android.intent.action.VIEW");
-            Uri content_url = Uri.parse("https://github.com/LEN5010/Asasfans/issues");
+            Uri content_url = Uri.parse("https://github.com/LEN5010/Asasfans-Next/issues");
             intentContractUs.setData(content_url);
             startActivity(intentContractUs);
         } else if (id == R.id.config_clear_pic_cache) {
