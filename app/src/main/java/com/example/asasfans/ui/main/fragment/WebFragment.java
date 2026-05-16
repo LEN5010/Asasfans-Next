@@ -6,6 +6,8 @@ import static android.content.Context.DOWNLOAD_SERVICE;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -156,6 +158,7 @@ public class WebFragment extends Fragment {
 
         webView = view.findViewById(R.id.webView);
         progressBar = view.findViewById(R.id.pb);
+        webView.setBackgroundColor(requireContext().getColor(R.color.cardWhite));
 //        RefreshLayout refreshLayout = (RefreshLayout)view.findViewById(R.id.web_refreshLayout);
 //        //先关掉下拉刷新
 //        refreshLayout.setEnableRefresh(false);
@@ -356,6 +359,61 @@ public class WebFragment extends Fragment {
 //        webView.loadUrl("https://asoul.cloud/pic");
 //        webView.loadUrl("https://liulanmi.com/labs/core.html");
         return view;
+    }
+
+    public void reloadCurrentPage() {
+        calendarFallbackOpened = false;
+        if (webView != null) {
+            String targetUrl = getCurrentOrInitialUrl();
+            if (TextUtils.isEmpty(webView.getUrl()) && !TextUtils.isEmpty(targetUrl)) {
+                webView.loadUrl(targetUrl);
+            } else {
+                webView.reload();
+            }
+        }
+    }
+
+    public void openCurrentUrlInBrowser() {
+        String targetUrl = getCurrentOrInitialUrl();
+        if (TextUtils.isEmpty(targetUrl)) {
+            showToast(R.string.web_open_failed);
+            return;
+        }
+        try {
+            downloadByBrowser(targetUrl);
+        } catch (Exception e) {
+            showToast(R.string.web_open_failed);
+        }
+    }
+
+    public void copyCurrentUrl() {
+        String targetUrl = getCurrentOrInitialUrl();
+        Context context = getContext();
+        if (TextUtils.isEmpty(targetUrl) || context == null) {
+            showToast(R.string.web_copy_failed);
+            return;
+        }
+        ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboardManager == null) {
+            showToast(R.string.web_copy_failed);
+            return;
+        }
+        clipboardManager.setPrimaryClip(ClipData.newPlainText(getString(R.string.web_link_label), targetUrl));
+        showToast(R.string.web_link_copied);
+    }
+
+    public String getCurrentOrInitialUrl() {
+        if (webView != null && !TextUtils.isEmpty(webView.getUrl())) {
+            return webView.getUrl();
+        }
+        return url;
+    }
+
+    private void showToast(int stringResId) {
+        Context context = getContext();
+        if (context != null) {
+            Toast.makeText(context, stringResId, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void configureCalendarCompatibility(WebSettings webSettings) {

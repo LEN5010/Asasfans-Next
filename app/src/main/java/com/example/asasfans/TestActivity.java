@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -30,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -276,6 +278,27 @@ public class TestActivity extends AppCompatActivity {
         topAppBar.setLayoutParams(layoutParams);
         topAppBar.setPadding(topAppBar.getPaddingLeft(), statusBarHeight, topAppBar.getPaddingRight(), topAppBar.getPaddingBottom());
         topAppBar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+        topAppBar.inflateMenu(R.menu.main_web_actions);
+        tintTopAppBarActionIcons();
+        updateWebActionVisibility(false);
+        topAppBar.setOnMenuItemClickListener(item -> {
+            WebFragment webFragment = getCurrentDirectWebFragment();
+            if (webFragment == null) {
+                return false;
+            }
+            int itemId = item.getItemId();
+            if (itemId == R.id.action_web_refresh) {
+                webFragment.reloadCurrentPage();
+                return true;
+            } else if (itemId == R.id.action_web_open_browser) {
+                webFragment.openCurrentUrlInBrowser();
+                return true;
+            } else if (itemId == R.id.action_web_copy_link) {
+                webFragment.copyCurrentUrl();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void configureDrawerNavigation() {
@@ -337,6 +360,7 @@ public class TestActivity extends AppCompatActivity {
             navigationView.setCheckedItem(R.id.nav_lists);
             topAppBar.setTitle(R.string.nav_lists);
         }
+        updateWebActionVisibility(position == 1 || position == 3);
     }
 
     private void updatePlaybackModeMenuItem() {
@@ -344,6 +368,36 @@ public class TestActivity extends AppCompatActivity {
         if (playModeItem != null) {
             playModeItem.setTitle(VideoPlaybackModeStore.menuTitle(VideoPlaybackModeStore.getMode(this)));
         }
+    }
+
+    private void updateWebActionVisibility(boolean visible) {
+        setMenuItemVisible(R.id.action_web_refresh, visible);
+        setMenuItemVisible(R.id.action_web_open_browser, visible);
+        setMenuItemVisible(R.id.action_web_copy_link, visible);
+    }
+
+    private void setMenuItemVisible(int itemId, boolean visible) {
+        MenuItem item = topAppBar.getMenu().findItem(itemId);
+        if (item != null) {
+            item.setVisible(visible);
+        }
+    }
+
+    private void tintTopAppBarActionIcons() {
+        int tint = ContextCompat.getColor(this, R.color.cardWhite);
+        tintMenuItemIcon(R.id.action_web_refresh, tint);
+        tintMenuItemIcon(R.id.action_web_open_browser, tint);
+        tintMenuItemIcon(R.id.action_web_copy_link, tint);
+    }
+
+    private void tintMenuItemIcon(int itemId, int tint) {
+        MenuItem item = topAppBar.getMenu().findItem(itemId);
+        if (item == null || item.getIcon() == null) {
+            return;
+        }
+        Drawable icon = DrawableCompat.wrap(item.getIcon()).mutate();
+        DrawableCompat.setTint(icon, tint);
+        item.setIcon(icon);
     }
 
 //    public static HttpProxyCacheServer getProxy() {
@@ -534,6 +588,15 @@ public class TestActivity extends AppCompatActivity {
             return null;
         }
         return getSupportFragmentManager().findFragmentByTag("f" + viewPager.getCurrentItem());
+    }
+
+    @Nullable
+    private WebFragment getCurrentDirectWebFragment() {
+        Fragment currentFragment = getCurrentFragment();
+        if (currentFragment instanceof WebFragment) {
+            return (WebFragment) currentFragment;
+        }
+        return null;
     }
 
     private void checkPermission() {

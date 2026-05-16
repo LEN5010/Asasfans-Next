@@ -20,6 +20,13 @@
     <string name="nav_play_mode_app">播放模式：App播放</string>
     <string name="nav_play_mode_external">播放模式：跳转B站</string>
     <string name="nav_header_subtitle">这次，我的热情无穷无尽</string>
+    <string name="web_refresh">刷新</string>
+    <string name="web_open_in_browser">浏览器打开</string>
+    <string name="web_copy_link">复制链接</string>
+    <string name="web_link_label">网页链接</string>
+    <string name="web_link_copied">链接已复制</string>
+    <string name="web_copy_failed">无法复制链接</string>
+    <string name="web_open_failed">无法打开链接</string>
 
 
     <string name="dont_want_to_see_this_up">我不想再看到这个up主</string>

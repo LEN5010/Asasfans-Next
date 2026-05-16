@@ -48,6 +48,7 @@ public class NewToolsFragment extends Fragment {
     private TextView title;
     private ImageView refresh;
     private ImageView browser;
+    private ImageView copy;
     private RecyclerView recyclerView;
     private DialogPlus dialog;
     private View dialogView;
@@ -135,6 +136,7 @@ public class NewToolsFragment extends Fragment {
         title = view.findViewById(R.id.title);
         refresh = view.findViewById(R.id.refresh);
         browser = view.findViewById(R.id.browser);
+        copy = view.findViewById(R.id.copy);
         frameLayout = view.findViewById(R.id.frameLayout);
 
         frameLayout.setFocusableInTouchMode(true);
@@ -154,6 +156,12 @@ public class NewToolsFragment extends Fragment {
                 }
                 refresh.setAnimation(mRotateAnimation);
                 refresh.startAnimation(mRotateAnimation);
+                WebFragment current = current();
+                if (current != null) {
+                    current.reloadCurrentPage();
+                } else {
+                    updateFragment(currentIndex);
+                }
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -167,11 +175,26 @@ public class NewToolsFragment extends Fragment {
         browser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent= new Intent();
-                intent.setAction("android.intent.action.VIEW");
-                Uri content_url = Uri.parse(webInfos.get(currentIndex).getWebUrl());
-                intent.setData(content_url);
-                getActivity().startActivity(intent);
+                WebFragment current = current();
+                if (current != null) {
+                    current.openCurrentUrlInBrowser();
+                } else {
+                    Intent intent= new Intent();
+                    intent.setAction("android.intent.action.VIEW");
+                    Uri content_url = Uri.parse(webInfos.get(currentIndex).getWebUrl());
+                    intent.setData(content_url);
+                    getActivity().startActivity(intent);
+                }
+            }
+        });
+
+        copy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                WebFragment current = current();
+                if (current != null) {
+                    current.copyCurrentUrl();
+                }
             }
         });
 

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:fitsSystemWindows="true"
+    android:background="?attr/colorSurface"
     android:layout_height="match_parent">
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -19,7 +19,9 @@
 
     <com.tencent.smtt.sdk.WebView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="?attr/colorSurface"
         android:id="@+id/webView"/>
 
 
