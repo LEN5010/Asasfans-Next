@@ -314,13 +314,24 @@ public class BlacklistTabsFragment extends Fragment {
     }
 
     private void refreshRows() {
+        if (blacklistTabsAdapter == null || !isAdded()) {
+            return;
+        }
         loadRowsFromDb();
         blacklistTabsAdapter.notifyDataSetChanged();
     }
 
+    public void refreshRowsIfReady() {
+        refreshRows();
+    }
+
     private void loadRowsFromDb() {
+        Context context = getContext();
+        if (context == null || table == null) {
+            return;
+        }
         rows.clear();
-        DBOpenHelper dbOpenHelper = new DBOpenHelper(getActivity(),"blackList.db",null,DBOpenHelper.DB_VERSION);
+        DBOpenHelper dbOpenHelper = new DBOpenHelper(context,"blackList.db",null,DBOpenHelper.DB_VERSION);
         SQLiteDatabase sqliteDatabase = dbOpenHelper.getReadableDatabase();
         Cursor cursor = null;
         try {
@@ -364,6 +375,12 @@ public class BlacklistTabsFragment extends Fragment {
         displayColumn = getArguments().getString("displayColumn");
         deleteColumn = getArguments().getString("deleteColumn");
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshRowsIfReady();
     }
 
     public class BlacklistTabsAdapter extends RecyclerView.Adapter<BlacklistViewHolder> {

@@ -209,7 +209,12 @@ public class SubscribedUpVideoFragment extends Fragment {
         }
         refreshLayout.setRefreshing(false);
         isLoadingMore = false;
-        Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(), errorMessage(e), Toast.LENGTH_LONG).show();
+    }
+
+    private String errorMessage(Exception e) {
+        String message = e == null ? null : e.getMessage();
+        return message == null || message.trim().isEmpty() ? getString(R.string.bili_play_failed) : message;
     }
 
     private boolean isBlocked(AdvancedSearchDataBean.DataBean.ResultBean bean, LocalBlockRules blockRules) {

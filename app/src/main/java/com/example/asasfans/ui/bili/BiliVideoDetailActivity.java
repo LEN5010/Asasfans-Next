@@ -191,11 +191,12 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
         executor.execute(() -> {
             try {
                 BiliModels.VideoViewResponse response = videoRepository.getVideoView(bvid);
-                runOnUiThread(() -> bindVideoDetail(response.data));
+                runOnUiIfAlive(() -> bindVideoDetail(response.data));
             } catch (Exception e) {
-                runOnUiThread(() -> {
-                    commentStatus.setText(e.getMessage());
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                runOnUiIfAlive(() -> {
+                    String message = errorMessage(e, R.string.bili_play_failed);
+                    commentStatus.setText(message);
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                 });
             }
         });
@@ -280,14 +281,14 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
                 if (videoUrl.isEmpty() || audioUrl.isEmpty()) {
                     throw new BiliException(-1, getString(R.string.bili_play_failed));
                 }
-                runOnUiThread(() -> {
+                runOnUiIfAlive(() -> {
                     if (refreshQualityOptions) {
                         bindQualityOptions(videoRepository.buildQualityOptions(playUrl));
                     }
                     playDash(videoUrl, audioUrl);
                 });
             } catch (Exception e) {
-                runOnUiThread(() -> fallbackToMp4(cid));
+                runOnUiIfAlive(() -> fallbackToMp4(cid));
             }
         });
     }
@@ -348,9 +349,9 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
                 if (mp4Url.isEmpty()) {
                     throw new BiliException(-1, getString(R.string.bili_play_failed));
                 }
-                runOnUiThread(() -> playMp4(mp4Url));
+                runOnUiIfAlive(() -> playMp4(mp4Url));
             } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                runOnUiIfAlive(() -> Toast.makeText(this, errorMessage(e, R.string.bili_play_failed), Toast.LENGTH_LONG).show());
             }
         });
     }
@@ -382,9 +383,9 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
             try {
                 BiliModels.ReplyResponse response = commentRepository.getVideoReplies(aid, page, sort);
                 List<BiliModels.Reply> replies = response.data == null ? null : response.data.replies;
-                runOnUiThread(() -> bindComments(replies, reset, page, response.data == null ? null : response.data.page));
+                runOnUiIfAlive(() -> bindComments(replies, reset, page, response.data == null ? null : response.data.page));
             } catch (Exception e) {
-                runOnUiThread(() -> bindCommentError(e));
+                runOnUiIfAlive(() -> bindCommentError(e));
             }
         });
     }
@@ -412,8 +413,21 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
         if (e instanceof BiliException && ((BiliException) e).getCode() == 12002) {
             commentStatus.setText(R.string.bili_comments_closed);
         } else {
-            commentStatus.setText(e.getMessage());
+            commentStatus.setText(errorMessage(e, R.string.bili_play_failed));
         }
+    }
+
+    private void runOnUiIfAlive(Runnable runnable) {
+        runOnUiThread(() -> {
+            if (!isFinishing() && !isDestroyed()) {
+                runnable.run();
+            }
+        });
+    }
+
+    private String errorMessage(Exception e, int fallbackResId) {
+        String message = e == null ? null : e.getMessage();
+        return message == null || message.trim().isEmpty() ? getString(fallbackResId) : message;
     }
 
     private void openInBilibili() {

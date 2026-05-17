@@ -236,7 +236,7 @@ public class BiliAccountFragment extends Fragment {
                     schedulePoll();
                 });
             } catch (Exception e) {
-                runOnUiIfAlive(() -> loginStatus.setText(getString(R.string.bili_login_failed) + ": " + e.getMessage()));
+                runOnUiIfAlive(() -> loginStatus.setText(loginErrorMessage(e)));
             }
         });
     }
@@ -254,7 +254,7 @@ public class BiliAccountFragment extends Fragment {
                 }
                 handlePollCode(response.data.code, response.data.message);
             } catch (Exception e) {
-                runOnUiIfAlive(() -> loginStatus.setText(getString(R.string.bili_login_failed) + ": " + e.getMessage()));
+                runOnUiIfAlive(() -> loginStatus.setText(loginErrorMessage(e)));
             }
         });
     }
@@ -328,6 +328,13 @@ public class BiliAccountFragment extends Fragment {
                 runnable.run();
             }
         });
+    }
+
+    private String loginErrorMessage(Exception e) {
+        String message = e == null ? null : e.getMessage();
+        return message == null || message.trim().isEmpty()
+                ? getString(R.string.bili_login_failed)
+                : getString(R.string.bili_login_failed) + ": " + message;
     }
 
     @Override
