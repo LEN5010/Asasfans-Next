@@ -57,6 +57,7 @@
             android:theme="@style/MainTheme"></activity>
         <activity
             android:name=".ui.bili.BiliVideoDetailActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="false"
             android:label="@string/bili_video_detail"
             android:screenOrientation="portrait"

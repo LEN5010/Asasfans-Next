@@ -2,13 +2,16 @@ package com.example.asasfans.ui.bili;
 
 import android.content.Intent;
 import android.content.ContentValues;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,7 +64,11 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
     private TextView ownerView;
     private TextView descView;
     private TextView commentStatus;
+    private MaterialToolbar toolbar;
     private MaterialButton subscribeButton;
+    private View playerContainer;
+    private View detailContent;
+    private ImageButton fullscreenButton;
     private Spinner pageSpinner;
     private Spinner qualitySpinner;
     private Spinner commentSortSpinner;
@@ -84,6 +91,8 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
     private int selectedQn;
     private boolean bindingQualitySpinner;
     private BiliModels.Owner currentOwner;
+    private boolean fullscreen;
+    private int normalPlayerHeight;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -113,9 +122,14 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
-        MaterialToolbar toolbar = findViewById(R.id.bili_detail_toolbar);
+        toolbar = findViewById(R.id.bili_detail_toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
         findViewById(R.id.bili_open_external).setOnClickListener(v -> openInBilibili());
+        playerContainer = findViewById(R.id.player_container);
+        detailContent = findViewById(R.id.bili_detail_content);
+        fullscreenButton = findViewById(R.id.bili_fullscreen_toggle);
+        normalPlayerHeight = playerContainer.getLayoutParams().height;
+        fullscreenButton.setOnClickListener(v -> setFullscreen(!fullscreen));
         subscribeButton = findViewById(R.id.bili_subscribe_up);
         subscribeButton.setOnClickListener(v -> toggleOwnerSubscription());
 
@@ -176,6 +190,56 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void setFullscreen(boolean enabled) {
+        if (fullscreen == enabled) {
+            return;
+        }
+        fullscreen = enabled;
+        ViewGroup.LayoutParams params = playerContainer.getLayoutParams();
+        if (enabled) {
+            if (params.height > 0) {
+                normalPlayerHeight = params.height;
+            }
+            toolbar.setVisibility(View.GONE);
+            detailContent.setVisibility(View.GONE);
+            commentsRecycler.setVisibility(View.GONE);
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            playerContainer.setLayoutParams(params);
+            fullscreenButton.setImageResource(R.drawable.ic_fullscreen_exit_24);
+            fullscreenButton.setContentDescription(getString(R.string.bili_exit_fullscreen));
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            applyImmersiveMode();
+        } else {
+            toolbar.setVisibility(View.VISIBLE);
+            detailContent.setVisibility(View.VISIBLE);
+            commentsRecycler.setVisibility(View.VISIBLE);
+            params.height = normalPlayerHeight > 0 ? normalPlayerHeight : dpToPx(220);
+            playerContainer.setLayoutParams(params);
+            fullscreenButton.setImageResource(R.drawable.ic_fullscreen_24);
+            fullscreenButton.setContentDescription(getString(R.string.bili_enter_fullscreen));
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            clearImmersiveMode();
+        }
+    }
+
+    private void applyImmersiveMode() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
+
+    private void clearImmersiveMode() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
     private void bindIntentPlaceholders() {
@@ -514,13 +578,36 @@ public class BiliVideoDetailActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        if (fullscreen) {
+            setFullscreen(false);
+        }
         if (player != null) {
             player.pause();
         }
     }
 
     @Override
+    public void onBackPressed() {
+        if (fullscreen) {
+            setFullscreen(false);
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus && fullscreen) {
+            applyImmersiveMode();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
+        if (fullscreen) {
+            setFullscreen(false);
+        }
         executor.shutdownNow();
         if (player != null) {
             player.release();

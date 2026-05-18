@@ -22,6 +22,7 @@ import com.example.asasfans.R;
 import com.example.asasfans.bili.BiliApiClient;
 import com.example.asasfans.bili.BiliAuthRepository;
 import com.example.asasfans.bili.BiliCredentialStore;
+import com.example.asasfans.bili.BiliException;
 import com.example.asasfans.bili.BiliModels;
 import com.example.asasfans.bili.BiliVideoRepository;
 import com.example.asasfans.bili.WbiSigner;
@@ -214,7 +215,27 @@ public class SubscribedUpVideoFragment extends Fragment {
 
     private String errorMessage(Exception e) {
         String message = e == null ? null : e.getMessage();
+        if (isAnonymousRiskError(e, message)) {
+            return getString(R.string.subscribed_up_anonymous_risk_error);
+        }
         return message == null || message.trim().isEmpty() ? getString(R.string.bili_play_failed) : message;
+    }
+
+    private boolean isAnonymousRiskError(Exception e, String message) {
+        if (e instanceof BiliException) {
+            int code = ((BiliException) e).getCode();
+            if (code == -352 || code == -412 || code == -101) {
+                return true;
+            }
+        }
+        if (message == null) {
+            return false;
+        }
+        return message.contains("-352")
+                || message.contains("-412")
+                || message.contains("HTTP 412")
+                || message.contains("风控")
+                || message.contains("账号未登录");
     }
 
     private boolean isBlocked(AdvancedSearchDataBean.DataBean.ResultBean bean, LocalBlockRules blockRules) {

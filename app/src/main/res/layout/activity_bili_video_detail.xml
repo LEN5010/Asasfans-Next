@@ -30,16 +30,36 @@
             android:textSize="14sp" />
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/player_view"
+    <FrameLayout
+        android:id="@+id/player_container"
         android:layout_width="match_parent"
         android:layout_height="220dp"
-        android:background="@android:color/black"
-        app:resize_mode="fit"
-        app:show_buffering="when_playing"
-        app:use_controller="true" />
+        android:background="@android:color/black">
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/player_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            app:resize_mode="fit"
+            app:show_buffering="when_playing"
+            app:use_controller="true" />
+
+        <ImageButton
+            android:id="@+id/bili_fullscreen_toggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="end|top"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/bili_enter_fullscreen"
+            android:padding="10dp"
+            android:src="@drawable/ic_fullscreen_24"
+            app:tint="@android:color/white" />
+    </FrameLayout>
 
     <LinearLayout
+        android:id="@+id/bili_detail_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"

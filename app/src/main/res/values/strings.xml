@@ -56,9 +56,12 @@
     <string name="bili_video_detail">视频详情</string>
     <string name="bili_open_in_bilibili">用B站打开</string>
     <string name="bili_open_failed">无法打开外部 B 站</string>
+    <string name="bili_enter_fullscreen">全屏</string>
+    <string name="bili_exit_fullscreen">退出全屏</string>
     <string name="bili_play_loading">正在获取播放地址</string>
     <string name="bili_play_mp4_fallback">DASH 播放失败，正在尝试 MP4</string>
     <string name="bili_play_failed">播放地址获取失败</string>
+    <string name="subscribed_up_anonymous_risk_error">订阅UP视频刷新失败：匿名接口可能被B站风控，建议登录后使用</string>
     <string name="bili_comments_loading">评论加载中</string>
     <string name="bili_comments_empty">暂无评论</string>
     <string name="bili_comments_closed">评论区已关闭</string>
