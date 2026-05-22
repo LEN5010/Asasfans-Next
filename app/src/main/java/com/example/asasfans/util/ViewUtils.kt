@@ -4,10 +4,6 @@ import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import com.example.asasfans.AsApplication
 
-/**
- * @author LEN5010
- * @description View 布局辅助工具，提供 margin 设置和 dp/px 转换。
- */
 
 /**
  * 动态设置View的Margin。

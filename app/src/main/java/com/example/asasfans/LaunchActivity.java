@@ -32,7 +32,7 @@ public class LaunchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        // 这两行其实tm屁用没有 其他地方的dbOpenHelper.getReadableDatabase()才能建库 闹麻了
         DBOpenHelper dbOpenHelper = new DBOpenHelper(this,"blackList.db",null, DBOpenHelper.DB_VERSION);
         dbOpenHelper.close();
         setContentView(R.layout.activity_lanch);
