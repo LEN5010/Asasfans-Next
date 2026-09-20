@@ -16,7 +16,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -56,18 +56,7 @@ fun NextApp(app: NextApplication) {
             isAppearanceLightNavigationBars = !dark
         }
     } }
-    val colors = if (dark) darkColorScheme(
-        primary = Color(0xFFBCC5F4), onPrimary = Color(0xFF263259), primaryContainer = Color(0xFF39466F),
-        secondaryContainer = Color(0xFF333F61), onSecondaryContainer = Color(0xFFDBE2FF),
-        background = Color(0xFF121317), surface = Color(0xFF1B1C22), onSurface = Color(0xFFE5E5EB),
-        onSurfaceVariant = Color(0xFFADB0BD), outline = Color(0xFF858896), outlineVariant = Color(0xFF34363F),
-        surfaceContainerLow = Color(0xFF202127), surfaceContainer = Color(0xFF24252D), surfaceContainerHigh = Color(0xFF2D2F38))
-    else lightColorScheme(
-        primary = Color(0xFF53649E), onPrimary = Color.White, primaryContainer = Color(0xFFDEE4FC),
-        secondaryContainer = Color(0xFFE1E6FA), onSecondaryContainer = Color(0xFF354572),
-        background = Color(0xFFF7F8FC), surface = Color.White, onSurface = Color(0xFF22232B),
-        onSurfaceVariant = Color(0xFF656875), outline = Color(0xFF868A98), outlineVariant = Color(0xFFE1E3EB),
-        surfaceContainerLow = Color(0xFFF0F1F7), surfaceContainer = Color(0xFFECEEF5), surfaceContainerHigh = Color(0xFFE6E8F0))
+    val colors = asasColorScheme(dark)
     MaterialTheme(colorScheme = colors) {
         val nav = rememberNavController()
         val entry by nav.currentBackStackEntryAsState()
@@ -120,7 +109,9 @@ fun NextApp(app: NextApplication) {
                     if (rootPage && wide) WideNavigation(route, ::navigate)
                     Surface(Modifier.weight(1f).fillMaxHeight(), color = MaterialTheme.colorScheme.background) {
                         when (val state = startup) {
-                            is StartupState.Failed -> MessagePanel("本地数据尚未就绪", state.message, "重试") { vm.action { vm.graph.startup.initialize() } }
+                            is StartupState.Failed -> Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.TopCenter) {
+                                MessagePanel("启动失败", state.message, "重试") { vm.action { vm.graph.startup.initialize() } }
+                            }
                             StartupState.NotStarted, StartupState.Migrating -> MessagePanel("正在载入…")
                             StartupState.Ready -> NavHost(nav, startDestination = "today") {
                                 composable("today") { TodayPage(vm, { b, p, t -> openVideo(b, p, t, false) }, { navigate("discover") }, { navigate("library") }, openWeb) }

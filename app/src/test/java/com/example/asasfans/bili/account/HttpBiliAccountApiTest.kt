@@ -67,4 +67,30 @@ class HttpBiliAccountApiTest {
         body = """{"code":0,"data":{"code":0}}"""
         try { api.pollQr("a".repeat(32)); fail("must fail") } catch (_: AppFailure.InvalidResponse) { }
     }
+
+    @Test fun qrAcceptsCurrentOfficialAccountHostWithoutSendingCookiesThere() = runTest {
+        val key = "a".repeat(32)
+        body = """{"code":0,"data":{"qrcode_key":"$key","url":"https://account.bilibili.com/h5/account-h5/auth/scan-web?navhide=1&callback=&qrcode_key=$key"}}"""
+        val qr = api.generateQr()
+        assertEquals(key, qr.key)
+        assertTrue(qr.url.startsWith("https://account.bilibili.com/"))
+        assertEquals("passport.bilibili.com", requests.single().url.host)
+        assertNull(requests.single().header("Cookie"))
+        assertFalse(qr.toString().contains(key))
+    }
+
+    @Test fun qrRejectsSpoofedHostsWrongRoutesDuplicateKeysAndMismatches() = runTest {
+        val key = "a".repeat(32)
+        val valid = "https://account.bilibili.com/h5/account-h5/auth/scan-web?qrcode_key=$key"
+        for (url in listOf(
+            valid.replace("account.bilibili.com", "account.bilibili.com.evil.example"),
+            valid.replace("https:", "http:"), valid.replace("/scan-web", "/unrelated"),
+            valid.replace(key, "b".repeat(32)), "$valid&qrcode_key=$key", "$valid#fragment",
+            valid.replace("account.bilibili.com", "user@account.bilibili.com"),
+        )) {
+            body = """{"code":0,"data":{"qrcode_key":"$key","url":"$url"}}"""
+            try { api.generateQr(); fail("untrusted QR address must be rejected") } catch (_: AppFailure.InvalidResponse) { }
+        }
+    }
+
 }

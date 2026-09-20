@@ -29,7 +29,8 @@ class MainViewModel(val graph: AppContainer, private val saved: SavedStateHandle
     } }.safeState(emptyList())
     val keyword = saved.getStateFlow("keyword", "")
     val feedMode = saved.getStateFlow("feedMode", "new")
-    private val window = MutableStateFlow(100)
+    private val window = saved.getStateFlow("discoverWindow", 40)
+    private val todayWindow = saved.getStateFlow("todayWindow", 40)
     // Keep source selection alongside semantic criteria; identical queries from two sources are not the same feed.
     private fun queryFor(word: String, mode: String) = if (mode == "search") QuerySpec(keyword = word.trim()) else QuerySpec(
             order = if (mode == "new") VideoOrder.NEWEST else VideoOrder.POPULAR,
@@ -41,7 +42,11 @@ class MainViewModel(val graph: AppContainer, private val saved: SavedStateHandle
         if (mode == "search" && query.keyword.isBlank()) flowOf(FeedSnapshot(hasMore = false))
         else repository(mode).observe(query, limit)
     }.safeState(FeedSnapshot())
-    val todayFeed = graph.discovery.observe(QuerySpec(), 12).safeState(FeedSnapshot())
+    val todayFeed = todayWindow.flatMapLatest { graph.discovery.observe(QuerySpec(), it) }.safeState(FeedSnapshot())
+    private var todayStarted = false
+    private var discoverStarted = false
+    fun ensureTodayLoaded() { if (!todayStarted) { todayStarted = true; refreshToday() } }
+    fun ensureDiscoverLoaded() { if (!discoverStarted) { discoverStarted = true; refreshFeed() } }
     private var todayJob: Job? = null
     fun refreshToday() {
         if (todayJob?.isActive != true) todayJob = action { graph.discovery.refresh(QuerySpec()) }
@@ -54,14 +59,30 @@ class MainViewModel(val graph: AppContainer, private val saved: SavedStateHandle
         saved["feedMode"] = mode
         val query = queryFor(word.take(256), mode)
         selection.value = query to mode
-        window.value = 100
+        saved["discoverWindow"] = 40
         startFeed { if (mode != "search" || query.keyword.isNotBlank()) repository(mode).refresh(query) }
     }
     fun refreshFeed() { val (query, mode) = selection.value; startFeed { if (mode != "search" || query.keyword.isNotBlank()) repository(mode).refresh(query) } }
-    fun loadMore() {
-        window.value = (window.value + 100).coerceAtMost(1000)
-        val (query, mode) = selection.value
-        if (feedJob?.isActive != true) feedJob = action { repository(mode).loadMore(query) }
+    fun loadMore() = appendFeed(today = false)
+    fun loadMoreToday() = appendFeed(today = true)
+    fun retryFeed() { if (feed.value.failedAppend) appendFeed(today = false, retry = true) else refreshFeed() }
+    fun retryToday() { if (todayFeed.value.failedAppend) appendFeed(today = true, retry = true) else refreshToday() }
+    fun continueFeed() = appendFeed(today = false, retry = true)
+    fun continueToday() = appendFeed(today = true, retry = true)
+
+    private fun appendFeed(today: Boolean, retry: Boolean = false) {
+        val snapshot = if (today) todayFeed.value else feed.value
+        val (query, mode) = if (today) QuerySpec() to "new" else selection.value
+        val repo = repository(mode)
+        val busy = if (today) todayJob?.isActive == true else feedJob?.isActive == true
+        if (busy || snapshot.queryKey != repo.key(query) || snapshot.loading || !snapshot.hasMore || snapshot.updatedAtMs == null) return
+        if (!retry && (snapshot.error != null || (snapshot.requiresManualLoad && !snapshot.hasCachedMore))) return
+        val windowKey = if (today) "todayWindow" else "discoverWindow"
+        val visibleWindow = if (today) todayWindow.value else window.value
+        saved[windowKey] = (visibleWindow.toLong() + 40).coerceAtMost(Int.MAX_VALUE.toLong() - 1).toInt()
+        if (snapshot.hasCachedMore && !snapshot.failedAppend) return
+        val job = action { repo.loadMore(query) }
+        if (today) todayJob = job else feedJob = job
     }
     fun addLater(video: Video) = action { graph.library.addWatchLater(video); notify("已加入稍后看") }
     fun removeLater(id: String) = action {

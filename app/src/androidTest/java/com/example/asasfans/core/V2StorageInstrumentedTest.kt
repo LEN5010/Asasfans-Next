@@ -56,4 +56,39 @@ class V2StorageInstrumentedTest {
             legacy.delete()
         }
     }
+
+    @Test fun v4DatabaseUnlocksStartupAndPreservesOriginalUpdates() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "v4-instrumentation-${System.nanoTime()}.db"
+        val legacy = File(context.cacheDir, "legacy-v4-${System.nanoTime()}.db")
+        SQLiteDatabase.openOrCreateDatabase(legacy, null).use {
+            it.version = 4
+            it.execSQL("CREATE TABLE subscribedUp(mid INTEGER PRIMARY KEY, name TEXT, face TEXT, note TEXT, updatedAt INTEGER)")
+            it.execSQL("INSERT INTO subscribedUp VALUES (123, '合成昵称', '', '必须保留的合成备注', 1700000000)")
+            it.execSQL("CREATE TABLE subscriptionUpdateVideo(bvid TEXT PRIMARY KEY, title TEXT, seen INTEGER)")
+            it.execSQL("INSERT INTO subscriptionUpdateVideo VALUES ('BV1xx411c7mD', '合成追更内容', 1)")
+            it.execSQL("CREATE TABLE subscriptionUpdateStatus(id INTEGER PRIMARY KEY, last_synced_at INTEGER)")
+            it.execSQL("INSERT INTO subscriptionUpdateStatus VALUES (1, 1700000000)")
+        }
+        val original = legacy.readBytes()
+        val database = Room.databaseBuilder(context, AsasDatabase::class.java, name).build()
+        try {
+            val startup = com.example.asasfans.core.data.StartupCoordinator(
+                importAssets = { LegacyImporter(database, legacy).importIfNeeded(); Unit }, importPreferences = {},
+            )
+            startup.initialize()
+            assertEquals(com.example.asasfans.core.data.StartupState.Ready, startup.state.value)
+            startup.requireReady()
+            assertEquals("必须保留的合成备注", database.assets().allSubscriptions().single().note)
+            assertEquals(2, database.assets().recoveryRows().size)
+            assertTrue(database.assets().history().first().isEmpty())
+            assertArrayEquals(original, legacy.readBytes())
+            assertEquals(4, database.assets().receipt(LegacyImporter.RECEIPT_ID)!!.sourceVersion)
+        } finally {
+            database.close()
+            context.deleteDatabase(name)
+            legacy.delete()
+        }
+    }
+
 }

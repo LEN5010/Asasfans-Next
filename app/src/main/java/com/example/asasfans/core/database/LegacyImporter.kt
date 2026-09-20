@@ -11,6 +11,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+class UnsupportedLegacyVersion(val version: Int) : IllegalStateException("Unsupported legacy database version: $version")
+
 /** The only new component that knows the 1.x database schema. Never writes the source. */
 class LegacyImporter(
     private val database: AsasDatabase,
@@ -43,7 +45,7 @@ class LegacyImporter(
         if (!legacyFile.exists()) return Snapshot(0, emptyList())
         // A corrupt/unreadable existing database must fail, not be treated as a new install.
         return SQLiteDatabase.openDatabase(legacyFile.path, null, SQLiteDatabase.OPEN_READONLY).use { old ->
-            require(old.version in 0..3) { "旧数据库版本高于当前迁移器支持范围" }
+            if (old.version !in 0..4) throw UnsupportedLegacyVersion(old.version)
             val tables = old.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null).use { cursor ->
                 buildSet { while (cursor.moveToNext()) add(cursor.getString(0)) }
             }
@@ -67,6 +69,15 @@ class LegacyImporter(
 
     private suspend fun importRow(row: LegacyRow) {
         val dao = database.assets()
+        if (row.table in UPDATE_TABLES) {
+            // v4's cached update/seen state is not playback history. Preserve its exact
+            // fields without guessing a new feed cursor or turning seen into watched.
+            dao.insertRecovery(LegacyRecoveryEntity(
+                "${row.table}:${row.index}", row.table, Json.encodeToString(row.values),
+                "旧版追更缓存与已读状态，保留供关注中心恢复",
+            ))
+            return
+        }
         // Validate/convert before mutating. Only validation errors are quarantined;
         // database/IO failures must propagate and roll back the entire import.
         val converted = try {
@@ -124,9 +135,11 @@ class LegacyImporter(
     private data class Converted(val content: ContentEntity? = null, val rule: RuleEntity? = null, val subscription: SubscriptionEntity? = null)
 
     companion object {
+        // The receipt key is stable: renaming it would rerun migration for existing users.
         const val RECEIPT_ID = "legacy-blackList-v1-v3"
         private const val MAX_ROWS = 100_000
-        private val TABLES = listOf("blackWord", "blackTag", "blackMid", "blackBvid", "subscribedUp")
+        private val UPDATE_TABLES = setOf("subscriptionUpdateVideo", "subscriptionUpdateStatus")
+        private val TABLES = listOf("blackWord", "blackTag", "blackMid", "blackBvid", "subscribedUp") + UPDATE_TABLES
         fun stableRuleId(kind: String, value: String): String = MessageDigest.getInstance("SHA-256")
             .digest("$kind\u0000$value".toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
     }

@@ -1,6 +1,8 @@
 package com.example.asasfans.core.data
 
 import com.example.asasfans.core.model.AppFailure
+import com.example.asasfans.core.database.UnsupportedLegacyVersion
+import android.database.sqlite.SQLiteFullException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,7 +37,11 @@ class StartupCoordinator(
             throw error
         } catch (error: Exception) {
             mutableState.value = StartupState.Failed(
-                "本地数据初始化未完成，旧数据未删除。请检查存储空间后重试。",
+                when (error) {
+                    is UnsupportedLegacyVersion -> "此版本暂不支持现有数据，请更新应用"
+                    is SQLiteFullException -> "存储空间不足，请释放空间后重试"
+                    else -> "无法读取本地数据，请重试"
+                },
                 error.javaClass.simpleName,
             )
         }

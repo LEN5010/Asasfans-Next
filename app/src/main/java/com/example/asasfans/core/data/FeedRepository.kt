@@ -23,6 +23,14 @@ data class FeedSnapshot(
     val error: AppFailure? = null,
     val filteredCount: Int = 0,
     val tagsIncomplete: Boolean = false,
+    val queryKey: String = "",
+    val cursor: String? = null,
+    val loadedCount: Int = 0,
+    val hasCachedMore: Boolean = false,
+    val refreshing: Boolean = false,
+    val appending: Boolean = false,
+    val failedAppend: Boolean = false,
+    val requiresManualLoad: Boolean = false,
 )
 
 /** Atomic refresh, success-only cursors and bounded refill. Source ordering is preserved. */
@@ -33,21 +41,26 @@ class FeedRepository(
     private val awaitReady: suspend () -> Unit,
     private val nowMs: () -> Long = System::currentTimeMillis,
 ) {
-    private data class LoadState(val loading: Boolean = false, val error: AppFailure? = null)
+    private data class LoadState(val loading: Boolean = false, val error: AppFailure? = null,
+        val append: Boolean = false, val requiresManualLoad: Boolean = false)
     private val locks = ConcurrentHashMap<String, Mutex>()
     private val loads = ConcurrentHashMap<String, MutableStateFlow<LoadState>>()
 
     fun observe(query: QuerySpec, limit: Int = 100): Flow<FeedSnapshot> {
-        require(limit in 1..1000)
+        require(limit in 1 until Int.MAX_VALUE)
         val key = key(query)
-        return combine(database.feeds().entries(key, limit), database.feeds().observeSyncState(key),
+        return combine(database.feeds().entries(key, limit + 1), database.feeds().observeSyncState(key),
             database.assets().rules(), loadState(key)) { entries, sync, rules, loading ->
-            val decisions = entries.map { it.toVideo() }.map { video -> video to
+            val decisions = entries.take(limit).map { it.toVideo() }.map { video -> video to
                 ContentRuleEvaluator.evaluate(video, rules.toRules(), nowMs()) }
+            val cachedMore = entries.size > limit
             FeedSnapshot(
-                decisions.filterNot { it.second.blocked }.map { it.first }, loading.loading,
-                sync?.exhausted != true, sync?.lastSuccessMs, loading.error,
-                decisions.count { it.second.blocked }, decisions.any { it.second.tagsUnknown },
+                videos = decisions.filterNot { it.second.blocked }.map { it.first }, loading = loading.loading,
+                hasMore = cachedMore || sync?.exhausted != true, updatedAtMs = sync?.lastSuccessMs, error = loading.error,
+                filteredCount = decisions.count { it.second.blocked }, tagsIncomplete = decisions.any { it.second.tagsUnknown },
+                queryKey = key, cursor = sync?.cursor, loadedCount = decisions.size, hasCachedMore = cachedMore,
+                refreshing = loading.loading && !loading.append, appending = loading.loading && loading.append,
+                failedAppend = loading.error != null && loading.append, requiresManualLoad = loading.requiresManualLoad,
             )
         }
     }
@@ -65,7 +78,7 @@ class FeedRepository(
             val previous = database.feeds().syncState(key)
             if (!reset && previous?.exhausted == true) return
             val state = loadState(key)
-            state.value = LoadState(loading = true)
+            state.value = LoadState(loading = true, append = !reset)
             try {
                 var page = if (reset) 1 else previous?.cursor?.toIntOrNull() ?: 1
                 val existing = if (reset) emptySet() else database.feeds().contentIds(key).toSet()
@@ -98,15 +111,17 @@ class FeedRepository(
                     })
                     database.feeds().putSyncState(SyncStateEntity(key, page.toString(), now, exhausted = !hasMore))
                 }
-                state.value = LoadState()
+                state.value = LoadState(requiresManualLoad = hasMore && loaded.values.none {
+                    !ContentRuleEvaluator.evaluate(it, rules, nowMs()).blocked
+                })
             } catch (error: CancellationException) {
                 state.value = LoadState()
                 throw error
             } catch (error: AppFailure) {
                 // Existing rows and cursor remain intact. UI shows this separately from empty data.
-                state.value = LoadState(error = error)
+                state.value = LoadState(error = error, append = !reset)
             } catch (error: SQLiteException) {
-                state.value = LoadState(error = AppFailure.LocalStorage())
+                state.value = LoadState(error = AppFailure.LocalStorage(), append = !reset)
             } finally {
                 if (state.value.loading) state.value = state.value.copy(loading = false)
             }

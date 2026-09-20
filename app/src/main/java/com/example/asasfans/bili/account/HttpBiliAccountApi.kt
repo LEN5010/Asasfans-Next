@@ -26,9 +26,14 @@ class HttpBiliAccountApi(
         val data = transport.get(BiliRequest("$QR_BASE/generate".toHttpUrl())).body.data()
         val key = data.text("qrcode_key")
         val url = data.text("url").toHttpUrlOrNull() ?: throw AppFailure.InvalidResponse()
-        if (!key.matches(Regex("[a-zA-Z0-9]{32}")) || !url.isHttps || url.host != "passport.bilibili.com" ||
-            url.port != 443 || url.username.isNotEmpty() || url.password.isNotEmpty() ||
-            url.queryParameter("qrcode_key") != key) throw AppFailure.InvalidResponse()
+        val trustedPage = when (url.host) {
+            "passport.bilibili.com" -> url.encodedPath == "/h5-app/passport/login/scan"
+            "account.bilibili.com" -> url.encodedPath == "/h5/account-h5/auth/scan-web"
+            else -> false
+        }
+        if (!key.matches(Regex("[a-zA-Z0-9]{32}")) || !url.isHttps || !trustedPage ||
+            url.port != 443 || url.username.isNotEmpty() || url.password.isNotEmpty() || url.fragment != null ||
+            url.queryParameterValues("qrcode_key") != listOf(key)) throw AppFailure.InvalidResponse()
         return GeneratedQr(key, url.toString())
     }
 

@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.junit.After
@@ -32,12 +33,12 @@ class LegacyImporterTest {
     @After fun tearDown() { db.close(); legacy.delete() }
 
     @Test fun importsEveryLegacyVersionWithoutChangingSource() = runBlocking {
-        for (version in 1..3) {
+        for (version in 1..4) {
             fixture(version)
             val original = legacy.readBytes()
             val receipt = LegacyImporter(db, legacy, nowMs = { 1234 }).importIfNeeded()
             assertEquals(version, receipt.sourceVersion)
-            assertEquals(if (version == 1) 1 else if (version == 2) 3 else 5, receipt.rowCount)
+            assertEquals(when (version) { 1 -> 1; 2 -> 3; 3 -> 5; else -> 8 }, receipt.rowCount)
             val content = db.assets().content("bilibili:BV1MBeq6rEz2")!!
             assertEquals("历史标题", content.title)
             assertEquals(42_000L, content.durationMs)
@@ -102,6 +103,34 @@ class LegacyImporterTest {
         assertFalse(legacy.exists())
     }
 
+    @Test fun v4UpdateCacheAndSeenFlagsArePreservedWithoutBecomingWatchHistory() = runBlocking {
+        fixture(4)
+        val original = legacy.readBytes()
+        val importer = LegacyImporter(db, legacy)
+        assertEquals(8, importer.importIfNeeded().rowCount)
+        val recovered = db.assets().recoveryRows()
+        assertEquals(3, recovered.size)
+        val videos = recovered.filter { it.tableName == "subscriptionUpdateVideo" }
+        assertEquals(2, videos.size)
+        assertTrue(videos.any { it.rowJson.contains("\"seen\":\"1\"") })
+        assertTrue(videos.any { it.rowJson.contains("\"seen\":\"0\"") })
+        assertEquals(1, recovered.count { it.tableName == "subscriptionUpdateStatus" })
+        assertTrue(db.assets().history().first().isEmpty())
+        importer.importIfNeeded()
+        assertEquals(3, db.assets().recoveryRows().size)
+        assertArrayEquals(original, legacy.readBytes())
+    }
+
+    @Test fun unknownFutureVersionsRemainProtectedAndNeverGetAReceipt() = runBlocking {
+        fixture(5)
+        val original = legacy.readBytes()
+        try { LegacyImporter(db, legacy).importIfNeeded(); fail("unsupported schema must not be silently accepted") }
+        catch (error: UnsupportedLegacyVersion) { assertEquals(5, error.version) }
+        assertNull(db.assets().receipt(LegacyImporter.RECEIPT_ID))
+        assertTrue(db.assets().allSubscriptions().isEmpty())
+        assertArrayEquals(original, legacy.readBytes())
+    }
+
     private fun fixture(version: Int) {
         SQLiteDatabase.openOrCreateDatabase(legacy, null).use { old ->
             old.version = version
@@ -118,6 +147,13 @@ class LegacyImporterTest {
                 old.execSQL("INSERT INTO blackWord VALUES ('屏蔽词')")
                 old.execSQL("CREATE TABLE subscribedUp(mid INTEGER PRIMARY KEY, name TEXT, face TEXT, note TEXT, updatedAt INTEGER)")
                 old.execSQL("INSERT INTO subscribedUp VALUES (456, '昵称', 'https://example.com/avatar', '备注,保留', 1700000000)")
+            }
+            if (version >= 4) {
+                old.execSQL("CREATE TABLE subscriptionUpdateVideo(bvid TEXT PRIMARY KEY, title TEXT, cover TEXT, owner_name TEXT, owner_mid INTEGER, pubdate INTEGER, duration TEXT, view_count INTEGER, like_count INTEGER, tname TEXT, seen INTEGER, synced_at INTEGER)")
+                old.execSQL("INSERT INTO subscriptionUpdateVideo VALUES ('BV1xx411c7mA', '合成更新甲', '', '昵称', 456, 1700000000, '1:30', 42, 3, '音乐', 1, 1700000010)")
+                old.execSQL("INSERT INTO subscriptionUpdateVideo VALUES ('BV1xx411c7mB', '合成更新乙', '', '昵称', 456, 1700000001, '0:30', 20, 2, '音乐', 0, 1700000010)")
+                old.execSQL("CREATE TABLE subscriptionUpdateStatus(id INTEGER PRIMARY KEY, syncing INTEGER, last_synced_at INTEGER, last_message TEXT, last_error TEXT, last_new_count INTEGER, last_total_count INTEGER, subscribed_up_count INTEGER)")
+                old.execSQL("INSERT INTO subscriptionUpdateStatus VALUES (1, 0, 1700000010, '合成状态', '', 1, 2, 1)")
             }
         }
     }

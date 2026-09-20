@@ -1,6 +1,7 @@
 package com.example.asasfans.core.data
 
 import com.example.asasfans.core.model.AppFailure
+import com.example.asasfans.core.database.UnsupportedLegacyVersion
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
@@ -36,4 +37,13 @@ class StartupCoordinatorTest {
         try { startup.initialize(); fail("must propagate cancellation") } catch (_: CancellationException) { }
         assertEquals(StartupState.NotStarted, startup.state.value)
     }
+    @Test fun unsupportedVersionDoesNotMisdiagnoseStorageSpace() = runBlocking {
+        val startup = StartupCoordinator(importAssets = { throw UnsupportedLegacyVersion(5) }, importPreferences = {})
+        startup.initialize()
+        val failure = startup.state.value as StartupState.Failed
+        assertEquals("UnsupportedLegacyVersion", failure.failureType)
+        assertEquals("此版本暂不支持现有数据，请更新应用", failure.message)
+        assertFalse(failure.message.contains("存储空间"))
+    }
+
 }

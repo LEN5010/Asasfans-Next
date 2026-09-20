@@ -47,7 +47,7 @@ fun AccountPage(vm: MainViewModel, rules: () -> Unit, web: (String) -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                             CreatorAvatar(account.profile?.name ?: "A", account.profile?.avatarUrl.orEmpty(), size = 52)
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(account.profile?.name ?: "未登录", style = MaterialTheme.typography.titleMedium)
+                                Text(account.profile?.name ?: if (account.status == AccountStatus.SIGNED_OUT) "未登录" else "Bilibili 账号", style = MaterialTheme.typography.titleMedium)
                                 Text(when (account.status) {
                                     AccountStatus.NOT_LOADED -> "读取中…"
                                     AccountStatus.SIGNED_OUT -> "Bilibili"
@@ -126,10 +126,11 @@ private fun QrDialog(vm: MainViewModel, dismiss: () -> Unit) {
     var attempt by remember { mutableIntStateOf(0) }
     var canRetry by remember { mutableStateOf(false) }
     LaunchedEffect(attempt) {
-        canRetry = false; bitmap = null
+        canRetry = false; bitmap = null; status = "正在生成二维码…"
         var current: LoginQr? = null
         try {
-            current = vm.graph.account.createQr() ?: return@LaunchedEffect
+            current = vm.graph.account.createQr()
+            if (current == null) { status = "此次登录已取消"; canRetry = true; return@LaunchedEffect }
             bitmap = withContext(Dispatchers.Default) {
                 val matrix = MultiFormatWriter().encode(current.url, BarcodeFormat.QR_CODE, 320, 320)
                 createBitmap(320, 320).apply {
@@ -141,12 +142,12 @@ private fun QrDialog(vm: MainViewModel, dismiss: () -> Unit) {
                     val result = vm.graph.account.pollQr(current)
                     status = when (result) { QrStatus.WAITING -> "使用哔哩哔哩 App 扫码"; QrStatus.SCANNED -> "已扫码，请在手机上确认"; QrStatus.EXPIRED -> "二维码已过期"; QrStatus.SUCCESS -> "登录凭据已保存"; QrStatus.SUPERSEDED -> "此次登录已取消" }
                     if (result == QrStatus.SUCCESS) { vm.graph.account.refresh(); dismiss(); break }
-                    if (result == QrStatus.EXPIRED || result == QrStatus.SUPERSEDED) { canRetry = true; break }
+                    if (result == QrStatus.EXPIRED || result == QrStatus.SUPERSEDED) { bitmap = null; canRetry = true; break }
                     delay(2000)
                 }
             }
         } catch (error: CancellationException) { throw error }
-        catch (error: AppFailure) { status = error.userMessage; canRetry = true }
+        catch (error: AppFailure) { bitmap = null; status = error.userMessage; canRetry = true }
         finally { withContext(NonCancellable) { current?.let { vm.graph.account.cancelQr(it) } } }
     }
     AlertDialog(onDismissRequest = dismiss, title = { Text("B 站扫码登录") }, text = {

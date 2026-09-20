@@ -44,7 +44,9 @@ class FeedRepositoryTest {
         val failedRefresh = repository.observe(query).first()
         assertEquals(20, failedRefresh.videos.size)
         assertTrue(failedRefresh.error is AppFailure.Network)
+        assertFalse(failedRefresh.failedAppend)
         repository.loadMore(query)
+        assertTrue(repository.observe(query).first().failedAppend)
         assertEquals("2", db.feeds().syncState(repository.key(query))!!.cursor)
         fail = false
         repository.loadMore(query)
@@ -65,6 +67,7 @@ class FeedRepositoryTest {
         assertTrue(state.videos.isEmpty())
         assertEquals(100, state.filteredCount)
         assertTrue(state.hasMore)
+        assertTrue(state.requiresManualLoad)
     }
 
     @Test fun sourceRankingIsNotAccidentallyReplacedByPublishDate() = runBlocking {
@@ -83,4 +86,43 @@ class FeedRepositoryTest {
         assertFalse(snapshot.loading)
         assertNull(snapshot.error)
     }
+
+    @Test fun cachedRowsRemainPageableEvenWhenTheServerIsExhausted() = runBlocking {
+        var requests = 0
+        val repo = FeedRepository(db, "test", { _, page -> requests++; VideoPage(videos(page), page, 20, false) }, {})
+        repo.refresh(QuerySpec())
+        val first = repo.observe(QuerySpec(), 10).first()
+        assertEquals(10, first.videos.size)
+        assertEquals(10, first.loadedCount)
+        assertTrue(first.hasCachedMore)
+        assertTrue(first.hasMore)
+        val all = repo.observe(QuerySpec(), 40).first()
+        assertEquals(20, all.videos.size)
+        assertFalse(all.hasCachedMore)
+        assertFalse(all.hasMore)
+        assertEquals(1, requests)
+    }
+
+    @Test fun appendWithOnlyDuplicatePagesPausesAutomaticLoadingAfterBoundedScan() = runBlocking {
+        var requests = 0
+        val repo = FeedRepository(db, "test", { _, page -> requests++; VideoPage(videos(1), page, 1000, true) }, {})
+        repo.refresh(QuerySpec())
+        repo.loadMore(QuerySpec())
+        val state = repo.observe(QuerySpec()).first()
+        assertEquals(6, requests)
+        assertEquals(20, state.videos.size)
+        assertTrue(state.requiresManualLoad)
+        assertTrue(state.hasMore)
+    }
+
+    @Test fun loadingWindowCanGrowBeyondTheOldThousandItemCeiling() = runBlocking {
+        val many = (0..1059).map { Video(ContentId.bilibili("fixture-$it"), "视频 $it", Creator(id = "42")) }
+        val repo = FeedRepository(db, "test", { _, page -> VideoPage(many, page, many.size.toLong(), false) }, {})
+        repo.refresh(QuerySpec())
+        assertTrue(repo.observe(QuerySpec(), 1000).first().hasCachedMore)
+        val expanded = repo.observe(QuerySpec(), 1100).first()
+        assertEquals(1060, expanded.videos.size)
+        assertFalse(expanded.hasMore)
+    }
+
 }

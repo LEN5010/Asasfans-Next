@@ -37,52 +37,60 @@ val communityTools = listOf(
 )
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayPage(vm: MainViewModel, onOpen: (String, Long?, Long?) -> Unit, discover: () -> Unit, library: () -> Unit, web: (String) -> Unit) {
     val continuing by vm.continuing.collectAsStateWithLifecycle()
     val later by vm.watchLater.collectAsStateWithLifecycle()
     val feed by vm.todayFeed.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { vm.refreshToday() }
+    val grid = rememberLazyGridState()
+    LaunchedEffect(Unit) { vm.ensureTodayLoaded() }
+    AutoLoadFeed(grid, feed, vm::loadMoreToday)
     var tools by rememberSaveable { mutableStateOf(false) }
     Column {
         PageHeader("Asasfans") { RoundAction(Icons.Outlined.Explore, "发现视频", discover) }
-        LazyVerticalGrid(columns = videoGridCells(), contentPadding = PaddingValues(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    listOf(Icons.Outlined.Headphones to "录音棚", Icons.Outlined.CalendarMonth to "日历", Icons.Outlined.GridView to "工具").forEachIndexed { index, (icon, title) ->
-                        Card(onClick = { if (index == 2) tools = true else web(communityTools[index].second) }, Modifier.weight(1f),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow), shape = RoundedCornerShape(16.dp)) {
-                            Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-                                Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text(title, style = MaterialTheme.typography.labelLarge)
+        PullToRefreshBox(isRefreshing = feed.refreshing, onRefresh = vm::refreshToday, modifier = Modifier.weight(1f)) {
+            LazyVerticalGrid(columns = videoGridCells(), state = grid, modifier = Modifier.fillMaxSize().testTag("today-grid"),
+                contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item(key = "tools", span = { GridItemSpan(maxLineSpan) }) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listOf(Icons.Outlined.Headphones to "录音棚", Icons.Outlined.CalendarMonth to "日历", Icons.Outlined.GridView to "工具").forEachIndexed { index, (icon, title) ->
+                            Card(onClick = { if (index == 2) tools = true else web(communityTools[index].second) }, Modifier.weight(1f),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow), shape = RoundedCornerShape(16.dp)) {
+                                Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+                                    Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text(title, style = MaterialTheme.typography.labelLarge)
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (continuing.isNotEmpty()) {
-                item(span = { GridItemSpan(maxLineSpan) }) { SectionTitle("继续观看") }
-                items(continuing.take(2), key = { it.first.id.key + ":" + it.second.partId }) { (video, progress) ->
-                    VideoCard(video, { onOpen(video.id.value, progress.partId, progress.positionMs) }, { vm.addLater(video) },
-                        extra = "${timeText(progress.positionMs)} / ${timeText(progress.durationMs)}")
+                if (continuing.isNotEmpty()) {
+                    item(key = "continue-title", span = { GridItemSpan(maxLineSpan) }) { SectionTitle("继续观看") }
+                    items(continuing.take(2), key = { "continue:${it.first.id.key}:${it.second.partId}" }) { (video, progress) ->
+                        VideoCard(video, { onOpen(video.id.value, progress.partId, progress.positionMs) }, { vm.addLater(video) },
+                            extra = "${timeText(progress.positionMs)} / ${timeText(progress.durationMs)}")
+                    }
                 }
-            }
-            item(span = { GridItemSpan(maxLineSpan) }) { SectionTitle("最新视频", action = "更多", onAction = discover) }
-            if (feed.loading && feed.videos.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            feed.error?.let { failure -> item(span = { GridItemSpan(maxLineSpan) }) { MessagePanel("加载失败", failure.userMessage, "重试", vm::refreshToday) } }
-            if (!feed.loading && feed.videos.isEmpty() && feed.error == null) item(span = { GridItemSpan(maxLineSpan) }) { EmptyState("暂无视频", action = "刷新", onAction = vm::refreshToday) }
-            items(feed.videos.take(6), key = { "new:${it.id.key}" }) { video ->
-                VideoCard(video, { onOpen(video.id.value, null, null) }, { vm.addLater(video) })
-            }
-            if (later.isNotEmpty()) {
-                item(span = { GridItemSpan(maxLineSpan) }) { SectionTitle("稍后看", later.size, "全部", library) }
-                items(later.take(4), key = { "later:${it.id}" }) { row ->
-                    VideoCard(row.toVideo(), { onOpen(row.sourceId, null, null) }, { vm.removeLater(row.id) }, "移出稍后看")
+                if (later.isNotEmpty()) {
+                    item(key = "later-title", span = { GridItemSpan(maxLineSpan) }) { SectionTitle("稍后看", later.size, "全部", library) }
+                    items(later.take(2), key = { "later:${it.id}" }) { row ->
+                        VideoCard(row.toVideo(), { onOpen(row.sourceId, null, null) }, { vm.removeLater(row.id) }, "移出稍后看")
+                    }
                 }
+                item(key = "latest-title", span = { GridItemSpan(maxLineSpan) }) { SectionTitle("最新视频") }
+                if (!feed.failedAppend) feed.error?.let { failure -> item(key = "refresh-error", span = { GridItemSpan(maxLineSpan) }) {
+                    MessagePanel("刷新失败", failure.userMessage, "重试", vm::retryToday)
+                } }
+                if (!feed.loading && feed.videos.isEmpty() && feed.error == null && !feed.hasCachedMore) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
+                    EmptyState("暂无视频")
+                }
+                items(feed.videos, key = { "new:${it.id.key}" }) { video ->
+                    VideoCard(video, { onOpen(video.id.value, null, null) }, { vm.addLater(video) })
+                }
+                item(key = "feed-footer", span = { GridItemSpan(maxLineSpan) }) { FeedFooter(feed, vm::retryToday, vm::continueToday) }
             }
-
         }
     }
     if (tools) CommunityToolsSheet({ tools = false }, web)
@@ -97,10 +105,10 @@ fun DiscoverPage(vm: MainViewModel, open: (String) -> Unit, internal: (String) -
     var search by rememberSaveable { mutableStateOf(false) }
     var tools by rememberSaveable { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
-    var loaded by rememberSaveable { mutableStateOf(false) }
     val grid = rememberLazyGridState()
     val categories = listOf("new" to "最新", "creations" to "二创", "clips" to "切片")
-    LaunchedEffect(Unit) { if (!loaded) { loaded = true; vm.refreshFeed() } }
+    LaunchedEffect(Unit) { vm.ensureDiscoverLoaded() }
+    AutoLoadFeed(grid, feed, vm::loadMore)
     var displayedQuery by rememberSaveable { mutableStateOf("$mode:$keyword") }
     LaunchedEffect(mode, keyword) {
         val nextQuery = "$mode:$keyword"
@@ -125,21 +133,17 @@ fun DiscoverPage(vm: MainViewModel, open: (String) -> Unit, internal: (String) -
             Text(keyword, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             IconButton(onClick = { vm.setFeed("new") }) { Icon(Icons.Outlined.Close, "清除搜索") }
         }
-        PullToRefreshBox(isRefreshing = feed.loading, onRefresh = vm::refreshFeed, modifier = Modifier.weight(1f)) {
+        PullToRefreshBox(isRefreshing = feed.refreshing, onRefresh = vm::refreshFeed, modifier = Modifier.weight(1f)) {
             LazyVerticalGrid(columns = videoGridCells(), state = grid, modifier = Modifier.fillMaxSize().testTag("video-grid"),
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                feed.error?.let { failure -> item(span = { GridItemSpan(maxLineSpan) }) { MessagePanel("加载失败", failure.userMessage, "重试", vm::refreshFeed) } }
-                if (!feed.loading && feed.videos.isEmpty() && feed.error == null) item(span = { GridItemSpan(maxLineSpan) }) { EmptyState("暂无视频", action = "重新加载", onAction = vm::refreshFeed) }
+                if (!feed.failedAppend) feed.error?.let { failure -> item(key = "refresh-error", span = { GridItemSpan(maxLineSpan) }) { MessagePanel("刷新失败", failure.userMessage, "重试", vm::retryFeed) } }
+                if (!feed.loading && feed.videos.isEmpty() && feed.error == null && !feed.hasCachedMore) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) { EmptyState("暂无视频") }
                 items(feed.videos, key = { it.id.key }) { video ->
                     VideoCard(video, { open(video.id.value) }, { vm.addLater(video) },
                         onInternal = { internal(video.id.value) }, onExternal = { external("https://www.bilibili.com/video/${video.id.value}") })
                 }
-                if (feed.hasMore && feed.videos.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        TextButton(onClick = vm::loadMore, enabled = !feed.loading) { Text(if (feed.loading) "加载中…" else "加载更多") }
-                    }
-                }
+                item(key = "feed-footer", span = { GridItemSpan(maxLineSpan) }) { FeedFooter(feed, vm::retryFeed, vm::continueFeed) }
             }
         }
     }
