@@ -34,6 +34,16 @@ class _StubRepository implements DynamicRepository {
     if (failure != null) throw failure!;
     return posts;
   }
+
+  @override
+  Future<DynamicPage> search({
+    DynamicQuery query = const DynamicQuery(),
+    String? cursor,
+    RequestCancellation? cancellation,
+  }) async => const DynamicPage(items: []);
+
+  @override
+  Future<List<DynamicMember>> members() async => const [];
 }
 
 Widget _app(DynamicRepository repository) => ProviderScope(

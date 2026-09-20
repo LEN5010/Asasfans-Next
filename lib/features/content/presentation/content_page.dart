@@ -7,6 +7,7 @@ import '../../../shared/widgets/feature_pending.dart';
 import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
 import '../domain/fanart_repository.dart';
+import 'dynamic_feed_view.dart';
 import 'fanart_card.dart';
 import 'fanart_detail_page.dart';
 import 'fanart_filter_bar.dart';
@@ -38,11 +39,16 @@ class ContentPage extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: current.isBackedByFanartApi
-                ? _FanartFeed(channel: current)
-                : const FeaturePending(
-                    icon: Icons.auto_awesome_mosaic_outlined,
-                  ),
+            child: switch (current) {
+              _ when current.isBackedByFanartApi => _FanartFeed(
+                channel: current,
+              ),
+              _ when current.isBackedByDynamicsApi => const DynamicFeedView(),
+              // Live clips come from a separate source that is not wired yet.
+              _ => const FeaturePending(
+                icon: Icons.auto_awesome_mosaic_outlined,
+              ),
+            },
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import '../data/dynamic_fanart_repository.dart';
 import '../data/dynamic_post_repository.dart';
 import '../domain/dynamic_repository.dart';
 import '../domain/fanart_repository.dart';
+import 'dynamic_feed_controller.dart';
 import 'fanart_feed_controller.dart';
 
 final fanartRepositoryProvider = Provider<FanartRepository>(
@@ -29,6 +30,16 @@ final onThisDayProvider = FutureProvider<List<DynamicPost>>(
   (ref) => ref.watch(dynamicRepositoryProvider).onThisDay(limit: 12),
 );
 
+final dynamicFeedControllerProvider =
+    Provider.autoDispose<DynamicFeedController>((ref) {
+      final controller = DynamicFeedController(
+        ref.watch(dynamicRepositoryProvider),
+      );
+      ref.onDispose(controller.dispose);
+      ref.keepAlive();
+      return controller;
+    });
+
 /// Content channels. Live replays and live clips come from a different source
 /// than the curated fanart archive, so only the archive-backed channels are
 /// served by this repository; the others stay explicitly pending.
@@ -46,6 +57,9 @@ enum ContentChannel {
 
   /// Whether the fanart dataset can currently answer this channel.
   bool get isBackedByFanartApi => this == ContentChannel.fanart;
+
+  /// Whether the historical publishing record answers this channel.
+  bool get isBackedByDynamicsApi => this == ContentChannel.dynamics;
 
   FanartQuery get initialQuery => const FanartQuery();
 }

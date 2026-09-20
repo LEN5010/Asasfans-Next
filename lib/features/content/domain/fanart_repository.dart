@@ -1,4 +1,7 @@
 import '../../../core/domain/content_identity.dart';
+import '../../../core/domain/request_cancellation.dart';
+
+export '../../../core/domain/request_cancellation.dart';
 
 /// Server-accepted facet values. The client mirrors them so an unsupported
 /// combination fails before a request is spent against the shared rate limit.
@@ -171,32 +174,6 @@ class FanartPage {
   final String? nextCursor;
   final String? prevCursor;
   final int? total;
-}
-
-/// Cancellation handle owned by the domain so the contract stays free of any
-/// HTTP client type. The data layer binds it to its own transport.
-class RequestCancellation {
-  final List<void Function()> _listeners = [];
-  bool _cancelled = false;
-
-  bool get isCancelled => _cancelled;
-
-  void cancel() {
-    if (_cancelled) return;
-    _cancelled = true;
-    for (final listener in _listeners) {
-      listener();
-    }
-    _listeners.clear();
-  }
-
-  void onCancel(void Function() listener) {
-    if (_cancelled) {
-      listener();
-      return;
-    }
-    _listeners.add(listener);
-  }
 }
 
 abstract interface class FanartRepository {

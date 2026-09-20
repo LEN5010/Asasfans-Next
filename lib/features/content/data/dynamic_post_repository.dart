@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/domain/content_identity.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../core/network/public_api_client.dart';
@@ -8,6 +10,81 @@ class DynamicPostRepository implements DynamicRepository {
   DynamicPostRepository(this._api, {required this.baseUrl});
   final PublicApiClient _api;
   final Uri baseUrl;
+
+  @override
+  Future<DynamicPage> search({
+    DynamicQuery query = const DynamicQuery(),
+    String? cursor,
+    RequestCancellation? cancellation,
+  }) async {
+    if (!query.isServerAcceptable) {
+      throw const ApiFailure(ApiFailureKind.invalidRequest);
+    }
+    final token = CancelToken();
+    cancellation?.onCancel(token.cancel);
+    final json = await _api.get(
+      'search',
+      query: buildSearchQuery(query, cursor: cursor),
+      cancelToken: token,
+    );
+    return decodeSearch(json, baseUrl: baseUrl);
+  }
+
+  @override
+  Future<List<DynamicMember>> members() async {
+    final json = await _api.get('members');
+    final items = json['items'] ?? json['members'];
+    if (items is! List) {
+      throw const ApiFailure(ApiFailureKind.invalidResponse);
+    }
+    return List.unmodifiable(items.map((raw) => _member(raw, baseUrl)));
+  }
+
+  static Map<String, dynamic> buildSearchQuery(
+    DynamicQuery query, {
+    String? cursor,
+  }) {
+    final keyword = query.keyword.trim();
+    return {
+      if (keyword.isNotEmpty) 'q': keyword,
+      'member': ?query.memberId,
+      'type': ?query.type?.name,
+      'from': ?_date(query.from),
+      'to': ?_date(query.to),
+      'sort': query.sort.name,
+      'limit': query.limit,
+      'cursor': ?cursor,
+    };
+  }
+
+  /// The range filter is a calendar date, not an instant.
+  static String? _date(DateTime? value) => value == null
+      ? null
+      : '${value.year.toString().padLeft(4, '0')}-'
+            '${value.month.toString().padLeft(2, '0')}-'
+            '${value.day.toString().padLeft(2, '0')}';
+
+  static DynamicPage decodeSearch(
+    Map<String, dynamic> json, {
+    required Uri baseUrl,
+  }) {
+    final items = json['items'];
+    final next = json['nextCursor'];
+    final prev = json['prevCursor'];
+    if (items is! List || !_isCursor(next) || !_isCursor(prev)) {
+      throw const ApiFailure(ApiFailureKind.invalidResponse);
+    }
+    final total = json['total'];
+    return DynamicPage(
+      items: List.unmodifiable(items.map((raw) => decodePost(raw, baseUrl))),
+      nextCursor: next as String?,
+      prevCursor: prev as String?,
+      total: total is int && total >= 0 ? total : null,
+    );
+  }
+
+  static bool _isCursor(Object? value) =>
+      value == null || (value is String && value.isNotEmpty);
 
   @override
   Future<List<DynamicPost>> onThisDay({
