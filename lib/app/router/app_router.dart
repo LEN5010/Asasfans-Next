@@ -1,10 +1,14 @@
+import '../../features/rules/presentation/rules_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/backup/presentation/backup_page.dart';
 import '../../features/content/presentation/content_page.dart';
 import '../../features/mine/presentation/mine_page.dart';
+import '../../features/library/presentation/library_pages.dart';
+import '../../features/library/presentation/calendar_follows.dart';
 import '../../features/today/presentation/today_page.dart';
 import 'app_shell.dart';
 
@@ -36,6 +40,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         const {
                           'fanart',
                           'clips',
+                          'latest',
+                          'subscriptions',
+                          'replays',
                           'dynamics',
                         }.contains(state.pathParameters['channel'])
                         ? null
@@ -61,17 +68,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/mine',
                 builder: (context, state) => const MinePage(),
                 routes: [
-                  for (final entry in const [
-                    ('saved', '收藏', Icons.bookmark_border),
-                    ('history', '观看历史', Icons.history),
-                    ('subscriptions', '订阅管理', Icons.person_add_alt),
-                    ('reminders', '提醒', Icons.notifications_none),
-                  ])
-                    GoRoute(
-                      path: entry.$1,
-                      builder: (context, state) =>
-                          PersonalSectionPage(title: entry.$2, icon: entry.$3),
+                  GoRoute(
+                    path: 'saved',
+                    builder: (_, _) => const CollectionsPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':folder',
+                        builder: (_, state) => CollectionPage(
+                          folderId: state.pathParameters['folder']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'later',
+                    builder: (_, _) => const WatchLaterPage(),
+                  ),
+                  GoRoute(
+                    path: 'history',
+                    builder: (_, _) => const LibraryHistoryPage(),
+                  ),
+                  GoRoute(
+                    path: 'subscriptions',
+                    builder: (_, _) => const SubscriptionsPage(),
+                  ),
+                  GoRoute(
+                    path: 'calendar-follows',
+                    builder: (_, _) => const CalendarFollowsPage(),
+                  ),
+                  GoRoute(path: 'rules', builder: (_, _) => const RulesPage()),
+                  GoRoute(
+                    path: 'backup',
+                    builder: (_, _) => const BackupPage(),
+                  ),
+                  GoRoute(
+                    path: 'reminders',
+                    builder: (_, _) => const PersonalSectionPage(
+                      title: '提醒',
+                      icon: Icons.notifications_none,
                     ),
+                  ),
                 ],
               ),
             ],

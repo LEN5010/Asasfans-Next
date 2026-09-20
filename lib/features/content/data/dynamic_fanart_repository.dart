@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 
 import '../../../core/domain/content_identity.dart';
@@ -11,9 +13,11 @@ import '../domain/fanart_repository.dart';
 /// here follows the server's shared DTO. Unknown fields are ignored rather than
 /// rejected, and long source identifiers always stay strings.
 class DynamicFanartRepository implements FanartRepository {
-  DynamicFanartRepository(this._api, {required this.baseUrl});
+  DynamicFanartRepository(this._api, {required this.baseUrl, Random? random})
+    : _random = random ?? Random();
   final PublicApiClient _api;
   final Uri baseUrl;
+  final Random _random;
 
   @override
   Future<FanartPage> page({
@@ -50,7 +54,18 @@ class DynamicFanartRepository implements FanartRepository {
       query: {...buildQuery(query.copyWith(limit: 1)), 'random': '1'},
       cancelToken: token,
     );
-    return decodePage(json, baseUrl: baseUrl).items.firstOrNull;
+    final items = decodePage(json, baseUrl: baseUrl).items;
+    if (items.isEmpty) return null;
+    // Union random returns one draw per nonempty source, Bilibili first.
+    // Give each represented source equal weight rather than always taking
+    // the first row. This is source-balanced, not a dataset-size lottery.
+    final groups = <ContentSource, List<FanartItem>>{};
+    for (final item in items) {
+      groups.putIfAbsent(item.identity.source, () => []).add(item);
+    }
+    final sources = groups.values.toList();
+    final selected = sources[_random.nextInt(sources.length)];
+    return selected[_random.nextInt(selected.length)];
   }
 
   /// Only parameters the deployed service validates are sent; an unsupported

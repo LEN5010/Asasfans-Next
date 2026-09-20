@@ -12,6 +12,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'helpers/today_fixture.dart';
+
 /// Window sizes that matter: a large desktop, a short desktop window, a
 /// common phone, and the smallest phone still supported.
 const _sizes = [
@@ -84,6 +86,7 @@ class _DynamicStub implements DynamicRepository {
 
 Widget _host(Widget home) => ProviderScope(
   overrides: [
+    ...offlineTodayOverrides(fanart: [_fanart('today')]),
     fanartRepositoryProvider.overrideWithValue(_FanartStub()),
     dynamicRepositoryProvider.overrideWithValue(_DynamicStub()),
   ],

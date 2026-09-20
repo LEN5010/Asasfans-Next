@@ -9,6 +9,7 @@ class _Adapter implements HttpClientAdapter {
   _Adapter(this.response);
   final ResponseBody response;
   RequestOptions? request;
+  int calls = 0;
 
   @override
   Future<ResponseBody> fetch(
@@ -17,6 +18,7 @@ class _Adapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     request = options;
+    calls++;
     return response;
   }
 
@@ -25,6 +27,39 @@ class _Adapter implements HttpClientAdapter {
 }
 
 void main() {
+  test(
+    'one 429 blocks other routes on the same API client before dispatch',
+    () async {
+      var now = DateTime.utc(2026, 9, 21);
+      final adapter = _Adapter(
+        ResponseBody.fromString(
+          '',
+          429,
+          headers: {
+            'retry-after': ['60'],
+          },
+        ),
+      );
+      final dio = Dio(BaseOptions(baseUrl: 'https://example.test/api/'))
+        ..httpClientAdapter = adapter;
+      addTearDown(() => dio.close(force: true));
+      final client = PublicApiClient(dio, clock: () => now);
+      await expectLater(client.get('fanart'), throwsA(isA<ApiFailure>()));
+      now = now.add(const Duration(seconds: 30));
+      await expectLater(
+        client.get('search'),
+        throwsA(
+          isA<ApiFailure>().having(
+            (e) => e.retryAfter,
+            'remaining',
+            const Duration(seconds: 30),
+          ),
+        ),
+      );
+      await expectLater(client.get('on-this-day'), throwsA(isA<ApiFailure>()));
+      expect(adapter.calls, 1);
+    },
+  );
   test(
     'GET is scoped below the API prefix and does not attach credentials',
     () async {

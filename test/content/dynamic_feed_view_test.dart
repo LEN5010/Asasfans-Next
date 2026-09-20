@@ -1,3 +1,4 @@
+import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
@@ -59,7 +60,10 @@ class _StubRepository implements DynamicRepository {
 }
 
 Widget _app(DynamicRepository repository) => ProviderScope(
-  overrides: [dynamicRepositoryProvider.overrideWithValue(repository)],
+  overrides: [
+    ...offlineLibrary(),
+    dynamicRepositoryProvider.overrideWithValue(repository),
+  ],
   child: const MaterialApp(home: ContentPage(channel: 'dynamics')),
 );
 
@@ -106,6 +110,8 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byTooltip('搜索'));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '生日');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();

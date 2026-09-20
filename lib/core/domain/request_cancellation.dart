@@ -9,17 +9,19 @@ class RequestCancellation {
   void cancel() {
     if (_cancelled) return;
     _cancelled = true;
-    for (final listener in _listeners) {
+    final listeners = List<void Function()>.of(_listeners);
+    _listeners.clear();
+    for (final listener in listeners) {
       listener();
     }
-    _listeners.clear();
   }
 
-  void onCancel(void Function() listener) {
+  void Function() onCancel(void Function() listener) {
     if (_cancelled) {
       listener();
-      return;
+      return () {};
     }
     _listeners.add(listener);
+    return () => _listeners.remove(listener);
   }
 }

@@ -1,4 +1,6 @@
+import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
+import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_page.dart';
@@ -27,12 +29,15 @@ class _StubRepository implements CalendarRepository {
     this.events_ = const [],
     this.failure,
     this.fromCache = false,
+    this.expiresAt,
   });
 
-  final List<CalendarEvent> events_;
+  List<CalendarEvent> events_;
   final ApiFailure? failure;
   final bool fromCache;
+  final DateTime? expiresAt;
   int calls = 0;
+  final forced = <bool>[];
 
   @override
   Future<CalendarSnapshot> events({
@@ -41,17 +46,22 @@ class _StubRepository implements CalendarRepository {
     bool forceRefresh = false,
   }) async {
     calls++;
+    forced.add(forceRefresh);
     if (failure != null) throw failure!;
     return CalendarSnapshot(
       events: events_,
       fetchedAt: DateTime.utc(2026, 9, 21, 4),
       fromCache: fromCache,
+      isStale: fromCache,
+      expiresAt: expiresAt,
     );
   }
 }
 
 Widget _app(CalendarRepository repository, {DateTime? month}) => ProviderScope(
   overrides: [
+    ...offlineLibrary(),
+    currentTimeProvider.overrideWithValue(() => DateTime.utc(2026, 9, 21, 4)),
     calendarRepositoryProvider.overrideWithValue(repository),
     if (month != null) visibleMonthProvider.overrideWith((ref) => month),
   ],
@@ -253,5 +263,83 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('2026 年 10 月'), findsOneWidget);
+    expect(find.textContaining('10 月'), findsWidgets);
+    expect(find.textContaining('9 月'), findsNothing);
+  });
+
+  testWidgets('manual refresh actually forces source revalidation', (
+    tester,
+  ) async {
+    final repository = _StubRepository();
+    await tester.pumpWidget(_app(repository, month: september));
+    await tester.pumpAndSettle();
+    expect(repository.forced, [false]);
+    await tester.tap(find.byTooltip('刷新'));
+    await tester.pumpAndSettle();
+    expect(repository.forced, contains(true));
+  });
+
+  testWidgets(
+    'manual refresh replaces a rescheduled event in the selected agenda',
+    (tester) async {
+      final repository = _StubRepository(
+        events_: [
+          _event(
+            uid: 'stable',
+            start: DateTime.utc(2026, 9, 21, 12),
+            title: '原安排',
+          ),
+        ],
+      );
+      await tester.pumpWidget(_app(repository, month: september));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('21'));
+      await tester.pumpAndSettle();
+      expect(find.text('20:00'), findsOneWidget);
+      repository.events_ = [
+        _event(
+          uid: 'stable',
+          start: DateTime.utc(2026, 9, 21, 13),
+          title: '改期安排',
+        ),
+      ];
+      await tester.tap(find.byTooltip('刷新'));
+      await tester.pumpAndSettle();
+      expect(repository.forced.where((value) => value), hasLength(1));
+      expect(find.text('原安排'), findsNothing);
+      expect(find.text('改期安排'), findsOneWidget);
+      expect(find.text('21:00'), findsOneWidget);
+    },
+  );
+
+  testWidgets('an open month revalidates when its healthy snapshot expires', (
+    tester,
+  ) async {
+    final repository = _StubRepository(
+      expiresAt: DateTime.utc(2026, 9, 21, 4).add(const Duration(seconds: 2)),
+    );
+    await tester.pumpWidget(_app(repository, month: september));
+    await tester.pumpAndSettle();
+    expect(repository.calls, 1);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(repository.calls, 2);
+    // Disposing the page cancels the provider's expiry timer.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(minutes: 1));
+    expect(repository.calls, 2);
+  });
+
+  testWidgets('stale snapshots do not enter an automatic revalidation loop', (
+    tester,
+  ) async {
+    final repository = _StubRepository(
+      fromCache: true,
+      expiresAt: DateTime.utc(2026, 9, 21, 4),
+    );
+    await tester.pumpWidget(_app(repository, month: september));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(minutes: 5));
+    expect(repository.calls, 1);
   });
 }

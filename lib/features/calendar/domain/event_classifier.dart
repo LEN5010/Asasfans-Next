@@ -64,6 +64,7 @@ abstract final class EventClassifier {
       event.location,
       event.description,
       ...event.categories,
+      ...event.members,
     ].join(' ').toLowerCase();
     return List.unmodifiable(
       memberAliases.entries

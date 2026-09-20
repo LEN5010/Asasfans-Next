@@ -169,9 +169,9 @@ abstract interface class DynamicRepository {
 
   /// Posts published on the same month and day in earlier years.
   ///
-  /// The month and day default to the source's Shanghai date and the current
-  /// year is excluded; both rules belong to the server, so the client does not
-  /// recompute them from the device clock.
+  /// Omitting monthDay uses the source's Shanghai date. A caller can pass an
+  /// explicit Shanghai month-day to bind a date-keyed cache; exclusion of the
+  /// current year remains a server rule, not a client-side filter.
   Future<List<DynamicPost>> onThisDay({
     String? monthDay,
     OnThisDaySort sort = OnThisDaySort.hot,

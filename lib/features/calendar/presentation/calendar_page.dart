@@ -1,215 +1,340 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/providers.dart';
 import '../../../core/network/api_failure.dart';
+import '../../../core/time/calendar_time.dart';
+import '../../../core/time/shanghai_date_provider.dart';
+import '../../../shared/widgets/retry_button.dart';
 import '../application/calendar_providers.dart';
+import '../domain/calendar_agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/event_classifier.dart';
+import 'calendar_event_widgets.dart';
 
-enum CalendarFilter {
-  all('全部'),
-  live('直播'),
-  other('其他活动');
-
-  const CalendarFilter(this.label);
-  final String label;
-}
+export '../domain/calendar_agenda.dart' show CalendarFilter;
 
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
-
   @override
   ConsumerState<CalendarPage> createState() => _CalendarPageState();
 }
 
 class _CalendarPageState extends ConsumerState<CalendarPage> {
   CalendarFilter _filter = CalendarFilter.all;
-  DateTime? _selectedDay;
+  Set<String> _members = {};
+  bool _week = false;
+  bool _monthExpanded = false;
+  bool _refreshing = false;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        if (mounted) ref.invalidate(monthEventsProvider);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  void _select(DateTime day) {
+    ref.read(selectedCalendarDayProvider.notifier).state = day;
+    ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
+      day.year,
+      day.month,
+    );
+  }
+
+  void _today() {
+    final day = ref.read(shanghaiDateProvider);
+    ref.read(selectedCalendarDayProvider.notifier).state = null;
+    ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
+      day.year,
+      day.month,
+    );
+  }
+
+  Future<void> _refresh(DateTime month) async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    try {
+      await ref.read(refreshCalendarProvider)(month);
+    } on ApiFailure catch (failure) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final month = ref.watch(visibleMonthProvider);
+    final today = ref.watch(shanghaiDateProvider);
+    final selected = CalendarTime.selectDayInMonth(
+      month,
+      ref.watch(selectedCalendarDayProvider) ?? today,
+    );
     final snapshot = ref.watch(monthEventsProvider(month));
-    final selected = _selectedDay ?? shanghaiDayOf(shanghaiNow(), allDay: true);
+    ref.listen(shanghaiDateProvider, (previous, next) {
+      if (previous != null &&
+          ref.read(selectedCalendarDayProvider) == null &&
+          month.year == previous.year &&
+          month.month == previous.month) {
+        ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
+          next.year,
+          next.month,
+        );
+      }
+    });
+    final events = (snapshot.valueOrNull?.events ?? const <CalendarEvent>[])
+        .where(
+          (event) =>
+              CalendarAgenda.visible(event, filter: _filter, members: _members),
+        )
+        .toList();
+    final byDay = CalendarAgenda.group(
+      events,
+      from: month,
+      until: DateTime.utc(month.year, month.month + 1),
+    );
 
+    Widget monthHeader({bool collapsible = false}) => _MonthHeader(
+      month: month,
+      expanded: _monthExpanded,
+      collapsible: collapsible,
+      onToggle: () => setState(() => _monthExpanded = !_monthExpanded),
+      onChange: (delta) => _select(
+        CalendarTime.selectDayInMonth(
+          DateTime.utc(month.year, month.month + delta),
+          selected,
+        ),
+      ),
+    );
+    Widget filters({required bool wide}) => _CalendarFilters(
+      wide: wide,
+      filter: _filter,
+      members: _members,
+      onFilter: (value) => setState(() => _filter = value),
+      onMember: (value) => setState(
+        () => _members = _members.contains(value)
+            ? ({..._members}..remove(value))
+            : {..._members, value},
+      ),
+      onReset: () => setState(() {
+        _filter = CalendarFilter.all;
+        _members = {};
+      }),
+    );
+    Widget agenda({required bool scrollable}) => _Agenda(
+      key: ValueKey('calendar-agenda-$scrollable'),
+      day: selected,
+      week: _week,
+      onWeek: (value) => setState(() => _week = value),
+      snapshot: snapshot,
+      events: events,
+      scrollable: scrollable,
+      filtered: _filter != CalendarFilter.all || _members.isNotEmpty,
+      onRetry: () => _refresh(month),
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('日历'),
         actions: [
           IconButton(
+            tooltip: '回到今天',
+            onPressed: _today,
+            icon: const Icon(Icons.today_outlined),
+          ),
+          IconButton(
             tooltip: '刷新',
+            onPressed: _refreshing ? null : () => _refresh(month),
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(monthEventsProvider(month)),
           ),
         ],
       ),
-      body: snapshot.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _CalendarError(
-          message: error is ApiFailure ? error.message : '日历加载失败',
-          onRetry: () => ref.invalidate(monthEventsProvider(month)),
-        ),
-        data: (data) {
-          final byDay = _groupByDay(data.events);
-          return Column(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 880) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: (constraints.maxWidth * .34).clamp(320, 380),
+                  child: ListView(
+                    key: const ValueKey('calendar-sidebar'),
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                    children: [
+                      monthHeader(),
+                      _MonthGrid(
+                        month: month,
+                        selected: selected,
+                        today: today,
+                        byDay: byDay,
+                        onSelect: _select,
+                      ),
+                      const Divider(height: 28),
+                      filters(wide: true),
+                    ],
+                  ),
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: agenda(scrollable: true)),
+              ],
+            );
+          }
+          return ListView(
+            key: const ValueKey('calendar-compact'),
+            padding: const EdgeInsets.only(bottom: 24),
             children: [
-              _MonthHeader(
-                month: month,
-                onChange: (delta) => setState(() {
-                  ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
-                    month.year,
-                    month.month + delta,
-                  );
-                  _selectedDay = null;
-                }),
-              ),
-              _FilterRow(
-                value: _filter,
-                onChanged: (value) => setState(() => _filter = value),
-              ),
-              if (data.fromCache) _StaleBanner(fetchedAt: data.fetchedAt),
-              // The grid sizes itself from the window width, so on a short or
-              // wide window it must be capped and allowed to scroll; otherwise
-              // it pushes the agenda past the bottom of the viewport.
-              Flexible(
-                child: _MonthGrid(
+              monthHeader(collapsible: true),
+              if (_monthExpanded)
+                _MonthGrid(
                   month: month,
                   selected: selected,
+                  today: today,
                   byDay: byDay,
-                  filter: _filter,
-                  onSelect: (day) => setState(() => _selectedDay = day),
+                  onSelect: _select,
+                )
+              else
+                _WeekStrip(
+                  selected: selected,
+                  today: today,
+                  events: events,
+                  onSelect: _select,
                 ),
-              ),
-              const Divider(height: 1),
-              Expanded(
-                child: _Agenda(
-                  day: selected,
-                  events: _visible(byDay[selected] ?? const [], _filter),
-                ),
-              ),
+              const SizedBox(height: 8),
+              filters(wide: false),
+              agenda(scrollable: false),
             ],
           );
         },
       ),
     );
   }
-
-  /// An event is listed on every Shanghai day it covers, so a broadcast that
-  /// runs past midnight appears on both days rather than only its start day.
-  static Map<DateTime, List<CalendarEvent>> _groupByDay(
-    List<CalendarEvent> events,
-  ) {
-    final byDay = <DateTime, List<CalendarEvent>>{};
-    for (final event in events) {
-      var day = shanghaiDayOf(event.start, allDay: event.allDay);
-      final last = shanghaiDayOf(
-        event.allDay
-            // An exclusive all-day end does not occupy its final date.
-            ? event.end.subtract(const Duration(days: 1))
-            : event.end.subtract(const Duration(milliseconds: 1)),
-        allDay: event.allDay,
-      );
-      while (!day.isAfter(last)) {
-        byDay.putIfAbsent(day, () => []).add(event);
-        day = day.add(const Duration(days: 1));
-      }
-    }
-    for (final list in byDay.values) {
-      list.sort((a, b) => a.start.compareTo(b.start));
-    }
-    return byDay;
-  }
-
-  static List<CalendarEvent> _visible(
-    List<CalendarEvent> events,
-    CalendarFilter filter,
-  ) => switch (filter) {
-    CalendarFilter.all => events,
-    CalendarFilter.live =>
-      events
-          .where((e) => EventClassifier.classify(e) == EventKind.live)
-          .toList(),
-    CalendarFilter.other =>
-      events
-          .where((e) => EventClassifier.classify(e) == EventKind.other)
-          .toList(),
-  };
 }
 
 class _MonthHeader extends StatelessWidget {
-  const _MonthHeader({required this.month, required this.onChange});
+  const _MonthHeader({
+    required this.month,
+    required this.onChange,
+    required this.onToggle,
+    required this.expanded,
+    this.collapsible = false,
+  });
   final DateTime month;
   final ValueChanged<int> onChange;
-
+  final VoidCallback onToggle;
+  final bool expanded;
+  final bool collapsible;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
           tooltip: '上个月',
           icon: const Icon(Icons.chevron_left),
           onPressed: () => onChange(-1),
         ),
-        Text(
-          '${month.year} 年 ${month.month} 月',
-          style: Theme.of(context).textTheme.titleMedium,
+        Expanded(
+          child: Text(
+            '${month.year} 年 ${month.month} 月',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ),
         IconButton(
           tooltip: '下个月',
           icon: const Icon(Icons.chevron_right),
           onPressed: () => onChange(1),
         ),
-      ],
-    ),
-  );
-}
-
-class _FilterRow extends StatelessWidget {
-  const _FilterRow({required this.value, required this.onChanged});
-  final CalendarFilter value;
-  final ValueChanged<CalendarFilter> onChanged;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Wrap(
-      spacing: 8,
-      alignment: WrapAlignment.center,
-      children: [
-        for (final filter in CalendarFilter.values)
-          ChoiceChip(
-            label: Text(filter.label),
-            selected: value == filter,
-            onSelected: (_) => onChanged(filter),
+        if (collapsible)
+          IconButton(
+            tooltip: expanded ? '收起月历' : '展开月历',
+            onPressed: onToggle,
+            icon: Icon(
+              expanded ? Icons.expand_less : Icons.calendar_view_month,
+            ),
           ),
       ],
     ),
   );
 }
 
-/// Says plainly that the list is not current instead of implying it is.
-class _StaleBanner extends StatelessWidget {
-  const _StaleBanner({required this.fetchedAt});
-  final DateTime fetchedAt;
-
+class _CalendarFilters extends StatelessWidget {
+  const _CalendarFilters({
+    required this.wide,
+    required this.filter,
+    required this.members,
+    required this.onFilter,
+    required this.onMember,
+    required this.onReset,
+  });
+  final bool wide;
+  final CalendarFilter filter;
+  final Set<String> members;
+  final ValueChanged<CalendarFilter> onFilter;
+  final ValueChanged<String> onMember;
+  final VoidCallback onReset;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final local = fetchedAt.toUtc().add(const Duration(hours: 8));
-    return Container(
-      width: double.infinity,
-      color: theme.colorScheme.surfaceContainerHighest,
+    final types = [
+      for (final value in CalendarFilter.values)
+        ChoiceChip(
+          label: Text(value.label),
+          selected: value == filter,
+          onSelected: (_) => onFilter(value),
+        ),
+    ];
+    final roles = [
+      for (final name in EventClassifier.memberAliases.keys)
+        FilterChip(
+          label: Text(name),
+          selected: members.contains(name),
+          onSelected: (_) => onMember(name),
+        ),
+    ];
+    Widget row(List<Widget> children) => wide
+        ? Wrap(spacing: 6, runSpacing: 6, children: children)
+        : SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final child in children)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: child,
+                  ),
+              ],
+            ),
+          );
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Text(
-        '显示的是缓存内容，上次同步 '
-        '${local.month}-${local.day} '
-        '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}',
-        style: theme.textTheme.labelSmall,
-        textAlign: TextAlign.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          row(types),
+          const SizedBox(height: 8),
+          if (wide) ...[
+            Text('成员', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+          ],
+          row(roles),
+          if (filter != CalendarFilter.all || members.isNotEmpty)
+            TextButton(onPressed: onReset, child: const Text('重置筛选')),
+        ],
       ),
     );
   }
@@ -219,103 +344,124 @@ class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
     required this.month,
     required this.selected,
+    required this.today,
     required this.byDay,
-    required this.filter,
     required this.onSelect,
   });
-
   final DateTime month;
   final DateTime selected;
+  final DateTime today;
   final Map<DateTime, List<CalendarEvent>> byDay;
-  final CalendarFilter filter;
   final ValueChanged<DateTime> onSelect;
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final first = DateTime.utc(month.year, month.month);
-    // Weeks start on Monday, matching the published schedule.
     final leading = first.weekday - 1;
     final days = DateTime.utc(month.year, month.month + 1, 0).day;
     final cells = ((leading + days) / 7).ceil() * 7;
-    final today = shanghaiDayOf(shanghaiNow(), allDay: true);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final rows = cells ~/ 7;
-        final cellWidth = (constraints.maxWidth - 16) / 7;
-        // Derive the row height from whatever space is left after the weekday
-        // header, clamped so cells stay tappable on a phone and do not become
-        // absurdly tall on a wide desktop window.
-        final available = constraints.hasBoundedHeight
-            ? constraints.maxHeight - 28
-            : double.infinity;
-        // On a narrow phone the square cell is already below the comfortable
-        // minimum, so the upper bound must win rather than invert the range.
-        final natural = cellWidth / 1.1;
-        final minHeight = natural < 44.0 ? natural : 44.0;
-        final fitted = available.isFinite ? available / rows : natural;
-        final cellHeight = fitted.clamp(minHeight, natural);
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  for (final label in ['一', '二', '三', '四', '五', '六', '日'])
-                    Expanded(
-                      child: Center(
-                        child: Text(label, style: theme.textTheme.labelSmall),
-                      ),
-                    ),
-                ],
+    final height = _cellHeight(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          const _Weekdays(),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: cells / 7 * height,
+            child: GridView.builder(
+              primary: false,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisExtent: height,
               ),
-              const SizedBox(height: 4),
-              Flexible(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  // On a very short window the minimum tappable cell size no
-                  // longer fits, so the month scrolls instead of overflowing.
-                  physics: cellHeight * rows > available
-                      ? const ClampingScrollPhysics()
-                      : const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    childAspectRatio: cellWidth / cellHeight,
-                  ),
-                  itemCount: cells,
-                  itemBuilder: (context, index) {
-                    final dayNumber = index - leading + 1;
-                    if (dayNumber < 1 || dayNumber > days) {
-                      return const SizedBox.shrink();
-                    }
-                    final day = DateTime.utc(
-                      month.year,
-                      month.month,
-                      dayNumber,
-                    );
-                    final events = _CalendarPageState._visible(
-                      byDay[day] ?? const [],
-                      filter,
-                    );
-                    return _DayCell(
-                      day: day,
-                      count: events.length,
-                      isSelected: day == selected,
-                      isToday: day == today,
-                      onTap: () => onSelect(day),
-                    );
-                  },
-                ),
-              ),
-            ],
+              itemCount: cells,
+              itemBuilder: (_, index) {
+                final number = index - leading + 1;
+                if (number < 1 || number > days) return const SizedBox.shrink();
+                final day = DateTime.utc(month.year, month.month, number);
+                return _DayCell(
+                  day: day,
+                  count: byDay[day]?.length ?? 0,
+                  isSelected: day == selected,
+                  isToday: day == today,
+                  onTap: () => onSelect(day),
+                );
+              },
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
+}
+
+class _WeekStrip extends StatelessWidget {
+  const _WeekStrip({
+    required this.selected,
+    required this.today,
+    required this.events,
+    required this.onSelect,
+  });
+  final DateTime selected;
+  final DateTime today;
+  final List<CalendarEvent> events;
+  final ValueChanged<DateTime> onSelect;
+  @override
+  Widget build(BuildContext context) {
+    final monday = CalendarAgenda.weekStart(selected);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          const _Weekdays(),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: _cellHeight(context),
+            child: Row(
+              children: [
+                for (var i = 0; i < 7; i++)
+                  Expanded(
+                    child: _DayCell(
+                      day: monday.add(Duration(days: i)),
+                      count: CalendarAgenda.onDay(
+                        events,
+                        monday.add(Duration(days: i)),
+                      ).length,
+                      isSelected: selected == monday.add(Duration(days: i)),
+                      isToday: today == monday.add(Duration(days: i)),
+                      onTap: () => onSelect(monday.add(Duration(days: i))),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+double _cellHeight(BuildContext context) =>
+    (MediaQuery.textScalerOf(context).scale(14) * 1.4 + 16).clamp(
+      44,
+      double.infinity,
+    );
+
+class _Weekdays extends StatelessWidget {
+  const _Weekdays();
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      for (final label in const ['一', '二', '三', '四', '五', '六', '日'])
+        Expanded(
+          child: Center(
+            child: Text(label, style: Theme.of(context).textTheme.labelSmall),
+          ),
+        ),
+    ],
+  );
 }
 
 class _DayCell extends StatelessWidget {
@@ -326,148 +472,59 @@ class _DayCell extends StatelessWidget {
     required this.isToday,
     required this.onTap,
   });
-
   final DateTime day;
   final int count;
   final bool isSelected;
   final bool isToday;
   final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        margin: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primaryContainer : null,
-          border: isToday
-              ? Border.all(color: theme.colorScheme.primary, width: 1.5)
-              : null,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${day.day}', style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 3),
-            SizedBox(
-              height: 6,
-              child: count == 0
-                  ? null
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (var i = 0; i < (count > 3 ? 3 : count); i++)
-                          Container(
-                            width: 5,
-                            height: 5,
-                            margin: const EdgeInsets.symmetric(horizontal: 1),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                      ],
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Agenda extends StatelessWidget {
-  const _Agenda({required this.day, required this.events});
-  final DateTime day;
-  final List<CalendarEvent> events;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (events.isEmpty) {
-      return Center(
-        child: Text(
-          '${day.month} 月 ${day.day} 日没有安排',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.outline,
-          ),
-        ),
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      itemCount: events.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, index) => _EventTile(event: events[index]),
-    );
-  }
-}
-
-class _EventTile extends ConsumerWidget {
-  const _EventTile({required this.event});
-  final CalendarEvent event;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final members = EventClassifier.members(event);
-    return Card(
-      color: theme.colorScheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
+    final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: '${day.year} 年 ${CalendarAgenda.date(day)}，$count 项安排',
       child: InkWell(
-        onTap: event.sourceUrl == null
-            ? null
-            : () =>
-                  ref.read(externalLinkServiceProvider).open(event.sourceUrl!),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          margin: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: isSelected ? colors.primaryContainer : null,
+            border: isToday
+                ? Border.all(color: colors.primary, width: 1.5)
+                : null,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                width: 56,
+              FittedBox(
+                fit: BoxFit.scaleDown,
                 child: Text(
-                  event.allDay ? '全天' : _time(event.start),
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
+                  '${day.day}',
+                  maxLines: 1,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.4),
                 ),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 3),
+              SizedBox(
+                height: 6,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      event.title.isEmpty ? '未命名安排' : event.title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        decoration: event.isCancelled
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: event.isCancelled
-                            ? theme.colorScheme.outline
-                            : null,
+                    for (var i = 0; i < count.clamp(0, 3); i++)
+                      Container(
+                        width: 5,
+                        height: 5,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.primary,
+                        ),
                       ),
-                    ),
-                    if (event.isCancelled)
-                      Text('已取消', style: theme.textTheme.labelSmall),
-                    if (members.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        children: [
-                          for (final member in members)
-                            Chip(
-                              label: Text(member),
-                              visualDensity: VisualDensity.compact,
-                              labelStyle: theme.textTheme.labelSmall,
-                            ),
-                        ],
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -477,34 +534,126 @@ class _EventTile extends ConsumerWidget {
       ),
     );
   }
-
-  static String _time(DateTime utc) {
-    final local = utc.toUtc().add(const Duration(hours: 8));
-    return '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}';
-  }
 }
 
-class _CalendarError extends StatelessWidget {
-  const _CalendarError({required this.message, required this.onRetry});
-  final String message;
+class _Agenda extends StatelessWidget {
+  const _Agenda({
+    required this.day,
+    required this.week,
+    required this.onWeek,
+    required this.snapshot,
+    required this.events,
+    required this.filtered,
+    required this.onRetry,
+    required this.scrollable,
+    super.key,
+  });
+  final DateTime day;
+  final bool week;
+  final ValueChanged<bool> onWeek;
+  final AsyncValue<CalendarSnapshot> snapshot;
+  final List<CalendarEvent> events;
+  final bool filtered;
   final VoidCallback onRetry;
+  final bool scrollable;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.event_busy_outlined,
-          size: 48,
-          color: Theme.of(context).colorScheme.outline,
+  Widget build(BuildContext context) {
+    final from = week ? CalendarAgenda.weekStart(day) : day;
+    final until = from.add(Duration(days: week ? 7 : 1));
+    final children = <Widget>[
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          ChoiceChip(
+            label: const Text('当天'),
+            selected: !week,
+            onSelected: (_) => onWeek(false),
+          ),
+          ChoiceChip(
+            label: const Text('周议程'),
+            selected: week,
+            onSelected: (_) => onWeek(true),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Text(
+        week
+            ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
+            : CalendarAgenda.date(day),
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 12),
+      snapshot.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(child: CircularProgressIndicator()),
         ),
-        const SizedBox(height: 16),
-        Text(message),
-        const SizedBox(height: 16),
-        FilledButton(onPressed: onRetry, child: const Text('重试')),
-      ],
-    ),
-  );
+        error: (error, _) => Column(
+          children: [
+            Text(error is ApiFailure ? error.message : '日历加载失败'),
+            const SizedBox(height: 12),
+            RetryButton(
+              failure: error is ApiFailure ? error : null,
+              onRetry: onRetry,
+              filled: true,
+            ),
+          ],
+        ),
+        data: (data) {
+          final grouped = CalendarAgenda.group(
+            events,
+            from: from,
+            until: until,
+          );
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (data.isStale) CalendarStaleBanner(fetchedAt: data.fetchedAt),
+              if (data.offlineCacheUnavailable)
+                const CalendarCacheFailureBanner(),
+              if (data.followSyncUnavailable) const CalendarFollowSyncBanner(),
+              if (grouped.values.every((list) => list.isEmpty))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Text(
+                    '${week ? '这一周' : CalendarAgenda.date(day)}${filtered ? '没有符合条件的安排' : '没有安排'}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                ),
+              for (final entry in grouped.entries.where(
+                (entry) => entry.value.isNotEmpty,
+              )) ...[
+                if (week)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 8),
+                    child: Text(
+                      CalendarAgenda.date(entry.key),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ),
+                for (final event in entry.value)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: CalendarEventTile(event: event, day: entry.key),
+                  ),
+              ],
+            ],
+          );
+        },
+      ),
+    ];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      shrinkWrap: !scrollable,
+      primary: false,
+      physics: scrollable ? null : const NeverScrollableScrollPhysics(),
+      children: children,
+    );
+  }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:asasfans_next/core/network/api_failure.dart';
@@ -104,6 +105,7 @@ void main() {
 
     expect(adapter.requests, hasLength(1));
     expect(second.fromCache, isTrue);
+    expect(second.isStale, isFalse);
   });
 
   test('a conditional revalidation reuses the cached events on 304', () async {
@@ -154,6 +156,7 @@ void main() {
     expect(second.fromCache, isTrue);
     // The stale marker lets the UI say when it last synced.
     expect(second.fetchedAt, first.fetchedAt);
+    expect(second.isStale, isTrue);
   });
 
   test('a failure with no cached calendar surfaces the error', () async {
@@ -190,6 +193,41 @@ void main() {
     expect(second.events.map((e) => e.uid), ['1']);
   });
 
+  test(
+    'a failed manual refresh revalidates after the soft cooldown, even within the original TTL',
+    () async {
+      var now = DateTime.utc(2026, 9, 21, 12);
+      final adapter = _Adapter([
+        () => _ok(_feed),
+        () => _ok('<html>temporary error</html>'),
+        () => _ok(_feed.replaceAll('SUMMARY:直播', 'SUMMARY:已改期')),
+      ]);
+      final repository = IcsCalendarRepository(
+        _dio(adapter),
+        calendarUrl: url,
+        clock: () => now,
+      );
+      await repository.events(from: windowStart, until: windowEnd);
+      now = now.add(const Duration(minutes: 1));
+      final stale = await repository.events(
+        from: windowStart,
+        until: windowEnd,
+        forceRefresh: true,
+      );
+      expect(stale.isStale, isTrue);
+      await repository.events(from: windowStart, until: windowEnd);
+      expect(adapter.requests, hasLength(2));
+      now = now.add(const Duration(seconds: 30));
+      final fresh = await repository.events(
+        from: windowStart,
+        until: windowEnd,
+      );
+      expect(adapter.requests, hasLength(3));
+      expect(fresh.isStale, isFalse);
+      expect(fresh.events.first.title, '已改期');
+    },
+  );
+
   test('forceRefresh bypasses a still-fresh cache', () async {
     final adapter = _Adapter([() => _ok(_feed)]);
     final repository = IcsCalendarRepository(
@@ -207,4 +245,119 @@ void main() {
 
     expect(adapter.requests, hasLength(2));
   });
+  test('a malformed first response is an error, not an empty month', () async {
+    final repository = IcsCalendarRepository(
+      _dio(_Adapter([() => _ok('<html>proxy error</html>')])),
+      calendarUrl: url,
+    );
+    await expectLater(
+      repository.events(from: windowStart, until: windowEnd),
+      throwsA(isA<ApiFailure>()),
+    );
+  });
+
+  test(
+    'a valid empty calendar replaces old events and advances validators',
+    () async {
+      final adapter = _Adapter([
+        () => _ok(
+          _feed,
+          headers: {
+            'etag': ['old'],
+          },
+        ),
+        () => _ok(
+          'BEGIN:VCALENDAR\nVERSION:2.0\nEND:VCALENDAR',
+          headers: {
+            'etag': ['empty'],
+          },
+        ),
+        () => ResponseBody.fromString('', 304),
+      ]);
+      final repository = IcsCalendarRepository(_dio(adapter), calendarUrl: url);
+      await repository.events(from: windowStart, until: windowEnd);
+      final empty = await repository.events(
+        from: windowStart,
+        until: windowEnd,
+        forceRefresh: true,
+      );
+      expect(empty.events, isEmpty);
+      expect(empty.isStale, isFalse);
+      await repository.events(
+        from: windowStart,
+        until: windowEnd,
+        forceRefresh: true,
+      );
+      expect(adapter.requests.last.headers['If-None-Match'], 'empty');
+    },
+  );
+
+  test('a malformed refresh preserves both data and validators', () async {
+    final adapter = _Adapter([
+      () => _ok(
+        _feed,
+        headers: {
+          'etag': ['good'],
+        },
+      ),
+      () => _ok(
+        '<html>broken</html>',
+        headers: {
+          'etag': ['bad'],
+        },
+      ),
+      () => ResponseBody.fromString('', 304),
+    ]);
+    final repository = IcsCalendarRepository(_dio(adapter), calendarUrl: url);
+    await repository.events(from: windowStart, until: windowEnd);
+    final stale = await repository.events(
+      from: windowStart,
+      until: windowEnd,
+      forceRefresh: true,
+    );
+    expect(stale.isStale, isTrue);
+    expect(stale.events, isNotEmpty);
+    await repository.events(
+      from: windowStart,
+      until: windowEnd,
+      forceRefresh: true,
+    );
+    expect(adapter.requests.last.headers['If-None-Match'], 'good');
+  });
+
+  test('concurrent month loads share the whole-calendar request', () async {
+    final adapter = _PendingAdapter();
+    final repository = IcsCalendarRepository(
+      Dio()..httpClientAdapter = adapter,
+      calendarUrl: url,
+    );
+    final september = repository.events(from: windowStart, until: windowEnd);
+    final october = repository.events(
+      from: DateTime.utc(2026, 10),
+      until: DateTime.utc(2026, 11),
+      forceRefresh: true,
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(adapter.calls, 1);
+    adapter.response.complete(_ok(_feed));
+    expect((await september).events.single.uid, '1');
+    expect((await october).events.single.uid, '2');
+  });
+}
+
+class _PendingAdapter implements HttpClientAdapter {
+  int calls = 0;
+  final response = Completer<ResponseBody>();
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) {
+    calls++;
+    return response.future;
+  }
+
+  @override
+  void close({bool force = false}) {}
 }

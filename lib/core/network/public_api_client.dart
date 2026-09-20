@@ -3,14 +3,26 @@ import 'dart:io' show HttpDate;
 import 'package:dio/dio.dart';
 
 import 'api_failure.dart';
+import 'rate_limit_gate.dart';
 
 /// Public, read-only metadata transport. Credentials and media playback must
 /// use separate clients; this client has no cookie jar or request logging.
 class PublicApiClient {
-  PublicApiClient(this._dio);
+  PublicApiClient(this._dio, {DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now,
+      _rateLimit = RateLimitGate(clock: clock);
+  final DateTime Function() _clock;
+  final RateLimitGate _rateLimit;
   final Dio _dio;
 
   Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, dynamic>? query,
+    CancelToken? cancelToken,
+  }) =>
+      _rateLimit.run(() => _get(path, query: query, cancelToken: cancelToken));
+
+  Future<Map<String, dynamic>> _get(
     String path, {
     Map<String, dynamic>? query,
     CancelToken? cancelToken,
@@ -56,6 +68,7 @@ class PublicApiClient {
           ApiFailureKind.rateLimited,
           retryAfter: parseRetryAfter(
             error.response?.headers.value('retry-after'),
+            now: _clock(),
           ),
         );
       }

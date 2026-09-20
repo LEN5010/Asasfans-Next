@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_failure.dart';
+import '../../../core/network/rate_limit_gate.dart';
 import '../domain/fanart_repository.dart';
+import 'feed_progress.dart';
 
 enum FeedStatus {
   /// No request has been issued for the current query yet.
@@ -24,6 +26,9 @@ enum FeedStatus {
 
   /// An append failed; earlier items remain valid and retry is offered.
   appendFailed,
+
+  /// Continuation stopped making progress. A fresh run is required.
+  stalled,
 }
 
 @immutable
@@ -46,9 +51,7 @@ class FanartFeedState {
   final int? total;
   final ApiFailure? failure;
 
-  bool get isEmptyResult =>
-      items.isEmpty &&
-      (status == FeedStatus.ready || status == FeedStatus.endOfList);
+  bool get isEmptyResult => items.isEmpty && status == FeedStatus.endOfList;
 
   bool get canAppend =>
       nextCursor != null &&
@@ -88,16 +91,23 @@ class FanartFeedController extends ChangeNotifier {
   FanartFeedController(
     this._repository, {
     FanartQuery query = const FanartQuery(),
-  }) : _state = FanartFeedState(query: query);
+    DateTime Function()? clock,
+  }) : _state = FanartFeedState(query: query),
+       _rateLimit = RateLimitGate(clock: clock);
 
   final FanartRepository _repository;
   FanartFeedState _state;
   int _generation = 0;
+  bool _disposed = false;
+  final RateLimitGate _rateLimit;
+  final _progress = FeedProgress<FanartItem>((item) => item.identity);
+  int get generation => _generation;
   RequestCancellation? _inFlight;
 
   FanartFeedState get state => _state;
 
   void _emit(FanartFeedState next) {
+    if (_disposed) return;
     _state = next;
     notifyListeners();
   }
@@ -105,6 +115,7 @@ class FanartFeedController extends ChangeNotifier {
   /// Replaces the query and reloads from the first page. Items from the old
   /// query are dropped immediately because they no longer match the filters.
   Future<void> applyQuery(FanartQuery query) {
+    if (_disposed) return Future.value();
     if (query == _state.query && _state.status != FeedStatus.idle) {
       return Future.value();
     }
@@ -115,6 +126,7 @@ class FanartFeedController extends ChangeNotifier {
   /// Reloads the first page while keeping current items on screen, so a
   /// refresh never flashes an empty list.
   Future<void> refresh() {
+    if (_disposed) return Future.value();
     _emit(
       _state.copyWith(status: FeedStatus.loadingFirstPage, clearFailure: true),
     );
@@ -122,35 +134,45 @@ class FanartFeedController extends ChangeNotifier {
   }
 
   Future<void> loadInitial() {
-    if (_state.status != FeedStatus.idle) return Future.value();
+    if (_disposed || _state.status != FeedStatus.idle) return Future.value();
     _emit(_state.copyWith(status: FeedStatus.loadingFirstPage));
     return _loadFirstPage();
   }
 
   Future<void> _loadFirstPage() async {
     final generation = ++_generation;
+    _progress.reset();
     _inFlight?.cancel();
     final cancellation = _inFlight = RequestCancellation();
     try {
-      final page = await _repository.page(
-        query: _state.query,
-        cancellation: cancellation,
+      final page = await _rateLimit.run(
+        () => _repository.page(query: _state.query, cancellation: cancellation),
       );
-      if (generation != _generation) return;
+      if (_disposed || generation != _generation) return;
+      final progress = _progress.accept(
+        page.items,
+        continuation: page.nextCursor,
+      );
       _emit(
         _state.copyWith(
-          items: page.items,
+          items: progress.added,
           snapshotId: page.snapshotId,
-          nextCursor: (value: page.nextCursor),
+          nextCursor: (value: progress.stalled ? null : page.nextCursor),
           total: page.total,
-          status: page.nextCursor == null
+          failure: progress.stalled
+              ? const ApiFailure(ApiFailureKind.paginationStalled)
+              : null,
+          status: progress.stalled
+              ? FeedStatus.stalled
+              : page.nextCursor == null
               ? FeedStatus.endOfList
               : FeedStatus.ready,
-          clearFailure: true,
+          clearFailure: !progress.stalled,
         ),
       );
     } on ApiFailure catch (failure) {
-      if (generation != _generation ||
+      if (_disposed ||
+          generation != _generation ||
           failure.kind == ApiFailureKind.cancelled) {
         return;
       }
@@ -160,36 +182,51 @@ class FanartFeedController extends ChangeNotifier {
 
   /// Loads the page after the current cursor. Callers may fire this on scroll;
   /// duplicate calls while a request is in flight are ignored.
-  Future<void> loadMore() async {
+  Future<void> loadMore({bool automatic = false}) async {
+    if (_state.status != FeedStatus.ready &&
+        (automatic || _state.status != FeedStatus.appendFailed)) {
+      return;
+    }
     final cursor = _state.nextCursor;
-    if (cursor == null || _state.isBusy) return;
+    if (_disposed || cursor == null || _state.isBusy) return;
     final generation = _generation;
     _emit(_state.copyWith(status: FeedStatus.appending, clearFailure: true));
-    final cancellation = RequestCancellation();
+    final cancellation = _inFlight = RequestCancellation();
     try {
-      final page = await _repository.page(
-        query: _state.query,
-        cursor: cursor,
-        cancellation: cancellation,
+      final page = await _rateLimit.run(
+        () => _repository.page(
+          query: _state.query,
+          cursor: cursor,
+          cancellation: cancellation,
+        ),
       );
-      if (generation != _generation) return;
-      // A cursor is only valid inside the dataset version that issued it.
-      if (_state.snapshotId != null && page.snapshotId != _state.snapshotId) {
-        await _restartAfterDatasetChange();
-        return;
-      }
+      if (_disposed || generation != _generation) return;
+      final progress = _progress.accept(
+        page.items,
+        continuation: page.nextCursor,
+      );
+      // A union page reports its *source's* snapshot, which legitimately
+      // changes at the Bilibili/Douban boundary. The opaque cursor binds all
+      // source revisions server-side; only a 409 invalidates this run.
       _emit(
         _state.copyWith(
-          items: [..._state.items, ...page.items],
-          nextCursor: (value: page.nextCursor),
+          items: List.unmodifiable([..._state.items, ...progress.added]),
+          snapshotId: page.snapshotId,
+          nextCursor: (value: progress.stalled ? null : page.nextCursor),
           total: page.total,
-          status: page.nextCursor == null
+          failure: progress.stalled
+              ? const ApiFailure(ApiFailureKind.paginationStalled)
+              : null,
+          status: progress.stalled
+              ? FeedStatus.stalled
+              : page.nextCursor == null
               ? FeedStatus.endOfList
               : FeedStatus.ready,
         ),
       );
     } on ApiFailure catch (failure) {
-      if (generation != _generation ||
+      if (_disposed ||
+          generation != _generation ||
           failure.kind == ApiFailureKind.cancelled) {
         return;
       }
@@ -217,6 +254,9 @@ class FanartFeedController extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _generation++;
     _inFlight?.cancel();
     super.dispose();
   }

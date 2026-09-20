@@ -1,11 +1,20 @@
+import '../../creator/presentation/creator_link.dart';
+import '../../rules/application/feed_visibility.dart';
+import '../../rules/presentation/rule_filter_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/providers.dart';
+import '../../library/application/content_snapshots.dart';
+import '../../library/presentation/content_actions.dart';
+import '../../library/presentation/library_common.dart';
+import '../../../core/network/api_failure.dart';
+import '../../../shared/widgets/auto_fill_viewport.dart';
+import '../../../shared/widgets/retry_button.dart';
 import '../application/content_providers.dart';
 import '../application/dynamic_feed_controller.dart';
 import '../application/fanart_feed_controller.dart' show FeedStatus;
 import '../domain/dynamic_repository.dart';
+import 'feed_status_footer.dart';
 
 /// Historical dynamics list with keyword search and auto-append.
 class DynamicFeedView extends ConsumerStatefulWidget {
@@ -24,25 +33,14 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _controller.loadInitial();
     });
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 600) {
-      _controller.loadMore();
-    }
-  }
-
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -58,35 +56,43 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
       final state = _controller.state;
       return Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              textInputAction: TextInputAction.search,
-              maxLength: 200,
-              decoration: const InputDecoration(
-                hintText: '搜索历史动态',
-                counterText: '',
-                isDense: true,
-                prefixIcon: Icon(Icons.search),
-              ),
-              onSubmitted: (keyword) =>
-                  _applyQuery(state.query.copyWith(keyword: keyword)),
-            ),
-          ),
-          const SizedBox(height: 8),
           _TypeFilter(query: state.query, onChanged: _applyQuery),
           const SizedBox(height: 8),
-          Expanded(child: _buildBody(state)),
+          Expanded(
+            child: RuleFilterScope(
+              items: state.items,
+              subjectOf: RuleSubjects.dynamic,
+              builder: (visible) => Column(
+                children: [
+                  RuleStatusBar(visibility: visible),
+                  Expanded(
+                    child: AutoFillViewport(
+                      controller: _scrollController,
+                      resetKey: (_controller.generation, visible.epoch),
+                      scrollResetKey: state.query,
+                      canLoadMore: state.status == FeedStatus.ready,
+                      onLoadMore: () => _controller.loadMore(automatic: true),
+                      child: _buildBody(state.copyWith(items: visible.items)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       );
     },
   );
 
   Widget _buildBody(DynamicFeedState state) {
-    if (state.items.isEmpty) {
+    if (state.items.isEmpty &&
+        (state.status == FeedStatus.failed ||
+            state.status == FeedStatus.idle ||
+            state.status == FeedStatus.loadingFirstPage ||
+            state.status == FeedStatus.endOfList)) {
       return switch (state.status) {
         FeedStatus.failed => _Error(
-          message: state.failure?.message ?? '内容加载失败',
+          failure: state.failure,
           onRetry: _controller.refresh,
         ),
         FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
@@ -98,12 +104,19 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
     return RefreshIndicator(
       onRefresh: _controller.refresh,
       child: ListView.separated(
+        key: const PageStorageKey('historical-dynamics-feed'),
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         itemCount: state.items.length + 1,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) => index == state.items.length
-            ? _Footer(state: state, onRetry: _controller.loadMore)
+            ? FeedStatusFooter(
+                status: state.status,
+                failure: state.failure,
+                onRetry: _controller.loadMore,
+                onRefresh: _controller.refresh,
+              )
             : _DynamicCard(post: state.items[index]),
       ),
     );
@@ -130,6 +143,16 @@ class _TypeFilter extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: Row(
       children: [
+        if (query.keyword.isNotEmpty) ...[
+          InputChip(
+            label: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 180),
+              child: Text(query.keyword, overflow: TextOverflow.ellipsis),
+            ),
+            onDeleted: () => onChanged(query.copyWith(keyword: '')),
+          ),
+          const SizedBox(width: 8),
+        ],
         ChoiceChip(
           label: const Text('全部'),
           selected: query.type == null,
@@ -166,7 +189,22 @@ class _DynamicCard extends ConsumerWidget {
       child: InkWell(
         onTap: post.sourceUrl == null
             ? null
-            : () => ref.read(externalLinkServiceProvider).open(post.sourceUrl!),
+            : () => openContentSource(
+                context,
+                ref,
+                ContentSnapshots.dynamic(post),
+                url: post.sourceUrl,
+              ),
+        onLongPress: () => showContentActions(
+          context,
+          ContentSnapshots.dynamic(post),
+          ruleSubject: RuleSubjects.dynamic(post),
+        ),
+        onSecondaryTap: () => showContentActions(
+          context,
+          ContentSnapshots.dynamic(post),
+          ruleSubject: RuleSubjects.dynamic(post),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -175,10 +213,13 @@ class _DynamicCard extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      post.member.name,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.primary,
+                    child: CreatorLink(
+                      mid: post.member.bilibiliUid,
+                      child: Text(
+                        post.member.name,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -273,54 +314,9 @@ class _DynamicCard extends ConsumerWidget {
   }
 }
 
-class _Footer extends StatelessWidget {
-  const _Footer({required this.state, required this.onRetry});
-
-  final DynamicFeedState state;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => switch (state.status) {
-    FeedStatus.appending => const Padding(
-      padding: EdgeInsets.all(20),
-      child: Center(
-        child: SizedBox.square(
-          dimension: 22,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-    ),
-    FeedStatus.appendFailed => Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Text(
-            state.failure?.message ?? '加载失败',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(onPressed: onRetry, child: const Text('重试')),
-        ],
-      ),
-    ),
-    FeedStatus.endOfList => Padding(
-      padding: const EdgeInsets.all(20),
-      child: Center(
-        child: Text(
-          '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.outline,
-          ),
-        ),
-      ),
-    ),
-    _ => const SizedBox(height: 20),
-  };
-}
-
 class _Error extends StatelessWidget {
-  const _Error({required this.message, required this.onRetry});
-  final String message;
+  const _Error({required this.failure, required this.onRetry});
+  final ApiFailure? failure;
   final VoidCallback onRetry;
 
   @override
@@ -334,9 +330,9 @@ class _Error extends StatelessWidget {
           color: Theme.of(context).colorScheme.outline,
         ),
         const SizedBox(height: 16),
-        Text(message),
+        Text(failure?.message ?? '内容加载失败'),
         const SizedBox(height: 16),
-        FilledButton(onPressed: onRetry, child: const Text('重试')),
+        RetryButton(failure: failure, onRetry: onRetry, filled: true),
       ],
     ),
   );

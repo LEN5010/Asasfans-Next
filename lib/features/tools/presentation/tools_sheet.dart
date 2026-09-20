@@ -6,32 +6,66 @@ import '../domain/community_tool.dart';
 
 Future<void> showToolsSheet(BuildContext context) => showModalBottomSheet<void>(
   context: context,
+  useRootNavigator: true,
   showDragHandle: true,
   isScrollControlled: true,
   useSafeArea: true,
   constraints: const BoxConstraints(maxWidth: 720),
-  builder: (context) => const ToolsSheet(),
+  builder: (context) => Padding(
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    child: const ToolsSheet(),
+  ),
 );
 
-class ToolsSheet extends ConsumerWidget {
+class ToolsSheet extends ConsumerStatefulWidget {
   const ToolsSheet({super.key});
+  @override
+  ConsumerState<ToolsSheet> createState() => _ToolsSheetState();
+}
+
+class _ToolsSheetState extends ConsumerState<ToolsSheet> {
+  String _keyword = '';
+  bool _opening = false;
+  bool _openFailed = false;
+
+  Future<void> _open(CommunityTool tool) async {
+    if (_opening) return;
+    setState(() {
+      _opening = true;
+      _openFailed = false;
+    });
+    final opened = await ref
+        .read(externalLinkServiceProvider)
+        .open(Uri.parse(tool.url));
+    if (mounted) {
+      setState(() {
+        _opening = false;
+        _openFailed = !opened;
+      });
+    }
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).colorScheme;
+  Widget build(BuildContext context) {
+    final query = _keyword.trim().toLowerCase();
+    final visible = communityTools
+        .where(
+          (tool) => '${tool.name} ${tool.id}'.toLowerCase().contains(query),
+        )
+        .toList();
     return SizedBox(
-      height: MediaQuery.sizeOf(context).height * .72,
+      height: MediaQuery.sizeOf(context).height * .78,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 12, 12),
+            padding: const EdgeInsets.fromLTRB(20, 0, 8, 12),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     '工具',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
                 IconButton(
@@ -42,67 +76,157 @@ class ToolsSheet extends ConsumerWidget {
               ],
             ),
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 160,
-                mainAxisExtent: 120,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              maxLength: 100,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                hintText: '搜索工具',
+                counterText: '',
+                isDense: true,
+                prefixIcon: Icon(Icons.search),
               ),
-              itemCount: communityTools.length,
-              itemBuilder: (context, index) {
-                final tool = communityTools[index];
-                return Material(
-                  color: colors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(20),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () async {
-                      final opened = await ref
-                          .read(externalLinkServiceProvider)
-                          .open(Uri.parse(tool.url));
-                      if (!opened && context.mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(const SnackBar(content: Text('无法打开链接')));
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: colors.primaryContainer,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Icon(
-                                _toolIcon(tool.id),
-                                color: colors.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            tool.name,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+              onChanged: (value) => setState(() {
+                _keyword = value;
+                _openFailed = false;
+              }),
             ),
           ),
+          const SizedBox(height: 8),
+          if (_openFailed)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  '无法打开链接',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ),
+          Expanded(
+            child: visible.isEmpty
+                ? const Center(child: Text('没有匹配的工具'))
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final scaler = MediaQuery.textScalerOf(context);
+                      final minimum = 128 * scaler.scale(1).clamp(1.0, 1.4);
+                      final columns =
+                          ((constraints.maxWidth - 40 + 12) / (minimum + 12))
+                              .floor()
+                              .clamp(1, 5);
+                      return CustomScrollView(
+                        slivers: [
+                          for (final category in ToolCategory.values) ...[
+                            if (visible.any(
+                              (tool) => tool.category == category,
+                            )) ...[
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    20,
+                                    14,
+                                    20,
+                                    10,
+                                  ),
+                                  child: Text(
+                                    switch (category) {
+                                      ToolCategory.content => '内容',
+                                      ToolCategory.community => '社区',
+                                      ToolCategory.utility => '实用工具',
+                                    },
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
+                                  ),
+                                ),
+                              ),
+                              SliverPadding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                sliver: SliverGrid(
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: columns,
+                                        mainAxisSpacing: 10,
+                                        crossAxisSpacing: 10,
+                                        mainAxisExtent:
+                                            80 +
+                                            (scaler.scale(14) * 1.35)
+                                                    .ceilToDouble() *
+                                                2,
+                                      ),
+                                  delegate: SliverChildListDelegate([
+                                    for (final tool in visible.where(
+                                      (tool) => tool.category == category,
+                                    ))
+                                      _ToolTile(
+                                        tool: tool,
+                                        onTap: _opening
+                                            ? null
+                                            : () => _open(tool),
+                                      ),
+                                  ]),
+                                ),
+                              ),
+                            ],
+                          ],
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                        ],
+                      );
+                    },
+                  ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ToolTile extends StatelessWidget {
+  const _ToolTile({required this.tool, required this.onTap});
+  final CommunityTool tool;
+  final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: colors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  _toolIcon(tool.id),
+                  size: 23,
+                  color: colors.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                tool.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, height: 1.35),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

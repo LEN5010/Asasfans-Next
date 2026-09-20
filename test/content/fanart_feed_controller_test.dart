@@ -6,8 +6,11 @@ import 'package:asasfans_next/features/content/application/fanart_feed_controlle
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-FanartItem _item(String id) => FanartItem(
-  identity: ContentIdentity(source: ContentSource.bilibiliDynamic, value: id),
+FanartItem _item(
+  String id, {
+  ContentSource source = ContentSource.bilibiliDynamic,
+}) => FanartItem(
+  identity: ContentIdentity(source: source, value: id),
   text: 'text-$id',
   authorName: 'author',
   authorUid: '1',
@@ -21,6 +24,8 @@ FanartItem _item(String id) => FanartItem(
 /// Repository double driven by queued responses so ordering, cancellation and
 /// generation behaviour can be exercised without any network access.
 class _FakeRepository implements FanartRepository {
+  bool honorCancellation = true;
+  final handles = <RequestCancellation?>[];
   final List<Completer<FanartPage>> pending = [];
   final List<({FanartQuery query, String? cursor})> calls = [];
 
@@ -31,10 +36,11 @@ class _FakeRepository implements FanartRepository {
     RequestCancellation? cancellation,
   }) {
     calls.add((query: query, cursor: cursor));
+    handles.add(cancellation);
     final completer = Completer<FanartPage>();
     pending.add(completer);
     cancellation?.onCancel(() {
-      if (!completer.isCompleted) {
+      if (honorCancellation && !completer.isCompleted) {
         completer.completeError(const ApiFailure(ApiFailureKind.cancelled));
       }
     });
@@ -189,29 +195,43 @@ void main() {
     },
   );
 
-  test(
-    'a snapshot change detected without a 409 also restarts the list',
-    () async {
-      final loading = controller.loadInitial();
-      repository.pending.first.complete(
-        FanartPage(items: [_item('a')], snapshotId: 's1', nextCursor: 'c1'),
-      );
-      await loading;
-
-      final append = controller.loadMore();
-      repository.pending[1].complete(
-        FanartPage(items: [_item('mixed')], snapshotId: 's2', nextCursor: 'c2'),
-      );
-      await Future<void>.delayed(Duration.zero);
-      repository.pending[2].complete(
-        FanartPage(items: [_item('fresh')], snapshotId: 's2'),
-      );
-      await append;
-
-      // The page from the newer dataset is discarded rather than appended.
-      expect(controller.state.items.map((i) => i.identity.value), ['fresh']);
-    },
-  );
+  for (final sort in [FanartSort.newest, FanartSort.oldest]) {
+    test(
+      'a successful union source transition preserves the list ($sort)',
+      () async {
+        controller.dispose();
+        controller = FanartFeedController(
+          repository,
+          query: FanartQuery(sort: sort),
+        );
+        final sources = sort == FanartSort.newest
+            ? [ContentSource.bilibiliDynamic, ContentSource.doubanTopic]
+            : [ContentSource.doubanTopic, ContentSource.bilibiliDynamic];
+        final loading = controller.loadInitial();
+        repository.pending.first.complete(
+          FanartPage(
+            items: [_item('123', source: sources.first)],
+            snapshotId: 'first-source-snapshot',
+            nextCursor: 'opaque_union_cursor',
+          ),
+        );
+        await loading;
+        final append = controller.loadMore();
+        repository.pending.last.complete(
+          FanartPage(
+            items: [_item('123', source: sources.last)],
+            snapshotId: 'second-source-snapshot',
+            nextCursor: 'next_union_cursor',
+          ),
+        );
+        await append;
+        expect(repository.calls, hasLength(2));
+        expect(repository.calls.last.cursor, 'opaque_union_cursor');
+        expect(controller.state.items.map((i) => i.identity.source), sources);
+        expect(controller.state.nextCursor, 'next_union_cursor');
+      },
+    );
+  }
 
   test(
     'refresh keeps current items visible until the new page arrives',
@@ -265,5 +285,44 @@ void main() {
 
     // Re-created for tearDown, which disposes the field.
     controller = FanartFeedController(repository);
+  });
+  test(
+    'refresh cancels an active append, not just the old first page',
+    () async {
+      final first = controller.loadInitial();
+      repository.pending.last.complete(
+        FanartPage(items: [_item('a')], snapshotId: 's', nextCursor: 'c'),
+      );
+      await first;
+      final append = controller.loadMore();
+      final appendHandle = repository.handles.last!;
+      final refresh = controller.refresh();
+      expect(appendHandle.isCancelled, isTrue);
+      repository.pending.last.complete(
+        FanartPage(items: [_item('b')], snapshotId: 's'),
+      );
+      await Future.wait([append, refresh]);
+      expect(controller.state.items.map((i) => i.identity.value), ['b']);
+    },
+  );
+
+  test('a non-cooperative append cannot notify after dispose', () async {
+    repository.honorCancellation = false;
+    final first = controller.loadInitial();
+    repository.pending.last.complete(
+      FanartPage(items: [_item('a')], snapshotId: 's', nextCursor: 'c'),
+    );
+    await first;
+    final append = controller.loadMore();
+    var notifications = 0;
+    controller.addListener(() => notifications++);
+    controller.dispose();
+    expect(repository.handles.last!.isCancelled, isTrue);
+    repository.pending.last.complete(
+      FanartPage(items: [_item('late')], snapshotId: 's'),
+    );
+    await append;
+    expect(notifications, 0);
+    expect(controller.state.items.map((i) => i.identity.value), ['a']);
   });
 }

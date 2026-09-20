@@ -48,7 +48,7 @@ void main() {
     expect(line?.value, '20260921T120000');
   });
 
-  test('a UTC stamp stays UTC and a floating time stays local', () {
+  test('UTC and named-zone stamps resolve to source instants', () {
     final utc = IcsParser.parseDateTime('20260921T120000Z', const {});
     expect(utc!.value.isUtc, isTrue);
     expect(utc.value, DateTime.utc(2026, 9, 21, 12));
@@ -56,7 +56,8 @@ void main() {
     final floating = IcsParser.parseDateTime('20260921T120000', const {
       'TZID': 'Asia/Shanghai',
     });
-    expect(floating!.value.isUtc, isFalse);
+    expect(floating!.value, DateTime.utc(2026, 9, 21, 4));
+    expect(floating.value.isUtc, isTrue);
     expect(floating.tzid, 'Asia/Shanghai');
     expect(floating.isDate, isFalse);
   });
@@ -165,8 +166,8 @@ void main() {
     );
 
     expect(events.map((e) => e.uid).toSet(), {'series'});
-    expect(events.first.identity, 'series');
-    expect(events.last.identity, 'series/20260928T120000Z');
+    expect(events.first.identity, '["series",null]');
+    expect(events.last.identity, '["series","20260928T120000Z"]');
     expect(events.first.identity, isNot(events.last.identity));
   });
 
@@ -200,12 +201,17 @@ void main() {
     expect(events.single.categories, ['直播', '歌会']);
   });
 
-  test('an event without a start is skipped rather than invented', () {
-    final events = IcsParser.parse(
-      _calendar('BEGIN:VEVENT\r\nUID:1\r\nSUMMARY:无开始时间\r\nEND:VEVENT'),
-    );
-    expect(events, isEmpty);
-  });
+  test(
+    'an invalid event does not silently turn a feed into an empty calendar',
+    () {
+      expect(
+        () => IcsParser.parse(
+          _calendar('BEGIN:VEVENT\r\nUID:1\r\nSUMMARY:无开始时间\r\nEND:VEVENT'),
+        ),
+        throwsFormatException,
+      );
+    },
+  );
 
   test('bare LF line endings parse the same as CRLF', () {
     final events = IcsParser.parse(
@@ -215,9 +221,113 @@ void main() {
     expect(events.single.title, '直播');
   });
 
-  test('an empty or malformed calendar yields no events, not an exception', () {
-    expect(IcsParser.parse(''), isEmpty);
-    expect(IcsParser.parse('not a calendar at all'), isEmpty);
-    expect(IcsParser.parse('BEGIN:VEVENT'), isEmpty);
+  test('malformed transport data is not a legitimate empty calendar', () {
+    for (final body in ['', 'not a calendar at all', 'BEGIN:VEVENT']) {
+      expect(() => IcsParser.parse(body), throwsFormatException);
+    }
+    expect(IcsParser.parse(_calendar('')), isEmpty);
+  });
+  test('Shanghai named time is independent of the device timezone', () {
+    final event = IcsParser.parse(
+      _calendar(
+        'BEGIN:VEVENT\nUID:shanghai\nDTSTART;TZID=Asia/Shanghai:20260921T200000\nEND:VEVENT',
+      ),
+    ).single;
+    expect(event.start, DateTime.utc(2026, 9, 21, 12));
+  });
+
+  test('Los Angeles follows seasonal DST rather than a fixed offset', () {
+    expect(
+      IcsParser.parseDateTime('20260121T120000', {
+        'TZID': 'America/Los_Angeles',
+      })!.value,
+      DateTime.utc(2026, 1, 21, 20),
+    );
+    expect(
+      IcsParser.parseDateTime('20260721T120000', {
+        'TZID': 'America/Los_Angeles',
+      })!.value,
+      DateTime.utc(2026, 7, 21, 19),
+    );
+  });
+
+  test('floating schedule values use Shanghai, not host local time', () {
+    expect(
+      IcsParser.parseDateTime('20260921T200000', {})!.value,
+      DateTime.utc(2026, 9, 21, 12),
+    );
+  });
+
+  test('unknown zones and nonexistent DST wall times fail explicitly', () {
+    expect(
+      () =>
+          IcsParser.parseDateTime('20260921T200000', {'TZID': 'Unknown/Zone'}),
+      throwsFormatException,
+    );
+    expect(
+      () => IcsParser.parseDateTime('20260308T023000', {
+        'TZID': 'America/Los_Angeles',
+      }),
+      throwsFormatException,
+    );
+    expect(IcsParser.parseDateTime('20260230', {'VALUE': 'DATE'}), isNull);
+  });
+
+  test('the highest sequence wins even when old revisions arrive last', () {
+    String event(int sequence, String time, String status) =>
+        'BEGIN:VEVENT\nUID:revision\nSEQUENCE:$sequence\nDTSTART:$time\nSTATUS:$status\nEND:VEVENT';
+    final events = IcsParser.parse(
+      _calendar(
+        [
+          event(3, '20260921T140000Z', 'CANCELLED'),
+          event(1, '20260921T120000Z', 'CONFIRMED'),
+        ].join('\n'),
+      ),
+    );
+    expect(events, hasLength(1));
+    expect(events.single.sequence, 3);
+    expect(events.single.isCancelled, isTrue);
+  });
+
+  test('recurrence identity normalizes equivalent named-zone and UTC stamps', () {
+    final events = IcsParser.parse(
+      _calendar(
+        'BEGIN:VEVENT\nUID:series\nRECURRENCE-ID;TZID=Asia/Shanghai:20260921T200000\n'
+        'DTSTART:20260921T140000Z\nEND:VEVENT',
+      ),
+    );
+    expect(events.single.identity, '["series","20260921T120000Z"]');
+  });
+
+  test('alarm properties cannot overwrite the event fields', () {
+    final event = IcsParser.parse(
+      _calendar(
+        'BEGIN:VEVENT\nUID:a\nDTSTART:20260921T120000Z\nSUMMARY:直播\n'
+        'BEGIN:VALARM\nSUMMARY:提醒\nEND:VALARM\nEND:VEVENT',
+      ),
+    ).single;
+    expect(event.title, '直播');
+  });
+
+  test('a slash in a UID cannot collide with another occurrence key', () {
+    final events = IcsParser.parse(
+      _calendar(
+        'BEGIN:VEVENT\nUID:series/20260921T120000Z\nDTSTART:20260921T120000Z\nEND:VEVENT\n'
+        'BEGIN:VEVENT\nUID:series\nRECURRENCE-ID:20260921T120000Z\nDTSTART:20260921T120000Z\nEND:VEVENT',
+      ),
+    );
+    expect(events, hasLength(2));
+    expect(events.map((event) => event.identity).toSet(), hasLength(2));
+  });
+
+  test('unsupported recurrence cannot masquerade as a complete schedule', () {
+    expect(
+      () => IcsParser.parse(
+        _calendar(
+          'BEGIN:VEVENT\nUID:a\nDTSTART:20260921T120000Z\nRRULE:FREQ=DAILY\nEND:VEVENT',
+        ),
+      ),
+      throwsFormatException,
+    );
   });
 }

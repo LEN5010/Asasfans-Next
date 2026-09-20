@@ -1,12 +1,13 @@
+import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/dynamic_repository.dart';
-import 'package:asasfans_next/features/today/presentation/today_page.dart';
+import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/features/today/presentation/on_this_day_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 
 DynamicPost _post(String id, {String text = '往年正文'}) => DynamicPost(
   identity: ContentIdentity(source: ContentSource.bilibiliDynamic, value: id),
@@ -47,18 +48,16 @@ class _StubRepository implements DynamicRepository {
 }
 
 Widget _app(DynamicRepository repository) => ProviderScope(
-  overrides: [dynamicRepositoryProvider.overrideWithValue(repository)],
-  child: MaterialApp.router(
-    routerConfig: GoRouter(
-      routes: [GoRoute(path: '/', builder: (_, _) => const TodayPage())],
-    ),
-  ),
+  overrides: [
+    ...offlineLibrary(),
+    dynamicRepositoryProvider.overrideWithValue(repository),
+    currentTimeProvider.overrideWithValue(() => DateTime.utc(2026, 8, 16, 4)),
+  ],
+  child: const MaterialApp(home: Scaffold(body: OnThisDaySection())),
 );
 
 void main() {
-  testWidgets('renders posts from earlier years on the home page', (
-    tester,
-  ) async {
+  testWidgets('renders posts from earlier years in the module', (tester) async {
     await tester.pumpWidget(_app(_StubRepository(posts: [_post('1')])));
     await tester.pumpAndSettle();
 
@@ -68,17 +67,14 @@ void main() {
     expect(find.textContaining('2021 年'), findsOneWidget);
   });
 
-  testWidgets('a failing module does not blank the rest of the page', (
-    tester,
-  ) async {
+  testWidgets('a failing module retains its heading and retry', (tester) async {
     await tester.pumpWidget(
       _app(_StubRepository(failure: const ApiFailure(ApiFailureKind.offline))),
     );
     await tester.pumpAndSettle();
 
-    // The page's own entries stay usable.
-    expect(find.text('二创档案'), findsOneWidget);
-    expect(find.text('直播日历'), findsOneWidget);
+    expect(find.text('历史上的今天'), findsOneWidget);
+    expect(find.text('重试'), findsOneWidget);
     expect(find.text('网络连接失败'), findsOneWidget);
   });
 

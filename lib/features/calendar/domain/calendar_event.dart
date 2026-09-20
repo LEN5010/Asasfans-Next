@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Whether the source marked an occurrence as still happening.
 enum EventStatus { confirmed, tentative, cancelled }
 
@@ -54,7 +56,7 @@ class CalendarEvent {
 
   /// Stable key for an occurrence. Rescheduling changes the start time but not
   /// this identity, so an existing reminder is updated rather than duplicated.
-  String get identity => recurrenceId == null ? uid : '$uid/$recurrenceId';
+  String get identity => jsonEncode([uid, recurrenceId]);
 
   CalendarEvent copyWith({
     DateTime? start,
@@ -86,11 +88,21 @@ class CalendarSnapshot {
     required this.events,
     required this.fetchedAt,
     this.fromCache = false,
+    this.isStale = false,
+    this.expiresAt,
+    this.offlineCacheUnavailable = false,
+    this.followSyncUnavailable = false,
   });
 
   final List<CalendarEvent> events;
   final DateTime fetchedAt;
   final bool fromCache;
+
+  /// Fresh cache hits are not stale. This flags failed revalidation instead.
+  final bool isStale;
+  final DateTime? expiresAt;
+  final bool offlineCacheUnavailable;
+  final bool followSyncUnavailable;
 }
 
 abstract interface class CalendarRepository {

@@ -1,3 +1,4 @@
+import '../../../core/time/calendar_time.dart';
 import '../domain/calendar_event.dart';
 
 /// A parsed but not yet interpreted content line.
@@ -28,28 +29,53 @@ class IcsDateTime {
 /// silently invent or drop events.
 abstract final class IcsParser {
   static List<CalendarEvent> parse(String text) {
-    final events = <CalendarEvent>[];
+    final lines = unfold(text.replaceFirst('\uFEFF', ''));
+    if (lines.isEmpty ||
+        lines.first != 'BEGIN:VCALENDAR' ||
+        lines.last != 'END:VCALENDAR') {
+      throw const FormatException('Expected a complete VCALENDAR');
+    }
+    final events = <String, CalendarEvent>{};
     Map<String, List<IcsLine>>? current;
+    var nestedDepth = 0;
 
-    for (final line in unfold(text)) {
+    for (final line in lines) {
       if (line == 'BEGIN:VEVENT') {
+        if (current != null) throw const FormatException('Unclosed VEVENT');
         current = {};
+        nestedDepth = 0;
         continue;
       }
       if (line == 'END:VEVENT') {
-        if (current != null) {
+        if (current != null && nestedDepth == 0) {
           final event = _build(current);
-          if (event != null) events.add(event);
+          if (event == null) throw const FormatException('Invalid VEVENT');
+          final previous = events[event.identity];
+          if (previous == null || event.sequence >= previous.sequence) {
+            events[event.identity] = event;
+          }
+        } else {
+          throw const FormatException('Unbalanced VEVENT');
         }
         current = null;
         continue;
       }
       if (current == null) continue;
+      if (line.startsWith('BEGIN:')) {
+        nestedDepth++;
+        continue;
+      }
+      if (line.startsWith('END:') && nestedDepth > 0) {
+        nestedDepth--;
+        continue;
+      }
+      if (nestedDepth > 0) continue;
       final parsed = parseLine(line);
       if (parsed == null) continue;
       current.putIfAbsent(parsed.name, () => []).add(parsed);
     }
-    return List.unmodifiable(events);
+    if (current != null) throw const FormatException('Truncated VEVENT');
+    return List.unmodifiable(events.values);
   }
 
   /// Joins continuation lines, which begin with a single space or tab, and
@@ -145,41 +171,52 @@ abstract final class IcsParser {
 
   /// Reads `YYYYMMDD` and `YYYYMMDDTHHMMSS[Z]`.
   ///
-  /// A trailing `Z` is UTC. A TZID is recorded but not resolved here, because
-  /// this build carries no timezone database; such values are kept as local
-  /// wall-clock times together with their zone name.
+  /// Timed values become UTC instants using the IANA source timezone. Floating
+  /// values follow this schedule's Shanghai default, not the device timezone.
   static IcsDateTime? parseDateTime(String value, Map<String, String> params) {
     final raw = value.trim();
     final isDate =
         params['VALUE']?.toUpperCase() == 'DATE' ||
         (raw.length == 8 && !raw.contains('T'));
     if (isDate) {
-      if (raw.length < 8) return null;
+      if (!RegExp(r'^\d{8}$').hasMatch(raw)) return null;
       final date = _digits(raw, 0, 8);
       if (date == null) return null;
-      return IcsDateTime(
-        DateTime.utc(date ~/ 10000, (date ~/ 100) % 100, date % 100),
-        isDate: true,
-      );
+      final value = _validFields(date, 0);
+      if (value == null) return null;
+      return IcsDateTime(value, isDate: true);
     }
-    if (raw.length < 15 || raw[8] != 'T') return null;
+    if (!RegExp(r'^\d{8}T\d{6}Z?$').hasMatch(raw)) return null;
     final date = _digits(raw, 0, 8);
     final time = _digits(raw, 9, 6);
     if (date == null || time == null) return null;
     final utc = raw.endsWith('Z');
+    final fields = _validFields(date, time);
+    if (fields == null) return null;
+    final zone = utc ? 'UTC' : params['TZID'] ?? CalendarTime.scheduleZone;
+    return IcsDateTime(
+      utc ? fields : CalendarTime.wallTimeToUtc(fields, zone),
+      isDate: false,
+      tzid: zone,
+    );
+  }
+
+  static DateTime? _validFields(int date, int time) {
     final year = date ~/ 10000;
     final month = (date ~/ 100) % 100;
     final day = date % 100;
     final hour = time ~/ 10000;
     final minute = (time ~/ 100) % 100;
     final second = time % 100;
-    return IcsDateTime(
-      utc
-          ? DateTime.utc(year, month, day, hour, minute, second)
-          : DateTime(year, month, day, hour, minute, second),
-      isDate: false,
-      tzid: params['TZID'],
-    );
+    final value = DateTime.utc(year, month, day, hour, minute, second);
+    return value.year == year &&
+            value.month == month &&
+            value.day == day &&
+            value.hour == hour &&
+            value.minute == minute &&
+            value.second == second
+        ? value
+        : null;
   }
 
   static int? _digits(String raw, int start, int length) {
@@ -205,6 +242,9 @@ abstract final class IcsParser {
   }
 
   static CalendarEvent? _build(Map<String, List<IcsLine>> fields) {
+    if (['RRULE', 'RDATE', 'EXDATE'].any(fields.containsKey)) {
+      throw const FormatException('Recurrence expansion is not supported');
+    }
     final startLine = fields['DTSTART']?.firstOrNull;
     if (startLine == null) return null;
     final start = parseDateTime(startLine.value, startLine.params);
@@ -233,9 +273,16 @@ abstract final class IcsParser {
     }
 
     final uid = _text(fields, 'UID');
+    final recurrence = fields['RECURRENCE-ID']?.firstOrNull;
+    final occurrence = recurrence == null
+        ? null
+        : parseDateTime(recurrence.value, recurrence.params);
+    if (recurrence != null && occurrence == null) {
+      throw const FormatException('Invalid recurrence identity');
+    }
     return CalendarEvent(
       uid: uid.isEmpty ? '${startLine.value}|${_text(fields, 'SUMMARY')}' : uid,
-      recurrenceId: fields['RECURRENCE-ID']?.firstOrNull?.value,
+      recurrenceId: occurrence == null ? null : _recurrenceKey(occurrence),
       sequence: int.tryParse(_text(fields, 'SEQUENCE')) ?? 0,
       title: _text(fields, 'SUMMARY'),
       start: start.value,
@@ -251,6 +298,16 @@ abstract final class IcsParser {
       categories: _list(fields, 'CATEGORIES'),
       sourceUrl: _uri(_text(fields, 'URL')),
     );
+  }
+
+  static String _recurrenceKey(IcsDateTime date) {
+    final value = date.value;
+    String two(int field) => field.toString().padLeft(2, '0');
+    final day =
+        '${value.year.toString().padLeft(4, '0')}${two(value.month)}${two(value.day)}';
+    return date.isDate
+        ? day
+        : '${day}T${two(value.hour)}${two(value.minute)}${two(value.second)}Z';
   }
 
   static String _text(Map<String, List<IcsLine>> fields, String name) {

@@ -1,7 +1,12 @@
+import '../../creator/presentation/creator_link.dart';
+import '../../rules/presentation/rule_filter_scope.dart';
+import '../../rules/application/feed_visibility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/providers.dart';
+import '../../library/application/content_snapshots.dart';
+import '../../library/presentation/content_actions.dart';
+import '../../library/presentation/library_common.dart';
 import '../../../core/network/api_failure.dart';
 import '../../content/application/content_providers.dart';
 import '../../content/domain/dynamic_repository.dart';
@@ -32,39 +37,55 @@ class OnThisDaySection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          // Grows with the text scale so the card contents keep their room.
-          height:
-              188 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
-          child: posts.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => _SectionError(
-              message: error is ApiFailure ? error.message : '内容加载失败',
-              onRetry: () => ref.invalidate(onThisDayProvider),
+        posts.when(
+          loading: () => const SizedBox(
+            height: 188,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => _SectionError(
+            message: error is ApiFailure ? error.message : '内容加载失败',
+            onRetry: () => ref.invalidate(onThisDayProvider),
+          ),
+          data: (raw) => RuleFilterScope(
+            items: raw,
+            subjectOf: RuleSubjects.dynamic,
+            builder: (visible) => Column(
+              children: [
+                RuleStatusBar(visibility: visible),
+                SizedBox(
+                  height:
+                      188 *
+                      MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
+                  child: _posts(context, visible.items),
+                ),
+              ],
             ),
-            data: (items) => items.isEmpty
-                ? Center(
-                    child: Text(
-                      '往年今天还没有记录',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                  )
-                // Trailing padding so the last card ends clear of the edge
-                // rather than looking clipped by the page margin.
-                : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.only(right: 4),
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) =>
-                        _PostCard(post: items[index]),
-                  ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _posts(BuildContext context, List<DynamicPost> items) {
+    final theme = Theme.of(context);
+    return items.isEmpty
+        ? Center(
+            child: Text(
+              '往年今天还没有记录',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+          )
+        // Trailing padding so the last card ends clear of the edge
+        // rather than looking clipped by the page margin.
+        : ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(right: 4),
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => _PostCard(post: items[index]),
+          );
   }
 }
 
@@ -84,8 +105,22 @@ class _PostCard extends ConsumerWidget {
         child: InkWell(
           onTap: post.sourceUrl == null
               ? null
-              : () =>
-                    ref.read(externalLinkServiceProvider).open(post.sourceUrl!),
+              : () => openContentSource(
+                  context,
+                  ref,
+                  ContentSnapshots.dynamic(post),
+                  url: post.sourceUrl,
+                ),
+          onLongPress: () => showContentActions(
+            context,
+            ContentSnapshots.dynamic(post),
+            ruleSubject: RuleSubjects.dynamic(post),
+          ),
+          onSecondaryTap: () => showContentActions(
+            context,
+            ContentSnapshots.dynamic(post),
+            ruleSubject: RuleSubjects.dynamic(post),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -108,10 +143,13 @@ class _PostCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _header(post),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.primary,
+                      CreatorLink(
+                        mid: post.member.bilibiliUid,
+                        child: Text(
+                          _header(post),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
