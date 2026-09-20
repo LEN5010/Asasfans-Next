@@ -76,6 +76,82 @@ void main() {
     });
   }
 
+  group('Retry-After', () {
+    final now = DateTime.utc(2026, 9, 21, 12);
+
+    test('reads delta-seconds', () {
+      expect(
+        PublicApiClient.parseRetryAfter('60', now: now),
+        const Duration(seconds: 60),
+      );
+      expect(PublicApiClient.parseRetryAfter('0', now: now), Duration.zero);
+    });
+
+    test('reads an HTTP-date as a delay from now', () {
+      expect(
+        PublicApiClient.parseRetryAfter(
+          'Mon, 21 Sep 2026 12:00:30 GMT',
+          now: now,
+        ),
+        const Duration(seconds: 30),
+      );
+    });
+
+    test(
+      'a past date means retry is already permitted, not a negative wait',
+      () {
+        expect(
+          PublicApiClient.parseRetryAfter(
+            'Mon, 21 Sep 2026 11:59:00 GMT',
+            now: now,
+          ),
+          Duration.zero,
+        );
+      },
+    );
+
+    test('an unusable value yields no server guidance', () {
+      for (final value in [null, '', '  ', '-5', 'soon', 'Mon, 99 Xxx 2026']) {
+        expect(
+          PublicApiClient.parseRetryAfter(value, now: now),
+          isNull,
+          reason: value.toString(),
+        );
+      }
+    });
+  });
+
+  test(
+    'surfaces the 409 discriminator so the two causes stay distinct',
+    () async {
+      for (final code in ['FANART_SNAPSHOT_CHANGED', 'FANART_STATS_CHANGED']) {
+        final dio = Dio(BaseOptions(baseUrl: 'https://example.test/api/'))
+          ..httpClientAdapter = _Adapter(
+            ResponseBody.fromString(
+              '{"error":"changed","code":"$code"}',
+              409,
+              headers: {
+                Headers.contentTypeHeader: ['application/json'],
+              },
+            ),
+          );
+        addTearDown(() => dio.close(force: true));
+        await expectLater(
+          PublicApiClient(dio).get('fanart'),
+          throwsA(
+            isA<ApiFailure>()
+                .having(
+                  (error) => error.kind,
+                  'kind',
+                  ApiFailureKind.datasetChanged,
+                )
+                .having((error) => error.code, 'code', code),
+          ),
+        );
+      }
+    },
+  );
+
   test('rejects escaping the API base URL before dispatch', () async {
     final dio = Dio(BaseOptions(baseUrl: 'https://example.test/api/'));
     addTearDown(() => dio.close(force: true));

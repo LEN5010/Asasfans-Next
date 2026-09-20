@@ -1,3 +1,5 @@
+import 'dart:io' show HttpDate;
+
 import 'package:dio/dio.dart';
 
 import 'api_failure.dart';
@@ -74,10 +76,25 @@ class PublicApiClient {
     }
   }
 
-  /// Unknown headers do not cause immediate automatic retries.
-  static Duration? parseRetryAfter(String? value) {
-    final seconds = int.tryParse(value ?? '');
-    return seconds != null && seconds >= 0 ? Duration(seconds: seconds) : null;
+  /// Accepts both `Retry-After` forms: delta-seconds and an HTTP-date. An
+  /// unparseable or past value yields null, which callers treat as "no server
+  /// guidance" rather than as permission to retry immediately.
+  static Duration? parseRetryAfter(String? value, {DateTime? now}) {
+    final raw = value?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    final seconds = int.tryParse(raw);
+    if (seconds != null) {
+      return seconds >= 0 ? Duration(seconds: seconds) : null;
+    }
+    final DateTime until;
+    try {
+      // Throws HttpException, not FormatException, on a malformed date.
+      until = HttpDate.parse(raw);
+    } on Exception {
+      return null;
+    }
+    final delta = until.difference(now ?? DateTime.now().toUtc());
+    return delta > Duration.zero ? delta : Duration.zero;
   }
 
   /// Reads only the documented `code` discriminator. Server error prose is not
