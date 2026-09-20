@@ -24,20 +24,26 @@ Asasfans Next 是一个面向 A-SOUL 粉丝的 Android 客户端，整合了视�
 
 Asasfans Next 是非官方粉丝项目，与 Bilibili、A-SOUL 及枝江娱乐等相关公司没有官方关联。
 
+## 2.0.0
+
+2.0 使用 Kotlin、Compose、Room 和 DataStore 重建主要使用流程，保留原版嘉然粉配色与本地资料。完整更新见 [2.0.0 更新说明](release-notes/2.0.0.md)。
+
 ## 功能
 
-- 浏览 A-SOUL 相关 Bilibili 视频流。
-- 支持 App 内播放或跳转 B 站播放。
-- 支持 Bilibili 二维码登录和官方 WebView 登录。
-- 支持视频详情、分 P、清晰度选择和只读评论区。
-- 支持订阅 UP 管理和订阅 UP 视频栏。
-- 支持黑名单词、黑名单 UP 和视频黑名单。
-- 提供音乐、工具、日历和设置页面。
-- 使用 Material 3 主框架和侧边栏导航。
+- 今日与发现视频流支持滚动自动续载、下拉刷新和失败重试。
+- 支持 App 内播放或跳转 B 站；提供分 P、清晰度、倍速、进度恢复和只读评论。
+- 支持 Bilibili 官方网页登录与二维码登录，账号凭据使用加密本地存储。
+- 点击 UP 头像或昵称进入原生主页，查看简介、订阅及分页投稿，或跳转 B 站空间。
+- 本地订阅管理位于「我的」，与 B 站账号关注独立。
+- 资料库提供稍后看、收藏夹、观看历史、播放进度和书签。
+- 支持关键词、Tag、UP 和视频屏蔽规则。
+- 底栏中间的工具抽屉整合录音棚、日历、社区导航等站点，各工具使用独立图标。
+- 手机底栏与宽屏侧栏布局、浅色与深色主题。
+- 支持旧版 v1–v4 本地数据库迁移，保留旧数据库与追更恢复记录。
 
 ## 构建
 
-在仓库根目录使用 Gradle Wrapper：
+使用 JDK 17 和 Android SDK 36，在仓库根目录使用 Gradle Wrapper：
 
 ```sh
 ./gradlew assembleDebug
@@ -54,7 +60,9 @@ Asasfans Next 是非官方粉丝项目，与 Bilibili、A-SOUL 及枝江娱乐�
 
 ### GitHub Actions 发布
 
-仓库提供 `Android Release` workflow。推送 `v*` tag，或在 Actions 页面手动输入 tag 触发后，会运行测试、lint、构建签名 APK，并上传到对应 GitHub Release。
+仓库提供 `Android Release` workflow。推送 `v*` tag，或在 Actions 页面手动输入已存在的 tag 后，流水线会检出该标签，核对应用版本与更新说明，运行测试、lint、编译设备测试 APK，再构建并校验签名 APK，上传 APK 和 SHA-256 校验文件到对应 GitHub Release。
+
+例如 `v2.0.0` 必须对应 `versionName "2.0.0"`，更新说明位于 `release-notes/2.0.0.md`。分支与 PR 的 `Android Checks` 不需要发布签名凭据。
 
 需要在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 配置以下 Secrets：
 
