@@ -209,6 +209,22 @@ void main() {
     expect(find.byTooltip('随机二创'), findsNothing);
   });
 
+  testWidgets('a narrow window drops to one readable column', (tester) async {
+    tester.view
+      ..physicalSize = const Size(320, 640)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_app(_StubRepository()));
+    await tester.pumpAndSettle();
+
+    final grid = tester.widget<SliverGrid>(find.byType(SliverGrid));
+    final delegate =
+        grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+    // 320 - 32 padding leaves room for one card above the readable floor.
+    expect(delegate.crossAxisCount, 1);
+  });
+
   testWidgets('wide windows use more columns than a phone', (tester) async {
     tester.view
       ..physicalSize = const Size(1600, 1200)

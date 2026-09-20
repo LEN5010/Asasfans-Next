@@ -33,7 +33,9 @@ class OnThisDaySection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 188,
+          // Grows with the text scale so the card contents keep their room.
+          height:
+              188 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
           child: posts.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) => _SectionError(
@@ -49,8 +51,11 @@ class OnThisDaySection extends ConsumerWidget {
                       ),
                     ),
                   )
+                // Trailing padding so the last card ends clear of the edge
+                // rather than looking clipped by the page margin.
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(right: 4),
                     itemCount: items.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 12),
                     itemBuilder: (context, index) =>

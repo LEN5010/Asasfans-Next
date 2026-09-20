@@ -264,6 +264,9 @@ class _SearchFieldState extends State<_SearchField> {
   );
 }
 
+/// Floor for an automatic column count, so cards stay readable.
+const _minCardWidth = 150.0;
+
 class _FanartGrid extends StatelessWidget {
   const _FanartGrid({
     required this.state,
@@ -280,12 +283,19 @@ class _FanartGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Wide windows get more columns rather than a stretched phone layout.
-        final columns = switch (constraints.maxWidth) {
+        final preferred = switch (constraints.maxWidth) {
           >= 1400 => 5,
           >= 1100 => 4,
           >= 760 => 3,
           _ => 2,
         };
+        // Never squeeze below a readable card, so a narrow window or a desktop
+        // split view drops a column instead of producing unusable slivers.
+        final usable = constraints.maxWidth - 32;
+        final fitting = ((usable + 12) / (_minCardWidth + 12)).floor();
+        final columns = fitting < 1
+            ? 1
+            : (fitting < preferred ? fitting : preferred);
         return CustomScrollView(
           controller: controller,
           slivers: [
