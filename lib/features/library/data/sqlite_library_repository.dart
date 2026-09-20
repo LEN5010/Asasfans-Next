@@ -65,6 +65,17 @@ class SqliteLibraryRepository implements LibraryRepository {
     LibraryCodec.id(key.uid),
     key.recurrenceId ?? '',
   ];
+
+  /// Local-only identifier for a user-created row. It is never a source id and
+  /// never leaves this store.
+  static String _localId() {
+    final random = Random.secure();
+    return List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+  }
+
   static String _folderName(String name) {
     final value = name.trim();
     if (value.isEmpty || value.length > 64 || value.contains('\u0000')) {
@@ -81,11 +92,17 @@ class SqliteLibraryRepository implements LibraryRepository {
   );
   // subscription_reads owns only a BVID receipt, not a content_refs snapshot.
   // Its lifetime is independent of this pruning and of unsubscription.
+  //
+  // Playback progress and bookmarks do own snapshots: a resume entry or a
+  // bookmark must keep its title after the item leaves every folder, watch-later
+  // and history list, so both are reference holders here.
   static const _prune = SqlStatement(
     '''DELETE FROM content_refs AS c
     WHERE NOT EXISTS(SELECT 1 FROM collection_items s WHERE s.source=c.source AND s.content_id=c.content_id)
     AND NOT EXISTS(SELECT 1 FROM watch_later w WHERE w.source=c.source AND w.content_id=c.content_id)
-    AND NOT EXISTS(SELECT 1 FROM content_history h WHERE h.source=c.source AND h.content_id=c.content_id)''',
+    AND NOT EXISTS(SELECT 1 FROM content_history h WHERE h.source=c.source AND h.content_id=c.content_id)
+    AND NOT EXISTS(SELECT 1 FROM playback_progress p WHERE p.source=c.source AND p.content_id=c.content_id)
+    AND NOT EXISTS(SELECT 1 FROM playback_bookmarks b WHERE b.source=c.source AND b.content_id=c.content_id)''',
   );
   Future<void> _write(
     List<SqlStatement> commands, {
@@ -305,11 +322,7 @@ class SqliteLibraryRepository implements LibraryRepository {
 
   @override
   Future<String> createFolder(String name) async {
-    final random = Random.secure();
-    final id = List.generate(
-      16,
-      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ).join();
+    final id = _localId();
     await _write([
       SqlStatement('INSERT INTO collection_folders VALUES(?,?,?)', [
         id,
@@ -484,6 +497,309 @@ class SqliteLibraryRepository implements LibraryRepository {
       done: row['done'] == 1,
     );
   }
+
+  static List<Object?> _part(PlaybackPart part) => [
+    ..._identity(part.identity),
+    LibraryCodec.id(part.partId),
+  ];
+
+  /// Milliseconds must stay inside a range SQLite stores exactly and that no
+  /// real media can exceed, so a malformed duration cannot poison a row.
+  static int _millis(Duration value) {
+    final ms = value.inMilliseconds;
+    if (ms < 0 || ms > _maxMillis) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    return ms;
+  }
+
+  static const _maxMillis = 1000 * 60 * 60 * 24 * 30;
+
+  static String _bookmarkText(String value, int limit) {
+    if (value.length > limit || value.contains('\u0000')) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    return value;
+  }
+
+  static PlaybackProgress _progress(SqlRow row) => PlaybackProgress(
+    part: PlaybackPart(
+      identity: ContentIdentity(
+        source: ContentSource.values.byName(row['source'] as String),
+        value: row['content_id'] as String,
+      ),
+      partId: row['part_id'] as String,
+    ),
+    position: Duration(milliseconds: row['position_ms'] as int),
+    duration: Duration(milliseconds: row['duration_ms'] as int),
+    completed: row['completed'] == 1,
+    updatedAt: DateTime.fromMillisecondsSinceEpoch(
+      row['updated_at'] as int,
+      isUtc: true,
+    ),
+  );
+
+  static PlaybackBookmark _bookmark(SqlRow row) => PlaybackBookmark(
+    id: row['id'] as String,
+    part: PlaybackPart(
+      identity: ContentIdentity(
+        source: ContentSource.values.byName(row['source'] as String),
+        value: row['content_id'] as String,
+      ),
+      partId: row['part_id'] as String,
+    ),
+    start: Duration(milliseconds: row['start_ms'] as int),
+    end: row['end_ms'] == null
+        ? null
+        : Duration(milliseconds: row['end_ms'] as int),
+    title: row['title'] as String,
+    note: row['note'] as String? ?? '',
+    createdAt: DateTime.fromMillisecondsSinceEpoch(
+      row['created_at'] as int,
+      isUtc: true,
+    ),
+    updatedAt: DateTime.fromMillisecondsSinceEpoch(
+      row['updated_at'] as int,
+      isUtc: true,
+    ),
+  );
+
+  /// Verifies the joined snapshot really describes the row's own item, the same
+  /// check [_record] performs, so a corrupted snapshot cannot be shown under
+  /// another item's identity.
+  static ContentSnapshot _joined(SqlRow row) {
+    final item = LibraryCodec.decodeContent(row['snapshot'] as String);
+    if (item.identity.source.name != row['source'] ||
+        item.identity.value != row['content_id']) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    return item;
+  }
+
+  @override
+  Future<LibraryPage<PlaybackRecord>> progressPage({
+    bool unfinishedOnly = true,
+    LibraryCursor? cursor,
+    int limit = 40,
+  }) => _page(
+    query: 'progress:$unfinishedOnly',
+    select:
+        'p.source,p.content_id,p.part_id,p.position_ms,p.duration_ms,p.completed,p.updated_at,c.snapshot',
+    from:
+        'playback_progress p JOIN content_refs c ON c.source=p.source AND c.content_id=p.content_id',
+    where: unfinishedOnly ? 'p.completed=0' : '1',
+    order: ['-p.updated_at', 'p.source', 'p.content_id', 'p.part_id'],
+    decode: (row) =>
+        PlaybackRecord(item: _joined(row), progress: _progress(row)),
+    cursor: cursor,
+    limit: limit,
+  );
+
+  @override
+  Future<LibraryPage<BookmarkRecord>> bookmarkPage({
+    LibraryCursor? cursor,
+    int limit = 40,
+  }) => _page(
+    query: 'bookmarks',
+    select:
+        'b.id,b.source,b.content_id,b.part_id,b.start_ms,b.end_ms,b.title,b.note,b.created_at,b.updated_at,c.snapshot',
+    from:
+        'playback_bookmarks b JOIN content_refs c ON c.source=b.source AND c.content_id=b.content_id',
+    order: ['-b.created_at', 'b.id'],
+    decode: (row) =>
+        BookmarkRecord(item: _joined(row), bookmark: _bookmark(row)),
+    cursor: cursor,
+    limit: limit,
+  );
+
+  @override
+  Future<PlaybackProgress?> progress(PlaybackPart part) async {
+    final rows = (await _batch([
+      SqlStatement(
+        'SELECT source,content_id,part_id,position_ms,duration_ms,completed,updated_at '
+        'FROM playback_progress WHERE source=? AND content_id=? AND part_id=?',
+        _part(part),
+        true,
+      ),
+    ])).single;
+    return rows.isEmpty ? null : _progress(rows.single);
+  }
+
+  @override
+  Future<Map<String, PlaybackProgress>> contentProgress(
+    ContentIdentity identity,
+  ) async {
+    final rows = (await _batch([
+      SqlStatement(
+        'SELECT source,content_id,part_id,position_ms,duration_ms,completed,updated_at '
+        'FROM playback_progress WHERE source=? AND content_id=? ORDER BY part_id',
+        _identity(identity),
+        true,
+      ),
+    ])).single;
+    return Map.unmodifiable({
+      for (final row in rows) row['part_id'] as String: _progress(row),
+    });
+  }
+
+  @override
+  Future<void> saveProgress(
+    ContentSnapshot item,
+    String partId,
+    Duration position, {
+    Duration duration = Duration.zero,
+    bool? completed,
+  }) async {
+    final positionMs = _millis(position);
+    final durationMs = _millis(duration);
+    // A known duration bounds the position: a late report from a longer source
+    // must not store a position past the end of the part being watched.
+    final bounded = durationMs == 0
+        ? positionMs
+        : positionMs > durationMs
+        ? durationMs
+        : positionMs;
+    final finished =
+        completed ??
+        (durationMs > 0 &&
+            durationMs - bounded <=
+                PlaybackProgress.completionTail.inMilliseconds);
+    await _write([
+      _content(item),
+      SqlStatement(
+        '''INSERT INTO playback_progress(source,content_id,part_id,position_ms,duration_ms,completed,updated_at)
+        VALUES(?,?,?,?,?,?,?)
+        ON CONFLICT(source,content_id,part_id) DO UPDATE SET
+          position_ms=excluded.position_ms,
+          duration_ms=CASE WHEN excluded.duration_ms>0 THEN excluded.duration_ms ELSE playback_progress.duration_ms END,
+          completed=excluded.completed,
+          updated_at=excluded.updated_at
+        WHERE excluded.updated_at >= playback_progress.updated_at''',
+        [
+          ..._identity(item.identity),
+          LibraryCodec.id(partId),
+          bounded,
+          durationMs,
+          finished ? 1 : 0,
+          _now,
+        ],
+      ),
+    ]);
+  }
+
+  @override
+  Future<void> removeProgress(PlaybackPart part) => _write([
+    SqlStatement(
+      'DELETE FROM playback_progress WHERE source=? AND content_id=? AND part_id=?',
+      _part(part),
+    ),
+    _prune,
+  ]);
+
+  @override
+  Future<void> clearProgress() =>
+      _write([const SqlStatement('DELETE FROM playback_progress'), _prune]);
+
+  @override
+  Future<List<PlaybackBookmark>> bookmarks(PlaybackPart part) async {
+    final rows = (await _batch([
+      SqlStatement(
+        'SELECT id,source,content_id,part_id,start_ms,end_ms,title,note,created_at,updated_at '
+        'FROM playback_bookmarks WHERE source=? AND content_id=? AND part_id=? '
+        'ORDER BY start_ms,id',
+        _part(part),
+        true,
+      ),
+    ])).single;
+    return [for (final row in rows) _bookmark(row)];
+  }
+
+  @override
+  Future<String> addBookmark(
+    ContentSnapshot item,
+    String partId,
+    Duration start, {
+    Duration? end,
+    String title = '',
+    String note = '',
+  }) async {
+    final startMs = _millis(start);
+    final endMs = end == null ? null : _millis(end);
+    if (endMs != null && endMs < startMs) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    final id = _localId();
+    await _write([
+      _content(item),
+      SqlStatement(
+        '''INSERT INTO playback_bookmarks(id,source,content_id,part_id,start_ms,end_ms,title,note,created_at,updated_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?)''',
+        [
+          id,
+          ..._identity(item.identity),
+          LibraryCodec.id(partId),
+          startMs,
+          endMs,
+          _bookmarkText(title.trim(), 200),
+          _bookmarkText(note, 2000),
+          _now,
+          _now,
+        ],
+      ),
+    ]);
+    return id;
+  }
+
+  @override
+  Future<void> updateBookmark(
+    String id, {
+    String? title,
+    String? note,
+    Duration? start,
+    Duration? end,
+    bool clearEnd = false,
+  }) async {
+    if (clearEnd && end != null) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    final assignments = <String>[];
+    final parameters = <Object?>[];
+    if (title != null) {
+      assignments.add('title=?');
+      parameters.add(_bookmarkText(title.trim(), 200));
+    }
+    if (note != null) {
+      assignments.add('note=?');
+      parameters.add(_bookmarkText(note, 2000));
+    }
+    if (start != null) {
+      assignments.add('start_ms=?');
+      parameters.add(_millis(start));
+    }
+    if (clearEnd) {
+      assignments.add('end_ms=NULL');
+    } else if (end != null) {
+      assignments.add('end_ms=?');
+      parameters.add(_millis(end));
+    }
+    if (assignments.isEmpty) return;
+    assignments.add('updated_at=?');
+    parameters.add(_now);
+    // The table's own CHECK rejects an end before the start, so a partial update
+    // cannot leave an inverted range behind.
+    await _write([
+      SqlStatement(
+        'UPDATE playback_bookmarks SET ${assignments.join(',')} WHERE id=?',
+        [...parameters, id],
+      ),
+    ]);
+  }
+
+  @override
+  Future<void> removeBookmark(String id) => _write([
+    SqlStatement('DELETE FROM playback_bookmarks WHERE id=?', [id]),
+    _prune,
+  ]);
 
   @override
   Future<List<LocalSubscription>> subscriptions() async {

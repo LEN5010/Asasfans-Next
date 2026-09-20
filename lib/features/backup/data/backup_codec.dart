@@ -25,6 +25,8 @@ class ValidatedBackup implements BackupImport {
 /// Portable allowlisted v3 format; v1/v2 remain readable without read receipts.
 /// Neither raw database files nor cache / credential stores are exportable.
 abstract final class BackupCodec {
+  /// Version written by [encode]. Older files stay readable; see [columns].
+  static const formatVersion = 4;
   static const maxBytes = 32 * 1024 * 1024;
   static const maxRows = 50000;
   static const _invalid = BackupFailure(BackupFailureKind.invalid);
@@ -60,9 +62,33 @@ abstract final class BackupCodec {
     ],
     'rule_settings': ['key', 'value'],
   };
-  static const columns = {
+  static const columnsV3 = {
     ...columnsV2,
     'subscription_reads': ['bvid', 'is_read', 'updated_at'],
+  };
+  static const columns = {
+    ...columnsV3,
+    'playback_progress': [
+      'source',
+      'content_id',
+      'part_id',
+      'position_ms',
+      'duration_ms',
+      'completed',
+      'updated_at',
+    ],
+    'playback_bookmarks': [
+      'id',
+      'source',
+      'content_id',
+      'part_id',
+      'start_ms',
+      'end_ms',
+      'title',
+      'note',
+      'created_at',
+      'updated_at',
+    ],
   };
   static final preferenceKeys = {
     'appearance',
@@ -100,7 +126,7 @@ abstract final class BackupCodec {
       utf8.encode(
         jsonEncode({
           'format': 'asasfans.personal',
-          'version': 3,
+          'version': formatVersion,
           'exported_at': at.toUtc().toIso8601String(),
           'data': data,
         }),
@@ -124,7 +150,7 @@ abstract final class BackupCodec {
       ]);
       if (root['format'] != 'asasfans.personal') throw _invalid;
       if (root['version'] is! int ||
-          !const [1, 2, 3].contains(root['version'])) {
+          !const [1, 2, 3, 4].contains(root['version'])) {
         throw const BackupFailure(BackupFailureKind.incompatible);
       }
       final atText = _text(root['exported_at'], 64);
@@ -134,6 +160,7 @@ abstract final class BackupCodec {
       final fields = switch (root['version']) {
         1 => columnsV1,
         2 => columnsV2,
+        3 => columnsV3,
         _ => columns,
       };
       final data = _object(root['data'], fields.keys.toList());
@@ -156,6 +183,8 @@ abstract final class BackupCodec {
       result.putIfAbsent('content_rules', () => []);
       result.putIfAbsent('rule_settings', () => []);
       result.putIfAbsent('subscription_reads', () => []);
+      result.putIfAbsent('playback_progress', () => []);
+      result.putIfAbsent('playback_bookmarks', () => []);
       _relations(result);
       return ValidatedBackup._(
         BackupSummary(
@@ -281,6 +310,37 @@ abstract final class BackupCodec {
         }
         _number(row['visits'], min: 1);
       }
+      // Both playback tables address a part by its source id, so an imported
+      // row keeps pointing at the same part even after the source reorders.
+      if (table == 'playback_progress' || table == 'playback_bookmarks') {
+        _id(row['part_id']);
+      }
+      if (table == 'playback_progress') {
+        _number(row['position_ms']);
+        _number(row['duration_ms']);
+        final position = row['position_ms'] as int;
+        final duration = row['duration_ms'] as int;
+        // An unknown duration is 0 and cannot bound the position; a known one
+        // must not be shorter than the stored position.
+        if ((duration > 0 && position > duration) ||
+            row['completed'] is! int ||
+            (row['completed'] != 0 && row['completed'] != 1)) {
+          throw _invalid;
+        }
+      }
+      if (table == 'playback_bookmarks') {
+        _id(row['id']);
+        _number(row['start_ms']);
+        final end = row['end_ms'];
+        // Null stays a point bookmark. A present end may equal the start but
+        // never precede it.
+        if (end != null) {
+          _number(end);
+          if ((end as int) < (row['start_ms'] as int)) throw _invalid;
+        }
+        _text(row['title'], 200);
+        _text(row['note'], 2000);
+      }
     }
     return row;
   }
@@ -298,6 +358,8 @@ abstract final class BackupCodec {
       'content_rules': ['id'],
       'rule_settings': ['key'],
       'subscription_reads': ['bvid'],
+      'playback_progress': ['source', 'content_id', 'part_id'],
+      'playback_bookmarks': ['id'],
     };
     String identity(Map<String, Object?> row) =>
         jsonEncode([row['source'], row['content_id']]);
@@ -329,6 +391,8 @@ abstract final class BackupCodec {
       'collection_items',
       'watch_later',
       'content_history',
+      'playback_progress',
+      'playback_bookmarks',
     ]) {
       for (final row in tables[table]!) {
         final key = identity(row);

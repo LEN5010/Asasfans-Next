@@ -81,6 +81,52 @@ final calendarFollowsProvider =
         repository.changes,
       );
     });
+
+/// Resume list. Completed parts are excluded so it stays a "continue watching"
+/// surface rather than a second history list.
+final playbackProgressProvider =
+    StateNotifierProvider.autoDispose<
+      LibraryPager<PlaybackRecord>,
+      LibraryListState<PlaybackRecord>
+    >((ref) {
+      final repository = ref.watch(libraryRepositoryProvider);
+      return LibraryPager(
+        (cursor) => repository.progressPage(cursor: cursor),
+        repository.changes,
+      );
+    });
+final playbackBookmarksProvider =
+    StateNotifierProvider.autoDispose<
+      LibraryPager<BookmarkRecord>,
+      LibraryListState<BookmarkRecord>
+    >((ref) {
+      final repository = ref.watch(libraryRepositoryProvider);
+      return LibraryPager(
+        (cursor) => repository.bookmarkPage(cursor: cursor),
+        repository.changes,
+      );
+    });
+
+/// Null means no stored position, which a player must treat as "start at the
+/// beginning" rather than as a resume offer.
+final partProgressProvider = FutureProvider.autoDispose
+    .family<PlaybackProgress?, PlaybackPart>((ref, part) {
+      _watchChanges(ref);
+      return ref.watch(libraryRepositoryProvider).progress(part);
+    });
+
+/// Every stored part of one item, so a part list can mark watched parts.
+final contentProgressProvider = FutureProvider.autoDispose
+    .family<Map<String, PlaybackProgress>, ContentIdentity>((ref, identity) {
+      _watchChanges(ref);
+      return ref.watch(libraryRepositoryProvider).contentProgress(identity);
+    });
+final partBookmarksProvider = FutureProvider.autoDispose
+    .family<List<PlaybackBookmark>, PlaybackPart>((ref, part) {
+      _watchChanges(ref);
+      return ref.watch(libraryRepositoryProvider).bookmarks(part);
+    });
+
 final isSubscribedProvider = FutureProvider.autoDispose.family<bool, String>((
   ref,
   mid,

@@ -5,6 +5,7 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'storage_failure.dart';
 import 'library_schema.dart';
+import 'playback_schema.dart';
 import 'rules_schema.dart';
 import 'subscription_schema.dart';
 
@@ -109,7 +110,7 @@ Future<SqlResults> _runIsolated(
 /// No importer exists: an unknown database identity is rejected, never reset.
 abstract final class SqliteExecutor {
   static const applicationId = 0x4153464E;
-  static const schemaVersion = 5;
+  static const schemaVersion = 6;
 
   static SqlResults openBatch(
     String path,
@@ -193,6 +194,12 @@ abstract final class SqliteExecutor {
             database.execute(statement);
           }
           database.userVersion = 5;
+        }
+        if (database.userVersion == 5) {
+          for (final statement in playbackSchemaV6) {
+            database.execute(statement);
+          }
+          database.userVersion = 6;
         }
         database.execute('COMMIT');
       } catch (_) {

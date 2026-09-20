@@ -94,7 +94,7 @@ void main() {
       expect(after.storeId, before.storeId);
       expect(after.revision, 0);
       expect(after.creators.single.name, 'retained');
-      expect(db.database.userVersion, 5);
+      expect(db.database.userVersion, SqliteExecutor.schemaVersion);
       expect(await store.readStates([updateVideo(1).identity.value]), isEmpty);
     },
   );
@@ -123,14 +123,14 @@ void main() {
     },
   );
   test(
-    'backup v3 restores receipts without content FK; local unread wins and v1/v2 never clear them',
+    'the current backup restores receipts without content FK; local unread wins and v1/v2 never clear them',
     () async {
       final id = updateVideo(1).identity.value;
       await store.mark([id], read: true);
       final backups = SqliteBackupRepository(db, onCommitted: () {});
       final bytes = await backups.export();
       final raw = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-      expect(raw['version'], 3);
+      expect(raw['version'], BackupCodec.formatVersion);
       expect(raw['data']['subscription_meta'], isNull);
       expect(raw['data']['content_refs'], isEmpty);
       final target = MemoryLocalDatabase();

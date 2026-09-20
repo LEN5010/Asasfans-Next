@@ -28,7 +28,7 @@ void main() {
     await db.close();
   });
   test(
-    'v3 exports rules without undo tokens and preserves local conflicts on repeated merge',
+    'the current format exports rules without undo tokens and preserves local conflicts on repeated merge',
     () async {
       final saved = await rules.save(
         const RuleDraft(kind: RuleKind.word, value: 'word'),
@@ -36,7 +36,7 @@ void main() {
       await rules.setSubscriptionPriority(false);
       final bytes = await backups.export();
       final raw = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-      expect(raw['version'], 3);
+      expect(raw['version'], BackupCodec.formatVersion);
       expect(utf8.decode(bytes), isNot(contains('change_token')));
       final target = MemoryLocalDatabase();
       final targetRules = SqliteRulesRepository(target);

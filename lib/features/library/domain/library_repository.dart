@@ -49,6 +49,63 @@ abstract interface class LibraryRepository {
   Future<List<LibraryRecord>> history({HistoryAction? action});
   Future<void> removeHistory(ContentIdentity identity, HistoryAction action);
   Future<void> clearHistory({HistoryAction? action});
+
+  /// Progress and bookmarks are keyed by source part id. Saving either keeps the
+  /// content snapshot alive, so a resume entry never loses its title.
+  Future<LibraryPage<PlaybackRecord>> progressPage({
+    bool unfinishedOnly = true,
+    LibraryCursor? cursor,
+    int limit = 40,
+  });
+  Future<LibraryPage<BookmarkRecord>> bookmarkPage({
+    LibraryCursor? cursor,
+    int limit = 40,
+  });
+
+  /// Null when the part has no stored position. Absence is not position zero.
+  Future<PlaybackProgress?> progress(PlaybackPart part);
+
+  /// Every stored part of one item, for a part list that shows which parts were
+  /// already watched.
+  Future<Map<String, PlaybackProgress>> contentProgress(
+    ContentIdentity identity,
+  );
+
+  /// Writes are frequent during playback; callers coalesce and rate-limit rather
+  /// than calling this on every frame. A position at or past the completion tail
+  /// marks the part finished.
+  Future<void> saveProgress(
+    ContentSnapshot item,
+    String partId,
+    Duration position, {
+    Duration duration = Duration.zero,
+    bool? completed,
+  });
+  Future<void> removeProgress(PlaybackPart part);
+
+  /// Clears stored positions without touching bookmarks, history or saved items.
+  Future<void> clearProgress();
+
+  /// Ordered by time within the part, so a player can step through them.
+  Future<List<PlaybackBookmark>> bookmarks(PlaybackPart part);
+  Future<String> addBookmark(
+    ContentSnapshot item,
+    String partId,
+    Duration start, {
+    Duration? end,
+    String title = '',
+    String note = '',
+  });
+  Future<void> updateBookmark(
+    String id, {
+    String? title,
+    String? note,
+    Duration? start,
+    Duration? end,
+    bool clearEnd = false,
+  });
+  Future<void> removeBookmark(String id);
+
   Future<List<LocalSubscription>> subscriptions();
   Future<void> subscribe(LocalSubscription creator);
   Future<void> unsubscribe(String mid);

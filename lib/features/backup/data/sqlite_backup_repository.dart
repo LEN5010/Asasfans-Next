@@ -84,6 +84,16 @@ class SqliteBackupRepository implements BackupRepository {
           snapshot=excluded.snapshot,sequence=excluded.sequence,observed_at=excluded.observed_at
           WHERE excluded.sequence>=calendar_follows.sequence AND excluded.observed_at>=calendar_follows.observed_at
           AND (excluded.sequence>calendar_follows.sequence OR excluded.observed_at>calendar_follows.observed_at)''',
+        // A newer stored position wins, and a part already finished locally
+        // stays finished: a restore must not rewind real watch state. An
+        // imported known duration fills in an unknown one.
+        'playback_progress' =>
+          '''ON CONFLICT(source,content_id,part_id) DO UPDATE SET
+          position_ms=excluded.position_ms,
+          duration_ms=CASE WHEN excluded.duration_ms>0 THEN excluded.duration_ms ELSE playback_progress.duration_ms END,
+          completed=MAX(playback_progress.completed,excluded.completed),
+          updated_at=excluded.updated_at
+          WHERE excluded.updated_at>playback_progress.updated_at''',
         _ => 'ON CONFLICT DO NOTHING',
       };
       for (final row in backup.tables[entry.key]!) {
