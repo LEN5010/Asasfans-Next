@@ -3,6 +3,7 @@ import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/content_page.dart';
+import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,8 +29,18 @@ class _StubRepository implements FanartRepository {
   final int pageSize;
   final bool failFirst;
   int requests = 0;
+  int randomDraws = 0;
   final List<FanartQuery> queries = [];
   final List<String?> cursors = [];
+
+  @override
+  Future<FanartItem?> random({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async {
+    randomDraws++;
+    return _item('random-$randomDraws');
+  }
 
   @override
   Future<FanartPage> page({
@@ -166,6 +177,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.queries.last.keyword, '嘉然');
+  });
+
+  testWidgets('the random draw opens a post directly', (tester) async {
+    final repository = _StubRepository();
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('随机二创'));
+    await tester.pumpAndSettle();
+
+    expect(repository.randomDraws, 1);
+    expect(find.byType(FanartDetailPage), findsOneWidget);
+    // A draw is independent of the list, which keeps its own pages.
+    expect(find.text('作品 random-1'), findsOneWidget);
+  });
+
+  testWidgets('the random action is absent on channels it cannot serve', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          fanartRepositoryProvider.overrideWithValue(_StubRepository()),
+        ],
+        child: const MaterialApp(home: ContentPage(channel: 'clips')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('随机二创'), findsNothing);
   });
 
   testWidgets('wide windows use more columns than a phone', (tester) async {

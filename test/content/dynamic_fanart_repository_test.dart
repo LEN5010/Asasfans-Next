@@ -129,6 +129,15 @@ void main() {
     expect(query.containsKey('character'), isFalse);
   });
 
+  test('random mode never carries a cursor', () {
+    // Random mode and cursors are mutually exclusive server-side.
+    final query = DynamicFanartRepository.buildQuery(
+      const FanartQuery(limit: 1),
+    );
+    expect(query.containsKey('cursor'), isFalse);
+    expect(query['limit'], 1);
+  });
+
   test('metric sort is rejected locally unless restricted to videos', () {
     const videoSort = FanartQuery(
       sort: FanartSort.views,

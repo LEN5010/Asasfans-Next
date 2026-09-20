@@ -20,7 +20,10 @@ class ContentPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ContentChannel.fromSlug(channel) ?? ContentChannel.fanart;
     return Scaffold(
-      appBar: AppBar(title: const Text('内容')),
+      appBar: AppBar(
+        title: const Text('内容'),
+        actions: [if (current.isBackedByFanartApi) const _RandomFanartAction()],
+      ),
       body: Column(
         children: [
           Padding(
@@ -54,6 +57,59 @@ class ContentPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Draws one random post and opens it directly.
+///
+/// Each draw is an independent request, so the button disables itself while
+/// one is in flight instead of letting repeated taps stack up requests.
+class _RandomFanartAction extends ConsumerStatefulWidget {
+  const _RandomFanartAction();
+
+  @override
+  ConsumerState<_RandomFanartAction> createState() =>
+      _RandomFanartActionState();
+}
+
+class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
+  bool _loading = false;
+
+  Future<void> _draw() async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      final item = await ref.read(fanartRepositoryProvider).random();
+      if (!mounted) return;
+      if (item == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('没有可用的二创')));
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => FanartDetailPage(item: item)),
+      );
+    } on ApiFailure catch (failure) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message)));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: '随机二创',
+    onPressed: _loading ? null : _draw,
+    icon: _loading
+        ? const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.shuffle),
+  );
 }
 
 /// Infinite fanart grid. Scroll position is owned by this widget so returning

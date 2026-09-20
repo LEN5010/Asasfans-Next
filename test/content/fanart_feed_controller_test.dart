@@ -40,6 +40,12 @@ class _FakeRepository implements FanartRepository {
     });
     return completer.future;
   }
+
+  @override
+  Future<FanartItem?> random({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => null;
 }
 
 void main() {

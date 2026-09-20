@@ -66,6 +66,12 @@ class _StubRepository implements FanartRepository {
       nextCursor: index + 1 < pages ? '${index + 1}' : null,
     );
   }
+
+  @override
+  Future<FanartItem?> random({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => null;
 }
 
 Widget _detail(FanartItem item, {ExternalLinkService? links}) => ProviderScope(
