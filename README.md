@@ -1,13 +1,66 @@
 # Asasfans Next
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/icon_asasfans_next_logo.png" alt="Asasfans Next" width="120" />
+  <img src="assets/brand/asasfans.png" alt="Asasfans Next" width="120" />
 </p>
 
 ### 若有一天我会离开. 这座城是否还在.        她们会不会依然像现在. 这样日复一日笑着走来
 ### 若有一天你也离开. 会不会偶尔感怀.        再看看当时艰难和愉快. 再听听那些. 夸张的告白.
 
-Asasfans Next 是一个面向 A-SOUL 粉丝的 Android 客户端，整合了视频浏览、Bilibili 登录、App 内播放、评论区浏览、订阅 UP、黑名单、音乐、工具、日历和设置等功能。
+面向 A-SOUL 粉丝的内容、日历与社区工具客户端。当前 `dev/flutter-rebuild` 分支正在从原生 Android 迁移到 Flutter，目标平台为 iOS、Android、Windows 和 macOS。
+
+## 当前状态
+
+本分支是工程基础阶段，不是完整可替代旧版的产品。已建立四端工程、手机/桌面自适应导航、嘉然粉主题、社区工具入口、只读 API 传输层和二创仓库适配器。内容、日历及个人资料页面目前为待开放入口；二创适配器尚未绑定到页面，也未完成线上联调。没有接入生产数据库或迁移旧账号凭据。
+
+版本 `3.0.0-dev.1+201` 仅作为开发标识，不代表已确定或发布下一个正式版本。
+
+原生 Android 暂停功能维护，源码与安装包保留在 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0)。重构尚未合入 `master`。本仓库的历史、Issues 和 Releases 继续保留，不新增仓库，也不复制旧工程到 `old/`。
+
+## 开发环境
+
+当前固定 Flutter **3.35.4** / Dart **3.9.2**，版本记录在 `.flutter-version`，应用依赖锁定在 `pubspec.lock`。暂不自动升级本机 SDK。
+
+```sh
+flutter pub get --enforce-lockfile
+flutter analyze --no-pub
+# 用户需要运行测试或应用时再执行：
+flutter test --no-pub
+flutter run -d macos
+```
+
+Android 使用 JDK 17、SDK 36、AGP 8.13.1 / Gradle 8.13，最低 API 24；暂保留 targetSdk 34，正式发行前单独验证平台行为升级。Flutter 可能优先选择 Android Studio 自带 JDK，可先用 `flutter doctor -v` 确认。
+
+iOS/macOS 需要可用的 Xcode、对应平台组件以及签名配置。Windows 原生构建需要 Windows 与 Visual Studio C++ 桌面工具链，不能在 macOS 上交叉验证。
+
+## 工程边界
+
+| 路径 | 职责 |
+| --- | --- |
+| `lib/app` | 启动、依赖装配、路由、自适应导航和主题 |
+| `lib/core` | 来源标识、配置、公共只读网络层、系统能力边界 |
+| `lib/features` | today、content、calendar、tools、mine、library 功能切片 |
+| `lib/shared` | 跨功能复用的纯展示组件 |
+| `android` / `ios` / `windows` / `macos` | 系统宿主工程 |
+| `test` | 离线契约与组件测试源码，旧版 Room schema 样本 |
+
+公开内容来源与 Bilibili 登录、站点账号和播放请求隔离；日历独立接入 ICS；切片不冒充二创。当前不引入尚无实际实现的数据库、播放器或 WebView 依赖。
+
+本地详细计划保存在被忽略的 `docs/Flutter重构计划.md`。`docs/`、`AGENTS.md`、`CONTEXT.md`、SDK 本机配置、签名材料和构建产物不提交。
+
+## Android 数据与发布保护
+
+开发包使用 `asasfans.next.flutterdev`，与旧 Android 应用并存。未来生产包保持 `asasfans.next` 和原签名；迁移实现前，Gradle 会阻止 release 构建，且不使用模板默认的 debug key 签署生产包。不要通过卸载或清除旧应用数据解决迁移问题。
+
+旧版 Room schema 随测试保留，但迁移器尚未实现；不能将 schema 样本或工程创建成功视为升级兼容验证。Apple bundle identifier `dev.asasfans.next` 是当前候选值，尚未注册或确认开发者归属；Apple/Windows 模板图标也待替换。
+
+## CI
+
+`Flutter Checks` 配置静态检查与离线测试；手动开启 `build_platforms` 才会构建四端 debug/未签名产物。当前没有 Flutter 正式发布工作流，也不会因标签自动创建 Release。此配置尚待首次远端运行验证。
+
+原 Android 工作流只保留在旧版 Git 历史与未改动的 `master` 中，重构分支不继续执行旧工程的构建或签名发布。
+
+## 来源与致谢
 
 本项目保留了早期开源项目 [A-SoulFan/as-as-fans](https://github.com/A-SoulFan/as-as-fans) 的历史来源，后续由当前仓库继续维护和重构，并继续遵循 GPL-2.0 协议发布。
 
@@ -24,65 +77,6 @@ Asasfans Next 是一个面向 A-SOUL 粉丝的 Android 客户端，整合了视�
 
 Asasfans Next 是非官方粉丝项目，与 Bilibili、A-SOUL 及枝江娱乐等相关公司没有官方关联。
 
-## 2.0.0
+## 反馈与许可证
 
-2.0 使用 Kotlin、Compose、Room 和 DataStore 重建主要使用流程，保留原版嘉然粉配色与本地资料。完整更新见 [2.0.0 更新说明](release-notes/2.0.0.md)。
-
-## 功能
-
-- 今日与发现视频流支持滚动自动续载、下拉刷新和失败重试。
-- 支持 App 内播放或跳转 B 站；提供分 P、清晰度、倍速、进度恢复和只读评论。
-- 支持 Bilibili 官方网页登录与二维码登录，账号凭据使用加密本地存储。
-- 点击 UP 头像或昵称进入原生主页，查看简介、订阅及分页投稿，或跳转 B 站空间。
-- 本地订阅管理位于「我的」，与 B 站账号关注独立。
-- 资料库提供稍后看、收藏夹、观看历史、播放进度和书签。
-- 支持关键词、Tag、UP 和视频屏蔽规则。
-- 底栏中间的工具抽屉整合录音棚、日历、社区导航等站点，各工具使用独立图标。
-- 手机底栏与宽屏侧栏布局、浅色与深色主题。
-- 支持旧版 v1–v4 本地数据库迁移，保留旧数据库与追更恢复记录。
-
-## 构建
-
-使用 JDK 17 和 Android SDK 36，在仓库根目录使用 Gradle Wrapper：
-
-```sh
-./gradlew assembleDebug
-```
-
-常用检查：
-
-```sh
-./gradlew testDebugUnitTest
-./gradlew lintDebug
-```
-
-正式包需要本地签名配置。请在仓库根目录创建 `keystore.properties`，并不要提交 keystore 或密码文件。
-
-### GitHub Actions 发布
-
-仓库提供 `Android Release` workflow。推送 `v*` tag，或在 Actions 页面手动输入已存在的 tag 后，流水线会检出该标签，核对应用版本与更新说明，运行测试、lint、编译设备测试 APK，再构建并校验签名 APK，上传 APK 和 SHA-256 校验文件到对应 GitHub Release。
-
-例如 `v2.0.0` 必须对应 `versionName "2.0.0"`，更新说明位于 `release-notes/2.0.0.md`。分支与 PR 的 `Android Checks` 不需要发布签名凭据。
-
-需要在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 配置以下 Secrets：
-
-- `ANDROID_KEYSTORE_BASE64`：`asasfans-release.jks` 的 Base64 内容
-- `ANDROID_KEYSTORE_PASSWORD`
-- `ANDROID_KEY_ALIAS`
-- `ANDROID_KEY_PASSWORD`
-
-本地生成 Base64 示例：
-
-```sh
-base64 -i asasfans-release.jks | pbcopy
-```
-
-## 反馈
-
-问题反馈和功能建议请提交到 [GitHub Issues](https://github.com/LEN5010/Asasfans-Next/issues)。
-
-## 许可证
-
-本项目基于 GNU General Public License v2.0 发布，详见 [LICENSE](./LICENSE)。
-
-如果你分发修改后的 APK 或其他二进制构建产物，需要同时提供对应源码，并保留原项目和本项目的版权及许可证说明。
+问题反馈见 [GitHub Issues](https://github.com/LEN5010/Asasfans-Next/issues)。继续使用 [GPL-2.0](LICENSE)，保留原项目历史与素材归属。分发二进制时同时提供对应源码及版权、许可证说明。

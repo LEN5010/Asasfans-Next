@@ -1,7 +1,0 @@
-{
-  "code": 0,
-  "data": {
-    "quality": 32, "timelength": 120000,
-    "durl": [{"order": 1, "length": 120000, "url": "", "backup_url": ["https://fixture.bilivideo.com/fallback.mp4?token=synthetic"]}]
-  }
-}
