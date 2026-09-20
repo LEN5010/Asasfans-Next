@@ -214,6 +214,36 @@ void main() {
     expect(repository.calls, greaterThan(1));
   });
 
+  // A real macOS window is far shorter than the generous test viewport above,
+  // and the month grid used to push the agenda past the bottom edge.
+  for (final size in const [
+    Size(1600, 1400),
+    Size(1000, 700),
+    Size(390, 844),
+    Size(320, 568),
+  ]) {
+    testWidgets('the calendar fits a ${size.width}x${size.height} window', (
+      tester,
+    ) async {
+      final view = tester.view;
+      view.physicalSize = size;
+      view.devicePixelRatio = 1;
+      addTearDown(view.reset);
+
+      await tester.pumpWidget(
+        _app(
+          _StubRepository(
+            events_: [_event(uid: '1', start: DateTime.utc(2026, 9, 21, 12))],
+          ),
+          month: september,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('moving to another month loads that month', (tester) async {
     final repository = _StubRepository();
     await tester.pumpWidget(_app(repository, month: september));

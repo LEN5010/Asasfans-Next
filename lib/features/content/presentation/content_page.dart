@@ -296,7 +296,11 @@ class _FanartGrid extends StatelessWidget {
                   crossAxisCount: columns,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.78,
+                  // Taller cells at larger text scales, so the caption keeps
+                  // its room instead of overflowing the card.
+                  childAspectRatio:
+                      0.78 /
+                      MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0),
                 ),
                 itemCount: state.items.length,
                 itemBuilder: (context, index) {

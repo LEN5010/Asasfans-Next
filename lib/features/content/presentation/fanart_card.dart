@@ -22,10 +22,11 @@ class FanartCard extends StatelessWidget {
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            AspectRatio(
-              aspectRatio: 4 / 3,
+            // The cover takes whatever height is left after the caption, so a
+            // narrow cell or a large text scale shrinks the image instead of
+            // pushing the card past the grid cell.
+            Expanded(
               child: cover == null
                   ? _Placeholder(item: item)
                   : Image.network(
@@ -52,7 +53,7 @@ class FanartCard extends StatelessWidget {
                     ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -60,11 +61,15 @@ class FanartCard extends StatelessWidget {
                   if (item.text.trim().isNotEmpty)
                     Text(
                       item.text.trim(),
-                      maxLines: 2,
+                      // One line at a large text scale keeps the caption from
+                      // consuming the whole cell.
+                      maxLines: MediaQuery.textScalerOf(context).scale(14) > 20
+                          ? 1
+                          : 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium,
                     ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Expanded(

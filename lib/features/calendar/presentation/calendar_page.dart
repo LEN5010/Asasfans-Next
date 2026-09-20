@@ -69,12 +69,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                 onChanged: (value) => setState(() => _filter = value),
               ),
               if (data.fromCache) _StaleBanner(fetchedAt: data.fetchedAt),
-              _MonthGrid(
-                month: month,
-                selected: selected,
-                byDay: byDay,
-                filter: _filter,
-                onSelect: (day) => setState(() => _selectedDay = day),
+              // The grid sizes itself from the window width, so on a short or
+              // wide window it must be capped and allowed to scroll; otherwise
+              // it pushes the agenda past the bottom of the viewport.
+              Flexible(
+                child: _MonthGrid(
+                  month: month,
+                  selected: selected,
+                  byDay: byDay,
+                  filter: _filter,
+                  onSelect: (day) => setState(() => _selectedDay = day),
+                ),
               ),
               const Divider(height: 1),
               Expanded(
@@ -235,50 +240,80 @@ class _MonthGrid extends StatelessWidget {
     final cells = ((leading + days) / 7).ceil() * 7;
     final today = shanghaiDayOf(shanghaiNow(), allDay: true);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final rows = cells ~/ 7;
+        final cellWidth = (constraints.maxWidth - 16) / 7;
+        // Derive the row height from whatever space is left after the weekday
+        // header, clamped so cells stay tappable on a phone and do not become
+        // absurdly tall on a wide desktop window.
+        final available = constraints.hasBoundedHeight
+            ? constraints.maxHeight - 28
+            : double.infinity;
+        // On a narrow phone the square cell is already below the comfortable
+        // minimum, so the upper bound must win rather than invert the range.
+        final natural = cellWidth / 1.1;
+        final minHeight = natural < 44.0 ? natural : 44.0;
+        final fitted = available.isFinite ? available / rows : natural;
+        final cellHeight = fitted.clamp(minHeight, natural);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              for (final label in ['一', '二', '三', '四', '五', '六', '日'])
-                Expanded(
-                  child: Center(
-                    child: Text(label, style: theme.textTheme.labelSmall),
+              Row(
+                children: [
+                  for (final label in ['一', '二', '三', '四', '五', '六', '日'])
+                    Expanded(
+                      child: Center(
+                        child: Text(label, style: theme.textTheme.labelSmall),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  // On a very short window the minimum tappable cell size no
+                  // longer fits, so the month scrolls instead of overflowing.
+                  physics: cellHeight * rows > available
+                      ? const ClampingScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    childAspectRatio: cellWidth / cellHeight,
                   ),
+                  itemCount: cells,
+                  itemBuilder: (context, index) {
+                    final dayNumber = index - leading + 1;
+                    if (dayNumber < 1 || dayNumber > days) {
+                      return const SizedBox.shrink();
+                    }
+                    final day = DateTime.utc(
+                      month.year,
+                      month.month,
+                      dayNumber,
+                    );
+                    final events = _CalendarPageState._visible(
+                      byDay[day] ?? const [],
+                      filter,
+                    );
+                    return _DayCell(
+                      day: day,
+                      count: events.length,
+                      isSelected: day == selected,
+                      isToday: day == today,
+                      onTap: () => onSelect(day),
+                    );
+                  },
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              childAspectRatio: 1.1,
-            ),
-            itemCount: cells,
-            itemBuilder: (context, index) {
-              final dayNumber = index - leading + 1;
-              if (dayNumber < 1 || dayNumber > days) {
-                return const SizedBox.shrink();
-              }
-              final day = DateTime.utc(month.year, month.month, dayNumber);
-              final events = _CalendarPageState._visible(
-                byDay[day] ?? const [],
-                filter,
-              );
-              return _DayCell(
-                day: day,
-                count: events.length,
-                isSelected: day == selected,
-                isToday: day == today,
-                onTap: () => onSelect(day),
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
