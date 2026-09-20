@@ -165,6 +165,9 @@ void main() {
   test(
     'a v3 file still restores and leaves playback assets untouched',
     () async {
+      // A real v3 writer exports a snapshot only if a v3-era asset references
+      // it, so the item is collected as well as being watched.
+      await library.setCollected(video, 'default', true);
       await library.saveProgress(video, '77', const Duration(seconds: 30));
       final root = object(await backup.export());
       final data = root['data'] as Map<String, dynamic>;
@@ -181,6 +184,7 @@ void main() {
         const Duration(seconds: 30),
         reason: 'an older format does not clear newer assets',
       );
+      expect(await library.collection('default'), hasLength(1));
     },
   );
 
