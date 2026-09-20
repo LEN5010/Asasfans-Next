@@ -7,6 +7,7 @@ import '../../../shared/widgets/feature_pending.dart';
 import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
 import 'fanart_card.dart';
+import 'fanart_detail_page.dart';
 
 class ContentPage extends ConsumerWidget {
   const ContentPage({this.channel = 'fanart', super.key});
@@ -155,8 +156,19 @@ class _FanartGrid extends StatelessWidget {
                   childAspectRatio: 0.78,
                 ),
                 itemCount: state.items.length,
-                itemBuilder: (context, index) =>
-                    FanartCard(item: state.items[index]),
+                itemBuilder: (context, index) {
+                  final item = state.items[index];
+                  return FanartCard(
+                    item: item,
+                    // Pushed on the local navigator so returning restores the
+                    // scroll offset and the already-loaded pages.
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => FanartDetailPage(item: item),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             SliverToBoxAdapter(

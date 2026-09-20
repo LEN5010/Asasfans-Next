@@ -1,0 +1,199 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../app/providers.dart';
+import '../domain/fanart_repository.dart';
+import 'fanart_image_viewer.dart';
+
+/// Reading view for one fanart post.
+///
+/// The item is handed in from the list rather than re-fetched, so opening a
+/// detail costs no extra request against the shared rate limit and returning
+/// keeps the list exactly where it was.
+class FanartDetailPage extends ConsumerWidget {
+  const FanartDetailPage({required this.item, super.key});
+
+  final FanartItem item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final text = item.text.trim();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(item.authorName.isEmpty ? '二创详情' : item.authorName),
+        actions: [
+          if (item.sourceUrl != null)
+            IconButton(
+              tooltip: '打开原动态',
+              icon: const Icon(Icons.open_in_new),
+              onPressed: () =>
+                  ref.read(externalLinkServiceProvider).open(item.sourceUrl!),
+            ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          _AuthorRow(item: item),
+          const SizedBox(height: 16),
+          if (text.isNotEmpty) ...[
+            SelectableText(text, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 16),
+          ],
+          for (var index = 0; index < item.images.length; index++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _DetailImage(
+                item: item,
+                index: index,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        FanartImageViewer(images: item.images, initial: index),
+                  ),
+                ),
+              ),
+            ),
+          if (item.images.isEmpty && text.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Center(
+                child: Text(
+                  '这条动态没有可显示的正文或图片',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              ),
+            ),
+          _MetaRow(item: item),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthorRow extends ConsumerWidget {
+  const _AuthorRow({required this.item});
+  final FanartItem item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 20,
+          backgroundColor: theme.colorScheme.primaryContainer,
+          foregroundImage: item.authorAvatarUrl == null
+              ? null
+              : NetworkImage(item.authorAvatarUrl.toString()),
+          child: Text(
+            item.authorName.isEmpty ? '?' : item.authorName.characters.first,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            item.authorName.isEmpty ? '未知作者' : item.authorName,
+            style: theme.textTheme.titleSmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (item.authorSpaceUrl != null)
+          TextButton(
+            onPressed: () => ref
+                .read(externalLinkServiceProvider)
+                .open(item.authorSpaceUrl!),
+            child: const Text('作者主页'),
+          ),
+      ],
+    );
+  }
+}
+
+/// Long vertical artwork is common here, so the image keeps its aspect ratio
+/// instead of being cropped into a fixed box.
+class _DetailImage extends StatelessWidget {
+  const _DetailImage({
+    required this.item,
+    required this.index,
+    required this.onTap,
+  });
+
+  final FanartItem item;
+  final int index;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          item.images[index].toString(),
+          fit: BoxFit.fitWidth,
+          width: double.infinity,
+          errorBuilder: (context, error, stack) => Container(
+            height: 160,
+            color: theme.colorScheme.surfaceContainerHighest,
+            alignment: Alignment.center,
+            child: Text(
+              '图片加载失败',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+          ),
+          loadingBuilder: (context, child, progress) => progress == null
+              ? child
+              : Container(
+                  height: 160,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  alignment: Alignment.center,
+                  child: const SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({required this.item});
+  final FanartItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final labels = [
+      item.category.wire,
+      for (final tag in item.characterTags) tag.wire,
+      if (item.viewCount != null) '播放 ${item.viewCount}',
+      if (item.favoriteCount != null) '收藏 ${item.favoriteCount}',
+    ];
+    if (labels.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final label in labels)
+            Chip(
+              label: Text(label),
+              visualDensity: VisualDensity.compact,
+              labelStyle: theme.textTheme.labelSmall,
+            ),
+        ],
+      ),
+    );
+  }
+}
