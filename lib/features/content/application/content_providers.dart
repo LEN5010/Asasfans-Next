@@ -41,6 +41,13 @@ final onThisDayProvider = FutureProvider.autoDispose<List<DynamicPost>>((ref) {
       .onThisDay(monthDay: monthDay, limit: 12);
 });
 
+/// Member ids for the search filter. The server wants `uid:<digits>`, which
+/// only this endpoint can supply, so a failure disables the member filter
+/// rather than letting the UI invent an id.
+final dynamicMembersProvider = FutureProvider<List<DynamicMember>>(
+  (ref) => ref.watch(dynamicRepositoryProvider).members(),
+);
+
 final dynamicFeedControllerProvider =
     Provider.autoDispose<DynamicFeedController>((ref) {
       final controller = DynamicFeedController(

@@ -123,7 +123,7 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
   }
 }
 
-class _TypeFilter extends StatelessWidget {
+class _TypeFilter extends ConsumerWidget {
   const _TypeFilter({required this.query, required this.onChanged});
 
   final DynamicQuery query;
@@ -137,42 +137,127 @@ class _TypeFilter extends StatelessWidget {
     DynamicType.text: '文字',
   };
 
+  static String _day(DateTime value) {
+    final local = value.toLocal();
+    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
+  }
+
+  /// The server rejects an inverted or empty range, so pick both ends at once
+  /// and send them only as a complete, ordered pair.
+  Future<void> _pickRange(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: query.from != null && query.to != null
+          ? DateTimeRange(
+              start: query.from!.toLocal(),
+              end: query.to!.toLocal(),
+            )
+          : null,
+    );
+    if (picked == null) return;
+    // Cover the whole end day: a date picker returns midnight, which would
+    // otherwise drop everything posted on the final day.
+    final to = DateTime(
+      picked.end.year,
+      picked.end.month,
+      picked.end.day,
+      23,
+      59,
+      59,
+    );
+    onChanged(query.copyWith(from: picked.start, to: to));
+  }
+
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: [
-        if (query.keyword.isNotEmpty) ...[
-          InputChip(
-            label: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 180),
-              child: Text(query.keyword, overflow: TextOverflow.ellipsis),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final members = ref.watch(dynamicMembersProvider);
+    final selected = members.valueOrNull?.where(
+      (member) => member.id == query.memberId,
+    );
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          if (query.keyword.isNotEmpty) ...[
+            InputChip(
+              label: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 180),
+                child: Text(query.keyword, overflow: TextOverflow.ellipsis),
+              ),
+              onDeleted: () => onChanged(query.copyWith(keyword: '')),
             ),
-            onDeleted: () => onChanged(query.copyWith(keyword: '')),
-          ),
-          const SizedBox(width: 8),
-        ],
-        ChoiceChip(
-          label: const Text('全部'),
-          selected: query.type == null,
-          onSelected: (_) => onChanged(query.copyWith(clearType: true)),
-        ),
-        for (final entry in _labels.entries) ...[
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
+          ],
+          if (query.memberId != null) ...[
+            InputChip(
+              avatar: const Icon(Icons.person_outline, size: 18),
+              label: Text(selected?.firstOrNull?.name ?? '指定成员'),
+              onDeleted: () => onChanged(query.copyWith(clearMember: true)),
+            ),
+            const SizedBox(width: 8),
+          ],
+          if (query.from != null && query.to != null) ...[
+            InputChip(
+              avatar: const Icon(Icons.date_range_outlined, size: 18),
+              label: Text('${_day(query.from!)} ~ ${_day(query.to!)}'),
+              onDeleted: () => onChanged(query.copyWith(clearRange: true)),
+            ),
+            const SizedBox(width: 8),
+          ],
           ChoiceChip(
-            label: Text(entry.value),
-            selected: query.type == entry.key,
-            onSelected: (selected) => onChanged(
-              selected
-                  ? query.copyWith(type: entry.key)
-                  : query.copyWith(clearType: true),
-            ),
+            label: const Text('全部'),
+            selected: query.type == null,
+            onSelected: (_) => onChanged(query.copyWith(clearType: true)),
           ),
+          for (final entry in _labels.entries) ...[
+            const SizedBox(width: 8),
+            ChoiceChip(
+              label: Text(entry.value),
+              selected: query.type == entry.key,
+              onSelected: (selected) => onChanged(
+                selected
+                    ? query.copyWith(type: entry.key)
+                    : query.copyWith(clearType: true),
+              ),
+            ),
+          ],
+          const SizedBox(width: 8),
+          ActionChip(
+            avatar: const Icon(Icons.date_range_outlined, size: 18),
+            label: const Text('时间范围'),
+            onPressed: () => _pickRange(context),
+          ),
+          // A member filter needs a server-issued id, so offer it only once the
+          // member list has actually loaded.
+          if (members.valueOrNull case final roster?
+              when roster.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            PopupMenuButton<String?>(
+              tooltip: '按成员筛选',
+              onSelected: (value) => onChanged(
+                value == null
+                    ? query.copyWith(clearMember: true)
+                    : query.copyWith(memberId: value),
+              ),
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: null, child: Text('全部成员')),
+                for (final member in roster)
+                  PopupMenuItem(value: member.id, child: Text(member.name)),
+              ],
+              child: const Chip(
+                avatar: Icon(Icons.person_outline, size: 18),
+                label: Text('成员'),
+              ),
+            ),
+          ],
         ],
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
 
 class _DynamicCard extends ConsumerWidget {
