@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Allow-list personal assets/settings, never WebView cookies or encrypted credentials. -->
+    <include domain="database" path="." />
+    <include domain="file" path="datastore/" />
+    <include domain="sharedpref" path="video_playback_mode.xml" />
+</full-backup-content>

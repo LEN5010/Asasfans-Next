@@ -38,4 +38,19 @@ public class WbiSignerTest {
         assertTrue(query.startsWith("bar=514&foo=a%20b%E4%B8%AD%E6%96%87&wts=1702204169&w_rid="));
         assertEquals(3, params.size());
     }
+
+    @Test
+    public void signToQuery_matchesReferenceDigestExactly() {
+        WbiSigner signer = new WbiSigner();
+        signer.setKeys(
+                "https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png",
+                "https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png"
+        );
+        Map<String, String> params = new HashMap<>();
+        params.put("foo", "114");
+        params.put("bar", "514");
+        params.put("zab", "1919810");
+        assertEquals("bar=514&foo=114&wts=1702204169&zab=1919810&w_rid=8f6f2b5b3d485fe1886cec6a0be8c5d4",
+                signer.signToQuery(params, 1702204169L));
+    }
 }

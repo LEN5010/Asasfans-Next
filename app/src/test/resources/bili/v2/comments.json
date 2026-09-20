@@ -1,0 +1,12 @@
+{
+  "code": 0,
+  "data": {
+    "page": {"num": 1, "size": 20, "count": 21},
+    "upper": {"top": {"rpid": 1, "member": {"mid": "42", "uname": "合成 UP", "avatar": ""}, "content": {"message": "置顶评论"}, "ctime": 1700000000, "like": 2}},
+    "hots": [{"rpid": 1, "member": {"mid": "42", "uname": "合成 UP", "avatar": ""}, "content": {"message": "置顶评论"}, "ctime": 1700000000, "like": 2}],
+    "replies": [
+      {"rpid": 1, "member": {"mid": "42", "uname": "合成 UP", "avatar": ""}, "content": {"message": "置顶评论"}, "ctime": 1700000000, "like": 2},
+      {"rpid": 2, "member": {"mid": "77", "uname": "合成用户", "avatar": ""}, "content": {"message": "正常评论"}, "ctime": 1700000001}
+    ]
+  }
+}
