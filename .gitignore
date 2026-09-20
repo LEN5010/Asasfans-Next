@@ -55,3 +55,14 @@ AGENTS.md
 !.env.example
 *.p12
 *.mobileprovision
+
+# Local Apple signing identity, like keystore.properties on Android: a Team ID
+# belongs to one developer's account, not the repository.
+# See macos/Runner/Configs/LocalSigning.xcconfig.example
+macos/Runner/Configs/LocalSigning.xcconfig
+ios/Runner/Configs/LocalSigning.xcconfig
+
+# Provisioning profiles and exported certificates never belong in the repo.
+*.provisionprofile
+*.certSigningRequest
+*.cer

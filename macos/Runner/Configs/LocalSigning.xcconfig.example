@@ -1,0 +1,15 @@
+// Copy this file to LocalSigning.xcconfig and set your own Team ID.
+//
+// The macOS entitlements request app-sandbox and keychain access, which macOS
+// signs only with a real development certificate. A free Apple ID is enough:
+// Xcode > Settings > Accounts > add account > Manage Certificates > + > Apple
+// Development.
+//
+// Find your Team ID with:
+//   security find-identity -v -p codesigning
+//   security find-certificate -c "Apple Development" -p | \
+//     openssl x509 -noout -subject | tr ',' '\n' | grep OU
+//
+// Leave this unset to keep ad-hoc signing, which cannot satisfy the
+// entitlements and will fail the build.
+DEVELOPMENT_TEAM =

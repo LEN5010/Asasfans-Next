@@ -1,3 +1,7 @@
+// A missing LocalSigning.xcconfig leaves DEVELOPMENT_TEAM unset and keeps the
+// default ad-hoc signing, so a fresh clone still configures without it.
+#include? "LocalSigning.xcconfig"
+
 PRODUCT_NAME = Asasfans Next
 PRODUCT_BUNDLE_IDENTIFIER = dev.asasfans.next
 PRODUCT_COPYRIGHT = Copyright © 2026 Asasfans Next contributors. GPL-2.0.
