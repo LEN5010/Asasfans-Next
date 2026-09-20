@@ -16,6 +16,20 @@ internal fun fixtureData(name: String) = fixture(name)["data"] as JsonObject
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class BiliContentMapperTest {
+    @Test fun creatorProfilePreservesDescriptionAndValidatesIdentity() {
+        val data = Json.parseToJsonElement("""{"mid":42,"name":"合成 UP","face":"//i0.hdslb.com/fixture.png","sign":"简介\n第二行","official":{"title":"合成认证"}}""") as JsonObject
+        val profile = BiliContentMapper.creator(data, 42)
+        assertEquals("42", profile.creator.id)
+        assertEquals("合成 UP", profile.creator.name)
+        assertEquals("https://i0.hdslb.com/fixture.png", profile.creator.avatarUrl)
+        assertEquals("简介\n第二行", profile.introduction)
+        assertEquals("合成认证", profile.officialTitle)
+        try { BiliContentMapper.creator(data, 43); fail("mismatched creator") }
+        catch (_: AppFailure.InvalidResponse) { }
+        try { BiliContentMapper.creator(JsonObject(data - "name"), 42); fail("missing identity") }
+        catch (_: AppFailure.InvalidResponse) { }
+    }
+
     @Test fun detailPreservesCidIdentityAndUnknownStats() {
         val result = BiliContentMapper.detail(fixtureData("detail"), "BV1xx411c7mD")
         assertEquals(listOf(101L, 201L), result.parts.map { it.id })

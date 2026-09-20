@@ -8,6 +8,14 @@ import kotlinx.serialization.json.*
 
 /** Wire DTOs stop here. Unknown fields remain unknown rather than invented zero statistics/tags. */
 internal object BiliContentMapper {
+    fun creator(data: JsonObject, mid: Long): CreatorProfile {
+        if (data.positive("mid") != mid || data.text("name").isBlank()) throw AppFailure.InvalidResponse()
+        return CreatorProfile(
+            Creator(id = mid.toString(), name = data.text("name"), avatarUrl = httpsUrl(data.text("face"))),
+            introduction = data.text("sign"), officialTitle = data.obj("official")?.text("title").orEmpty(),
+        )
+    }
+
     fun detail(data: JsonObject, bvid: String): VideoDetails {
         if (data.text("bvid") != bvid) throw AppFailure.InvalidResponse()
         val owner = data.requireObject("owner")

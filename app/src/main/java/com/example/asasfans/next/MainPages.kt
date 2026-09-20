@@ -1,6 +1,7 @@
 package com.example.asasfans.next
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.*
@@ -27,56 +28,31 @@ import com.example.asasfans.core.model.Creator
 import com.example.asasfans.core.model.RuleKind
 import com.example.asasfans.core.database.RuleEntity
 
-val communityTools = listOf(
-    "录音棚" to "https://studio.asoul.us.kg", "A-SOUL 日历" to "https://asoul.love",
-    "动态站" to "https://len5010.top/dynamics/", "枝网查重" to "https://cnki.asoul.us.kg",
-    "导航站" to "https://nav.asoul.us.kg", "枝江小作文" to "https://book.asoul.us.kg",
-    "查重排行榜" to "https://cnki.asoul.us.kg/rank", "A-SOUL Wiki" to "https://wiki.asoul.us.kg/",
-    "录播站" to "https://nf.asoul-rec.com", "BiliTools" to "https://www.bilitools.top/t/4/",
-    "字幕工具" to "https://zimu.live/", "AICU" to "https://aicu.cc", "VTBs" to "https://vtbs.moe",
-)
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayPage(vm: MainViewModel, onOpen: (String, Long?, Long?) -> Unit, discover: () -> Unit, library: () -> Unit, web: (String) -> Unit) {
+fun TodayPage(vm: MainViewModel, onOpen: (String, Long?, Long?) -> Unit, discover: () -> Unit, library: () -> Unit, openCreator: (Creator) -> Unit) {
     val continuing by vm.continuing.collectAsStateWithLifecycle()
     val later by vm.watchLater.collectAsStateWithLifecycle()
     val feed by vm.todayFeed.collectAsStateWithLifecycle()
     val grid = rememberLazyGridState()
     LaunchedEffect(Unit) { vm.ensureTodayLoaded() }
     AutoLoadFeed(grid, feed, vm::loadMoreToday)
-    var tools by rememberSaveable { mutableStateOf(false) }
     Column {
         PageHeader("Asasfans") { RoundAction(Icons.Outlined.Explore, "发现视频", discover) }
         PullToRefreshBox(isRefreshing = feed.refreshing, onRefresh = vm::refreshToday, modifier = Modifier.weight(1f)) {
             LazyVerticalGrid(columns = videoGridCells(), state = grid, modifier = Modifier.fillMaxSize().testTag("today-grid"),
                 contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                item(key = "tools", span = { GridItemSpan(maxLineSpan) }) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        listOf(Icons.Outlined.Headphones to "录音棚", Icons.Outlined.CalendarMonth to "日历", Icons.Outlined.GridView to "工具").forEachIndexed { index, (icon, title) ->
-                            Card(onClick = { if (index == 2) tools = true else web(communityTools[index].second) }, Modifier.weight(1f),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow), shape = RoundedCornerShape(16.dp)) {
-                                Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-                                    Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Text(title, style = MaterialTheme.typography.labelLarge)
-                                }
-                            }
-                        }
-                    }
-                }
                 if (continuing.isNotEmpty()) {
                     item(key = "continue-title", span = { GridItemSpan(maxLineSpan) }) { SectionTitle("继续观看") }
                     items(continuing.take(2), key = { "continue:${it.first.id.key}:${it.second.partId}" }) { (video, progress) ->
                         VideoCard(video, { onOpen(video.id.value, progress.partId, progress.positionMs) }, { vm.addLater(video) },
-                            extra = "${timeText(progress.positionMs)} / ${timeText(progress.durationMs)}")
+                            extra = "${timeText(progress.positionMs)} / ${timeText(progress.durationMs)}", onCreator = { openCreator(video.creator) })
                     }
                 }
                 if (later.isNotEmpty()) {
                     item(key = "later-title", span = { GridItemSpan(maxLineSpan) }) { SectionTitle("稍后看", later.size, "全部", library) }
                     items(later.take(2), key = { "later:${it.id}" }) { row ->
-                        VideoCard(row.toVideo(), { onOpen(row.sourceId, null, null) }, { vm.removeLater(row.id) }, "移出稍后看")
+                        VideoCard(row.toVideo(), { onOpen(row.sourceId, null, null) }, { vm.removeLater(row.id) }, "移出稍后看", onCreator = { openCreator(row.toVideo().creator) })
                     }
                 }
                 item(key = "latest-title", span = { GridItemSpan(maxLineSpan) }) { SectionTitle("最新视频") }
@@ -87,23 +63,21 @@ fun TodayPage(vm: MainViewModel, onOpen: (String, Long?, Long?) -> Unit, discove
                     EmptyState("暂无视频")
                 }
                 items(feed.videos, key = { "new:${it.id.key}" }) { video ->
-                    VideoCard(video, { onOpen(video.id.value, null, null) }, { vm.addLater(video) })
+                    VideoCard(video, { onOpen(video.id.value, null, null) }, { vm.addLater(video) }, onCreator = { openCreator(video.creator) })
                 }
                 item(key = "feed-footer", span = { GridItemSpan(maxLineSpan) }) { FeedFooter(feed, vm::retryToday, vm::continueToday) }
             }
         }
     }
-    if (tools) CommunityToolsSheet({ tools = false }, web)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiscoverPage(vm: MainViewModel, open: (String) -> Unit, internal: (String) -> Unit, external: (String) -> Unit, web: (String) -> Unit, rules: () -> Unit) {
+fun DiscoverPage(vm: MainViewModel, open: (String) -> Unit, internal: (String) -> Unit, external: (String) -> Unit, openCreator: (Creator) -> Unit, rules: () -> Unit) {
     val feed by vm.feed.collectAsStateWithLifecycle()
     val keyword by vm.keyword.collectAsStateWithLifecycle()
     val mode by vm.feedMode.collectAsStateWithLifecycle()
     var search by rememberSaveable { mutableStateOf(false) }
-    var tools by rememberSaveable { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     val grid = rememberLazyGridState()
     val categories = listOf("new" to "最新", "creations" to "二创", "clips" to "切片")
@@ -125,7 +99,6 @@ fun DiscoverPage(vm: MainViewModel, open: (String) -> Unit, internal: (String) -
                 DropdownMenu(menu, { menu = false }) {
                     DropdownMenuItem(text = { Text("刷新") }, leadingIcon = { Icon(Icons.Outlined.Refresh, null) }, onClick = { menu = false; vm.refreshFeed() })
                     DropdownMenuItem(text = { Text("内容规则") }, leadingIcon = { Icon(Icons.Outlined.Tune, null) }, onClick = { menu = false; rules() })
-                    DropdownMenuItem(text = { Text("社区工具") }, leadingIcon = { Icon(Icons.Outlined.GridView, null) }, onClick = { menu = false; tools = true })
                 }
             }
         }
@@ -141,14 +114,13 @@ fun DiscoverPage(vm: MainViewModel, open: (String) -> Unit, internal: (String) -
                 if (!feed.loading && feed.videos.isEmpty() && feed.error == null && !feed.hasCachedMore) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) { EmptyState("暂无视频") }
                 items(feed.videos, key = { it.id.key }) { video ->
                     VideoCard(video, { open(video.id.value) }, { vm.addLater(video) },
-                        onInternal = { internal(video.id.value) }, onExternal = { external("https://www.bilibili.com/video/${video.id.value}") })
+                        onCreator = { openCreator(video.creator) }, onInternal = { internal(video.id.value) }, onExternal = { external("https://www.bilibili.com/video/${video.id.value}") })
                 }
                 item(key = "feed-footer", span = { GridItemSpan(maxLineSpan) }) { FeedFooter(feed, vm::retryFeed, vm::continueFeed) }
             }
         }
     }
     if (search) SearchDialog("搜索视频", keyword, { search = false }) { vm.setFeed("search", it); search = false }
-    if (tools) CommunityToolsSheet({ tools = false }, web)
 }
 
 @Composable
@@ -167,30 +139,24 @@ fun SearchDialog(title: String, initial: String, dismiss: () -> Unit, submit: (S
         dismissButton = { TextButton(onClick = dismiss) { Text("取消") } })
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommunityToolsSheet(dismiss: () -> Unit, web: (String) -> Unit) {
-    ModalBottomSheet(onDismissRequest = dismiss) {
-        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
-            item { SectionTitle("社区工具") }
-            items(communityTools) { (label, url) -> SettingsRow(Icons.Outlined.Language, label, onClick = { dismiss(); web(url) }) }
-        }
-    }
-}
-
-@Composable
-fun FollowingPage(vm: MainViewModel) {
+fun SubscriptionPage(vm: MainViewModel, back: () -> Unit, openCreator: (Creator) -> Unit) {
     val subscriptions by vm.subscriptions.collectAsStateWithLifecycle()
     var uid by rememberSaveable { mutableStateOf("") }
     var adding by rememberSaveable { mutableStateOf(false) }
     var removing by remember { mutableStateOf<String?>(null) }
     Column {
-        PageHeader("关注") { RoundAction(Icons.Outlined.Add, "添加订阅", { adding = true }) }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = back) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
+            Text("订阅管理", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+            RoundAction(Icons.Outlined.Add, "添加订阅", { adding = true })
+        }
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { SectionTitle("订阅的 UP", subscriptions.size) }
             if (subscriptions.isEmpty()) item { EmptyState("暂无订阅", Icons.Outlined.Subscriptions, "添加订阅", { adding = true }) }
             items(subscriptions, key = { it.creatorKey }) { subscription ->
-                Surface(shape = RoundedCornerShape(16.dp)) {
+                Surface(onClick = { openCreator(Creator(subscription.source, subscription.creatorId, subscription.name, subscription.avatarUrl)) },
+                    shape = RoundedCornerShape(16.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 14.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         CreatorAvatar(subscription.name, subscription.avatarUrl, size = 40)

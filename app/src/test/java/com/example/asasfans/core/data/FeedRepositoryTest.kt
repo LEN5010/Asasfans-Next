@@ -125,4 +125,25 @@ class FeedRepositoryTest {
         assertFalse(expanded.hasMore)
     }
 
+    @Test fun creatorArchiveQueriesKeepIndependentCachesAndCursors() = runBlocking {
+        val repo = FeedRepository(db, "bilibili-creator", { query, page ->
+            VideoPage((0 until 20).map { index ->
+                Video(ContentId.bilibili("fixture-${query.creatorId}-$page-$index"), "合成投稿", Creator(id = query.creatorId!!))
+            }, page, 100, true)
+        }, {})
+        val first = QuerySpec(creatorId = "42")
+        val second = QuerySpec(creatorId = "43")
+        repo.refresh(first)
+        repo.refresh(second)
+        repo.loadMore(first)
+        val a = repo.observe(first).first()
+        val b = repo.observe(second).first()
+        assertEquals(40, a.videos.size)
+        assertEquals(20, b.videos.size)
+        assertTrue(a.videos.all { it.creator.id == "42" })
+        assertTrue(b.videos.all { it.creator.id == "43" })
+        assertEquals("3", a.cursor)
+        assertEquals("2", b.cursor)
+    }
+
 }

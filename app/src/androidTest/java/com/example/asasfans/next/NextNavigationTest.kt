@@ -29,8 +29,42 @@ class NextNavigationTest {
             compose.onNodeWithText(video.title).assertIsDisplayed()
             compose.onAllNodesWithText("我的").onLast().performClick()
             compose.onNodeWithText("扫码登录").assertIsDisplayed()
-            compose.onAllNodesWithText("关注").onLast().performClick()
-            compose.onNodeWithText("添加订阅").assertIsDisplayed()
+            compose.onNodeWithText("订阅管理").performScrollTo().performClick()
+            compose.onNodeWithContentDescription("添加订阅").assertIsDisplayed()
+        } finally { runBlocking { app.container.library.removeWatchLater(video.id.key) } }
+    }
+
+    @Test fun centerToolsOpensAnIconGridAndSubscriptionsLiveUnderMine() {
+        val app = ApplicationProvider.getApplicationContext<NextApplication>()
+        compose.waitUntil(10_000) { app.container.startup.state.value == StartupState.Ready }
+        compose.onNodeWithTag("tools-button").performClick()
+        compose.onNodeWithTag("tools-grid").assertIsDisplayed()
+        compose.onNodeWithText("社区导航").assertIsDisplayed()
+        compose.onNodeWithText("录音棚").assertIsDisplayed()
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithTag("tools-grid").assertDoesNotExist()
+        compose.onAllNodesWithText("我的").onLast().performClick()
+        compose.onNodeWithText("网页登录").assertIsDisplayed()
+        compose.onNodeWithText("社区导航").assertDoesNotExist()
+        compose.onNodeWithText("订阅管理").performScrollTo().performClick()
+        compose.onNodeWithText("订阅管理").assertIsDisplayed()
+        compose.onNodeWithContentDescription("添加订阅").assertIsDisplayed()
+    }
+
+    @Test fun videoCreatorActionOpensNativeProfileWithoutOpeningPlayback() {
+        val app = ApplicationProvider.getApplicationContext<NextApplication>()
+        compose.waitUntil(10_000) { app.container.startup.state.value == StartupState.Ready }
+        val video = Video(ContentId.bilibili("BV1xx411c7mZ"), "主页入口合成视频", Creator(id = "42", name = "主页合成 UP"))
+        runBlocking { app.container.library.addWatchLater(video) }
+        try {
+            compose.onAllNodesWithText("资料库").onLast().performClick()
+            compose.onNodeWithText(video.title).assertIsDisplayed()
+            compose.onNodeWithText(video.creator.name).performClick()
+            compose.onNodeWithText("UP 主页").assertIsDisplayed()
+            compose.onNodeWithText("UID 42").assertIsDisplayed()
+            compose.onNodeWithContentDescription("在 B 站打开 UP 主页").assertIsDisplayed()
+            compose.onNodeWithContentDescription("返回").performClick()
+            compose.onNodeWithText(video.title).assertIsDisplayed()
         } finally { runBlocking { app.container.library.removeWatchLater(video.id.key) } }
     }
 
@@ -106,7 +140,7 @@ class NextNavigationTest {
         try {
             compose.activityRule.scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
             compose.waitUntil(5000) { compose.onAllNodesWithTag("side-navigation").fetchSemanticsNodes().isNotEmpty() }
-            listOf("今日", "发现", "关注", "资料库", "我的").forEach { label ->
+            listOf("今日", "发现", "工具", "资料库", "我的").forEach { label ->
                 compose.onAllNodesWithText(label).onLast().assertIsDisplayed()
             }
             compose.onAllNodesWithText("我的").onLast().performClick()

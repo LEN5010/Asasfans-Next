@@ -34,6 +34,27 @@ class BiliContentRepositoryTest {
         val repository = BiliContentRepository(BiliGateway(this) { BiliCredentials.fromWebCookies("SESSDATA=fixture-session") }) { 100 }
     }
 
+    @Test fun creatorUsesSignedReadOnlySpaceEndpointAndCurrentCredentialSnapshot() = runTest {
+        val transport = Transport().apply {
+            response = Json.parseToJsonElement("""{"code":0,"data":{"mid":42,"name":"合成 UP","sign":"简介","face":""}}""") as JsonObject
+        }
+        assertEquals("合成 UP", transport.repository.creator(42).creator.name)
+        val request = transport.requests.last()
+        assertEquals("/x/space/wbi/acc/info", request.url.encodedPath)
+        assertEquals("42", request.url.queryParameter("mid"))
+        assertEquals(32, request.url.queryParameter("w_rid")!!.length)
+        assertEquals("https://space.bilibili.com/42", request.referer)
+        assertTrue(request.cookies.contains("SESSDATA=fixture-session"))
+        assertNull(request.url.queryParameter("csrf"))
+    }
+
+    @Test fun invalidCreatorNeverMakesANetworkRequest() = runTest {
+        val transport = Transport()
+        try { transport.repository.creator(0); fail("invalid creator") }
+        catch (_: AppFailure.InvalidInput) { }
+        assertTrue(transport.requests.isEmpty())
+    }
+
     @Test fun searchSignsRealKeywordAndAddsEphemeralDeviceCookie() = runTest {
         val transport = Transport().apply { response = fixture("search") }
         val query = QuerySpec(keyword = "嘉然 & 歌曲", order = VideoOrder.POPULAR)

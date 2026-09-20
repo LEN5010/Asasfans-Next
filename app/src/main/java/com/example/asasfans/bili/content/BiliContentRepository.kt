@@ -12,6 +12,12 @@ class BiliContentRepository(
     private val api: BiliGateway,
     private val nowMs: () -> Long = System::currentTimeMillis,
 ) {
+    suspend fun creator(mid: Long): CreatorProfile {
+        if (mid <= 0) throw AppFailure.InvalidInput("UP UID 不正确")
+        return BiliContentMapper.creator(api.get("/x/space/wbi/acc/info", mapOf("mid" to mid.toString()),
+            needsDeviceCookie = true, referer = "https://space.bilibili.com/$mid"), mid)
+    }
+
     suspend fun detail(bvid: String): VideoDetails {
         requireBvid(bvid)
         return BiliContentMapper.detail(api.get("/x/web-interface/wbi/view", mapOf("bvid" to bvid)), bvid)

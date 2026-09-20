@@ -15,6 +15,8 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.asasfans.core.model.Creator
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
@@ -87,8 +89,19 @@ fun NextApp(app: NextApplication) {
             }
             else nav.navigate("video/${Uri.encode(bvid)}?part=${part ?: -1}&at=${at ?: -1}")
         }
+        var toolsOpen by rememberSaveable { mutableStateOf(false) }
         val openWeb: (String) -> Unit = { nav.navigate("web/${Uri.encode(it)}") }
-        val rootPage = sections.any { it.path == route }
+        val openCreator: (Creator) -> Unit = { creator ->
+            val mid = creator.id.toLongOrNull()?.takeIf { it > 0 }
+            if (creator.source == "bilibili" && mid != null) {
+                nav.navigate("creator/$mid?name=${Uri.encode(creator.name.take(100))}&avatar=${Uri.encode(creator.avatarUrl.take(2048))}") {
+                    launchSingleTop = true
+                }
+            } else vm.action { vm.notify("此 UP 暂无可用主页") }
+        }
+        val openLogin: () -> Unit = { nav.navigate("login/web") { launchSingleTop = true } }
+        val rootPage = sections.any { it.path != "tools" && it.path == route }
+        if (toolsOpen) CommunityToolsSheet({ toolsOpen = false }, openWeb)
         fun navigate(path: String) {
             nav.navigate(path) { popUpTo("today") { saveState = true }; launchSingleTop = true; restoreState = true }
         }
@@ -102,11 +115,11 @@ fun NextApp(app: NextApplication) {
                     })
                 },
                 bottomBar = {
-                    if (rootPage && !wide) Box(Modifier.navigationBarsPadding()) { CompactNavigation(route, ::navigate) }
+                    if (rootPage && !wide) Box(Modifier.navigationBarsPadding()) { CompactNavigation(route, ::navigate, toolsOpen) { toolsOpen = true } }
                 },
             ) { padding ->
                 Row(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-                    if (rootPage && wide) WideNavigation(route, ::navigate)
+                    if (rootPage && wide) WideNavigation(route, ::navigate, toolsOpen) { toolsOpen = true }
                     Surface(Modifier.weight(1f).fillMaxHeight(), color = MaterialTheme.colorScheme.background) {
                         when (val state = startup) {
                             is StartupState.Failed -> Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.TopCenter) {
@@ -114,11 +127,26 @@ fun NextApp(app: NextApplication) {
                             }
                             StartupState.NotStarted, StartupState.Migrating -> MessagePanel("正在载入…")
                             StartupState.Ready -> NavHost(nav, startDestination = "today") {
-                                composable("today") { TodayPage(vm, { b, p, t -> openVideo(b, p, t, false) }, { navigate("discover") }, { navigate("library") }, openWeb) }
-                                composable("discover") { DiscoverPage(vm, { openVideo(it, null, null, false) }, { openVideo(it, null, null, true) }, ::external, openWeb, { nav.navigate("rules") }) }
-                                composable("following") { FollowingPage(vm) }
-                                composable("library") { LibraryPage(vm) { b, p, t -> openVideo(b, p, t, false) } }
-                                composable("mine") { AccountPage(vm, { nav.navigate("rules") }, openWeb) }
+                                composable("today") { TodayPage(vm, { b, p, t -> openVideo(b, p, t, false) }, { navigate("discover") }, { navigate("library") }, openCreator) }
+                                composable("discover") { DiscoverPage(vm, { openVideo(it, null, null, false) }, { openVideo(it, null, null, true) }, ::external, openCreator, { nav.navigate("rules") }) }
+                                composable("subscriptions") { SubscriptionPage(vm, { nav.popBackStack() }, openCreator) }
+                                // Keep saved back stacks from the former bottom-tab route restorable.
+                                composable("following") { SubscriptionPage(vm, { nav.popBackStack() }, openCreator) }
+                                composable("library") { LibraryPage(vm, openCreator) { b, p, t -> openVideo(b, p, t, false) } }
+                                composable("mine") { AccountPage(vm, { nav.navigate("rules") }, { nav.navigate("subscriptions") }, openLogin) }
+                                composable("login/web") { BiliWebLoginPage(vm) { nav.popBackStack() } }
+                                composable("creator/{mid}?name={name}&avatar={avatar}", arguments = listOf(
+                                    navArgument("mid") { type = NavType.LongType },
+                                    navArgument("name") { type = NavType.StringType; defaultValue = "" },
+                                    navArgument("avatar") { type = NavType.StringType; defaultValue = "" },
+                                )) { page ->
+                                    val creatorVm: CreatorViewModel = viewModel(factory = viewModelFactory { initializer {
+                                        CreatorViewModel(app.container, Creator(id = page.arguments!!.getLong("mid").toString(),
+                                            name = page.arguments!!.getString("name").orEmpty(), avatarUrl = page.arguments!!.getString("avatar").orEmpty()),
+                                            page.savedStateHandle)
+                                    } })
+                                    CreatorPage(creatorVm, vm, { nav.popBackStack() }, { openVideo(it, null, null, false) }, ::external, openLogin)
+                                }
                                 composable("rules") { RulesPage(vm) }
                                 composable("web/{url}") { page -> WebPage(page.arguments?.getString("url").orEmpty(), ::external) { nav.popBackStack() } }
                                 composable("video/{bvid}?part={part}&at={at}", arguments = listOf(
@@ -129,7 +157,7 @@ fun NextApp(app: NextApplication) {
                                         PlayerViewModel(app, page.arguments!!.getString("bvid").orEmpty(),
                                             page.arguments!!.getLong("part").takeIf { it > 0 }, page.arguments!!.getLong("at").takeIf { it >= 0 }, page.savedStateHandle)
                                     } })
-                                    PlayerPage(playerVm, vm, { nav.popBackStack() }, ::external)
+                                    PlayerPage(playerVm, vm, { nav.popBackStack() }, ::external, openCreator)
                                 }
                             }
                         }

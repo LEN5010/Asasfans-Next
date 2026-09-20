@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.asasfans.bili.account.BiliAccountRepository
 import com.example.asasfans.bili.account.EncryptedBiliCredentialVault
 import com.example.asasfans.bili.account.HttpBiliAccountApi
+import com.example.asasfans.bili.account.BiliWebCookieStore
 import com.example.asasfans.bili.content.BiliContentRepository
 import com.example.asasfans.bili.network.BiliGateway
 import com.example.asasfans.bili.network.BiliMediaDataSource
@@ -34,11 +35,18 @@ class AppContainer(context: Context) {
         .readTimeout(15, TimeUnit.SECONDS).callTimeout(25, TimeUnit.SECONDS).build()
     private val community = CommunityVideoSource(JsonHttpClient(httpClient))
     private val biliTransport = HttpBiliTransport(JsonHttpClient(httpClient))
-    val account = BiliAccountRepository(EncryptedBiliCredentialVault(app), HttpBiliAccountApi(biliTransport))
+    val webLoginCookies = BiliWebCookieStore()
+    val account = BiliAccountRepository(EncryptedBiliCredentialVault(app), HttpBiliAccountApi(biliTransport),
+        clearWebSession = webLoginCookies::clear)
     val bili = BiliContentRepository(BiliGateway(biliTransport, account::requestCredentials))
     val biliMedia = BiliMediaDataSource(httpClient, account::currentCredentials)
     val library = LibraryRepository(database, startup::requireReady)
     val curation = CurationRepository(database, startup::requireReady)
     val discovery = FeedRepository(database, "community", community::load, startup::requireReady)
     val search = FeedRepository(database, "bilibili-search", bili::search, startup::requireReady)
+    val creatorVideos = FeedRepository(database, "bilibili-creator", { query, page ->
+        val mid = query.creatorId?.toLongOrNull()?.takeIf { it > 0 }
+            ?: throw com.example.asasfans.core.model.AppFailure.InvalidInput("UP UID 不正确")
+        bili.archive(mid, page)
+    }, startup::requireReady)
 }

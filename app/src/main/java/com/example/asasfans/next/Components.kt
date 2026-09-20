@@ -120,7 +120,7 @@ fun CreatorAvatar(name: String, url: String = "", size: Int = 24) {
 
 @Composable
 fun VideoCard(video: Video, onOpen: () -> Unit, onLater: () -> Unit, laterLabel: String = "加入稍后看", extra: String? = null,
-    onInternal: (() -> Unit)? = null, onExternal: (() -> Unit)? = null) {
+    onInternal: (() -> Unit)? = null, onExternal: (() -> Unit)? = null, onCreator: (() -> Unit)? = null) {
     var menu by remember { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .6f))) {
@@ -145,13 +145,18 @@ fun VideoCard(video: Video, onOpen: () -> Unit, onLater: () -> Unit, laterLabel:
             extra?.let { Text(it, Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp), maxLines = 1,
                 overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall) }
             Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                CreatorAvatar(video.creator.name, video.creator.avatarUrl, 18)
-                Text(video.creator.name.ifBlank { "UP ${video.creator.id}" }, Modifier.weight(1f).padding(start = 5.dp), maxLines = 1,
-                    overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.weight(1f).heightIn(min = 44.dp)
+                    .then(if (onCreator != null) Modifier.clickable(onClickLabel = "查看 UP 主页", onClick = onCreator) else Modifier),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    CreatorAvatar(video.creator.name, video.creator.avatarUrl, 18)
+                    Text(video.creator.name.ifBlank { "UP ${video.creator.id}" }, Modifier.weight(1f).padding(start = 5.dp), maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "视频操作", Modifier.size(18.dp)) }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(text = { Text(laterLabel) }, onClick = { menu = false; onLater() }, leadingIcon = { Icon(Icons.Outlined.Schedule, null) })
+                        onCreator?.let { action -> DropdownMenuItem(text = { Text("查看 UP 主页") }, onClick = { menu = false; action() }) }
                         onInternal?.let { action -> DropdownMenuItem(text = { Text("App 内播放") }, onClick = { menu = false; action() }) }
                         onExternal?.let { action -> DropdownMenuItem(text = { Text("用 B 站打开") }, onClick = { menu = false; action() }) }
                     }

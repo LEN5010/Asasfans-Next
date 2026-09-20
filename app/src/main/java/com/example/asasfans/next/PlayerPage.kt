@@ -45,7 +45,7 @@ import kotlinx.coroutines.isActive
 @OptIn(UnstableApi::class)
 @kotlin.OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerPage(vm: PlayerViewModel, main: MainViewModel, back: () -> Unit, external: (String) -> Unit) {
+fun PlayerPage(vm: PlayerViewModel, main: MainViewModel, back: () -> Unit, external: (String) -> Unit, openCreator: (com.example.asasfans.core.model.Creator) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val player by vm.engine.player.collectAsStateWithLifecycle()
     val comments by vm.comments.collectAsStateWithLifecycle()
@@ -164,8 +164,12 @@ fun PlayerPage(vm: PlayerViewModel, main: MainViewModel, back: () -> Unit, exter
                                 overflow = TextOverflow.Ellipsis, modifier = Modifier.clickable { expandedTitle = !expandedTitle })
                         }
                         item { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            CreatorAvatar(item.creator.name, item.creator.avatarUrl, 32)
-                            Text(item.creator.name.ifBlank { "UP ${item.creator.id}" }, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Row(Modifier.weight(1f).heightIn(min = 48.dp).clickable { openCreator(item.creator) },
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CreatorAvatar(item.creator.name, item.creator.avatarUrl, 32)
+                                Text(item.creator.name.ifBlank { "UP ${item.creator.id}" }, style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
                             val subscribed = subscriptions.any { it.creatorKey == item.creator.key }
                             FilledTonalButton(onClick = { main.action { vm.graph.curation.subscribe(item.creator) } }, enabled = !subscribed,
                                 contentPadding = PaddingValues(horizontal = 14.dp)) { Text(if (subscribed) "已订阅" else "订阅") }

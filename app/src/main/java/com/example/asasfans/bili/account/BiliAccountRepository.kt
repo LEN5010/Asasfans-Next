@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 class BiliAccountRepository(
     private val vault: BiliCredentialVault,
     private val api: BiliAccountApi,
+    private val clearWebSession: suspend () -> Unit = {},
     private val nowMs: () -> Long = System::currentTimeMillis,
 ) {
     private val mutex = Mutex()
@@ -125,6 +126,27 @@ class BiliAccountRepository(
         true
     }
 
+    /** Verify the official browser snapshot before replacing an existing encrypted account. */
+    suspend fun verifyAndAcceptWebCookies(ticket: LoginTicket, cookieHeader: String): Boolean {
+        mutex.withLock { if (!isCurrent(ticket)) return false }
+        val next = BiliCredentials.fromWebCookies(cookieHeader)
+        val profile = try {
+            api.profile(next) ?: throw AppFailure.LoginRequired()
+        } catch (error: AppFailure) {
+            mutex.withLock { if (!isCurrent(ticket)) return false }
+            throw error
+        }
+        return mutex.withLock {
+            if (!isCurrent(ticket)) return false
+            // Persist and publish the same verified account, even if disposal occurs during disk IO.
+            withContext(NonCancellable) {
+                install(next)
+                mutableState.value = AccountState(AccountStatus.SIGNED_IN, profile)
+            }
+            true
+        }
+    }
+
     suspend fun cancelLogin(ticket: LoginTicket) = mutex.withLock {
         if (isCurrent(ticket)) attempt++
     }
@@ -165,6 +187,7 @@ class BiliAccountRepository(
     private suspend fun clearCredentials() = withContext(NonCancellable) {
         try {
             vault.clear()
+            clearWebSession()
             mutableState.value = AccountState(AccountStatus.SIGNED_OUT)
         } catch (error: AppFailure) {
             mutableState.value = AccountState(AccountStatus.LOGOUT_PENDING, failure = error)

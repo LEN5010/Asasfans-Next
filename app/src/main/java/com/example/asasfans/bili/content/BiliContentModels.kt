@@ -2,6 +2,9 @@ package com.example.asasfans.bili.content
 
 import com.example.asasfans.core.model.Video
 import com.example.asasfans.core.model.VideoPart
+import com.example.asasfans.core.model.Creator
+
+data class CreatorProfile(val creator: Creator, val introduction: String, val officialTitle: String = "")
 
 data class VideoDetails(val video: Video, val aid: Long, val parts: List<VideoPart>)
 

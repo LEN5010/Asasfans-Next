@@ -183,6 +183,64 @@ class BiliAccountRepositoryTest {
         assertEquals(0, vault.writes)
     }
 
+    @Test fun verifiedWebLoginSavesOnlyAfterNavSucceeds() = runTest {
+        val vault = Vault()
+        val gate = CompletableDeferred<BiliProfile?>()
+        val account = BiliAccountRepository(vault, Api().apply { load = { gate.await() } })
+        val ticket = account.beginWebLogin()
+        val result = async { account.verifyAndAcceptWebCookies(ticket, "SESSDATA=fixture-web") }
+        runCurrent()
+        assertEquals(0, vault.writes)
+        gate.complete(BiliProfile(42, "合成网页登录账号", "", 20))
+        assertTrue(result.await())
+        assertEquals(1, vault.writes)
+        assertEquals(AccountStatus.SIGNED_IN, account.state.value.status)
+        assertEquals(42L, account.state.value.profile!!.mid)
+    }
+
+    @Test fun webVerificationFailurePreservesExistingEncryptedAccount() = runTest {
+        val vault = Vault()
+        val api = Api().apply { load = { throw AppFailure.Network() } }
+        val account = BiliAccountRepository(vault, api)
+        val ticket = account.beginWebLogin()
+        try { account.verifyAndAcceptWebCookies(ticket, "SESSDATA=fixture-web"); fail("must fail") }
+        catch (_: AppFailure.Network) { }
+        api.load = { null }
+        try { account.verifyAndAcceptWebCookies(ticket, "SESSDATA=fixture-web"); fail("must fail") }
+        catch (_: AppFailure.LoginRequired) { }
+        assertEquals(0, vault.writes)
+        assertEquals(credentials("old").cookieHeader(), vault.saved.cookieHeader())
+    }
+
+    @Test fun leavingWebLoginDuringVerificationCannotInstallItsLateResponse() = runTest {
+        val vault = Vault()
+        val gate = CompletableDeferred<BiliProfile?>()
+        val account = BiliAccountRepository(vault, Api().apply { load = { gate.await() } })
+        val ticket = account.beginWebLogin()
+        val result = async { account.verifyAndAcceptWebCookies(ticket, "SESSDATA=fixture-web") }
+        runCurrent()
+        account.cancelLogin(ticket)
+        gate.complete(BiliProfile(42, "迟到的合成响应", "", 20))
+        assertFalse(result.await())
+        assertEquals(0, vault.writes)
+    }
+
+    @Test fun webCookieCleanupFailureKeepsLogoutPendingAndRetryFinishesIt() = runTest {
+        var failCleanup = true
+        var cleanups = 0
+        val account = BiliAccountRepository(Vault(), Api(), clearWebSession = {
+            cleanups++
+            if (failCleanup) throw AppFailure.LocalStorage()
+        })
+        account.logout()
+        assertEquals(AccountStatus.LOGOUT_PENDING, account.state.value.status)
+        assertFalse(account.requestCredentials().hasSession)
+        failCleanup = false
+        account.retryStorage()
+        assertEquals(AccountStatus.SIGNED_OUT, account.state.value.status)
+        assertEquals(2, cleanups)
+    }
+
     companion object {
         private fun credentials(name: String) = BiliCredentials.fromWebCookies("SESSDATA=fixture-$name; bili_jct=fixture-csrf-$name")
     }

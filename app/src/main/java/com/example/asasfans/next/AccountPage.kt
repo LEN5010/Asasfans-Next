@@ -3,6 +3,7 @@ package com.example.asasfans.next
 import android.graphics.Bitmap
 import androidx.core.graphics.createBitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,8 +27,9 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import kotlinx.coroutines.*
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AccountPage(vm: MainViewModel, rules: () -> Unit, web: (String) -> Unit) {
+fun AccountPage(vm: MainViewModel, rules: () -> Unit, openSubscriptions: () -> Unit, webLogin: () -> Unit) {
     val account by vm.graph.account.state.collectAsStateWithLifecycle()
     val preferences by vm.preferences.collectAsStateWithLifecycle()
     val later by vm.watchLater.collectAsStateWithLifecycle()
@@ -70,12 +72,18 @@ fun AccountPage(vm: MainViewModel, rules: () -> Unit, web: (String) -> Unit) {
                                 }
                             }
                         }
-                        if (account.status != AccountStatus.SIGNED_IN) FilledTonalButton(onClick = { showQr = true }) {
-                            Icon(Icons.Outlined.QrCode, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("扫码登录")
+                        if (account.status != AccountStatus.SIGNED_IN) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilledTonalButton(onClick = webLogin) {
+                                Icon(Icons.Outlined.Language, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("网页登录")
+                            }
+                            OutlinedButton(onClick = { showQr = true }) {
+                                Icon(Icons.Outlined.QrCode, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("扫码登录")
+                            }
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                             listOf(later.size to "稍后看", collections.size to "收藏夹", subscriptions.size to "订阅").forEach { (count, label) ->
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Column(Modifier.then(if (label == "订阅") Modifier.clickable(onClick = openSubscriptions) else Modifier).padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text(count.toString(), style = MaterialTheme.typography.titleLarge)
                                     Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -85,6 +93,9 @@ fun AccountPage(vm: MainViewModel, rules: () -> Unit, web: (String) -> Unit) {
                 }
             }
             account.failure?.let { failure -> item { MessagePanel("账号暂不可用", failure.userMessage) } }
+            item { Surface(shape = RoundedCornerShape(16.dp)) {
+                SettingsRow(Icons.Outlined.Subscriptions, "订阅管理", subscriptions.size.toString(), openSubscriptions)
+            } }
             item { SectionTitle("偏好设置") }
             item { Surface(shape = RoundedCornerShape(16.dp)) { Column {
                 SettingsRow(Icons.Outlined.Palette, "外观", themeName, { picker = "theme" })
@@ -94,7 +105,6 @@ fun AccountPage(vm: MainViewModel, rules: () -> Unit, web: (String) -> Unit) {
             item { SectionTitle("通用") }
             item { Surface(shape = RoundedCornerShape(16.dp)) { Column {
                 SettingsRow(Icons.Outlined.CleaningServices, "清除列表缓存", onClick = { vm.action { vm.graph.library.clearFeedCache(); vm.notify("列表缓存已清除") } })
-                SettingsRow(Icons.Outlined.Language, "社区导航", onClick = { web("https://nav.asoul.us.kg") })
                 SettingsRow(Icons.Outlined.Info, "关于 Asasfans", BuildConfig.VERSION_NAME, { picker = "about" })
             } } }
         }

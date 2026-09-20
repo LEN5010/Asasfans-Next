@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun LibraryPage(vm: MainViewModel, open: (String, Long?, Long?) -> Unit) {
+fun LibraryPage(vm: MainViewModel, openCreator: (com.example.asasfans.core.model.Creator) -> Unit, open: (String, Long?, Long?) -> Unit) {
     val later by vm.watchLater.collectAsStateWithLifecycle()
     val history by vm.history.collectAsStateWithLifecycle()
     val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
@@ -94,7 +94,7 @@ fun LibraryPage(vm: MainViewModel, open: (String, Long?, Long?) -> Unit) {
                 items(videos, key = { it.id }) { row ->
                     VideoCard(row.toVideo(), { open(row.sourceId, null, null) }, {
                         if (tab == "稍后看" && query.isBlank() && collectionId == null) vm.removeLater(row.id) else vm.addLater(row.toVideo())
-                    }, if (tab == "稍后看" && query.isBlank() && collectionId == null) "移出稍后看" else "加入稍后看")
+                    }, if (tab == "稍后看" && query.isBlank() && collectionId == null) "移出稍后看" else "加入稍后看", onCreator = { openCreator(row.toVideo().creator) })
                 }
             }
         }
