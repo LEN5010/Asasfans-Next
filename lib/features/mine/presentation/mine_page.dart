@@ -23,6 +23,8 @@ class _MinePageState extends State<MinePage> {
           for (final entry in const [
             ('收藏', 'saved', Icons.bookmark_border),
             ('稍后看', 'later', Icons.watch_later_outlined),
+            ('继续观看', 'continue', Icons.play_circle_outline),
+            ('时间书签', 'bookmarks', Icons.bookmark_outline),
             ('历史记录', 'history', Icons.history),
             ('订阅管理', 'subscriptions', Icons.person_add_alt),
             ('关注日程', 'calendar-follows', Icons.event_available_outlined),

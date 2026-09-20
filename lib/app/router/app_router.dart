@@ -8,6 +8,7 @@ import '../../features/backup/presentation/backup_page.dart';
 import '../../features/content/presentation/content_page.dart';
 import '../../features/mine/presentation/mine_page.dart';
 import '../../features/library/presentation/library_pages.dart';
+import '../../features/library/presentation/playback_pages.dart';
 import '../../features/library/presentation/calendar_follows.dart';
 import '../../features/today/presentation/today_page.dart';
 import 'app_shell.dart';
@@ -87,6 +88,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'history',
                     builder: (_, _) => const LibraryHistoryPage(),
+                  ),
+                  GoRoute(
+                    path: 'continue',
+                    builder: (_, _) => const ContinueWatchingPage(),
+                  ),
+                  GoRoute(
+                    path: 'bookmarks',
+                    builder: (_, _) => const BookmarksPage(),
                   ),
                   GoRoute(
                     path: 'subscriptions',
