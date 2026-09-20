@@ -11,11 +11,15 @@
 
 ## 当前状态
 
-本分支是工程基础阶段，不是完整可替代旧版的产品。已建立四端工程、手机/桌面自适应导航、嘉然粉主题、社区工具入口、只读 API 传输层和二创仓库适配器。内容、日历及个人资料页面目前为待开放入口；二创适配器尚未绑定到页面，也未完成线上联调。没有接入生产数据库或迁移旧账号凭据。
+本分支正在重建核心功能，尚不是完整可替代旧版的产品。已建立四端工程、手机/桌面自适应导航、嘉然粉主题和只读 API 传输层。
+
+已经可用：二创档案列表（筛选、搜索、随机、自动续页、图文详情与大图查看）、历史动态搜索、首页「历史上的今天」、原生直播日历（月视图与当日议程、直播/其他活动切换、离线回退）和社区工具入口。
+
+尚未实现：切片频道（需要独立来源，不能借用二创数据集）、收藏与观看历史等个人资料、Bilibili 登录、UP 主页和视频播放。以上入口在界面中明确标为「即将开放」，不用假数据充数。
 
 版本 `3.0.0-dev.1+201` 仅作为开发标识，不代表已确定或发布下一个正式版本。
 
-原生 Android 暂停功能维护，源码与安装包保留在 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0)。重构尚未合入 `master`。本仓库的历史、Issues 和 Releases 继续保留，不新增仓库，也不复制旧工程到 `old/`。
+原生 Android 线已结束，[v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 是它的最终版本，源码与安装包保留在该标签。重构尚未合入 `master`。本仓库的历史、Issues 和 Releases 继续保留，不新增仓库，也不复制旧工程到 `old/`。
 
 ## 开发环境
 
@@ -42,7 +46,7 @@ iOS/macOS 需要可用的 Xcode、对应平台组件以及签名配置。Windows
 | `lib/features` | today、content、calendar、tools、mine、library 功能切片 |
 | `lib/shared` | 跨功能复用的纯展示组件 |
 | `android` / `ios` / `windows` / `macos` | 系统宿主工程 |
-| `test` | 离线契约与组件测试源码，旧版 Room schema 样本 |
+| `test` | 离线契约、组件与布局回归测试，旧版 Room schema 历史样本 |
 
 公开内容来源与 Bilibili 登录、站点账号和播放请求隔离；日历独立接入 ICS；切片不冒充二创。当前不引入尚无实际实现的数据库、播放器或 WebView 依赖。
 
@@ -50,9 +54,11 @@ iOS/macOS 需要可用的 Xcode、对应平台组件以及签名配置。Windows
 
 ## Android 数据与发布保护
 
-开发包使用 `asasfans.next.flutterdev`，与旧 Android 应用并存。未来生产包保持 `asasfans.next` 和原签名；迁移实现前，Gradle 会阻止 release 构建，且不使用模板默认的 debug key 签署生产包。不要通过卸载或清除旧应用数据解决迁移问题。
+开发包使用 `asasfans.next.flutterdev`，与旧 Android 应用并存。未来生产包保持 `asasfans.next` 和原签名；接入发布签名前，Gradle 会阻止 release 构建，且不使用模板默认的 debug key 签署生产包。
 
-旧版 Room schema 随测试保留，但迁移器尚未实现；不能将 schema 样本或工程创建成功视为升级兼容验证。Apple bundle identifier `dev.asasfans.next` 是当前候选值，尚未注册或确认开发者归属；Apple/Windows 模板图标也待替换。
+旧数据迁移已确定不做：原生 Android 线以 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 为最终版本，Flutter 版的个人资料从零开始，不读取旧应用的数据库与凭据。旧版 Room schema 样本仅作为历史参考保留。
+
+Apple bundle identifier `dev.asasfans.next` 是当前候选值，尚未注册或确认开发者归属；Apple/Windows 模板图标也待替换。
 
 ## CI
 

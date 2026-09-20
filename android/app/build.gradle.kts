@@ -40,11 +40,13 @@ android {
     }
 }
 
-// Enable production builds only in the migration/release milestone, after
-// legacy DB import and signing have been implemented and validated.
+// Legacy-data migration was cancelled on 2026-09-21, so it is no longer a
+// release gate. Signing continuity still is: a production build must be
+// signed with the original release key so it can upgrade the installed
+// asasfans.next, and must never fall back to the template debug key.
 tasks.matching { it.name == "preReleaseBuild" }.configureEach {
     doFirst {
-        throw GradleException("Flutter production release is gated on legacy-data migration and signing validation. Use a debug build for the scaffold.")
+        throw GradleException("Flutter production release is gated on release signing validation. Use a debug build until the release key is wired.")
     }
 }
 
