@@ -6,8 +6,10 @@ import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/feature_pending.dart';
 import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
+import '../domain/fanart_repository.dart';
 import 'fanart_card.dart';
 import 'fanart_detail_page.dart';
+import 'fanart_filter_bar.dart';
 
 class ContentPage extends ConsumerWidget {
   const ContentPage({this.channel = 'fanart', super.key});
@@ -90,35 +92,114 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
     super.dispose();
   }
 
+  /// Applying a filter starts a new query generation, so the view returns to
+  /// the top rather than keeping an offset that belonged to the old result.
+  void _applyQuery(FanartQuery query) {
+    _controller.applyQuery(query);
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
         final state = _controller.state;
-        if (state.items.isEmpty) {
-          return switch (state.status) {
-            FeedStatus.failed => _FeedError(
-              failure: state.failure,
-              onRetry: _controller.refresh,
+        return Column(
+          children: [
+            _SearchField(
+              key: ValueKey(state.query.keyword),
+              initial: state.query.keyword,
+              onSubmitted: (keyword) =>
+                  _applyQuery(state.query.copyWith(keyword: keyword)),
             ),
-            FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            _ => const _FeedEmpty(),
-          };
-        }
-        return RefreshIndicator(
-          onRefresh: _controller.refresh,
-          child: _FanartGrid(
-            state: state,
-            controller: _scrollController,
-            onRetryAppend: _controller.loadMore,
-          ),
+            const SizedBox(height: 8),
+            FanartFilterBar(query: state.query, onChanged: _applyQuery),
+            const SizedBox(height: 8),
+            Expanded(child: _buildBody(state)),
+          ],
         );
       },
     );
   }
+
+  Widget _buildBody(FanartFeedState state) {
+    if (state.items.isEmpty) {
+      return switch (state.status) {
+        FeedStatus.failed => _FeedError(
+          failure: state.failure,
+          onRetry: _controller.refresh,
+        ),
+        FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        _ => const _FeedEmpty(),
+      };
+    }
+    return RefreshIndicator(
+      onRefresh: _controller.refresh,
+      child: _FanartGrid(
+        state: state,
+        controller: _scrollController,
+        onRetryAppend: _controller.loadMore,
+      ),
+    );
+  }
+}
+
+/// Submitting starts a new query; typing alone does not, so a partly typed
+/// keyword never spends requests against the shared rate limit.
+class _SearchField extends StatefulWidget {
+  const _SearchField({
+    required this.initial,
+    required this.onSubmitted,
+    super.key,
+  });
+
+  final String initial;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: TextField(
+      controller: _controller,
+      textInputAction: TextInputAction.search,
+      // The server caps the keyword, so the field does too.
+      maxLength: 200,
+      decoration: InputDecoration(
+        hintText: '搜索二创正文或作者',
+        counterText: '',
+        isDense: true,
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: _controller.text.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: '清除搜索',
+                onPressed: () {
+                  _controller.clear();
+                  widget.onSubmitted('');
+                },
+              ),
+      ),
+      onChanged: (_) => setState(() {}),
+      onSubmitted: widget.onSubmitted,
+    ),
+  );
 }
 
 class _FanartGrid extends StatelessWidget {

@@ -173,18 +173,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // The filter bar is also scrollable, so target the grid explicitly.
+      final grid = find.descendant(
+        of: find.byType(CustomScrollView),
+        matching: find.byType(Scrollable),
+      );
       // Scroll into the second page so there is a position worth preserving.
       await tester.scrollUntilVisible(
         find.text('作品 p1i0'),
         400,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: grid,
       );
       await tester.pumpAndSettle();
       final requestsBefore = repository.requests;
-      final offset = tester
-          .widget<Scrollable>(find.byType(Scrollable).first)
-          .controller!
-          .offset;
+      final offset = tester.widget<Scrollable>(grid).controller!.offset;
 
       await tester.tap(find.text('作品 p1i0'));
       await tester.pumpAndSettle();
@@ -193,13 +195,7 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      expect(
-        tester
-            .widget<Scrollable>(find.byType(Scrollable).first)
-            .controller!
-            .offset,
-        offset,
-      );
+      expect(tester.widget<Scrollable>(grid).controller!.offset, offset);
       // Opening a detail must not re-fetch the list.
       expect(repository.requests, requestsBefore);
     },

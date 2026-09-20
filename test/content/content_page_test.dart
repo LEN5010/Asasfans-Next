@@ -28,6 +28,8 @@ class _StubRepository implements FanartRepository {
   final int pageSize;
   final bool failFirst;
   int requests = 0;
+  final List<FanartQuery> queries = [];
+  final List<String?> cursors = [];
 
   @override
   Future<FanartPage> page({
@@ -36,6 +38,8 @@ class _StubRepository implements FanartRepository {
     RequestCancellation? cancellation,
   }) async {
     requests++;
+    queries.add(query);
+    cursors.add(cursor);
     if (failFirst && cursor == null && requests == 1) {
       throw const ApiFailure(ApiFailureKind.offline);
     }
@@ -75,7 +79,10 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('作品 p1i0'),
       400,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find.descendant(
+        of: find.byType(CustomScrollView),
+        matching: find.byType(Scrollable),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -131,6 +138,34 @@ void main() {
 
     // Live clips are a separate source and must not borrow the fanart dataset.
     expect(find.text('即将开放'), findsOneWidget);
+  });
+
+  testWidgets('applying a filter reloads with the new query from the top', (
+    tester,
+  ) async {
+    final repository = _StubRepository();
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+    expect(repository.queries.last.characters, isEmpty);
+
+    await tester.tap(find.widgetWithText(FilterChip, '嘉然'));
+    await tester.pumpAndSettle();
+
+    expect(repository.queries.last.characters, {FanartCharacter.diana});
+    // A filter change starts a new run, so it must not carry an old cursor.
+    expect(repository.cursors.last, isNull);
+  });
+
+  testWidgets('submitting a search applies the keyword', (tester) async {
+    final repository = _StubRepository();
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '嘉然');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(repository.queries.last.keyword, '嘉然');
   });
 
   testWidgets('wide windows use more columns than a phone', (tester) async {
