@@ -28,10 +28,11 @@ abstract final class EventClassifier {
 
   static const nonLiveKeywords = {'投稿', '翻唱发布', '周边', '纪念', '生日', '周年', '首发'};
 
+  /// Members offered as calendar filters. Dropping an entry only stops
+  /// classifying and filtering by that name; it never hides an event, and the
+  /// event keeps its own title, description and categories unchanged.
   static const memberAliases = <String, List<String>>{
-    '向晚': ['向晚', 'ava'],
     '贝拉': ['贝拉', 'bella'],
-    '珈乐': ['珈乐', 'carol'],
     '嘉然': ['嘉然', 'diana'],
     '乃琳': ['乃琳', 'eileen'],
     '心宜': ['心宜', 'fiona'],
