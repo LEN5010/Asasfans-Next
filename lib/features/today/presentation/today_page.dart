@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../tools/presentation/tools_sheet.dart';
+import 'on_this_day_section.dart';
 
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
@@ -65,6 +66,8 @@ class TodayPage extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 32),
+            const OnThisDaySection(),
           ],
         ),
       ),

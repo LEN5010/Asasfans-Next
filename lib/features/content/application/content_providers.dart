@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../data/dynamic_fanart_repository.dart';
+import '../data/dynamic_post_repository.dart';
+import '../domain/dynamic_repository.dart';
 import '../domain/fanart_repository.dart';
 import 'fanart_feed_controller.dart';
 
@@ -10,6 +12,21 @@ final fanartRepositoryProvider = Provider<FanartRepository>(
     ref.watch(publicApiClientProvider),
     baseUrl: ref.watch(appEnvironmentProvider).dynamicApiBaseUrl,
   ),
+);
+
+final dynamicRepositoryProvider = Provider<DynamicRepository>(
+  (ref) => DynamicPostRepository(
+    ref.watch(publicApiClientProvider),
+    baseUrl: ref.watch(appEnvironmentProvider).dynamicApiBaseUrl,
+  ),
+);
+
+/// Historical posts for today's Shanghai month-day.
+///
+/// The response changes at most once a day, so it is cached for the session
+/// instead of being refetched every time the home page rebuilds.
+final onThisDayProvider = FutureProvider<List<DynamicPost>>(
+  (ref) => ref.watch(dynamicRepositoryProvider).onThisDay(limit: 12),
 );
 
 /// Content channels. Live replays and live clips come from a different source
