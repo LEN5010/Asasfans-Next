@@ -7,6 +7,8 @@ import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../content/presentation/video_card.dart';
 import '../../creator/presentation/creator_link.dart';
+import '../../handoff/domain/return_context.dart';
+import '../../handoff/presentation/watch_on_bilibili.dart';
 import '../../library/presentation/library_common.dart';
 import '../../library/presentation/library_pages.dart';
 import '../../rules/application/feed_visibility.dart';
@@ -181,7 +183,15 @@ class _SubscriptionFeedViewState extends ConsumerState<SubscriptionFeedView> {
                                     true;
                                 return Column(
                                   children: [
-                                    Expanded(child: VideoCard(video: item)),
+                                    Expanded(
+                                      child: VideoCard(
+                                        video: item,
+                                        origin: const WatchOrigin(
+                                          target: ReturnTarget.contentChannel,
+                                          channel: 'subscriptions',
+                                        ),
+                                      ),
+                                    ),
                                     SizedBox(
                                       height: receiptHeight,
                                       child: Align(

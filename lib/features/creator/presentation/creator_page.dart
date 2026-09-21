@@ -180,6 +180,11 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
                       ],
                     ),
                     itemCount: items.length,
+                    // This page is pushed on the root navigator with no named
+                    // route, so a cold start cannot rebuild it. Keep the
+                    // default rather than storing a target the restorer would
+                    // have to invent a path for; a warm return still comes back
+                    // here because the route is still on the stack.
                     itemBuilder: (_, index) => VideoCard(
                       key: ValueKey(items[index].identity),
                       video: items[index],

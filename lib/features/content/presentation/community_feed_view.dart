@@ -7,6 +7,8 @@ import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
+import '../../handoff/domain/return_context.dart';
+import '../../handoff/presentation/watch_on_bilibili.dart';
 import 'video_card.dart';
 import '../application/community_feed_controller.dart';
 import '../application/content_providers.dart';
@@ -139,8 +141,26 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
                     ],
                   ),
                   itemCount: state.videos.length,
-                  itemBuilder: (_, index) =>
-                      VideoCard(video: state.videos[index]),
+                  itemBuilder: (_, index) => VideoCard(
+                    video: state.videos[index],
+                    origin: WatchOrigin(
+                      target: ReturnTarget.contentChannel,
+                      // These enum names are the route slugs, and the
+                      // restorer resolves whatever it is given through
+                      // ContentChannel, so a rename lands on the channel
+                      // list rather than a broken route.
+                      channel: widget.channel.name,
+                      // Read at tap time, so the anchor is where the list
+                      // actually is rather than where it was when this card
+                      // was first built.
+                      anchorOf: () => ReturnAnchor(
+                        identity: state.videos[index].identity,
+                        offset: _scrollController.hasClients
+                            ? _scrollController.offset
+                            : null,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               SliverToBoxAdapter(

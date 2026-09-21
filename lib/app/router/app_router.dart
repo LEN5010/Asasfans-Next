@@ -10,6 +10,7 @@ import '../../features/mine/presentation/mine_page.dart';
 import '../../features/library/presentation/library_pages.dart';
 import '../../features/library/presentation/playback_pages.dart';
 import '../../features/library/presentation/calendar_follows.dart';
+import '../../features/handoff/presentation/return_restorer.dart';
 import '../../features/today/presentation/today_page.dart';
 import 'app_shell.dart';
 
@@ -19,7 +20,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
-            AppShell(navigationShell: navigationShell),
+            // Wraps the shell so a return lands before any branch is chosen.
+            ReturnRestorer(child: AppShell(navigationShell: navigationShell)),
         branches: [
           StatefulShellBranch(
             routes: [
