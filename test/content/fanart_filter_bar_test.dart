@@ -38,10 +38,13 @@ void main() {
   }
 
   Future<void> pick(WidgetTester tester, String option) async {
-    final finder = find.widgetWithText(ChoiceChip, option).last;
-    if (finder.evaluate().isEmpty) {
+    // Test against the unqualified finder: `.last` on an empty match throws
+    // StateError from evaluate(), so the emptiness guard never ran and an
+    // option that merely had not been built yet looked like a missing one.
+    final matches = find.widgetWithText(ChoiceChip, option);
+    if (matches.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
-        finder,
+        matches,
         160,
         scrollable: find.descendant(
           of: find.byType(BottomSheet),
@@ -49,6 +52,7 @@ void main() {
         ),
       );
     }
+    final finder = matches.last;
     await tester.ensureVisible(finder);
     await tester.tap(finder);
     await tester.pumpAndSettle();

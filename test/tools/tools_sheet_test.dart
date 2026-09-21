@@ -52,7 +52,11 @@ void main() {
       for (final tool in communityTools) {
         await tester.enterText(find.byType(TextField), tool.name);
         await tester.pumpAndSettle();
-        final label = find.text(tool.name);
+        // The query is now also on screen inside the search field, so match the
+        // label only where it is a tile's own Text, not editable content.
+        final label = find.byWidgetPredicate(
+          (widget) => widget is Text && widget.data == tool.name,
+        );
         expect(label, findsOneWidget);
         final tile = find
             .ancestor(of: label, matching: find.byType(InkWell))
