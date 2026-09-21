@@ -83,8 +83,31 @@ void main() {
       final library = container.read(libraryRepositoryProvider);
       final records = await library.history();
       expect(records.single.action, HistoryAction.detail);
-      final selector = find.textContaining('分 P ·');
-      await tester.ensureVisible(selector);
+      // Tap the button, not its label: the label is an ellipsized two-line Text
+      // whose centre does not land on the button's hit box, so tapping it warned
+      // about a missed hit and the part sheet never opened. OutlinedButton.icon
+      // builds a private widget that is not an OutlinedButton, so match the
+      // button by its semantics instead of by that internal type.
+      final selector = find
+          .ancestor(
+            of: find.textContaining('分 P ·'),
+            matching: find.byType(InkWell),
+          )
+          .first;
+      // ensureVisible does not move a CustomScrollView far enough here: at the
+      // default 800x600 logical viewport the button sits below the fold, so the
+      // tap resolved to an offset that hit nothing and the sheet never opened.
+      await tester.scrollUntilVisible(
+        selector,
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(selector);
       await tester.pumpAndSettle();
       await tester.tap(find.text('P2 · 第二部分'));
