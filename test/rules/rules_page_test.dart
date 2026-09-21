@@ -70,9 +70,17 @@ void main() {
       expect((await repository.load()).rules.single.draft.enabled, isTrue);
       expect(tester.widget<Switch>(find.byType(Switch).last).value, isTrue);
       expect(find.text('本地资料暂时无法读写，请重试'), findsOneWidget);
+      // Clear it before acting again: the delete queues its own snackbar behind
+      // this one, and settling would run both lifetimes out, taking the undo
+      // action away before it can be tapped.
+      ScaffoldMessenger.of(
+        tester.element(find.byType(Switch).last),
+      ).removeCurrentSnackBar();
+      await tester.pumpAndSettle();
       writes.fail = false;
       await tester.tap(find.byTooltip('删除规则'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 750));
       expect((await repository.load()).rules, isEmpty);
       await tester.tap(find.text('撤销'));
       await tester.pumpAndSettle();

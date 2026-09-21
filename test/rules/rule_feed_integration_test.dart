@@ -188,7 +188,10 @@ void main() {
           utf8.encode(
             jsonEncode({
               'format': 'asasfans.personal',
-              'version': 3,
+              // The table set above is BackupCodec.columns, so the file must
+              // declare the version that carries it. An older number with newer
+              // tables is a file no release ever wrote.
+              'version': BackupCodec.formatVersion,
               'exported_at': DateTime.utc(2026).toIso8601String(),
               'data': data,
             }),
