@@ -5,6 +5,7 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'storage_failure.dart';
 import 'channel_schema.dart';
+import 'handoff_schema.dart';
 import 'library_schema.dart';
 import 'playback_schema.dart';
 import 'rules_schema.dart';
@@ -111,7 +112,7 @@ Future<SqlResults> _runIsolated(
 /// No importer exists: an unknown database identity is rejected, never reset.
 abstract final class SqliteExecutor {
   static const applicationId = 0x4153464E;
-  static const schemaVersion = 7;
+  static const schemaVersion = 8;
 
   static SqlResults openBatch(
     String path,
@@ -207,6 +208,12 @@ abstract final class SqliteExecutor {
             database.execute(statement);
           }
           database.userVersion = 7;
+        }
+        if (database.userVersion == 7) {
+          for (final statement in handoffSchemaV8) {
+            database.execute(statement);
+          }
+          database.userVersion = 8;
         }
         database.execute('COMMIT');
       } catch (_) {
