@@ -67,6 +67,8 @@ Android：JDK 17、SDK 36、AGP 8.13.1 / Gradle 8.13、最低 API 24、targetSdk
 
 Android 开发包为 `asasfans.next.flutterdev`；未来生产包保持 `asasfans.next` 与原签名。release 构建目前由签名验收门槛阻断，不使用 debug key 兜底。Apple bundle ID `dev.asasfans.next`、Apple 分发和 Windows 安装身份尚待确认；Apple/Windows 品牌图标也待完善。
 
+解除 Android 发布门槛前必须实际完成这几项，缺一项就继续阻断：在受控环境接入原 release key（不提交进版本库）；用它构建的包能覆盖安装已有的 `asasfans.next`，且升级后旧版个人数据不被当成损坏库重置；开发包与生产包可以并存，开发包不顶替原包；产物能追溯到具体提交与测试结果。删除门禁或改用 debug key 都不算完成。
+
 旧 Android 构建与发布流程仅在历史标签及 `master` 中保留。
 
 ## 项目历史

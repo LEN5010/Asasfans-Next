@@ -31,7 +31,10 @@ android {
         }
         release {
             // Do not use Flutter's generated debug signing for production.
-            // Existing signing continuity is restored only after migration QA.
+            // Legacy-data migration was cancelled, so it no longer gates this;
+            // signing continuity does. Left null deliberately: a missing key
+            // must fail the build rather than silently produce an artifact that
+            // cannot upgrade the installed asasfans.next.
             signingConfig = null
         }
     }
