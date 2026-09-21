@@ -56,6 +56,14 @@ void main() {
   testWidgets(
     'keyboard paging, zoom, long-image reading and Escape work on the root route',
     (tester) async {
+      // The viewer derives cacheWidth from the viewport times the device pixel
+      // ratio, so both must be pinned here. Without this the default ratio of 3
+      // asked for a 2400-wide decode, missed the seeded 800-wide entry, and the
+      // case measured a placeholder instead of the long image.
+      tester.view
+        ..physicalSize = const Size(800, 600)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final images = [
         Uri.parse('https://fixture.test/long'),
         Uri.parse('https://fixture.test/second'),
