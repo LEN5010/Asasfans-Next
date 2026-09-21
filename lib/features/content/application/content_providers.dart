@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/storage/storage_providers.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../data/community_video_source.dart';
 import '../data/dynamic_fanart_repository.dart';
 import '../data/dynamic_post_repository.dart';
+import '../data/sqlite_channel_repository.dart';
 import '../domain/community_video_repository.dart';
 import '../domain/dynamic_repository.dart';
 import '../domain/fanart_repository.dart';
+import '../domain/saved_channel.dart';
 import 'community_feed_controller.dart';
 import 'dynamic_feed_controller.dart';
 import 'fanart_feed_controller.dart';
@@ -47,6 +52,24 @@ final onThisDayProvider = FutureProvider.autoDispose<List<DynamicPost>>((ref) {
 final dynamicMembersProvider = FutureProvider<List<DynamicMember>>(
   (ref) => ref.watch(dynamicRepositoryProvider).members(),
 );
+
+final savedChannelRepositoryProvider = Provider<SavedChannelRepository>((ref) {
+  final repository = SqliteChannelRepository(ref.watch(localDatabaseProvider));
+  ref.onDispose(() => unawaited(repository.close()));
+  return repository;
+});
+
+final savedChannelsProvider = FutureProvider.autoDispose
+    .family<List<SavedChannel>, ChannelFeed>((ref, feed) {
+      final repository = ref.watch(savedChannelRepositoryProvider);
+      // Rebuild after a save, rename or removal so the picker never shows a
+      // channel that no longer exists.
+      final subscription = repository.changes.listen((_) {
+        ref.invalidateSelf();
+      });
+      ref.onDispose(subscription.cancel);
+      return repository.channels(feed: feed);
+    });
 
 final dynamicFeedControllerProvider =
     Provider.autoDispose<DynamicFeedController>((ref) {

@@ -14,6 +14,8 @@ import '../application/content_providers.dart';
 import '../application/dynamic_feed_controller.dart';
 import '../application/fanart_feed_controller.dart' show FeedStatus;
 import '../domain/dynamic_repository.dart';
+import '../domain/saved_channel.dart';
+import 'saved_channel_bar.dart';
 import 'feed_status_footer.dart';
 
 /// Historical dynamics list with keyword search and auto-append.
@@ -57,6 +59,12 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
       return Column(
         children: [
           _TypeFilter(query: state.query, onChanged: _applyQuery),
+          const SizedBox(height: 8),
+          SavedChannelBar(
+            feed: ChannelFeed.dynamic,
+            currentSpec: () => ChannelSpec.ofDynamic(_controller.state.query),
+            onOpen: (spec) => _applyQuery(spec.toDynamic()),
+          ),
           const SizedBox(height: 8),
           Expanded(
             child: RuleFilterScope(

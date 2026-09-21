@@ -21,7 +21,9 @@ import 'content_search_control.dart';
 import 'dynamic_feed_view.dart';
 import 'fanart_card.dart';
 import 'fanart_detail_page.dart';
+import '../domain/saved_channel.dart';
 import 'fanart_filter_bar.dart';
+import 'saved_channel_bar.dart';
 import 'feed_status_footer.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
@@ -319,6 +321,12 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
         return Column(
           children: [
             FanartFilterBar(query: state.query, onChanged: _applyQuery),
+            const SizedBox(height: 8),
+            SavedChannelBar(
+              feed: ChannelFeed.fanart,
+              currentSpec: () => ChannelSpec.ofFanart(_controller.state.query),
+              onOpen: (spec) => _applyQuery(spec.toFanart()),
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: RuleFilterScope(
