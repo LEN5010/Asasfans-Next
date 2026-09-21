@@ -11,10 +11,19 @@ import '../../../core/time/calendar_time.dart';
 import '../../../shared/widgets/media_cover.dart';
 import '../../../core/domain/video_summary.dart';
 import '../../creator/presentation/creator_link.dart';
+import '../../handoff/presentation/watch_on_bilibili.dart';
 
 class VideoCard extends ConsumerWidget {
-  const VideoCard({required this.video, super.key});
+  const VideoCard({
+    required this.video,
+    this.origin = WatchOrigin.today,
+    super.key,
+  });
   final VideoSummary video;
+
+  /// Where a return from Bilibili should land. The same card shows up on Today,
+  /// in a channel and on a creator page, so the caller owns this.
+  final WatchOrigin origin;
 
   static bool _hasMeta(VideoSummary video) =>
       video.viewCount != null || video.publishedAt != null;
@@ -53,11 +62,25 @@ class VideoCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MediaCover(
-              image: video.coverUrl,
-              aspectRatio: 16 / 9,
-              video: true,
-              badge: video.duration == null ? null : _duration(video.duration!),
+            Stack(
+              children: [
+                MediaCover(
+                  image: video.coverUrl,
+                  aspectRatio: 16 / 9,
+                  video: true,
+                  badge: video.duration == null
+                      ? null
+                      : _duration(video.duration!),
+                ),
+                // Only a Bilibili video can be handed to Bilibili; anything
+                // else on this card has no external player to go to.
+                if (video.identity.source == ContentSource.bilibiliVideo)
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: WatchOverlayButton(video: video, origin: origin),
+                  ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),

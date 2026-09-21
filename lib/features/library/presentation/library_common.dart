@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/providers.dart';
 import '../../../core/storage/storage_failure.dart';
+import '../../handoff/application/handoff_providers.dart';
+import '../../handoff/domain/return_context.dart';
 import '../application/library_providers.dart';
 import '../domain/library_models.dart';
 
@@ -26,24 +27,49 @@ Future<bool> libraryAction(
   }
 }
 
+/// Hands one item to its external source and records the attempt.
+///
+/// Every entry point goes through here, so the behaviour of "open this
+/// elsewhere" is the same from a card, a detail page, a folder or the schedule.
+/// Pass [returnTo] to also register a return session; without it this is an
+/// ordinary outbound link that does not claim a restore.
 Future<void> openContentSource(
   BuildContext context,
   WidgetRef ref,
   ContentSnapshot item, {
   Uri? url,
+  ReturnTarget? returnTo,
+  String? channel,
+  Map<String, Object?>? query,
+  ReturnAnchor? anchor,
 }) async {
-  final links = ref.read(externalLinkServiceProvider);
   final repository = ref.read(libraryRepositoryProvider);
-  final opened = await links.open(url ?? item.sourceUrl);
-  if (!opened) {
-    if (context.mounted) {
+  final result = await ref
+      .read(handoffCoordinatorProvider)
+      .open(
+        url: url ?? item.sourceUrl,
+        target: returnTo ?? ReturnTarget.today,
+        channel: returnTo == ReturnTarget.contentChannel ? channel : null,
+        query: query,
+        anchor: anchor,
+        openedContent: item.identity,
+      );
+  if (!result.accepted) {
+    if (context.mounted && result.outcome != HandoffOutcome.duplicate) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('无法打开链接')));
     }
     return;
   }
+  if (!result.contextSaved && context.mounted && returnTo != null) {
+    // Say so rather than promising a restore that may not survive a cold start.
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('返回位置未保存，重新打开应用可能回到频道开头')));
+  }
   try {
+    // Only an accepted handoff is an external open. This is not playback.
     await repository.recordHistory(item, HistoryAction.external);
   } catch (_) {
     if (context.mounted) {

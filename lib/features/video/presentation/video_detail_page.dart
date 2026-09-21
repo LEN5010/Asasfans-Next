@@ -10,11 +10,12 @@ import '../../../core/network/api_failure.dart';
 import '../../comments/domain/comments.dart';
 import '../../comments/presentation/comment_list.dart';
 import '../../creator/presentation/creator_link.dart';
+import '../../handoff/application/handoff_providers.dart';
+import '../../handoff/presentation/watch_on_bilibili.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/domain/library_models.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../library/presentation/history_recorder.dart';
-import '../../library/presentation/library_common.dart';
 import '../../library/presentation/local_subscribe_button.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../application/video_providers.dart';
@@ -67,10 +68,20 @@ class VideoDetailPage extends ConsumerWidget {
             onPressed: controller.loading ? null : controller.refresh,
             icon: const Icon(Icons.refresh),
           ),
-          IconButton(
-            tooltip: '在 B 站打开视频',
-            onPressed: () => openContentSource(context, ref, snapshot),
-            icon: const Icon(Icons.open_in_new),
+          // Same handoff as the panel button, so the two actions on one screen
+          // cannot disagree about what opening this video means. ListenableBuilder
+          // is what makes the busy state visible here: the provider hands back
+          // one long-lived coordinator, so watching it alone never rebuilds.
+          ListenableBuilder(
+            listenable: ref.watch(handoffCoordinatorProvider),
+            builder: (context, _) => IconButton(
+              tooltip: '在 B 站打开视频',
+              onPressed:
+                  ref.read(handoffCoordinatorProvider).busy || detail == null
+                  ? null
+                  : () => watchOnBilibili(context, ref, detail.video),
+              icon: const Icon(Icons.open_in_new),
+            ),
           ),
         ],
       ),
@@ -251,15 +262,23 @@ class _VideoPanel extends ConsumerWidget {
                   avatar: video.creatorAvatarUrl,
                 ),
               ),
-              FilledButton.icon(
-                onPressed: () => openContentSource(
-                  context,
-                  ref,
-                  ContentSnapshots.video(video),
-                  url: detail.redirectUrl ?? detail.partUrl(part),
+              // The detail page is a secondary entry: a return goes back to the
+              // list that led here, not to this page.
+              ListenableBuilder(
+                listenable: ref.watch(handoffCoordinatorProvider),
+                builder: (context, _) => FilledButton.icon(
+                  onPressed: ref.read(handoffCoordinatorProvider).busy
+                      ? null
+                      : () => watchOnBilibili(
+                          context,
+                          ref,
+                          video,
+                          part: detail.parts.length > 1 ? part.number : null,
+                          redirect: detail.redirectUrl,
+                        ),
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('在 B 站播放'),
                 ),
-                icon: const Icon(Icons.open_in_new),
-                label: const Text('在 B 站播放'),
               ),
             ],
           ),
