@@ -264,7 +264,8 @@ void main() {
     await chunks.close();
   });
   test('cancellation before dispatch and during body stops work', () async {
-    final chunks = StreamController<Uint8List>();
+    var listened = false;
+    final chunks = StreamController<Uint8List>(onListen: () => listened = true);
     final adapter = _Adapter((_) => ResponseBody(chunks.stream, 200));
     final client = BiliMetadataClient(adapter: adapter);
     addTearDown(client.close);
@@ -280,6 +281,15 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     during.cancel();
     await assertion;
-    await chunks.close();
+    // Cancelling this early means the body is abandoned before anything
+    // subscribes to it, which is the point of the case. A single-subscription
+    // stream that was never listened to cannot complete close(), so assert the
+    // abandonment instead of awaiting a future that can never finish.
+    expect(
+      listened,
+      isFalse,
+      reason: 'a cancelled request must not start reading its body',
+    );
+    unawaited(chunks.close());
   });
 }
