@@ -53,10 +53,13 @@ jobs:
             os: macos-latest
             command: flutter build macos --debug --no-pub
             artifact: build/flutter-macos-debug.tar.gz
+          # Release rather than debug: a debug Windows build needs the Visual
+          # C++ debug runtime, which a plain machine does not have, so a tester
+          # would just see a missing-DLL error.
           - platform: windows
             os: windows-latest
-            command: flutter build windows --debug --no-pub
-            artifact: build/windows/x64/runner/Debug/
+            command: flutter build windows --release --no-pub
+            artifact: build/windows/x64/runner/Release/
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:
@@ -86,6 +89,8 @@ jobs:
         run: tar -czf build/flutter-macos-debug.tar.gz -C build/macos/Build/Products/Debug "Asasfans Next.app"
       - uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.platform }}-debug
+          # Windows ships release binaries; the rest stay debug. Nothing here is
+          # code-signed, so these are test artifacts, not a distribution.
+          name: flutter-${{ matrix.platform }}-${{ matrix.platform == 'windows' && 'release-unsigned' || 'debug' }}
           path: ${{ matrix.artifact }}
           if-no-files-found: error
