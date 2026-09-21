@@ -6,6 +6,7 @@ import 'package:asasfans_next/features/content/application/content_providers.dar
 import 'package:asasfans_next/features/content/domain/community_video_repository.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/content_page.dart';
+import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:flutter/material.dart';
@@ -93,9 +94,21 @@ void main() {
           tester.getSize(find.byKey(const ValueKey('content-toolbar'))).height,
           lessThan(90),
         );
+        // The persistent chrome is one toolbar row plus one filter row. State
+        // the contract against those measured bands rather than a single magic
+        // number, so a new always-visible band fails here instead of silently
+        // pushing content down until someone raises a threshold.
+        final toolbar = tester.getRect(
+          find.byKey(const ValueKey('content-toolbar')),
+        );
+        final filters = tester.getRect(find.byType(FanartFilterBar));
+        expect(filters.top, toolbar.bottom, reason: 'no band between them');
+        expect(filters.height, lessThan(64));
+        final firstCard = tester.getTopLeft(find.byType(FanartCard).first).dy;
         expect(
-          tester.getTopLeft(find.byType(FanartCard).first).dy,
-          lessThan(170),
+          firstCard - filters.bottom,
+          lessThan(72),
+          reason: 'only grid padding separates the filters from the first row',
         );
         expect(
           find.byType(TextField),
