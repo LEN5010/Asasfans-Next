@@ -337,7 +337,11 @@ void main() {
       until: DateTime.utc(2026, 11),
       forceRefresh: true,
     );
-    await Future<void>.delayed(Duration.zero);
+    // The repository dispatches a few microtasks in, so wait for the request to
+    // arrive instead of assuming a drain count. The point of the case is that a
+    // second concurrent month does not add a request, which the assertion below
+    // still checks once the first has landed.
+    await adapter.dispatched.future;
     expect(adapter.calls, 1);
     adapter.response.complete(_ok(_feed));
     expect((await september).events.single.uid, '1');
@@ -348,6 +352,7 @@ void main() {
 class _PendingAdapter implements HttpClientAdapter {
   int calls = 0;
   final response = Completer<ResponseBody>();
+  final dispatched = Completer<void>();
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -355,6 +360,7 @@ class _PendingAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) {
     calls++;
+    if (!dispatched.isCompleted) dispatched.complete();
     return response.future;
   }
 
