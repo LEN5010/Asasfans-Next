@@ -9,6 +9,7 @@ import 'package:asasfans_next/features/library/data/sqlite_library_repository.da
 import 'package:asasfans_next/features/library/domain/library_models.dart';
 import 'package:asasfans_next/features/subscriptions/data/sqlite_subscription_update_store.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../helpers/backup_fixture.dart';
 import '../helpers/sqlite_fixture.dart';
 import '../helpers/subscriptions_fixture.dart';
 
@@ -84,38 +85,71 @@ void main() {
   test(
     'v4 upgrade keeps assets/store identity and initializes independent roster revision',
     () async {
-      await library.subscribe(
+      // A real v4 database: no subscription tables yet, and none of the later
+      // versions' tables either.
+      final legacy = MemoryLocalDatabase.at(4);
+      final legacyLibrary = SqliteLibraryRepository(
+        legacy,
+        backgroundDecoding: false,
+      );
+      final legacyStore = SqliteSubscriptionUpdateStore(
+        legacy,
+        clock: () => DateTime.utc(2026),
+      );
+      addTearDown(() async {
+        await legacyStore.close();
+        await legacyLibrary.close();
+        await legacy.close();
+      });
+      await legacyLibrary.subscribe(
         const LocalSubscription(mid: '123', name: 'retained'),
       );
-      final before = await store.roster();
-      removeSubscriptionV5Fixture(db.database);
-      SqliteExecutor.initialize(db.database);
-      final after = await store.roster();
-      expect(after.storeId, before.storeId);
+      final storeId =
+          legacy.database
+                  .select('SELECT store_id FROM library_meta')
+                  .single['store_id']
+              as String;
+      SqliteExecutor.initialize(legacy.database);
+      final after = await legacyStore.roster();
+      expect(after.storeId, storeId);
       expect(after.revision, 0);
       expect(after.creators.single.name, 'retained');
-      expect(db.database.userVersion, SqliteExecutor.schemaVersion);
-      expect(await store.readStates([updateVideo(1).identity.value]), isEmpty);
+      expect(legacy.database.userVersion, SqliteExecutor.schemaVersion);
+      expect(
+        await legacyStore.readStates([updateVideo(1).identity.value]),
+        isEmpty,
+      );
     },
   );
   test(
     'failed v4 upgrade rolls back new receipts table and leaves original assets',
     () async {
-      await library.subscribe(
+      final legacy = MemoryLocalDatabase.at(4);
+      final legacyLibrary = SqliteLibraryRepository(
+        legacy,
+        backgroundDecoding: false,
+      );
+      addTearDown(() async {
+        await legacyLibrary.close();
+        await legacy.close();
+      });
+      await legacyLibrary.subscribe(
         const LocalSubscription(mid: '123', name: 'retained'),
       );
-      removeSubscriptionV5Fixture(db.database);
-      db.database.execute('CREATE TABLE subscription_meta (unexpected TEXT)');
-      expect(() => SqliteExecutor.initialize(db.database), throwsException);
-      expect(db.database.userVersion, 4);
+      // An obstruction the v5 step must hit, so the whole upgrade rolls back.
+      legacy.database.execute(
+        'CREATE TABLE subscription_meta (unexpected TEXT)',
+      );
+      expect(() => SqliteExecutor.initialize(legacy.database), throwsException);
+      expect(legacy.database.userVersion, 4);
       expect(
-        db.database.select(
+        legacy.database.select(
           "SELECT name FROM sqlite_master WHERE name='subscription_reads'",
         ),
         isEmpty,
       );
       expect(
-        db.database
+        legacy.database
             .select('SELECT name FROM local_subscriptions')
             .single['name'],
         'retained',
@@ -145,19 +179,12 @@ void main() {
       await other.mark([id], read: false);
       await restore.merge(await restore.inspect(bytes));
       expect(await other.readStates([id]), {id: false});
+      // Neither format carried read receipts, so restoring one must leave the
+      // local explicit unread alone rather than clearing it.
       for (final version in [1, 2]) {
-        final old = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-        old['version'] = version;
-        (old['data'] as Map).remove('subscription_reads');
-        if (version == 1) {
-          (old['data'] as Map)
-            ..remove('content_rules')
-            ..remove('rule_settings');
-        }
-        final decoded = BackupCodec.decode(
-          Uint8List.fromList(utf8.encode(jsonEncode(old))),
+        await restore.merge(
+          BackupCodec.decode(downgradeBackup(bytes, version)),
         );
-        await restore.merge(decoded);
         expect(await other.readStates([id]), {id: false});
       }
       raw['data']['subscription_reads'][0]['is_read'] = true;

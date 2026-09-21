@@ -3,15 +3,21 @@ import 'package:asasfans_next/core/storage/storage_failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-/// Builds a store at schema v5 through the real migration path, then seeds one
-/// saved item so the playback tables have a legitimate reference target.
-Database _v5() {
-  final database = sqlite3.openInMemory();
-  SqliteExecutor.initialize(database);
-  expect(database.userVersion, SqliteExecutor.schemaVersion);
+import '../helpers/sqlite_fixture.dart';
+
+/// Builds a real v5 store, seeds one saved item so the playback tables have a
+/// legitimate reference target, then runs the production upgrade over it.
+///
+/// The seed is written before the upgrade so each assertion below covers data
+/// that predates the playback tables, which is what a real user's database
+/// looks like on the version that introduced them.
+Database _upgradedFromV5() {
+  final database = historicalDatabase(5);
   database.execute(
     "INSERT INTO content_refs VALUES ('bilibiliVideo','BV1xx','{}',1)",
   );
+  SqliteExecutor.initialize(database);
+  expect(database.userVersion, SqliteExecutor.schemaVersion);
   return database;
 }
 
@@ -21,9 +27,8 @@ int _revision(Database database) =>
 
 void main() {
   test('v6 adds playback tables and keeps existing personal assets', () {
-    final database = _v5();
+    final database = _upgradedFromV5();
     addTearDown(database.dispose);
-    expect(SqliteExecutor.schemaVersion, 6);
     expect(
       database.select('SELECT snapshot FROM content_refs').single['snapshot'],
       '{}',
@@ -36,7 +41,7 @@ void main() {
   });
 
   test('a position past a known duration is rejected by the table', () {
-    final database = _v5();
+    final database = _upgradedFromV5();
     addTearDown(database.dispose);
     expect(
       () => database.execute(
@@ -57,7 +62,7 @@ void main() {
   });
 
   test('a negative position and an inverted bookmark range are rejected', () {
-    final database = _v5();
+    final database = _upgradedFromV5();
     addTearDown(database.dispose);
     expect(
       () => database.execute(
@@ -82,7 +87,7 @@ void main() {
   });
 
   test('playback rows require an existing content reference', () {
-    final database = _v5();
+    final database = _upgradedFromV5();
     addTearDown(database.dispose);
     expect(
       () => database.execute(
@@ -99,7 +104,7 @@ void main() {
   });
 
   test('progress and bookmark writes advance the cursor revision', () {
-    final database = _v5();
+    final database = _upgradedFromV5();
     addTearDown(database.dispose);
     final start = _revision(database);
     database.execute(
@@ -131,7 +136,7 @@ void main() {
   });
 
   test('a future schema version is rejected instead of being reset', () {
-    final database = _v5();
+    final database = _upgradedFromV5();
     addTearDown(database.dispose);
     database.userVersion = SqliteExecutor.schemaVersion + 1;
     expect(

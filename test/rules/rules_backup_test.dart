@@ -10,6 +10,7 @@ import 'package:asasfans_next/features/rules/data/sqlite_rules_repository.dart';
 import 'package:asasfans_next/features/rules/domain/content_rules.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/backup_fixture.dart';
 import '../helpers/sqlite_fixture.dart';
 
 Uint8List _encode(Object value) =>
@@ -66,15 +67,9 @@ void main() {
     'legacy v1 remains readable, omits new tables and does not erase current rules',
     () async {
       await rules.save(const RuleDraft(kind: RuleKind.tag, value: '嘉然'));
-      final raw =
-          jsonDecode(utf8.decode(await backups.export()))
-              as Map<String, dynamic>;
-      raw['version'] = 1;
-      (raw['data'] as Map<String, dynamic>)
-        ..remove('content_rules')
-        ..remove('rule_settings')
-        ..remove('subscription_reads');
-      final file = await backups.inspect(_encode(raw));
+      final file = await backups.inspect(
+        downgradeBackup(await backups.export(), 1),
+      );
       expect(file.summary.counts['content_rules'], 0);
       await backups.merge(file);
       expect((await rules.load()).rules, hasLength(1));
@@ -154,31 +149,34 @@ void main() {
   test(
     'v3 to v4 adds rules without losing existing personal records',
     () async {
-      removeSubscriptionV5Fixture(db.database);
-      db.database.execute('DROP TABLE content_rules');
-      db.database.execute('DROP TABLE rule_settings');
-      db.database.userVersion = 3;
-      db.database.execute(
+      // A real v3 database: no rules tables, and none of v5-v7's tables either.
+      final legacy = MemoryLocalDatabase.at(3);
+      final legacyRules = SqliteRulesRepository(legacy);
+      addTearDown(() async {
+        await legacyRules.close();
+        await legacy.close();
+      });
+      legacy.database.execute(
         "INSERT INTO local_subscriptions VALUES('123','retained',NULL,1)",
       );
-      final id = db.database
+      final id = legacy.database
           .select('SELECT store_id FROM library_meta')
           .single['store_id'];
-      SqliteExecutor.initialize(db.database);
-      expect(db.database.userVersion, SqliteExecutor.schemaVersion);
+      SqliteExecutor.initialize(legacy.database);
+      expect(legacy.database.userVersion, SqliteExecutor.schemaVersion);
       expect(
-        db.database
+        legacy.database
             .select('SELECT store_id FROM library_meta')
             .single['store_id'],
         id,
       );
       expect(
-        db.database
+        legacy.database
             .select('SELECT name FROM local_subscriptions')
             .single['name'],
         'retained',
       );
-      expect((await rules.load()).rules, isEmpty);
+      expect((await legacyRules.load()).rules, isEmpty);
     },
   );
 }
