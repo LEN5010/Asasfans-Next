@@ -169,6 +169,7 @@ class _ImportPreview extends StatelessWidget {
                 'content_rules': '内容规则',
                 'rule_settings': '规则设置',
                 'subscription_reads': '更新已读状态',
+                'saved_channels': '保存的频道',
               }.entries)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 3),

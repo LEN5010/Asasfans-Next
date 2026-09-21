@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../../core/domain/content_identity.dart';
 import '../../../core/domain/bilibili_id.dart';
+import '../../content/domain/saved_channel.dart';
 import '../../library/data/library_codec.dart';
 import '../../library/domain/library_models.dart';
 import '../../preferences/domain/app_preferences.dart';
@@ -26,7 +27,7 @@ class ValidatedBackup implements BackupImport {
 /// Neither raw database files nor cache / credential stores are exportable.
 abstract final class BackupCodec {
   /// Version written by [encode]. Older files stay readable; see [columns].
-  static const formatVersion = 4;
+  static const formatVersion = 5;
   static const maxBytes = 32 * 1024 * 1024;
   static const maxRows = 50000;
   static const _invalid = BackupFailure(BackupFailureKind.invalid);
@@ -66,7 +67,7 @@ abstract final class BackupCodec {
     ...columnsV2,
     'subscription_reads': ['bvid', 'is_read', 'updated_at'],
   };
-  static const columns = {
+  static const columnsV4 = {
     ...columnsV3,
     'playback_progress': [
       'source',
@@ -86,6 +87,23 @@ abstract final class BackupCodec {
       'end_ms',
       'title',
       'note',
+      'created_at',
+      'updated_at',
+    ],
+  };
+
+  /// Version 5 adds saved query channels, which are user-authored assets: a
+  /// name the user chose plus the query behind it. Without them an export
+  /// succeeded while silently losing everything the user had built.
+  static const columns = {
+    ...columnsV4,
+    'saved_channels': [
+      'id',
+      'name',
+      'feed',
+      'spec_version',
+      'spec',
+      'position',
       'created_at',
       'updated_at',
     ],
@@ -150,7 +168,7 @@ abstract final class BackupCodec {
       ]);
       if (root['format'] != 'asasfans.personal') throw _invalid;
       if (root['version'] is! int ||
-          !const [1, 2, 3, 4].contains(root['version'])) {
+          !const [1, 2, 3, 4, 5].contains(root['version'])) {
         throw const BackupFailure(BackupFailureKind.incompatible);
       }
       final atText = _text(root['exported_at'], 64);
@@ -161,6 +179,7 @@ abstract final class BackupCodec {
         1 => columnsV1,
         2 => columnsV2,
         3 => columnsV3,
+        4 => columnsV4,
         _ => columns,
       };
       final data = _object(root['data'], fields.keys.toList());
@@ -185,6 +204,7 @@ abstract final class BackupCodec {
       result.putIfAbsent('subscription_reads', () => []);
       result.putIfAbsent('playback_progress', () => []);
       result.putIfAbsent('playback_bookmarks', () => []);
+      result.putIfAbsent('saved_channels', () => []);
       _relations(result);
       return ValidatedBackup._(
         BackupSummary(
@@ -237,6 +257,25 @@ abstract final class BackupCodec {
       _id(row['id']);
       final name = _text(row['name'], 64);
       if (name.trim().isEmpty || name.trim() != name) throw _invalid;
+    } else if (table == 'saved_channels') {
+      _id(row['id']);
+      // Same shape the repository enforces on save, so an imported channel can
+      // never be one the app itself would have refused to create.
+      final name = _text(row['name'], 64);
+      if (name.trim() != name || name.isEmpty || name.contains(' ')) {
+        throw _invalid;
+      }
+      if (!ChannelFeed.values.any((feed) => feed.name == row['feed'])) {
+        throw _invalid;
+      }
+      _number(row['spec_version'], min: 1);
+      _number(row['position']);
+      // The spec must parse as an object. A version this build cannot read is
+      // kept verbatim rather than rejected: the reader already skips a
+      // too-new spec, and dropping it here would lose the channel on a
+      // round-trip through an older install.
+      final spec = _text(row['spec'], 4096);
+      if (jsonDecode(spec) is! Map<String, dynamic>) throw _invalid;
     } else if (table == 'local_subscriptions') {
       if (!LocalSubscription.validMid(_text(row['mid'], 20))) throw _invalid;
       _text(row['name'], 1000);
@@ -360,6 +399,7 @@ abstract final class BackupCodec {
       'subscription_reads': ['bvid'],
       'playback_progress': ['source', 'content_id', 'part_id'],
       'playback_bookmarks': ['id'],
+      'saved_channels': ['id'],
     };
     String identity(Map<String, Object?> row) =>
         jsonEncode([row['source'], row['content_id']]);
@@ -378,6 +418,14 @@ abstract final class BackupCodec {
       if (!ruleKeys.add(
         jsonEncode([row['kind'], row['scope'], row['value']]),
       )) {
+        throw _invalid;
+      }
+    }
+    // The store also requires one name per feed, so reject a file that carries
+    // two such channels rather than letting the insert decide which survives.
+    final channelNames = <String>{};
+    for (final row in tables['saved_channels']!) {
+      if (!channelNames.add(jsonEncode([row['feed'], row['name']]))) {
         throw _invalid;
       }
     }

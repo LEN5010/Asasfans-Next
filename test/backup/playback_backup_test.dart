@@ -9,6 +9,7 @@ import 'package:asasfans_next/features/library/data/sqlite_library_repository.da
 import 'package:asasfans_next/features/library/domain/library_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/backup_fixture.dart';
 import '../helpers/sqlite_fixture.dart';
 
 const video = ContentSnapshot(
@@ -53,30 +54,32 @@ void main() {
     await db.close();
   });
 
-  test('export declares version 4 and carries playback assets', () async {
-    await library.saveProgress(
-      video,
-      '77',
-      const Duration(seconds: 30),
-      duration: const Duration(minutes: 10),
-    );
-    await library.addBookmark(
-      video,
-      '77',
-      const Duration(minutes: 1),
-      title: '名场面',
-    );
-    final root = object(await backup.export());
-    expect(root['version'], BackupCodec.formatVersion);
-    expect(BackupCodec.formatVersion, 4);
-    final data = root['data'] as Map<String, dynamic>;
-    expect(data['playback_progress'], hasLength(1));
-    expect(data['playback_bookmarks'], hasLength(1));
-    expect(
-      (data['playback_progress'] as List).single,
-      containsPair('part_id', '77'),
-    );
-  });
+  test(
+    'export declares the current version and carries playback assets',
+    () async {
+      await library.saveProgress(
+        video,
+        '77',
+        const Duration(seconds: 30),
+        duration: const Duration(minutes: 10),
+      );
+      await library.addBookmark(
+        video,
+        '77',
+        const Duration(minutes: 1),
+        title: '名场面',
+      );
+      final root = object(await backup.export());
+      expect(root['version'], BackupCodec.formatVersion);
+      final data = root['data'] as Map<String, dynamic>;
+      expect(data['playback_progress'], hasLength(1));
+      expect(data['playback_bookmarks'], hasLength(1));
+      expect(
+        (data['playback_progress'] as List).single,
+        containsPair('part_id', '77'),
+      );
+    },
+  );
 
   test(
     'a v4 file restores progress and bookmarks into an empty store',
@@ -170,13 +173,9 @@ void main() {
       await library.setCollected(video, 'default', true);
       await library.saveProgress(video, '77', const Duration(seconds: 30));
       final root = object(await backup.export());
-      final data = root['data'] as Map<String, dynamic>;
-      // Reduce the export to what a v3 writer produced.
-      data.remove('playback_progress');
-      data.remove('playback_bookmarks');
-      root['version'] = 3;
-
-      final imported = await backup.inspect(bytesOf(root));
+      // Reduce the export to exactly what a v3 writer produced, rather than
+      // removing whichever tables happen to be newer today.
+      final imported = await backup.inspect(downgradeBackup(bytesOf(root), 3));
       expect(imported.summary.counts['playback_progress'], 0);
       await backup.merge(imported);
       expect(
@@ -238,7 +237,7 @@ void main() {
 
   test('an unknown future format version is refused as incompatible', () async {
     final root = object(await backup.export());
-    root['version'] = 5;
+    root['version'] = BackupCodec.formatVersion + 1;
     expect(
       () => backup.inspect(bytesOf(root)),
       invalid(BackupFailureKind.incompatible),
