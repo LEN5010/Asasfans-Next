@@ -83,11 +83,21 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      // The resume handler updates the day synchronously, but the dependent
+      // FutureProvider rebuilds and dispatches on a later microtask. Drain the
+      // queue with a short pump rather than pumpAndSettle, which would also run
+      // the next day timer and leave a freshly armed one behind.
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
       expect(container.read(shanghaiDateProvider), DateTime.utc(2027, 1, 2));
       expect(repository.days, ['12-31', '01-02']);
       sub.close();
       container.dispose();
+      // Dropping the last listener makes Riverpod schedule its autoDispose
+      // sweep on its own zero-duration timer, which a zero-duration pump does
+      // not run. Advance fake time so it fires, or the binding reports a
+      // pending timer for work the container has already torn down.
+      await tester.pump(const Duration(milliseconds: 1));
     },
   );
 
@@ -106,14 +116,24 @@ void main() {
     await tester.pump();
     now = now.add(const Duration(seconds: 2));
     container.read(shanghaiDateProvider.notifier).resync();
+    // The new day's request is dispatched by a rebuild on a later microtask, so
+    // advance fake time. Asserting inside the frame left one pending request,
+    // making `first` and `last` the same completer.
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(
+      repository.pending,
+      hasLength(2),
+      reason: 'yesterday and today are separate in-flight requests',
+    );
     repository.pending.last.complete([]);
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
     final todayValue = container.read(onThisDayProvider);
     repository.pending.first.completeError(Exception('yesterday failed'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
     expect(container.read(onThisDayProvider), todayValue);
     sub.close();
     container.dispose();
+    await tester.pump(const Duration(milliseconds: 1));
   });
 }
