@@ -51,7 +51,15 @@ class AccountPage extends ConsumerStatefulWidget {
 }
 
 class _AccountPageState extends ConsumerState<AccountPage> {
-  late final AccountController _account = ref.read(accountControllerProvider);
+  // Resolved while ref is still valid: a lazy `late` initializer would run its
+  // first read inside dispose() when no other path touched the field.
+  late final AccountController _account;
+  @override
+  void initState() {
+    super.initState();
+    _account = ref.read(accountControllerProvider);
+  }
+
   @override
   void dispose() {
     if (_account.loginActive) {

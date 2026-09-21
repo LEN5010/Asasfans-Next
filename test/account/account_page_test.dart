@@ -16,14 +16,19 @@ void main() {
   late MemoryLogoutIntent intent;
   late MemoryLoginCookies cookies;
   late AccountController controller;
-  setUp(() {
+  // Built inside the test body, never in setUp: the controller chains its
+  // serialized work onto a Future created with it. Constructing it in setUp
+  // leaves that chain in setUp's real-time zone, which the test's FakeAsync
+  // never advances, so every await on it hangs until the suite times out.
+  void createController() {
     gateway = OfflineAuthGateway();
     vault = MemoryAccountVault();
     intent = MemoryLogoutIntent();
     cookies = MemoryLoginCookies(supportsWebLogin: true);
     controller = AccountController(gateway, vault, intent, cookies);
-  });
-  tearDown(() => controller.dispose());
+    addTearDown(controller.dispose);
+  }
+
   Widget host({double scale = 1}) => ProviderScope(
     overrides: [accountControllerProvider.overrideWith((ref) => controller)],
     child: MaterialApp(
@@ -39,6 +44,7 @@ void main() {
   testWidgets(
     'phone has web login alongside QR, and scanned state does not report logged in',
     (tester) async {
+      createController();
       await controller.restore();
       gateway.poller = (_) async => const BiliQrResult(BiliQrStatus.scanned);
       await tester.pumpWidget(host());
@@ -60,6 +66,7 @@ void main() {
   testWidgets('failed deletion visibly offers retry, not successful logout', (
     tester,
   ) async {
+    createController();
     vault.value = accountSession();
     await controller.restore();
     await tester.pumpWidget(host());
@@ -79,6 +86,7 @@ void main() {
   testWidgets('offline verification retains profile and does not log out', (
     tester,
   ) async {
+    createController();
     vault.value = accountSession();
     await controller.restore();
     gateway.verifyError = const ApiFailure(ApiFailureKind.offline);
@@ -125,6 +133,7 @@ void main() {
         ..physicalSize = size
         ..devicePixelRatio = 1;
       addTearDown(tester.view.reset);
+      createController();
       await controller.restore();
       await tester.pumpWidget(host(scale: 2));
       await tester.pumpAndSettle();
