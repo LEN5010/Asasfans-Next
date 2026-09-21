@@ -135,6 +135,19 @@ class HandoffCoordinator extends ChangeNotifier {
     }
   }
 
+  /// The stored session whether or not a return already consumed it.
+  ///
+  /// Consumption stops a second *navigation*; the query and anchor still have to
+  /// be readable afterwards, because the list that gets rebuilt is what needs
+  /// them. Callers here only read — the restorer owns consuming.
+  Future<ReturnContext?> lastReturn() async {
+    try {
+      return await _store.read();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Claims a session for exactly one restore.
   ///
   /// A restore never re-opens anything: the user came back to keep picking, and

@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'helpers/library_fixture.dart';
 import 'helpers/today_fixture.dart';
 
 /// Window sizes that matter: a large desktop, a short desktop window, a
@@ -167,6 +168,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          // The content page reads the return session, so it needs a store.
+          ...offlineLibrary(),
           fanartRepositoryProvider.overrideWithValue(_FanartStub()),
           dynamicRepositoryProvider.overrideWithValue(_DynamicStub()),
         ],

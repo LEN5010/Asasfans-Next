@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../rules/application/rules_providers.dart';
 import '../../rules/application/visible_random.dart';
 import '../../rules/presentation/rule_common.dart';
@@ -13,6 +15,8 @@ import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feature_pending.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/retry_button.dart';
+import '../../handoff/application/handoff_providers.dart';
+import '../../handoff/domain/return_context.dart';
 import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
 import '../domain/fanart_repository.dart';
@@ -295,8 +299,58 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
     super.initState();
     _controller = ref.read(fanartFeedControllerProvider(widget.channel));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _controller.loadInitial();
+      if (!mounted) return;
+      // Load first and restore after. Waiting on storage before the first fetch
+      // would let a slow or unavailable store delay ordinary browsing, and the
+      // common case has no return session at all.
+      _controller.loadInitial();
+      unawaited(_restoreReturn());
     });
+  }
+
+  /// Re-applies the query and position a return session stored for this channel.
+  ///
+  /// The session is read, not consumed: the restorer owns consumption, and
+  /// claiming it here would race the navigation that brought us to this channel.
+  Future<void> _restoreReturn() async {
+    final pending = await ref.read(handoffCoordinatorProvider).lastReturn();
+    if (!mounted ||
+        pending == null ||
+        pending.target != ReturnTarget.contentChannel ||
+        pending.channel != widget.channel.slug) {
+      return;
+    }
+    final values = pending.query;
+    if (values != null) {
+      // A cold return arrives with the channel chosen but the filters at their
+      // defaults, so re-apply what the user had actually committed.
+      await _controller.applyQuery(
+        ChannelSpec(
+          version: ChannelSpec.currentVersion,
+          values: values,
+        ).toFanart(),
+      );
+    }
+    if (!mounted) return;
+    _restoreAnchor(pending.anchor);
+  }
+
+  /// Returns to where the user was, preferring the identity over the raw offset:
+  /// an offset alone points at whatever has since moved into that position.
+  ///
+  /// Only a bounded restore is attempted. If the anchored item is not in what
+  /// has loaded, the stored offset is used and clamped to the current extent —
+  /// the app does not fetch page after page to reach a deep position.
+  void _restoreAnchor(ReturnAnchor? anchor) {
+    if (anchor == null || !_scrollController.hasClients) return;
+    final found = _controller.state.items.any(
+      (item) => item.identity == anchor.identity,
+    );
+    final offset = anchor.offset;
+    if (found || offset == null) return;
+    _scrollController.jumpTo(
+      offset.clamp(0, _scrollController.position.maxScrollExtent),
+    );
   }
 
   @override
