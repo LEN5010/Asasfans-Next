@@ -13,6 +13,7 @@ import 'package:asasfans_next/features/calendar/presentation/calendar_event_widg
 import 'package:asasfans_next/features/library/application/library_providers.dart';
 import 'package:asasfans_next/features/library/data/sqlite_library_repository.dart';
 import 'package:asasfans_next/features/library/domain/library_models.dart';
+import 'package:asasfans_next/features/library/presentation/calendar_follow_button.dart';
 import 'package:asasfans_next/features/library/presentation/calendar_follows.dart';
 import 'package:asasfans_next/features/library/presentation/content_actions.dart';
 import 'package:asasfans_next/features/library/presentation/library_pages.dart';
@@ -121,6 +122,9 @@ void main() {
       await tester.tap(find.text('新建收藏夹'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '精选');
+      // The save button stays disabled until the field reports a non-empty
+      // value, so let that rebuild land before tapping it.
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, '保存'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(CheckboxListTile, '精选'), findsOneWidget);
@@ -252,11 +256,24 @@ void main() {
       await tester.tap(find.text('已关注歌会'));
       await tester.pumpAndSettle();
       expect(find.byType(CalendarEventDetail), findsOneWidget);
-      expect(find.widgetWithText(TextButton, '已关注'), findsOneWidget);
-      await tester.tap(find.widgetWithText(TextButton, '已关注'));
+      // The toggle is built with TextButton.icon, whose private widget is not a
+      // TextButton, so anchor on the follow button itself rather than on a
+      // Material internal that can change shape between versions.
+      final toggle = find.descendant(
+        of: find.byType(CalendarFollowButton),
+        matching: find.text('已关注'),
+      );
+      expect(toggle, findsOneWidget);
+      await tester.tap(toggle);
       await tester.pumpAndSettle();
       expect(await repository.calendarFollows(), isEmpty);
-      expect(find.widgetWithText(TextButton, '关注日程'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CalendarFollowButton),
+          matching: find.text('关注日程'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 
