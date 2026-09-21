@@ -241,20 +241,19 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('刷新今日'));
-      await tester.pump();
-      expect(
-        tester.widget<IconButton>(find.byTooltip('刷新今日')).onPressed,
-        isNull,
+      final refreshButton = find.ancestor(
+        of: find.byTooltip('刷新今日'),
+        matching: find.byType(IconButton),
       );
+      await tester.tap(refreshButton);
+      await tester.pump();
+      // byTooltip matches the Tooltip, not the button it wraps.
+      expect(tester.widget<IconButton>(refreshButton).onPressed, isNull);
       expect(calls, 2);
       expect(calendar.forced.where((forced) => forced), hasLength(1));
       pending.complete([_fanart]);
       await tester.pumpAndSettle();
-      expect(
-        tester.widget<IconButton>(find.byTooltip('刷新今日')).onPressed,
-        isNotNull,
-      );
+      expect(tester.widget<IconButton>(refreshButton).onPressed, isNotNull);
     },
   );
 

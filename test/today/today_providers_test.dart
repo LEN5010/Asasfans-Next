@@ -96,12 +96,16 @@ void main() {
           calendarRepositoryProvider.overrideWithValue(repository),
         ],
       );
-      addTearDown(container.dispose);
       container.listen(todayScheduleProvider, (_, _) {});
       container.listen(monthEventsProvider(DateTime.utc(2026, 9)), (_, _) {});
       await tester.pump();
       expect(repository.calls, 1);
       expect(container.read(todayScheduleProvider).hasValue, isTrue);
+      // Dispose inside the body: the day clock arms a timer until the next
+      // Shanghai midnight, and addTearDown runs after the binding has already
+      // checked for pending timers.
+      container.dispose();
+      await tester.pump(const Duration(milliseconds: 1));
     },
   );
 
@@ -117,7 +121,6 @@ void main() {
           communityVideoRepositoryProvider.overrideWithValue(repository),
         ],
       );
-      addTearDown(container.dispose);
       container.listen(todayClipsProvider, (_, _) {});
       await tester.pump();
       expect(
@@ -132,6 +135,9 @@ void main() {
         isTrue,
       );
       expect(container.read(todayClipsProvider).requireValue, hasLength(1));
+      // See above: the armed day timer outlives addTearDown.
+      container.dispose();
+      await tester.pump(const Duration(milliseconds: 1));
     },
   );
 
@@ -152,20 +158,24 @@ void main() {
       expect(repository.queries.single.sort, FanartSort.newest);
       now = now.add(const Duration(seconds: 2));
       container.read(shanghaiDateProvider.notifier).resync();
+      // The new day's request is dispatched by a rebuild on a later microtask,
+      // so advance fake time before treating the two as separate requests.
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
       expect(repository.handles.first.isCancelled, isTrue);
       expect(repository.pending, hasLength(2));
       repository.pending.last.complete(
         const FanartPage(items: [], snapshotId: 'today'),
       );
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
       final current = container.read(todayFanartProvider);
       repository.pending.first.completeError(StateError('old response'));
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
       expect(container.read(todayFanartProvider), current);
       subscription.close();
       container.dispose();
       expect(repository.handles.last.isCancelled, isTrue);
+      await tester.pump(const Duration(milliseconds: 1));
     },
   );
 }
