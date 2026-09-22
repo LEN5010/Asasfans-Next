@@ -5,6 +5,7 @@ import '../../../core/domain/content_identity.dart';
 import '../../../core/platform/external_link_service.dart';
 import '../data/sqlite_return_store.dart';
 import '../domain/return_context.dart';
+import 'return_entry_controller.dart';
 
 /// The result of one handoff attempt, including whether the return context
 /// survived. A caller needs both: an accepted open with an unsaved context is
@@ -53,12 +54,22 @@ abstract final class BilibiliTargets {
 /// URL" boundary. Widening that service to understand one platform's scheme
 /// would make every tools link inherit the exemption.
 class HandoffCoordinator extends ChangeNotifier {
-  HandoffCoordinator(this._links, this._store, {DateTime Function()? clock})
-    : _clock = clock ?? DateTime.now;
+  HandoffCoordinator(
+    this._links,
+    this._store, {
+    DateTime Function()? clock,
+    ReturnEntryController? entry,
+  }) : _clock = clock ?? DateTime.now,
+       _entry = entry;
 
   final ExternalLinkService _links;
   final ReturnStore _store;
   final DateTime Function() _clock;
+
+  /// The optional floating return entry. Null on platforms without one, and
+  /// inert until the user turns it on: a handoff never depends on it, and its
+  /// absence changes nothing about the trip out or the way back.
+  final ReturnEntryController? _entry;
 
   bool _busy = false;
 
@@ -103,17 +114,24 @@ class HandoffCoordinator extends ChangeNotifier {
       } catch (_) {
         saved = false;
       }
+      // Prepared before dispatch, while this app is still in the foreground:
+      // a newer Android will not start the overlay's service from the
+      // background. A platform refusal is not a handoff failure, so the result
+      // is ignored here and the trip proceeds either way.
+      await _entry?.prepare(sessionId);
       final accepted = await _links.open(url);
       if (!accepted) {
         // Nothing was handed over, so nothing should look like it was. Drop the
         // session rather than leaving one that a later resume would restore.
         if (saved) await _clearQuietly();
+        await _entry?.abandon(sessionId);
         return HandoffResult(
           HandoffOutcome.failed,
           sessionId: sessionId,
           contextSaved: saved,
         );
       }
+      await _entry?.dispatched(sessionId);
       return HandoffResult(
         HandoffOutcome.accepted,
         sessionId: sessionId,

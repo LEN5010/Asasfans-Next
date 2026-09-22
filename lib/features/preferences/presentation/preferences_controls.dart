@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../handoff/presentation/return_entry_tile.dart';
 import '../application/preferences_controller.dart';
 import '../domain/app_preferences.dart';
 
@@ -82,6 +83,10 @@ class PreferencesControls extends ConsumerWidget {
                   ? (visible) => controller.setHomeSection(section, visible)
                   : null,
             ),
+          // Device-local: the permission and the running service belong to this
+          // installation, so the choice is not something a backup carries to
+          // another phone.
+          const ReturnEntryTile(),
         ],
       ],
     );

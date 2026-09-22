@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../content/application/content_providers.dart';
 import '../application/handoff_providers.dart';
+import '../application/return_entry_controller.dart';
 import '../domain/return_context.dart';
 
 /// Restores the list the user was picking from when they left for Bilibili.
@@ -31,6 +34,11 @@ class _ReturnRestorerState extends ConsumerState<ReturnRestorer>
   /// session. A resume after that is an ordinary return to a live tree.
   bool _settled = false;
 
+  /// Held from the first build so cleanup never reads a ref that is already
+  /// gone. Reading the provider in dispose is what produced the account page's
+  /// ref-after-dispose failure; the same mistake here would be the same bug.
+  ReturnEntryController? _entry;
+
   @override
   void initState() {
     super.initState();
@@ -39,18 +47,61 @@ class _ReturnRestorerState extends ConsumerState<ReturnRestorer>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // A tap on the floating entry restores the same context an ordinary return
+    // would. The controller reports the tap; navigating is this widget's job,
+    // so there is one restore path rather than one per way of coming back.
+    final entry = ref.read(returnEntryControllerProvider);
+    if (identical(entry, _entry)) return;
+    _entry?.onReturnRequested = null;
+    _entry = entry
+      ..onReturnRequested = (_) {
+        if (mounted) unawaited(_restoreWarm());
+      };
+  }
+
+  @override
   void dispose() {
+    _entry?.onReturnRequested = null;
+    _entry = null;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
+  /// Restores after a tap on the entry, when the process is still alive.
+  ///
+  /// The stored context is read rather than assumed: the tap only says the user
+  /// wants to come back, not where to. A session already consumed by an
+  /// ordinary resume leaves nothing to do, which is what stops one return from
+  /// being restored twice.
+  Future<void> _restoreWarm() async {
+    final coordinator = ref.read(handoffCoordinatorProvider);
+    final pending = await coordinator.pending();
+    if (pending == null || !mounted) return;
+    final claimed = await coordinator.consume(pending.sessionId);
+    if (claimed == null || !mounted) return;
+    _navigate(claimed);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final entry = _entry;
+    if (entry == null) return;
+    if (entry.awaitingPermission) {
+      // Coming back from the system permission screen is not coming back from
+      // Bilibili. Settling it here is what stops a freshly granted permission
+      // from immediately ending the session it was granted for.
+      unawaited(entry.settlePermissionReturn());
+      return;
+    }
+    // Any other resume means the user came back, however they did it. The
+    // entry has done its job either way.
+    unawaited(entry.returnedElsewhere());
     // A warm return needs no navigation, but the session is finished with, so
     // consume it rather than leaving one a later cold start would replay.
-    if (state == AppLifecycleState.resumed && _settled) {
-      _consumeQuietly();
-    }
+    if (_settled) _consumeQuietly();
   }
 
   Future<void> _consumeQuietly() async {
