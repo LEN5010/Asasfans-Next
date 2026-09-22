@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The brand's Diana pink, so the entry reads as this app's rather than as a
+     system control the user cannot account for. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#E799B0" />
+    <stroke
+        android:width="2dp"
+        android:color="#8A3E59" />
+</shape>

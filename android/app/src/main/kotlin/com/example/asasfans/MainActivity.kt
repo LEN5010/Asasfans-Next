@@ -16,6 +16,11 @@ class MainActivity : FlutterActivity() {
         private var profileUnavailable = false
     }
     private var loginCookies: MethodChannel? = null
+
+    /// The floating return entry, kept in its own module. It has no business
+    /// with the login browser's cookie store, and the login channel has no
+    /// business starting services.
+    private var returnEntry: ReturnEntryBridge? = null
     private val navOrigin = "https://api.bilibili.com/x/web-interface/nav"
     private val allowedCookies = setOf("SESSDATA", "bili_jct", "DedeUserID", "DedeUserID__ckMd5", "sid")
 
@@ -33,6 +38,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        returnEntry = ReturnEntryBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         loginCookies = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "asasfans.next/bilibili_login_cookies").also { channel ->
             channel.setMethodCallHandler { call, result ->
                 val available = !profileUnavailable && (Build.VERSION.SDK_INT >= 28 || packageName != "asasfans.next")
@@ -108,6 +114,8 @@ class MainActivity : FlutterActivity() {
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         loginCookies?.setMethodCallHandler(null)
         loginCookies = null
+        returnEntry?.dispose()
+        returnEntry = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

@@ -1,5 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- The floating return entry. Optional and user-enabled: without it the
+         ordinary handoff and the system's own back/app-switch still return to
+         the same restored context, so a refusal costs the enhancement and
+         nothing else. Declared maxSdkVersion-free because the permission is
+         requested at runtime and never assumed. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <!-- specialUse, not mediaPlayback: this app plays nothing. Bilibili may be
+         playing a video, but reporting someone else's playback as our own
+         foreground type would be a false declaration. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <!-- Only for the return entry's own notification, which doubles as a way
+         back and a way to stop. Not requested for content updates: no push
+         capability exists yet and none is implied here. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Asasfans Next"
         android:name="${applicationName}"
@@ -28,6 +43,23 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- The return entry's service. Not exported: it is started by this
+             app's own activity while the user is looking at it, and by
+             nothing else. It is never started on boot and never restarts
+             itself, so a session the system ended stays ended. -->
+        <service
+            android:name=".ReturnOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="true">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps a user-enabled button on screen so the
+                    user can return to this app after it handed a video to an
+                    external player. It performs no playback, no network and no
+                    observation of other apps; it ends when the user returns or
+                    dismisses it." />
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The return entry says what it does: it brings the user back here to
+         keep picking. It deliberately does not claim to control, observe or
+         know anything about whatever app they are currently in. -->
+    <string name="return_entry_title">回到 Asasfans 继续挑选</string>
+    <string name="return_entry_text">看完后点这里回到刚才的列表</string>
+    <string name="return_entry_stop">结束</string>
+    <string name="return_entry_channel">返回入口</string>
+</resources>
