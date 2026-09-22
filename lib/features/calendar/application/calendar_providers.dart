@@ -9,6 +9,7 @@ import '../../../core/time/shanghai_date_provider.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../data/calendar_cache_store.dart';
 import '../../library/application/library_providers.dart';
+import '../../updates/application/update_providers.dart';
 import '../data/ics_calendar_repository.dart';
 import '../domain/calendar_event.dart';
 
@@ -38,7 +39,15 @@ final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
     calendarUrl: source,
     clock: ref.watch(currentTimeProvider),
     cacheStore: ref.watch(calendarCacheStoreProvider),
-    onSnapshot: (events, at) => library.synchronizeCalendar(source, events, at),
+    onSnapshot: (events, at) async {
+      // Order matters: the inbox compares this snapshot against the revision
+      // each follow was taken at, and synchronization is what replaces that
+      // revision. Running it afterwards would compare a snapshot with itself.
+      await ref
+          .read(updateControllerProvider)
+          .recordCalendarSnapshot(source, events);
+      await library.synchronizeCalendar(source, events, at);
+    },
   );
 });
 
