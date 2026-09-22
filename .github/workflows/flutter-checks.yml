@@ -34,13 +34,13 @@ jobs:
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub
 
-  # Release artifacts for hands-on testing.
+  # Installable release artifacts: an APK, a DMG and a Windows setup exe.
   #
   # Android is signed with the original release key, so it can upgrade an
-  # installed asasfans.next. macOS and Windows are unsigned: no Apple
-  # Developer ID or Authenticode certificate exists, which is a distribution
-  # gap, not something a build flag can paper over. Treat those two as test
-  # builds rather than as something to hand to other people.
+  # installed asasfans.next. macOS is ad-hoc signed, which does not remove the
+  # first-launch prompt but does stop macOS reporting the app as damaged.
+  # Windows is unsigned and SmartScreen will warn. Those last two are
+  # certificate gaps, not something a build flag can close.
   platform-build:
     if: github.event_name == 'workflow_dispatch' && inputs.build_platforms
     needs: checks
@@ -55,7 +55,7 @@ jobs:
           - platform: macos
             os: macos-latest
             command: flutter build macos --release --no-pub
-            artifact: build/flutter-macos-release.tar.gz
+            artifact: build/macos/*.dmg
           # Kept building so iOS breakage still shows up, though an unsigned
           # build cannot be installed on a device.
           - platform: ios
@@ -65,7 +65,7 @@ jobs:
           - platform: windows
             os: windows-latest
             command: flutter build windows --release --no-pub
-            artifact: build/windows/x64/runner/Release/
+            artifact: build/windows/*.exe
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:
@@ -93,12 +93,39 @@ jobs:
             exit 1
           fi
           printf '%s' "$KEYSTORE" | base64 --decode > asasfans-release.jks
+      # The previous run failed with "Visual Studio 16 2019 could not find any
+      # instance of Visual Studio": the runner image ships VS 2022, and Flutter
+      # fell back to naming the 2019 generator because its own detection came
+      # up empty. Activating the toolchain explicitly puts the compiler on PATH
+      # and gives CMake an instance to find.
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.platform == 'windows'
+        with:
+          arch: x64
+      - name: Install Inno Setup
+        if: matrix.platform == 'windows'
+        run: choco install innosetup --no-progress
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.4'
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
+      # Recorded so the next toolchain failure is readable rather than guessed
+      # at from a CMake generator name.
+      - name: Report the Windows toolchain
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vswhere) {
+            & $vswhere -products * -format value -property displayName
+            & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+              -format value -property installationPath
+          } else {
+            Write-Host "vswhere not present"
+          }
+          flutter doctor -v
       - name: Build
         env:
           ANDROID_KEYSTORE_FILE: asasfans-release.jks
@@ -117,14 +144,30 @@ jobs:
       - name: Remove the release key from the runner
         if: always() && matrix.platform == 'android'
         run: rm -f asasfans-release.jks
-      - name: Package macOS app preserving framework symlinks
+      # Ad-hoc signed inside the script. No secrets are set here, so it takes
+      # the ad-hoc path; wiring Developer ID later is a matter of adding them.
+      - name: Package macOS DMG
         if: matrix.platform == 'macos'
-        run: tar -czf build/flutter-macos-release.tar.gz -C build/macos/Build/Products/Release "Asasfans Next.app"
+        run: bash macos/packaging/build_dmg.sh
+      - name: Package Windows installer
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path pubspec.yaml -Pattern '^version:\s*(.+)$').Matches[0].Groups[1].Value.Split('+')[0].Trim()
+          Write-Host "Packaging version $version"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=$version" `
+            windows\packaging\installer.iss
       - name: Package iOS app preserving bundle permissions
         if: matrix.platform == 'ios'
         run: tar -czf build/flutter-ios-release.tar.gz -C build/ios/iphoneos Runner.app
+      # The name says how much the artifact can be trusted, because that is
+      # what decides whether it opens on someone else's machine.
       - uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.platform }}-${{ matrix.platform == 'android' && 'release-signed' || 'release-unsigned' }}
+          name: >-
+            asasfans-next-${{ matrix.platform }}-${{
+              matrix.platform == 'android' && 'signed' ||
+              matrix.platform == 'macos' && 'adhoc-signed' || 'unsigned' }}
           path: ${{ matrix.artifact }}
           if-no-files-found: error
