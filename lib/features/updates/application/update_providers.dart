@@ -26,17 +26,15 @@ final updateCollectorProvider = Provider<UpdateCollector>(
   ),
 );
 
-final updateControllerProvider = ChangeNotifierProvider<UpdateController>((
-  ref,
-) {
-  final controller = UpdateController(
+/// No `onDispose`: ChangeNotifierProvider already disposes the notifier it
+/// holds, so registering it again would dispose the same controller twice.
+final updateControllerProvider = ChangeNotifierProvider<UpdateController>(
+  (ref) => UpdateController(
     ref.watch(updateCollectorProvider),
     ref.watch(updateRepositoryProvider),
     ref.watch(libraryRepositoryProvider),
-  );
-  ref.onDispose(controller.dispose);
-  return controller;
-});
+  ),
+);
 
 final _changesProvider = StreamProvider<int>(
   (ref) => ref.watch(updateRepositoryProvider).changes,
