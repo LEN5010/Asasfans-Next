@@ -24,6 +24,8 @@ import '../../preferences/domain/app_preferences.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../tools/presentation/tools_sheet.dart';
+import '../../updates/application/update_providers.dart';
+import '../../updates/presentation/updates_section.dart';
 import '../application/today_providers.dart';
 import 'on_this_day_section.dart';
 
@@ -63,7 +65,14 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     setState(() => _refreshing = true);
     _lastRefresh = ref.read(currentTimeProvider)();
     try {
-      await ref.read(refreshTodayProvider)(forceCalendar);
+      // The update pass is separate from the content reload: a failing creator
+      // must not stop the feeds from refreshing, and vice versa. Both settle
+      // their own failures into their own blocks, and waiting on them together
+      // keeps one from being abandoned mid-flight if the other ever throws.
+      await Future.wait([
+        ref.read(updateControllerProvider).run(),
+        ref.read(refreshTodayProvider)(forceCalendar),
+      ]);
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }
@@ -133,6 +142,7 @@ class _TodayPageState extends ConsumerState<TodayPage> {
           ],
         ),
         actions: [
+          const UpdatesBellButton(),
           IconButton(
             tooltip: '刷新今日',
             onPressed: _refreshing ? null : () => _refresh(true),
@@ -160,6 +170,8 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                   _ScheduleSection(day: day, onCalendar: _calendar),
                   const SizedBox(height: 12),
                 ],
+                const UpdatesSection(),
+                const SizedBox(height: 16),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(

@@ -12,6 +12,9 @@ enum ReturnTarget {
   /// The saved-items area the handoff started from.
   library,
 
+  /// The in-app update inbox.
+  updates,
+
   /// Today, used when there is no source list to go back to.
   today,
 }

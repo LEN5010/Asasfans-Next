@@ -81,6 +81,8 @@ class _ReturnRestorerState extends ConsumerState<ReturnRestorer>
         router.go(channel == null ? '/content' : '/content/${channel.slug}');
       case ReturnTarget.library:
         router.go('/mine');
+      case ReturnTarget.updates:
+        router.go('/mine/updates');
       case ReturnTarget.today:
         router.go('/today');
     }

@@ -21,6 +21,9 @@ class _MinePageState extends State<MinePage> {
         children: [
           const AccountSummaryTile(),
           for (final entry in const [
+            // Named for what it actually is: updates the app collected while
+            // running, not notifications the system delivered.
+            ('应用内更新', 'updates', Icons.notifications_none),
             ('收藏', 'saved', Icons.bookmark_border),
             ('稍后看', 'later', Icons.watch_later_outlined),
             ('继续观看', 'continue', Icons.play_circle_outline),
@@ -28,7 +31,6 @@ class _MinePageState extends State<MinePage> {
             ('历史记录', 'history', Icons.history),
             ('订阅管理', 'subscriptions', Icons.person_add_alt),
             ('关注日程', 'calendar-follows', Icons.event_available_outlined),
-            ('提醒', 'reminders', Icons.notifications_none),
             ('内容规则', 'rules', Icons.filter_alt_outlined),
             ('备份与恢复', 'backup', Icons.backup_outlined),
           ])

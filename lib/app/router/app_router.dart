@@ -12,6 +12,7 @@ import '../../features/library/presentation/playback_pages.dart';
 import '../../features/library/presentation/calendar_follows.dart';
 import '../../features/handoff/presentation/return_restorer.dart';
 import '../../features/today/presentation/today_page.dart';
+import '../../features/updates/presentation/updates_page.dart';
 import 'app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -107,17 +108,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'calendar-follows',
                     builder: (_, _) => const CalendarFollowsPage(),
                   ),
+                  GoRoute(
+                    path: 'updates',
+                    builder: (_, _) => const UpdatesPage(),
+                  ),
                   GoRoute(path: 'rules', builder: (_, _) => const RulesPage()),
                   GoRoute(
                     path: 'backup',
                     builder: (_, _) => const BackupPage(),
-                  ),
-                  GoRoute(
-                    path: 'reminders',
-                    builder: (_, _) => const PersonalSectionPage(
-                      title: '提醒',
-                      icon: Icons.notifications_none,
-                    ),
                   ),
                 ],
               ),
