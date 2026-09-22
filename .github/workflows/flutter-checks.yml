@@ -34,6 +34,13 @@ jobs:
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub
 
+  # Release artifacts for hands-on testing.
+  #
+  # Android is signed with the original release key, so it can upgrade an
+  # installed asasfans.next. macOS and Windows are unsigned: no Apple
+  # Developer ID or Authenticode certificate exists, which is a distribution
+  # gap, not something a build flag can paper over. Treat those two as test
+  # builds rather than as something to hand to other people.
   platform-build:
     if: github.event_name == 'workflow_dispatch' && inputs.build_platforms
     needs: checks
@@ -43,19 +50,18 @@ jobs:
         include:
           - platform: android
             os: ubuntu-latest
-            command: flutter build apk --debug --no-pub
-            artifact: build/app/outputs/flutter-apk/app-debug.apk
-          - platform: ios
-            os: macos-latest
-            command: flutter build ios --debug --no-codesign --no-pub
-            artifact: build/flutter-ios-debug.tar.gz
+            command: flutter build apk --release --no-pub
+            artifact: build/app/outputs/flutter-apk/app-release.apk
           - platform: macos
             os: macos-latest
-            command: flutter build macos --debug --no-pub
-            artifact: build/flutter-macos-debug.tar.gz
-          # Release rather than debug: a debug Windows build needs the Visual
-          # C++ debug runtime, which a plain machine does not have, so a tester
-          # would just see a missing-DLL error.
+            command: flutter build macos --release --no-pub
+            artifact: build/flutter-macos-release.tar.gz
+          # Kept building so iOS breakage still shows up, though an unsigned
+          # build cannot be installed on a device.
+          - platform: ios
+            os: macos-latest
+            command: flutter build ios --release --no-codesign --no-pub
+            artifact: build/flutter-ios-release.tar.gz
           - platform: windows
             os: windows-latest
             command: flutter build windows --release --no-pub
@@ -74,23 +80,51 @@ jobs:
         with:
           packages: platform-tools
           log-accepted-android-sdk-licenses: false
+      # Written to the repository root, which is where the Gradle config
+      # resolves a relative storeFile from. The file and the passwords stay in
+      # the runner and are never printed.
+      - name: Restore the Android release key
+        if: matrix.platform == 'android'
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 is not set; a release build must not fall back to a debug key." >&2
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE" | base64 --decode > asasfans-release.jks
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.4'
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: ${{ matrix.command }}
-      - name: Package iOS app preserving bundle permissions
-        if: matrix.platform == 'ios'
-        run: tar -czf build/flutter-ios-debug.tar.gz -C build/ios/iphoneos Runner.app
+      - name: Build
+        env:
+          ANDROID_KEYSTORE_FILE: asasfans-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ${{ matrix.command }}
+      # The fingerprint is the only evidence that the artifact can upgrade the
+      # installed app. It is a public property of a signed APK, not a secret.
+      - name: Report the signing certificate
+        if: matrix.platform == 'android'
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | tail -1)
+          "$APKSIGNER" verify --print-certs \
+            build/app/outputs/flutter-apk/app-release.apk | grep -i 'SHA-256 digest'
+      - name: Remove the release key from the runner
+        if: always() && matrix.platform == 'android'
+        run: rm -f asasfans-release.jks
       - name: Package macOS app preserving framework symlinks
         if: matrix.platform == 'macos'
-        run: tar -czf build/flutter-macos-debug.tar.gz -C build/macos/Build/Products/Debug "Asasfans Next.app"
+        run: tar -czf build/flutter-macos-release.tar.gz -C build/macos/Build/Products/Release "Asasfans Next.app"
+      - name: Package iOS app preserving bundle permissions
+        if: matrix.platform == 'ios'
+        run: tar -czf build/flutter-ios-release.tar.gz -C build/ios/iphoneos Runner.app
       - uses: actions/upload-artifact@v4
         with:
-          # Windows ships release binaries; the rest stay debug. Nothing here is
-          # code-signed, so these are test artifacts, not a distribution.
-          name: flutter-${{ matrix.platform }}-${{ matrix.platform == 'windows' && 'release-unsigned' || 'debug' }}
+          name: flutter-${{ matrix.platform }}-${{ matrix.platform == 'android' && 'release-signed' || 'release-unsigned' }}
           path: ${{ matrix.artifact }}
           if-no-files-found: error
