@@ -1,8 +1,12 @@
+import 'package:asasfans_next/core/storage/channel_schema.dart';
+import 'package:asasfans_next/core/storage/handoff_schema.dart';
 import 'package:asasfans_next/core/storage/library_schema.dart';
 import 'package:asasfans_next/core/storage/local_database.dart';
+import 'package:asasfans_next/core/storage/playback_schema.dart';
 import 'package:asasfans_next/core/storage/rules_schema.dart';
 import 'package:asasfans_next/core/storage/storage_failure.dart';
 import 'package:asasfans_next/core/storage/subscription_schema.dart';
+import 'package:asasfans_next/core/storage/updates_schema.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// Opens an in-memory database migrated only as far as [version].
@@ -41,6 +45,10 @@ Database historicalDatabase(int version) {
       (3, librarySchemaV3),
       (4, rulesSchemaV4),
       (5, subscriptionSchemaV5),
+      (6, playbackSchemaV6),
+      (7, channelSchemaV7),
+      (8, handoffSchemaV8),
+      (9, updatesSchemaV9),
     ]) {
       if (version < step.$1) break;
       for (final statement in step.$2) {

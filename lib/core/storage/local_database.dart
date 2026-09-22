@@ -10,6 +10,7 @@ import 'library_schema.dart';
 import 'playback_schema.dart';
 import 'rules_schema.dart';
 import 'subscription_schema.dart';
+import 'updates_schema.dart';
 
 typedef SqlRow = Map<String, Object?>;
 typedef SqlResults = List<List<SqlRow>>;
@@ -112,7 +113,7 @@ Future<SqlResults> _runIsolated(
 /// No importer exists: an unknown database identity is rejected, never reset.
 abstract final class SqliteExecutor {
   static const applicationId = 0x4153464E;
-  static const schemaVersion = 8;
+  static const schemaVersion = 9;
 
   static SqlResults openBatch(
     String path,
@@ -214,6 +215,12 @@ abstract final class SqliteExecutor {
             database.execute(statement);
           }
           database.userVersion = 8;
+        }
+        if (database.userVersion == 8) {
+          for (final statement in updatesSchemaV9) {
+            database.execute(statement);
+          }
+          database.userVersion = 9;
         }
         database.execute('COMMIT');
       } catch (_) {
