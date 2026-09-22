@@ -62,8 +62,15 @@ jobs:
             os: macos-latest
             command: flutter build ios --release --no-codesign --no-pub
             artifact: build/flutter-ios-release.tar.gz
+          # Pinned to windows-2022 rather than windows-latest, which now ships
+          # Visual Studio 18. Flutter 3.35.4 predates that release: its VS
+          # detection does not recognise 18, and it falls back to asking CMake
+          # for the "Visual Studio 16 2019" generator, which no current runner
+          # has. Activating the 18 toolchain by hand does not help, because the
+          # generator name is what fails. Revisit when the pinned Flutter
+          # version knows about VS 18.
           - platform: windows
-            os: windows-latest
+            os: windows-2022
             command: flutter build windows --release --no-pub
             artifact: build/windows/*.exe
     runs-on: ${{ matrix.os }}
@@ -93,11 +100,8 @@ jobs:
             exit 1
           fi
           printf '%s' "$KEYSTORE" | base64 --decode > asasfans-release.jks
-      # The previous run failed with "Visual Studio 16 2019 could not find any
-      # instance of Visual Studio": the runner image ships VS 2022, and Flutter
-      # fell back to naming the 2019 generator because its own detection came
-      # up empty. Activating the toolchain explicitly puts the compiler on PATH
-      # and gives CMake an instance to find.
+      # Belt and braces on top of the windows-2022 pin: makes the compiler's
+      # location explicit rather than relying on the image's default PATH.
       - uses: ilammy/msvc-dev-cmd@v1
         if: matrix.platform == 'windows'
         with:
