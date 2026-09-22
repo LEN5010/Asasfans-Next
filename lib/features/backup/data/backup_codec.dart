@@ -27,7 +27,7 @@ class ValidatedBackup implements BackupImport {
 /// Neither raw database files nor cache / credential stores are exportable.
 abstract final class BackupCodec {
   /// Version written by [encode]. Older files stay readable; see [columns].
-  static const formatVersion = 5;
+  static const formatVersion = 6;
   static const maxBytes = 32 * 1024 * 1024;
   static const maxRows = 50000;
   static const _invalid = BackupFailure(BackupFailureKind.invalid);
@@ -95,7 +95,7 @@ abstract final class BackupCodec {
   /// Version 5 adds saved query channels, which are user-authored assets: a
   /// name the user chose plus the query behind it. Without them an export
   /// succeeded while silently losing everything the user had built.
-  static const columns = {
+  static const columnsV5 = {
     ...columnsV4,
     'saved_channels': [
       'id',
@@ -106,6 +106,38 @@ abstract final class BackupCodec {
       'position',
       'created_at',
       'updated_at',
+    ],
+  };
+
+  /// Version 6 adds the in-app update inbox, for the same reason read receipts
+  /// are exported: which updates the user has read and filed away is their own
+  /// record, and a restore that silently resurrects a cleared inbox has lost
+  /// the user's work.
+  ///
+  /// `update_cursors` is deliberately absent. A cursor is device-local run
+  /// state describing how far *this* installation has polled; importing one
+  /// would make a new device believe it had already read a source it has never
+  /// contacted, and suppress the very updates the user restored the backup to
+  /// keep receiving.
+  static const columns = {
+    ...columnsV5,
+    'update_events': [
+      'id',
+      'kind',
+      'title',
+      'subtitle',
+      'occurred_at',
+      'observed_at',
+      'source',
+      'content_id',
+      'creator_mid',
+      'creator_name',
+      'follow_source',
+      'follow_uid',
+      'follow_recurrence_id',
+      'schedule_change',
+      'is_read',
+      'archived_at',
     ],
   };
   static final preferenceKeys = {
@@ -168,7 +200,7 @@ abstract final class BackupCodec {
       ]);
       if (root['format'] != 'asasfans.personal') throw _invalid;
       if (root['version'] is! int ||
-          !const [1, 2, 3, 4, 5].contains(root['version'])) {
+          !const [1, 2, 3, 4, 5, 6].contains(root['version'])) {
         throw const BackupFailure(BackupFailureKind.incompatible);
       }
       final atText = _text(root['exported_at'], 64);
@@ -180,6 +212,7 @@ abstract final class BackupCodec {
         2 => columnsV2,
         3 => columnsV3,
         4 => columnsV4,
+        5 => columnsV5,
         _ => columns,
       };
       final data = _object(root['data'], fields.keys.toList());
@@ -205,6 +238,7 @@ abstract final class BackupCodec {
       result.putIfAbsent('playback_progress', () => []);
       result.putIfAbsent('playback_bookmarks', () => []);
       result.putIfAbsent('saved_channels', () => []);
+      result.putIfAbsent('update_events', () => []);
       _relations(result);
       return ValidatedBackup._(
         BackupSummary(
@@ -276,6 +310,44 @@ abstract final class BackupCodec {
       // round-trip through an older install.
       final spec = _text(row['spec'], 4096);
       if (jsonDecode(spec) is! Map<String, dynamic>) throw _invalid;
+    } else if (table == 'update_events') {
+      // Validated against the same shape the store enforces, so an imported
+      // row can never be one the app itself would have refused to write. The
+      // per-kind requirements mirror the table's CHECK constraints: a video
+      // update without its video, or a schedule change without its occurrence,
+      // is an entry the user could not act on.
+      _id(row['id']);
+      _text(row['title'], 1000);
+      _text(row['subtitle'], 1000);
+      _time(row['occurred_at']);
+      _time(row['observed_at']);
+      _time(row['archived_at']);
+      if (row['is_read'] is! int ||
+          (row['is_read'] != 0 && row['is_read'] != 1)) {
+        throw _invalid;
+      }
+      final kind = row['kind'];
+      if (kind == 'subscriptionVideo') {
+        final source = _text(row['source'], 64);
+        if (!ContentSource.values.any((s) => s.name == source)) throw _invalid;
+        _id(row['content_id']);
+        if (row['creator_mid'] != null &&
+            !LocalSubscription.validMid(_text(row['creator_mid'], 20))) {
+          throw _invalid;
+        }
+        if (row['creator_name'] != null) _text(row['creator_name'], 1000);
+      } else if (kind == 'scheduleChange') {
+        _uri(row['follow_source']);
+        _id(row['follow_uid']);
+        final recurrence = _text(row['follow_recurrence_id'], 256);
+        if (recurrence.isNotEmpty) _id(recurrence);
+        if (row['schedule_change'] != 'rescheduled' &&
+            row['schedule_change'] != 'cancelled') {
+          throw _invalid;
+        }
+      } else {
+        throw _invalid;
+      }
     } else if (table == 'local_subscriptions') {
       if (!LocalSubscription.validMid(_text(row['mid'], 20))) throw _invalid;
       _text(row['name'], 1000);
@@ -400,6 +472,11 @@ abstract final class BackupCodec {
       'playback_progress': ['source', 'content_id', 'part_id'],
       'playback_bookmarks': ['id'],
       'saved_channels': ['id'],
+      // The inbox is keyed by the source-derived event id alone. It is
+      // deliberately not joined to content_refs: an update points at a video
+      // without owning a reading snapshot of it, so an entry for something the
+      // user never saved is normal rather than a dangling reference.
+      'update_events': ['id'],
     };
     String identity(Map<String, Object?> row) =>
         jsonEncode([row['source'], row['content_id']]);
