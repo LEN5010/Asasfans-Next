@@ -18,6 +18,32 @@ class _Signal implements TransparencyPreferenceService {
 
 void main() {
   testWidgets(
+    'benchmark records background interruption without waiting for a frame',
+    (tester) async {
+      final runtime = GlassRuntime(
+        shaderFiltersSupported: false,
+        load: () async {},
+      );
+      addTearDown(runtime.dispose);
+      addTearDown(
+        () => tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        ),
+      );
+      await tester.pumpWidget(GlassProbeApp(runtime: runtime));
+      await tester.pumpAndSettle();
+      final scene = tester.state<GlassProbeSceneState>(
+        find.byType(GlassProbeScene),
+      );
+      scene.collecting = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      expect(scene.invalidReasons, contains('application_inactive'));
+      scene.collecting = false;
+    },
+  );
+
+  testWidgets(
     'native content never instantiates glass even with a ready runtime',
     (tester) async {
       final runtime = GlassRuntime(

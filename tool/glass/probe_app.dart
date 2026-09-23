@@ -118,7 +118,8 @@ class GlassProbeScene extends StatefulWidget {
   State<GlassProbeScene> createState() => GlassProbeSceneState();
 }
 
-class GlassProbeSceneState extends State<GlassProbeScene> {
+class GlassProbeSceneState extends State<GlassProbeScene>
+    with WidgetsBindingObserver {
   final scroll = ScrollController();
   final captureKey = GlobalKey();
   final toolsFocus = FocusNode(debugLabel: 'probe-tools');
@@ -135,6 +136,7 @@ class GlassProbeSceneState extends State<GlassProbeScene> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     SchedulerBinding.instance.addTimingsCallback(_timings);
     if (const bool.fromEnvironment('GLASS_BENCHMARK')) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -147,6 +149,15 @@ class GlassProbeSceneState extends State<GlassProbeScene> {
     if (collecting) {
       _validateSample();
       frames.addAll(timings);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // A paused engine may deliver no frames/dependency rebuild at all. Record
+    // invalidation from the OS event itself, including brief background trips.
+    if (collecting && state != AppLifecycleState.resumed) {
+      invalidReasons.add('application_inactive');
     }
   }
 
@@ -169,6 +180,7 @@ class GlassProbeSceneState extends State<GlassProbeScene> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     SchedulerBinding.instance.removeTimingsCallback(_timings);
     scroll.dispose();
     toolsFocus.dispose();
