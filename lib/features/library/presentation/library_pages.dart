@@ -1,7 +1,4 @@
 import '../../../shared/widgets/app_page_bar.dart';
-import '../../creator/presentation/creator_link.dart';
-import '../../subscriptions/application/subscription_providers.dart';
-import '../../subscriptions/presentation/subscription_feed_view.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -373,35 +370,6 @@ class SubscriptionsPage extends ConsumerWidget {
         title: const Text('本地订阅'),
         actions: [
           IconButton(
-            tooltip: '订阅更新',
-            icon: const Icon(Icons.subscriptions_outlined),
-            onPressed: () => Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute<void>(
-                builder: (_) => Scaffold(
-                  extendBodyBehindAppBar: true,
-                  appBar: AppPageBar(
-                    title: const Text('订阅更新'),
-                    actions: [
-                      Consumer(
-                        builder: (context, ref, _) {
-                          final feed = ref.watch(
-                            subscriptionFeedControllerProvider,
-                          );
-                          return IconButton(
-                            tooltip: '刷新订阅更新',
-                            onPressed: feed.loading ? null : feed.refresh,
-                            icon: const Icon(Icons.refresh),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  body: const SubscriptionFeedView(),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
             tooltip: '添加 UP',
             icon: const Icon(Icons.person_add_alt),
             onPressed: () async {
@@ -442,7 +410,6 @@ class SubscriptionsPage extends ConsumerWidget {
                 creator.name.isEmpty ? 'UP ${creator.mid}' : creator.name,
               ),
               subtitle: Text('UID ${creator.mid}'),
-              onTap: () => openCreatorPage(context, creator.mid),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

@@ -1,7 +1,4 @@
 import '../helpers/library_fixture.dart';
-import '../helpers/creator_fixture.dart';
-import 'package:asasfans_next/features/creator/application/creator_providers.dart';
-import 'package:asasfans_next/features/creator/presentation/creator_page.dart';
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/platform/external_link_service.dart';
@@ -82,7 +79,6 @@ class _StubRepository implements FanartRepository {
 Widget _detail(FanartItem item, {ExternalLinkService? links}) => ProviderScope(
   overrides: [
     ...offlineLibrary(),
-    creatorRepositoryProvider.overrideWithValue(OfflineCreatorRepository()),
     if (links != null) externalLinkServiceProvider.overrideWithValue(links),
   ],
   child: MaterialApp(home: FanartDetailPage(item: item)),
@@ -90,15 +86,15 @@ Widget _detail(FanartItem item, {ExternalLinkService? links}) => ProviderScope(
 
 void main() {
   testWidgets(
-    'B-site author opens native profile, numeric Douban author stays on Douban',
+    'B-site author opens the Bilibili space, numeric Douban author stays on Douban',
     (tester) async {
       final links = _RecordingLinkService();
       await tester.pumpWidget(_detail(_item(), links: links));
       await tester.pumpAndSettle();
       await tester.tap(find.text('作者主页'));
       await tester.pumpAndSettle();
-      expect(find.byType(CreatorPage), findsOneWidget);
-      expect(links.opened, isEmpty);
+      expect(links.opened, [Uri.parse('https://space.bilibili.com/1')]);
+      links.opened.clear();
       await tester.pumpWidget(const SizedBox.shrink());
       final douban = Uri.parse('https://www.douban.com/people/1/');
       await tester.pumpWidget(
@@ -110,7 +106,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('作者主页'));
       await tester.pumpAndSettle();
-      expect(find.byType(CreatorPage), findsNothing);
       expect(links.opened, [douban]);
     },
   );

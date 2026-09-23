@@ -20,20 +20,16 @@ void main() {
   });
 
   test(
-    'preview isolates personal storage, credentials, login and external opens',
+    'preview isolates personal storage, credentials and external opens',
     () async {
       final container = ProviderContainer(overrides: offlinePreviewOverrides());
       addTearDown(container.dispose);
       expect(container.read(localDatabaseProvider), isA<MemoryLocalDatabase>());
       expect(container.read(biliVaultProvider), isA<MemoryAccountVault>());
-      expect(await container.read(biliVaultProvider).read(), isNull);
+      expect(await container.read(biliVaultProvider).stored(), isFalse);
       expect(
-        container.read(biliLoginCookiesProvider).supportsWebLogin,
-        isFalse,
-      );
-      await expectLater(
-        container.read(biliAuthGatewayProvider).createQr(),
-        throwsStateError,
+        container.read(biliLoginCookiesProvider),
+        isA<MemoryLoginCookies>(),
       );
       expect(
         await container

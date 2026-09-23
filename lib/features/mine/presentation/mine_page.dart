@@ -1,23 +1,28 @@
 import '../../../shared/theme/app_icons.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../preferences/presentation/preferences_controls.dart';
-import '../../account/presentation/account_page.dart';
+import '../../account/application/account_providers.dart';
+import '../../account/presentation/local_login_cleanup_tile.dart';
 
-class MinePage extends StatefulWidget {
+class MinePage extends ConsumerStatefulWidget {
   const MinePage({super.key});
   @override
-  State<MinePage> createState() => _MinePageState();
+  ConsumerState<MinePage> createState() => _MinePageState();
 }
 
-class _MinePageState extends State<MinePage> {
+class _MinePageState extends ConsumerState<MinePage> {
   int _section = 0;
   @override
   Widget build(BuildContext context) {
+    final hasLocalLogin = ref.watch(
+      accountControllerProvider.select((account) => account.hasLocalLogin),
+    );
     List<Widget> links(List<(String, String, IconData)> entries) => [
       for (final entry in entries)
         ListTile(
@@ -34,8 +39,11 @@ class _MinePageState extends State<MinePage> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SettingsGroup(title: '账号', children: [AccountSummaryTile()]),
-          const SizedBox(height: 20),
+          // Only while an earlier build's sign-in is still on this device.
+          if (hasLocalLogin) ...const [
+            _SettingsGroup(title: '账号', children: [LocalLoginCleanupTile()]),
+            SizedBox(height: 20),
+          ],
           _SettingsGroup(
             title: '我的内容',
             children: links(const [

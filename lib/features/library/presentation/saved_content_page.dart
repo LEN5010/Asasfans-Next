@@ -12,7 +12,7 @@ import 'history_recorder.dart';
 import 'library_common.dart';
 import '../../../core/domain/bilibili_id.dart';
 import '../../../core/domain/content_identity.dart';
-import '../../video/presentation/video_detail_page.dart';
+import '../../handoff/domain/return_context.dart';
 
 class SavedContentPage extends ConsumerWidget {
   const SavedContentPage({required this.item, super.key});
@@ -56,11 +56,16 @@ class SavedContentPage extends ConsumerWidget {
                     validBvid(item.identity.value))
                   Align(
                     alignment: Alignment.centerLeft,
+                    // Videos are watched on Bilibili; the app has no detail page.
                     child: TextButton.icon(
-                      onPressed: () =>
-                          openVideoDetail(context, item.identity.value),
+                      onPressed: () => openContentSource(
+                        context,
+                        ref,
+                        item,
+                        returnTo: ReturnTarget.library,
+                      ),
                       icon: const Icon(Icons.smart_display_outlined),
-                      label: const Text('视频详情'),
+                      label: const Text('在 B 站观看'),
                     ),
                   ),
                 if (item.body.isNotEmpty) SelectableText(item.body),

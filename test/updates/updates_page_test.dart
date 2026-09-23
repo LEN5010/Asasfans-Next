@@ -1,9 +1,6 @@
 import 'package:asasfans_next/core/domain/content_identity.dart';
-import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
 import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
-import 'package:asasfans_next/features/creator/application/creator_providers.dart';
-import 'package:asasfans_next/features/library/application/library_providers.dart';
 import 'package:asasfans_next/features/library/domain/library_models.dart';
 import 'package:asasfans_next/features/updates/application/update_providers.dart';
 import 'package:asasfans_next/features/updates/domain/update_event.dart';
@@ -13,7 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/sqlite_fixture.dart';
-import '../helpers/subscriptions_fixture.dart';
 
 final _now = DateTime.utc(2026, 9, 22, 12);
 
@@ -38,17 +34,15 @@ UpdateEvent _video(int id, {bool read = false, bool archived = false}) {
 
 /// Mounts the page over a real schema and a real repository, so what the widget
 /// shows is what the store would actually return.
-Future<(MemoryLocalDatabase, UpdateSource)> _pump(
+Future<void> _pump(
   WidgetTester tester, {
   List<UpdateEvent> seed = const [],
 }) async {
   final db = MemoryLocalDatabase();
-  final source = UpdateSource();
   addTearDown(db.close);
   final container = ProviderContainer(
     overrides: [
       localDatabaseProvider.overrideWithValue(db),
-      creatorRepositoryProvider.overrideWithValue(source),
       currentTimeProvider.overrideWithValue(() => _now),
     ],
   );
@@ -78,7 +72,6 @@ Future<(MemoryLocalDatabase, UpdateSource)> _pump(
     ),
   );
   await tester.pumpAndSettle();
-  return (db, source);
 }
 
 void main() {
@@ -89,6 +82,9 @@ void main() {
       tester,
       seed: [_video(1), _video(2, read: true), _video(3, archived: true)],
     );
+    // Subscription videos stored before creators stopped being polled stay
+    // readable, and nothing offers to poll them again.
+    expect(find.byTooltip('检查更新'), findsNothing);
     // The inbox holds read and unread alike, but not what was filed away.
     expect(find.text('视频 1'), findsOneWidget);
     expect(find.text('视频 2'), findsOneWidget);
@@ -145,39 +141,5 @@ void main() {
     await tester.pumpAndSettle();
     // The archived entry was already dealt with; a bulk read must not reach it.
     expect(find.byTooltip('标记已读'), findsOneWidget);
-  });
-
-  testWidgets('a source that could not be read is a gap, not silence', (
-    tester,
-  ) async {
-    final (_, source) = await _pump(tester);
-    source.failures['123'] = const ApiFailure(ApiFailureKind.offline);
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(UpdatesPage)),
-    );
-    await container
-        .read(libraryRepositoryProvider)
-        .subscribe(const LocalSubscription(mid: '123', name: 'UP 123'));
-    await container.read(updateControllerProvider).run();
-    await tester.pumpAndSettle();
-    expect(find.textContaining('没有读取成功'), findsOneWidget);
-    expect(find.textContaining('这里显示的不是全部更新'), findsOneWidget);
-    // An empty list plus a failed source must not read as "nothing new".
-    expect(find.text('收件箱是空的'), findsOneWidget);
-  });
-
-  testWidgets('a first pass explains why it produced nothing', (tester) async {
-    final (_, source) = await _pump(tester);
-    source.rows['123'] = [updateVideo(1), updateVideo(2)];
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(UpdatesPage)),
-    );
-    await container
-        .read(libraryRepositoryProvider)
-        .subscribe(const LocalSubscription(mid: '123', name: 'UP 123'));
-    await container.read(updateControllerProvider).run();
-    await tester.pumpAndSettle();
-    expect(find.textContaining('新订阅的历史投稿不会补进收件箱'), findsOneWidget);
-    expect(find.text('收件箱是空的'), findsOneWidget);
   });
 }

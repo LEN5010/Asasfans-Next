@@ -26,7 +26,6 @@ import '../../preferences/application/preferences_controller.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
-import '../../updates/application/update_providers.dart';
 import '../../updates/presentation/updates_section.dart';
 import '../application/today_providers.dart';
 import 'on_this_day_section.dart';
@@ -67,14 +66,7 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     setState(() => _refreshing = true);
     _lastRefresh = ref.read(currentTimeProvider)();
     try {
-      // The update pass is separate from the content reload: a failing creator
-      // must not stop the feeds from refreshing, and vice versa. Both settle
-      // their own failures into their own blocks, and waiting on them together
-      // keeps one from being abandoned mid-flight if the other ever throws.
-      await Future.wait([
-        ref.read(updateControllerProvider).run(),
-        ref.read(refreshTodayProvider)(forceCalendar),
-      ]);
+      await ref.read(refreshTodayProvider)(forceCalendar);
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }

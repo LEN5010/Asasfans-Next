@@ -1,127 +1,23 @@
-import '../../../core/network/api_failure.dart';
 import '../../calendar/domain/calendar_event.dart';
-import '../../creator/domain/creator_repository.dart';
 import '../../library/domain/library_models.dart';
 import '../domain/update_event.dart';
 
 /// Turns current source state into inbox events.
 ///
-/// It is a pure-ish collection pass: it reads sources and compares them with
-/// the stored cursors, and it never writes. Committing is the repository's job,
-/// so a failed write cannot leave a cursor ahead of its events.
+/// It compares a source with what was stored and never writes. Committing is
+/// the repository's job, so a failed write cannot leave a cursor ahead of its
+/// events.
+///
+/// Subscribed creators are no longer polled: videos are indexed by the
+/// asasfans backend and watched on Bilibili. Subscription entries already in
+/// the inbox stay readable, but nothing adds new ones.
 class UpdateCollector {
-  UpdateCollector(this._creators, {DateTime Function()? clock})
+  UpdateCollector({DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
 
-  final CreatorRepository _creators;
   final DateTime Function() _clock;
 
-  /// How many of the newest videos per creator one pass may turn into events.
-  ///
-  /// A creator who posted 40 times since the last check produces a bounded
-  /// burst, not 40 inbox rows. The cursor still advances past the whole page,
-  /// so the skipped middle is not re-offered later — the user gets the newest
-  /// ones, which is what an update feed is for.
-  static const perCreatorLimit = 5;
-
-  static String creatorSourceKey(String mid) => 'creator:$mid';
   static String calendarSourceKey(Uri source) => 'calendar:$source';
-
-  /// Reads one page per creator. One creator's failure is recorded and the
-  /// others still produce events.
-  Future<UpdateHarvest> collectSubscriptions(
-    List<LocalSubscription> creators,
-    Map<String, UpdateCursor> cursors, {
-    RequestCancellation? cancellation,
-  }) async {
-    final events = <UpdateEvent>[];
-    final advanced = <String, UpdateCursor>{};
-    final failed = <String>{};
-    final baselined = <String>{};
-    final now = _clock().toUtc();
-    for (final creator in creators) {
-      if (cancellation?.isCancelled == true) {
-        throw const ApiFailure(ApiFailureKind.cancelled);
-      }
-      final key = creatorSourceKey(creator.mid);
-      final cursor = cursors[key];
-      CreatorArchivePage page;
-      try {
-        page = await _creators.archives(
-          CreatorArchiveQuery(mid: creator.mid),
-          page: 1,
-          cancellation: cancellation,
-        );
-      } catch (error) {
-        if (error is ApiFailure && error.kind == ApiFailureKind.cancelled) {
-          rethrow;
-        }
-        failed.add(key);
-        continue;
-      }
-      // Only items the source dated can be ordered or compared with a cursor.
-      final dated = [
-        for (final item in page.items)
-          if (item.publishedAt != null) item,
-      ]..sort((a, b) => b.publishedAt!.compareTo(a.publishedAt!));
-      if (cursor == null) {
-        // First sight of this creator. Record where "new" starts and say
-        // nothing: the user subscribed to hear about the next upload, not to be
-        // handed the back catalogue.
-        baselined.add(key);
-        advanced[key] = UpdateCursor(
-          sourceKey: key,
-          baselineAt: now,
-          lastOccurredAt: dated.isEmpty ? null : dated.first.publishedAt,
-          lastId: dated.isEmpty
-              ? null
-              : UpdateIds.subscriptionVideo(dated.first.identity),
-        );
-        continue;
-      }
-      var newest = cursor.lastOccurredAt;
-      var newestId = cursor.lastId;
-      var produced = 0;
-      for (final item in dated) {
-        final id = UpdateIds.subscriptionVideo(item.identity);
-        final at = item.publishedAt!;
-        if (!cursor.accepts(at, id)) continue;
-        if (newest == null ||
-            at.isAfter(newest) ||
-            (at.isAtSameMomentAs(newest) &&
-                (newestId == null || id.compareTo(newestId) > 0))) {
-          newest = at;
-          newestId = id;
-        }
-        if (produced >= perCreatorLimit) continue;
-        produced++;
-        events.add(
-          UpdateEvent(
-            id: id,
-            kind: UpdateKind.subscriptionVideo,
-            title: item.title,
-            subtitle: creator.name,
-            occurredAt: at,
-            observedAt: now,
-            content: item.identity,
-            creator: creator,
-          ),
-        );
-      }
-      advanced[key] = UpdateCursor(
-        sourceKey: key,
-        baselineAt: cursor.baselineAt,
-        lastOccurredAt: newest,
-        lastId: newestId,
-      );
-    }
-    return UpdateHarvest(
-      events: events,
-      cursors: advanced,
-      failedSources: failed,
-      baselinedSources: baselined,
-    );
-  }
 
   /// Compares followed occurrences with the calendar snapshot the app just read.
   ///

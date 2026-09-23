@@ -8,7 +8,6 @@ import 'package:asasfans_next/core/platform/return_entry_service.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
 import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
 import 'package:asasfans_next/features/account/application/account_providers.dart';
-import 'package:asasfans_next/features/account/domain/bili_account.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
@@ -45,7 +44,6 @@ List<Override> offlinePreviewOverrides() => [
     return database;
   }),
   biliVaultProvider.overrideWith((_) => MemoryAccountVault()),
-  biliAuthGatewayProvider.overrideWithValue(const _NoAuthentication()),
   biliLoginCookiesProvider.overrideWith((_) => MemoryLoginCookies()),
   externalLinkServiceProvider.overrideWithValue(const _NoExternalLinks()),
   returnEntryServiceProvider.overrideWithValue(
@@ -61,25 +59,6 @@ class _NoExternalLinks implements ExternalLinkService {
   const _NoExternalLinks();
   @override
   Future<bool> open(Uri uri) async => false;
-}
-
-class _NoAuthentication implements BiliAuthGateway {
-  const _NoAuthentication();
-  Never _disabled() =>
-      throw StateError('Authentication is disabled in preview.');
-  @override
-  Future<BiliQrTicket> createQr({RequestCancellation? cancellation}) async =>
-      _disabled();
-  @override
-  Future<BiliQrResult> poll(
-    BiliQrTicket ticket, {
-    RequestCancellation? cancellation,
-  }) async => _disabled();
-  @override
-  Future<BiliAccountProfile> verify(
-    BiliCredentials credentials, {
-    RequestCancellation? cancellation,
-  }) async => _disabled();
 }
 
 class _EmptyFanart implements FanartRepository {
