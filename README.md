@@ -7,90 +7,11 @@
 ### 若有一天我会离开. 这座城是否还在.        她们会不会依然像现在. 这样日复一日笑着走来
 ### 若有一天你也离开. 会不会偶尔感怀.        再看看当时艰难和愉快. 再听听那些. 夸张的告白.
 
-面向 A-SOUL 粉丝的内容、日历与社区工具客户端。当前在 `dev/flutter-rebuild` 分支以 Flutter 重建，目标平台为 **iOS / Android / Windows / macOS**，保留嘉然粉配色。
-
-**这是开发中的内容浏览版本，尚不能完整替代旧版。** `3.0.0-dev.1+201` 仅为开发标识，不是正式发行版本。原生 Android 线以 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 为最终版本；源码和安装包保留在该标签，重构尚未合入 `master`。
-
-## 功能进度
-
-下表描述**源码实现范围**，不代表四端运行验收通过。
-
-| 模块 | 已有源码 | 主要缺口 |
-| --- | --- | --- |
-| 内容与首页 | 视频主流（全部/切片/录播）、动态头像/表情/媒体/转发、二创与小说；宽屏错位瀑布流、分组筛选、自动续页和大图查看 | 视频源无标题搜索；小说尚无收藏/阅读进度/本地规则；真实来源与布局待验收 |
-| 日历与工具 | 原生日/周/月视图、成员筛选、事件详情、持久缓存、日程关注；分组工具外跳 | 重复规则展开、系统提醒和系统日历集成 |
-| 个人资料 | 收藏夹、稍后看、浏览/外跳记录、本地订阅、内容规则、分页、JSON 备份与事务合并恢复、播放进度与时间书签存储 | 无真实播放位置上报；大数据与恢复验收 |
-| UP 与订阅 | 本地订阅列表、规则里的订阅优先；UP 主页外跳 B 站 | 不抓取 UP 投稿，不做订阅更新流 |
-| 视频 | 视频来自 asasfans 后端索引，**一律外跳 B 站观看** | 不做应用内详情、评论、播放或 B 站登录 |
-
-自研 B 站抓取（元数据、WBI 签名、视频详情、评论、原生 UP 主页、扫码与网页登录、按 UP 抓投稿）已退役，源码已删除。旧版本存下的 B 站登录凭据只在我的页提供清除入口。
-
-当前采用中性明暗主题；液态玻璃仅用于主导航与频道切换，筛选、设置、工具和卡片操作使用轻量普通控件。手机二创采用接近视频流密度的双列卡片，宽屏增加瀑布流列数而不是放大卡片。首页窄屏依次为日历、历史上的今天、最新切片、最新二创；宽屏左侧日程、右侧历史，日程事件始终纵向排列。历史为自然高度的小图摘要，全文在独立面板阅读。小说默认全部，R18 仅提供元信息与原帖入口。源码、编译与用户验收分别记录。SDK 升级已完成，[历史四端开发构建](https://github.com/LEN5010/Asasfans-Next/actions/runs/35874899297)在 `3b14066` 成功，不覆盖后续迭代，界面和设备效果由用户验收，不用历史测试数量代替。
-
-开发方式：**UI/组件阶段全部完成后，集中做必要检查与编译，再交付人类验收。** 不逐页运行、自建实验或追求测试数量；禁止防御性编程和过度测试编写，如无必要勿增实体。
-
-## 数据与产品边界
-
-- 手机导航为今日 / 内容 / 日历 / 我的四个栏目，工具是右侧独立圆钮动作面板；宽屏使用浮动玻璃侧栏。内容分视频 / 二创 / 动态 / 小说。订阅管理位于“我的”。[LoveIwara](https://github.com/FoxSensei001/LoveIwara) 作为布局与组件接法参考；已有 MIT 适配见 `third_party/README.md`，不搬业务、品牌素材或整套架构。
-- 本地订阅不修改 B 站关注；收藏不等于下载；浏览、外部打开、更新已读均不等于实际观看。
-- 个人资料使用独立 SQLite，新库 schema v9；备份导出 v6、兼容受支持的旧格式，以事务合并而非清空替换。手机导出交给系统分享，桌面使用保存对话框。
-- 旧版本的 B 站凭据留在系统安全存储里，不进入普通数据库或备份；应用不再解析其内容，只判断是否存在，并在用户确认后清除。清除前先写入待清除标记，失败可重试。
-- **旧 Android 数据迁移已取消**：Flutter 个人资料从零建立，不读取、修改或删除旧数据库与凭据。新库不兼容或损坏时不以清库恢复。覆盖安装须核对实际旧 APK 与新包的签名证书、版本号并进行设备验收；即使允许覆盖，**订阅、屏蔽名单、收藏与历史也不会自动带过来**；旧数据仍留在设备上，只是不再被读取。
-
-## 开发
-
-固定 Flutter **3.47.3** / Dart **3.13.3**。官方下载地址、SHA-256 和完整 revision 见 `tool/flutter-sdk.json`；`.flutter-version` 与 CI 同步固定版本，依赖锁定在 `pubspec.lock`。启动脚本校验已安装的 Flutter，也可通过 `ASASFANS_FLUTTER_SDK` 显式指定目录，不自动替换错误版本。安装与校验步骤见 [工具链说明](tool/README.md)。
-
-```sh
-# 仅全部开发完成后按需执行，不是逐次编辑的检查清单：
-tool/flutterw pub get --enforce-lockfile
-tool/flutterw analyze --no-pub
-tool/flutterw build macos --profile --no-pub
-```
-
-其他平台用手动开发构建 CI，不在本机重复构建。现有测试只在真实行为变更/已知缺陷需要时选用，全量回归需要明确选择。
-
-Windows 使用 `tool/flutterw.ps1`。格式化使用 `tool/flutterw --dart format`，避免 PATH 中的 Dart 与项目 Flutter 不一致。Apple 最低系统为 iOS 15 / macOS 12；Android API 24 保留。新 SDK/UI 的四端运行与性能验收单独记录，旧版本的测试或 CI 成功不构成新版本验证。
-
-Android：Java 编译目标 17、SDK 36、AGP 8.13.1 / Gradle 8.14.3 / Kotlin 2.2.20、最低 API 24、targetSdk 34。这是满足目标 Flutter 最低要求的兼容组合，不使用跳过依赖检查的参数。Flutter 可能优先使用 Android Studio 自带 JDK，先确认实际选择。Apple 工程采用目标 Flutter 的 Swift Package Manager 接线，不支持它的安全存储插件仍由 CocoaPods 管理；原生依赖锁文件一起保留。iOS/macOS 需要 Xcode、平台组件和签名；Windows 需要 Windows 与 Visual Studio C++ 桌面工具链，不能在 Mac 上交叉验收。
-
-| 路径 | 职责 |
-| --- | --- |
-| `lib/app` | 启动、依赖装配、路由、主题和自适应导航 |
-| `lib/core` | 跨功能模型、分离的网络边界、新存储与平台能力 |
-| `lib/features` | 按功能划分 domain / data / application / presentation |
-| `lib/shared` | 共享展示组件 |
-| `android` / `ios` / `windows` / `macos` | 原生宿主与插件桥接 |
-| `test` | 离线契约、存储、组件和布局测试源码 |
-
-本地详细文档入口为 `docs/README.md`。`docs/`、`AGENTS.md`、`CONTEXT.md`、SDK 本机配置、凭据、签名材料和构建产物保持 Git 忽略；公开说明以本 README 为准。
-
-## CI 与发布
-
-两个 workflow 都只接受手动触发，push/PR 不自动运行：
-
-- `Flutter Checks`：固定 SDK、格式和静态分析；`run_tests` 默认关闭，只有明确要求时运行现有全量测试。
-- `Flutter Development Validation`：Android Debug、iOS Debug 无签名、macOS/Windows Profile；只产生开发包，不接受许可证、不使用生产签名、不发布。
-
-旧的手动生产签名打包任务已从 Flutter 检查配置中移除；签名配置与历史 Git 记录保留。完成全部开发阶段再集中调用，不把 CI 当每次修改的闸门。
-
-Android 开发包为 `asasfans.next.flutterdev`；未来生产包保持 `asasfans.next` 与原签名。release 构建目前由签名验收门槛阻断，不使用 debug key 兜底。Apple bundle ID `dev.asasfans.next`、Apple 分发和 Windows 安装身份尚待确认；四端品牌图标已有原路径资产，实际桌面/启动器效果待用户验收。
-
-解除 Android 发布门槛前必须实际完成这几项，缺一项就继续阻断：在受控环境接入原 release key（不提交进版本库）；用它构建的包能覆盖安装已有的 `asasfans.next`，且升级后旧版个人数据不被当成损坏库重置；开发包与生产包可以并存，开发包不顶替原包；产物能追溯到具体提交与测试结果。删除门禁或改用 debug key 都不算完成。
-
-旧 Android 构建与发布流程仅在历史标签及 `master` 中保留。
-
-## 项目历史
-
-原生 Android 线已结束，[v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 是它的最终版本，源码与安装包保留在该标签，另有 `old/android` 分支指向同一提交作为只读保留点。本仓库的历史、Issues 和 Releases 继续保留，不新增仓库，也不复制旧工程到目录。
-
-那一版的功能范围、技术栈、参数对照和查阅方式见 [HISTORY.md](HISTORY.md)。
-
-## 来源与致谢
+Asasfans Next 是一个面向 A-SOUL 粉丝的客户端，把视频、二创、历史动态、小说、日程和社区工具收在一个地方。现在它用 Flutter 重新写了一遍，目标平台是 iOS、Android、Windows 和 macOS，嘉然粉配色保留了下来。
 
 本项目保留了早期开源项目 [A-SoulFan/as-as-fans](https://github.com/A-SoulFan/as-as-fans) 的历史来源，后续由当前仓库继续维护和重构，并继续遵循 GPL-2.0 协议发布。
 
-感谢 [jiarandiana0307](https://github.com/jiarandiana0307) 去年对其 [Fork 版本](https://github.com/jiarandiana0307/as-as-fans) 的维护和更新。
+感谢 [jiarandiana0307](https://github.com/jiarandiana0307) 在 2025 年对其 [Fork 版本](https://github.com/jiarandiana0307/as-as-fans) 的维护和更新。
 
 感谢 [枝江站](https://asoul.love/)、[ASOUL录音棚](https://studio.asoul.us.kg/) 等 A-SOUL 社区项目。
 
@@ -103,6 +24,62 @@ Android 开发包为 `asasfans.next.flutterdev`；未来生产包保持 `asasfan
 
 Asasfans Next 是非官方粉丝项目，与 Bilibili、A-SOUL 及枝江娱乐等相关公司没有官方关联。
 
-## 反馈与许可证
+## 3.0（开发中）
 
-问题反馈见 [GitHub Issues](https://github.com/LEN5010/Asasfans-Next/issues)。继续使用 [GPL-2.0](LICENSE)，保留原项目历史与素材归属。分发二进制时同时提供对应源码及版权、许可证说明。
+`main` 分支上是 Flutter 版，版本号 `3.0.0-dev.1+201` 只是开发标识，还没有正式发行，暂时也不能完全替代旧版。
+
+原生 Android 版在 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 画上了句号，源码和安装包都留在这个标签和 `old` 分支里，想用稳定版的话可以继续装它。项目从 2022 年一路走到现在的经过、旧版的功能和技术参数，都写在 [HISTORY.md](HISTORY.md) 里。
+
+## 功能
+
+- **今日**：今天的日程、历史上的今天、最新切片和最新二创。手机上从上往下排，宽屏时日程和历史左右并排。
+- **内容**：视频、二创、动态、小说四个频道。
+  - 视频来自 asasfans 后端索引，分全部 / 切片 / 录播，点开跳到 B 站观看。
+  - 二创有成员和分类快捷筛选，宽屏用错位瀑布流，手机用紧凑双列。
+  - 历史动态保留头像、表情、图片、视频和转发，可以按成员、类型、日期筛选。
+  - 小说可以在应用里阅读，R18 作品只显示作品信息和原帖链接。
+- **日历**：日、周、月视图，按成员和类型筛选，单人日程用成员应援色，可以关注日程并在应用内收到变动提醒。
+- **我的**：收藏、稍后看、浏览记录、时间书签、本地订阅、内容规则，以及 JSON 备份和合并恢复。作者信息和致谢也在这里。
+- **工具**：底栏右侧的圆钮打开工具面板，里面是录音棚、日历、动态站、枝网查重、Wiki 等社区站点。
+- 手机用悬浮底栏，宽屏用侧栏；主栏目切换、页面转场和加载都有动画，系统关闭动画时会自动跳过。
+
+应用内不播放视频，也不登录 B 站。旧版自己抓取 B 站数据的那部分已经整体退役，视频一律交给 B 站打开。
+
+从旧版升级的话，订阅、屏蔽名单、收藏和历史不会自动带过来。新版的个人资料用一套独立的存储从零开始，旧数据还留在手机上，只是新版不再读取它。
+
+## 构建
+
+Flutter 固定为 **3.47.3**（Dart **3.13.3**），下载地址和校验值记在 `tool/flutter-sdk.json`。请用仓库自带的启动脚本，它会先核对本机 SDK 的版本：
+
+```sh
+tool/flutterw pub get --enforce-lockfile
+tool/flutterw analyze --no-pub
+tool/flutterw build macos --profile --no-pub
+```
+
+Windows 上用 `tool/flutterw.ps1`，格式化用 `tool/flutterw --dart format`。更完整的工具链说明见 [tool/README.md](tool/README.md)。
+
+各平台要求：
+
+- iOS 15 / macOS 12 起，需要 Xcode 和对应的签名配置。
+- Android 最低 API 24，Java 编译目标 17，Android SDK 36。
+- Windows 需要 Visual Studio 的 C++ 桌面开发组件，只能在 Windows 上构建。
+
+### GitHub Actions
+
+两条 workflow 都只能手动触发，推送和 PR 不会自动运行：
+
+- `Flutter Checks`：固定 SDK 的格式检查和静态分析，勾选 `run_tests` 时再跑全量测试。
+- `Flutter Development Validation`：构建 Android Debug、iOS Debug（无签名）和 macOS / Windows Profile 开发包，不签名，也不发布。
+
+Android 开发包的包名是 `asasfans.next.flutterdev`，可以和旧版 `asasfans.next` 装在同一台手机上。正式包会沿用 `asasfans.next` 和原来的签名，在确认能覆盖安装旧版之前，正式发布会一直暂停。签名文件和密码只放在本地，不要提交到仓库。
+
+## 反馈
+
+问题反馈和功能建议请提交到 [GitHub Issues](https://github.com/LEN5010/Asasfans-Next/issues)。
+
+## 许可证
+
+本项目基于 GNU General Public License v2.0 发布，详见 [LICENSE](./LICENSE)。
+
+如果你分发修改后的安装包或其他二进制构建产物，需要同时提供对应源码，并保留原项目和本项目的版权及许可证说明。第三方组件的许可见 `third_party/README.md`。
