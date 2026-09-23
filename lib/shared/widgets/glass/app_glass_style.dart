@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
-/// Chrome uses the reference's light tint and the package's optical defaults.
+/// Chrome uses the package's optical defaults with a fixed legible tint.
 /// A high-opacity readability veil hides the very backdrop being refracted.
 abstract final class AppGlassStyle {
   // Standard is the reference's desktop startup compromise, not evidence of
@@ -13,9 +13,11 @@ abstract final class AppGlassStyle {
     _ => GlassQuality.premium,
   };
 
+  // Light chrome carries more white than the reference so its fixed dark
+  // text stays legible over any content; controls no longer flip with it.
   static Color tint(Brightness brightness) => brightness == Brightness.dark
       ? Colors.black.withValues(alpha: .24)
-      : Colors.white.withValues(alpha: .10);
+      : Colors.white.withValues(alpha: .35);
 
   static LiquidGlassSettings settings(
     Brightness brightness, {

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
-import 'app_glass_chrome.dart';
 import 'app_glass_scope.dart';
 import 'app_glass_style.dart';
 
@@ -37,8 +36,7 @@ class _AppGlassSurfaceState extends State<AppGlassSurface> {
   final contentKey = GlobalKey();
 
   @override
-  Widget build(BuildContext context) => AppGlassChrome(
-    nativeContent: widget.nativeContent,
+  Widget build(BuildContext context) => Builder(
     builder: (context) {
       final liquid =
           AppGlassScope.of(context).usesLiquid && !widget.nativeContent;

@@ -9,7 +9,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../theme/app_icons.dart';
-import 'app_glass_chrome.dart';
 import 'app_glass_scope.dart';
 import 'app_glass_style.dart';
 import 'app_glass_surface.dart';
@@ -184,8 +183,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
   );
 
   @override
-  Widget build(BuildContext context) => AppGlassChrome(
-    nativeContent: widget.nativeContent,
+  Widget build(BuildContext context) => Builder(
     builder: (context) => LayoutBuilder(
       builder: (context, constraints) {
         final policy = AppGlassScope.of(context);

@@ -3,9 +3,7 @@ import 'dart:async';
 import '../../rules/application/rules_providers.dart';
 import '../../rules/application/visible_random.dart';
 import '../../rules/presentation/rule_common.dart';
-import '../../subscriptions/presentation/subscription_feed_view.dart';
-import '../../subscriptions/application/subscription_providers.dart';
-import '../../library/presentation/library_pages.dart' show SubscriptionsPage;
+import '../../novels/presentation/novel_feed_view.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
@@ -24,6 +22,7 @@ import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/domain/return_context.dart';
 import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
+import '../domain/community_video_repository.dart';
 import '../domain/fanart_repository.dart';
 import 'community_feed_view.dart';
 import 'content_search_control.dart';
@@ -38,8 +37,11 @@ import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 
 class ContentPage extends ConsumerStatefulWidget {
-  const ContentPage({this.channel = 'fanart', super.key});
+  const ContentPage({this.channel = 'videos', this.videoKind, super.key});
   final String channel;
+
+  /// The video filter to open with, from a return or an old channel link.
+  final String? videoKind;
 
   @override
   ConsumerState<ContentPage> createState() => _ContentPageState();
@@ -51,6 +53,7 @@ class ContentPage extends ConsumerStatefulWidget {
 class _ContentPageState extends ConsumerState<ContentPage>
     with SingleTickerProviderStateMixin {
   late ContentChannel _current = _parse(widget.channel);
+  late CommunityChannel _kind = _parseKind(widget.videoKind);
   ContentChannel? _previous;
   late final _visited = <ContentChannel>{_current};
   late final _slide = AnimationController(
@@ -60,11 +63,18 @@ class _ContentPageState extends ConsumerState<ContentPage>
   );
 
   static ContentChannel _parse(String slug) =>
-      ContentChannel.fromSlug(slug) ?? ContentChannel.fanart;
+      ContentChannel.fromSlug(slug) ?? ContentChannel.videos;
+
+  static CommunityChannel _parseKind(String? name) =>
+      CommunityChannel.values.where((c) => c.name == name).firstOrNull ??
+      CommunityChannel.latest;
 
   @override
   void didUpdateWidget(ContentPage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.videoKind != null && widget.videoKind != oldWidget.videoKind) {
+      setState(() => _kind = _parseKind(widget.videoKind));
+    }
     final next = _parse(widget.channel);
     if (next == _current) return;
     setState(() {
@@ -86,10 +96,14 @@ class _ContentPageState extends ConsumerState<ContentPage>
   }
 
   Widget _feed(ContentChannel channel) => switch (channel) {
-    ContentChannel.subscriptions => const SubscriptionFeedView(),
+    ContentChannel.videos => CommunityFeedView(
+      key: ValueKey(_kind),
+      channel: _kind,
+      onChannel: (kind) => setState(() => _kind = kind),
+    ),
     ContentChannel.fanart => _FanartFeed(channel: channel),
     ContentChannel.dynamics => const DynamicFeedView(),
-    _ => CommunityFeedView(channel: channel.communityChannel!),
+    ContentChannel.novels => const NovelFeedView(),
   };
 
   // One stable structure per channel, so moving between active, leaving and
@@ -131,7 +145,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
           key: ValueKey(_current),
           title: _ChannelStrip(current: _current),
           actions: [
-            _headerActions(ref, _current, constraints.maxWidth >= 1040),
+            ?_headerActions(ref, _current, constraints.maxWidth >= 1040),
           ],
         ),
         body: ClipRect(
@@ -150,32 +164,9 @@ class _ContentPageState extends ConsumerState<ContentPage>
     );
   }
 
-  Widget _headerActions(WidgetRef ref, ContentChannel channel, bool wide) {
-    if (channel == ContentChannel.subscriptions) {
-      final controller = ref.watch(subscriptionFeedControllerProvider);
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Builder(
-            builder: (context) => IconButton(
-              tooltip: '管理订阅',
-              onPressed: () => Navigator.of(context, rootNavigator: true).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const SubscriptionsPage(),
-                ),
-              ),
-              icon: const Icon(Icons.people_outline),
-            ),
-          ),
-          IconButton(
-            tooltip: '刷新订阅更新',
-            onPressed: controller.loading ? null : controller.refresh,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      );
-    }
-    if (channel.isBackedByFanartApi) {
+  Widget? _headerActions(WidgetRef ref, ContentChannel channel, bool wide) {
+    if (channel == ContentChannel.novels) return null;
+    if (channel == ContentChannel.fanart) {
       final controller = ref.watch(fanartFeedControllerProvider(channel));
       return ListenableBuilder(
         listenable: controller,
@@ -210,7 +201,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
         ),
       );
     }
-    if (channel.isBackedByDynamicsApi) {
+    if (channel == ContentChannel.dynamics) {
       final controller = ref.watch(dynamicFeedControllerProvider);
       return ListenableBuilder(
         listenable: controller,
@@ -239,9 +230,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
         ),
       );
     }
-    final controller = ref.watch(
-      communityFeedControllerProvider(channel.communityChannel!),
-    );
+    final controller = ref.watch(communityFeedControllerProvider(_kind));
     return ListenableBuilder(
       listenable: controller,
       builder: (_, _) => IconButton(
@@ -368,8 +357,12 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
         );
         return;
       }
-      await Navigator.of(context, rootNavigator: true).push(
-        MaterialPageRoute<void>(builder: (_) => FanartDetailPage(item: item)),
+      openFanart(
+        context,
+        ref,
+        item,
+        returnTo: ReturnTarget.contentChannel,
+        channel: ContentChannel.fanart.slug,
       );
     } on ApiFailure catch (failure) {
       if (!mounted ||
@@ -531,7 +524,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
   );
 }
 
-class _FanartGrid extends StatelessWidget {
+class _FanartGrid extends ConsumerWidget {
   const _FanartGrid({
     required this.state,
     required this.header,
@@ -547,7 +540,7 @@ class _FanartGrid extends StatelessWidget {
   final Future<void> Function() onRefresh;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final placeholder = state.items.isNotEmpty
         ? null
         : switch (state.status) {
@@ -605,14 +598,15 @@ class _FanartGrid extends StatelessWidget {
                       ContentSnapshots.fanart(item),
                       ruleSubject: RuleSubjects.fanart(item),
                     ),
-                    // Root route covers the shell without destroying the
-                    // branch's retained scroll position or loaded pages.
-                    onTap: () =>
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => FanartDetailPage(item: item),
-                          ),
-                        ),
+                    // A root route or an external open keeps the branch's
+                    // scroll position and loaded pages.
+                    onTap: () => openFanart(
+                      context,
+                      ref,
+                      item,
+                      returnTo: ReturnTarget.contentChannel,
+                      channel: ContentChannel.fanart.slug,
+                    ),
                   );
                 },
               ),

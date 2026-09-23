@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
-import '../../video/presentation/video_detail_page.dart';
 import '../../../core/domain/content_identity.dart';
 import '../../library/presentation/library_common.dart';
 import '../../../core/time/calendar_time.dart';
@@ -48,8 +47,9 @@ class VideoCard extends ConsumerWidget {
       ruleSubject: RuleSubjects.video(video),
     );
     return MediaCardSurface(
+      // Videos are watched on Bilibili; the app has no player or detail page.
       onTap: () => video.identity.source == ContentSource.bilibiliVideo
-          ? openVideoDetail(context, video.identity.value)
+          ? watchOnBilibili(context, ref, video, origin: origin)
           : openContentSource(context, ref, ContentSnapshots.video(video)),
       onMore: more,
       child: Stack(
@@ -57,26 +57,13 @@ class VideoCard extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Stack(
-                children: [
-                  MediaCover(
-                    image: video.coverUrl,
-                    aspectRatio: 16 / 9,
-                    video: true,
-                    badgeLeading: true,
-                    badge: video.duration == null
-                        ? null
-                        : _duration(video.duration!),
-                  ),
-                  // Only a Bilibili video can be handed to Bilibili; anything
-                  // else on this card has no external player to go to.
-                  if (video.identity.source == ContentSource.bilibiliVideo)
-                    Positioned(
-                      right: 8,
-                      bottom: 8,
-                      child: WatchOverlayButton(video: video, origin: origin),
-                    ),
-                ],
+              MediaCover(
+                image: video.coverUrl,
+                aspectRatio: 16 / 9,
+                video: true,
+                badge: video.duration == null
+                    ? null
+                    : _duration(video.duration!),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),

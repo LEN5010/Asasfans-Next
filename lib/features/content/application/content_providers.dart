@@ -114,37 +114,30 @@ final communityFeedControllerProvider = Provider.autoDispose
       return controller;
     });
 
-/// Curated fanart, indexed videos and historical posts remain separate sources.
+/// The indexed video stream is the main source; fanart, historical posts and
+/// novels are the archive.
 enum ContentChannel {
+  videos('videos', '视频'),
   fanart('fanart', '二创'),
-  latest('latest', '最新视频'),
-  subscriptions('subscriptions', '订阅更新'),
-  clips('clips', '切片'),
-  replays('replays', '录播'),
-  dynamics('dynamics', '历史动态');
+  dynamics('dynamics', '动态'),
+  novels('novels', '小说');
 
   const ContentChannel(this.slug, this.label);
   final String slug;
   final String label;
 
-  static ContentChannel? fromSlug(String? slug) =>
-      ContentChannel.values.where((c) => c.slug == slug).firstOrNull;
-
-  /// Whether the fanart dataset can currently answer this channel.
-  bool get isBackedByFanartApi => this == ContentChannel.fanart;
-
-  /// Whether the historical publishing record answers this channel.
-  bool get isBackedByDynamicsApi => this == ContentChannel.dynamics;
-
-  /// Whether the community video index answers this channel.
-  bool get isBackedByCommunityApi => communityChannel != null;
-
-  CommunityChannel? get communityChannel => switch (this) {
-    ContentChannel.latest => CommunityChannel.latest,
-    ContentChannel.clips => CommunityChannel.clips,
-    ContentChannel.replays => CommunityChannel.replays,
-    _ => null,
+  /// Earlier slugs from saved returns and links: the video kinds became
+  /// filters inside the video channel, and subscriptions were retired.
+  static const legacyVideoSlugs = {
+    'latest',
+    'clips',
+    'replays',
+    'subscriptions',
   };
+
+  static ContentChannel? fromSlug(String? slug) =>
+      ContentChannel.values.where((c) => c.slug == slug).firstOrNull ??
+      (legacyVideoSlugs.contains(slug) ? ContentChannel.videos : null);
 
   FanartQuery get initialQuery => const FanartQuery();
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
 import '../../shared/widgets/app_backdrop.dart';
@@ -79,72 +78,65 @@ class _AppShellState extends State<AppShell> {
                 // Isolate branch ModalRoute semantics from the preceding rail.
                 child: Semantics(
                   container: true,
-                  child: GlassContentAwareScope(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        GlassContentAwareContent(
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              MediaQuery(
-                                data: mq.copyWith(
-                                  padding: mq.padding.copyWith(
-                                    bottom: mq.padding.bottom + obstruction,
-                                  ),
-                                ),
-                                child: widget.navigationShell,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          MediaQuery(
+                            data: mq.copyWith(
+                              padding: mq.padding.copyWith(
+                                bottom: mq.padding.bottom + obstruction,
                               ),
-                              // Sample the subtle edge fade with the content, never
-                              // the controls themselves. It is not an opaque footer.
-                              if (showBottom)
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 0,
-                                  height: mq.padding.bottom + barHeight + 44,
-                                  child: IgnorePointer(
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Theme.of(context)
-                                                .scaffoldBackgroundColor
-                                                .withValues(alpha: 0),
-                                            Theme.of(context)
-                                                .scaffoldBackgroundColor
-                                                .withValues(alpha: .72),
-                                          ],
-                                        ),
-                                      ),
+                            ),
+                            child: widget.navigationShell,
+                          ),
+                          // A subtle edge fade under the bar, not an opaque footer.
+                          if (showBottom)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: mq.padding.bottom + barHeight + 44,
+                              child: IgnorePointer(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Theme.of(context)
+                                            .scaffoldBackgroundColor
+                                            .withValues(alpha: 0),
+                                        Theme.of(context)
+                                            .scaffoldBackgroundColor
+                                            .withValues(alpha: .72),
+                                      ],
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                        if (showBottom)
-                          Positioned(
-                            left: 12,
-                            right: 12,
-                            bottom: mq.padding.bottom + 12,
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 520,
-                                ),
-                                child: AppGlassNavigation(
-                                  selected: selected,
-                                  onSelect: _select,
-                                  onTools: _tools,
-                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (showBottom)
+                        Positioned(
+                          left: 12,
+                          right: 12,
+                          bottom: mq.padding.bottom + 12,
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 520),
+                              child: AppGlassNavigation(
+                                selected: selected,
+                                onSelect: _select,
+                                onTools: _tools,
                               ),
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
               ),

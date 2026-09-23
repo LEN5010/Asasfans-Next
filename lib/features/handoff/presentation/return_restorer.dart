@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../content/application/content_providers.dart';
+import '../../content/domain/community_video_repository.dart';
 import '../application/handoff_providers.dart';
 import '../application/return_entry_controller.dart';
 import '../domain/return_context.dart';
@@ -129,7 +130,17 @@ class _ReturnRestorerState extends ConsumerState<ReturnRestorer>
         // return composes a route from known values only, so a corrupted or
         // renamed row lands on the channel list instead of a bad path.
         final channel = ContentChannel.fromSlug(context.channel);
-        router.go(channel == null ? '/content' : '/content/${channel.slug}');
+        // A video kind returns as the video channel's filter.
+        final kind = CommunityChannel.values
+            .where((c) => c.name == context.channel)
+            .firstOrNull;
+        router.go(
+          channel == null
+              ? '/content'
+              : kind != null
+              ? '/content/videos?kind=${kind.name}'
+              : '/content/${channel.slug}',
+        );
       case ReturnTarget.library:
         router.go('/mine');
       case ReturnTarget.updates:

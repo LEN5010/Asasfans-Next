@@ -22,13 +22,21 @@ Future<void> showCalendarEvent(
   builder: (_) => CalendarEventDetail(event: event, source: source),
 );
 
-/// The member's support colour, or the group colour for shared and
-/// unattributed events.
+const _cast = ['嘉然', '乃琳', '贝拉', '心宜', '思诺'];
+
+/// Who appears, for the colour strip: the group mark stands for everyone.
+List<String> calendarEventCast(CalendarEvent event) {
+  final members = EventClassifier.members(event);
+  return members.contains('A-SOUL') ? _cast : members;
+}
+
+/// A solo event wears its member's support colour; a shared or group event
+/// wears the group colour, dimmed so it does not glare.
 Color calendarEventColor(CalendarEvent event) {
   final members = EventClassifier.members(event);
-  return AppTheme.memberColors[members.length == 1
-      ? members.single
-      : 'A-SOUL']!;
+  return members.length == 1 && members.single != 'A-SOUL'
+      ? AppTheme.memberColors[members.single]!
+      : Color.lerp(AppTheme.memberColors['A-SOUL'], Colors.black, .18)!;
 }
 
 class CalendarEventTile extends StatelessWidget {
@@ -48,7 +56,7 @@ class CalendarEventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final members = EventClassifier.members(event);
+    final cast = calendarEventCast(event);
     final startDay = CalendarTime.dayOf(event.start, allDay: event.allDay);
     final date = showDate || (day != null && day != startDay);
     final scale = MediaQuery.textScalerOf(context).scale(1);
@@ -65,17 +73,15 @@ class CalendarEventTile extends StatelessWidget {
         ? rest
         : '未命名安排';
     final subtitle = head.isNotEmpty ? rest : '';
+    final live = EventClassifier.classify(event) == EventKind.live;
     final label =
         _tag.firstMatch(title)?.group(1)?.split('/').first.trim() ??
-        (EventClassifier.classify(event) == EventKind.live ? '直播' : '日程');
-    final color = event.isCancelled
-        ? theme.colorScheme.surfaceContainerHighest
-        : calendarEventColor(event);
-    final foreground = event.isCancelled
-        ? theme.colorScheme.outline
-        : ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-        ? Colors.white
-        : const Color(0xFF2B1A20);
+        (live ? '直播' : '日程');
+    // White text throughout; the fill is dimmed so light colours carry it.
+    final fill = event.isCancelled
+        ? const Color(0xFF7D7881)
+        : Color.lerp(calendarEventColor(event), Colors.black, .15)!;
+    const foreground = Colors.white;
     final strike = event.isCancelled ? TextDecoration.lineThrough : null;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,78 +110,103 @@ class CalendarEventTile extends StatelessWidget {
         ),
         Expanded(
           child: Material(
-            color: color,
+            color: fill,
             borderRadius: BorderRadius.circular(16),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => showCalendarEvent(context, event),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                child: DefaultTextStyle.merge(
-                  style: TextStyle(color: foreground, decoration: strike),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
+              child: DefaultTextStyle.merge(
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: foreground, decoration: strike),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (final badge in [
-                            label,
-                            if (event.isCancelled) '已取消',
-                            if (event.status == EventStatus.tentative) '待定',
-                          ])
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: foreground.withValues(alpha: .16),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 1,
-                                ),
-                                child: Text(
-                                  badge,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    decoration: TextDecoration.none,
+                          Row(
+                            children: [
+                              for (final badge in [
+                                label,
+                                if (event.isCancelled) '已取消',
+                                if (event.status == EventStatus.tentative) '待定',
+                              ])
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: .2),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 1,
+                                      ),
+                                      child: Text(
+                                        badge,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              const Spacer(),
+                              if (live && !event.isCancelled)
+                                const Icon(
+                                  Icons.sensors,
+                                  size: 18,
+                                  color: foreground,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            headline,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              height: 1.3,
                             ),
+                          ),
+                          const SizedBox(height: 2),
+                          // Always one line, so every card has the same height.
+                          Text(
+                            subtitle.isEmpty ? ' ' : subtitle,
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.4,
+                              color: foreground.withValues(alpha: .88),
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        headline,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        ),
+                    ),
+                    // Who appears: one segment per member, or the fill's own
+                    // colour when nobody is named.
+                    SizedBox(
+                      height: 5,
+                      child: Row(
+                        children: [
+                          if (cast.isEmpty || event.isCancelled)
+                            Expanded(child: ColoredBox(color: fill))
+                          else
+                            for (final member in cast)
+                              Expanded(
+                                child: ColoredBox(
+                                  color: AppTheme.memberColors[member]!,
+                                ),
+                              ),
+                        ],
                       ),
-                      if (subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(fontSize: 14, height: 1.4),
-                        ),
-                      ],
-                      // A shared event wears the group colour; name its cast.
-                      if (members.length > 1) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          members.join(' · '),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: foreground.withValues(alpha: .8),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 abstract final class MediaCardMetrics {
   static double line(TextScaler scaler, double size, double height) =>
@@ -14,14 +13,12 @@ class MediaCover extends StatelessWidget {
     required this.aspectRatio,
     this.badge,
     this.video = false,
-    this.badgeLeading = false,
     super.key,
   });
   final Uri? image;
   final double aspectRatio;
   final String? badge;
   final bool video;
-  final bool badgeLeading;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -34,12 +31,6 @@ class MediaCover extends StatelessWidget {
             image.toString(),
             fit: BoxFit.cover,
             cacheWidth: 800,
-            frameBuilder: (context, child, frame, synchronous) {
-              if (frame == 0 && !synchronous) {
-                GlassContentAwareScope.maybeOf(context)?.requestSample();
-              }
-              return child;
-            },
             errorBuilder: (_, _, _) => _fallback(context),
             loadingBuilder: (_, child, progress) => progress == null
                 ? child
@@ -53,8 +44,7 @@ class MediaCover extends StatelessWidget {
           _fallback(context),
         if (badge != null)
           Positioned(
-            left: badgeLeading ? 8 : null,
-            right: badgeLeading ? 64 : 8,
+            right: 8,
             bottom: 8,
             child: Align(
               alignment: Alignment.centerLeft,

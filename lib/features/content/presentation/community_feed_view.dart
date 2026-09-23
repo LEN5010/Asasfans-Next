@@ -20,8 +20,15 @@ import 'feed_status_footer.dart';
 ///
 /// Channel alternatives are merged by the pager, separately from fanart.
 class CommunityFeedView extends ConsumerStatefulWidget {
-  const CommunityFeedView({this.channel = CommunityChannel.clips, super.key});
+  const CommunityFeedView({
+    this.channel = CommunityChannel.clips,
+    this.onChannel,
+    super.key,
+  });
   final CommunityChannel channel;
+
+  /// Switches the kind of video; the kinds are filters of one video channel.
+  final ValueChanged<CommunityChannel>? onChannel;
 
   @override
   ConsumerState<CommunityFeedView> createState() => _CommunityFeedViewState();
@@ -57,7 +64,12 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      final order = _OrderRow(query: state.query, onChanged: _applyQuery);
+      final order = _FilterRow(
+        channel: widget.channel,
+        onChannel: widget.onChannel,
+        query: state.query,
+        onChanged: _applyQuery,
+      );
       return RuleFilterScope(
         items: state.videos,
         subjectOf: RuleSubjects.video,
@@ -173,13 +185,32 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
   }
 }
 
-class _OrderRow extends StatelessWidget {
-  const _OrderRow({required this.query, required this.onChanged});
+/// Kind, order and time window in one row: the kinds as chips, the rest as
+/// compact menus so the row does not outgrow a phone.
+class _FilterRow extends StatelessWidget {
+  const _FilterRow({
+    required this.channel,
+    required this.onChannel,
+    required this.query,
+    required this.onChanged,
+  });
 
+  final CommunityChannel channel;
+  final ValueChanged<CommunityChannel>? onChannel;
   final CommunityVideoQuery query;
   final ValueChanged<CommunityVideoQuery> onChanged;
 
-  static const _windows = {7: '一周内', 30: '一月内'};
+  static const _kinds = {
+    CommunityChannel.latest: '全部',
+    CommunityChannel.clips: '切片',
+    CommunityChannel.replays: '录播',
+  };
+  static const _orders = {
+    CommunityVideoOrder.newest: '最新',
+    CommunityVideoOrder.score: '最热',
+  };
+  // 0 stands for no window: a menu cannot return null as a choice.
+  static const _windows = {0: '全部时间', 7: '一周内', 30: '一月内'};
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
@@ -187,33 +218,65 @@ class _OrderRow extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
     child: Row(
       children: [
-        for (final order in CommunityVideoOrder.values) ...[
-          ChoiceChip(
-            label: Text(order == CommunityVideoOrder.newest ? '最新' : '最热'),
-            selected: query.order == order,
-            onSelected: (_) => onChanged(query.copyWith(order: order)),
-          ),
-          const SizedBox(width: 8),
-        ],
-        const SizedBox(width: 4),
-        ChoiceChip(
-          label: const Text('全部时间'),
-          selected: query.withinDays == null,
-          onSelected: (_) => onChanged(query.copyWith(clearDays: true)),
-        ),
-        for (final entry in _windows.entries) ...[
-          const SizedBox(width: 8),
-          ChoiceChip(
-            label: Text(entry.value),
-            selected: query.withinDays == entry.key,
-            onSelected: (selected) => onChanged(
-              selected
-                  ? query.copyWith(withinDays: entry.key)
-                  : query.copyWith(clearDays: true),
+        if (onChannel != null) ...[
+          for (final entry in _kinds.entries) ...[
+            ChoiceChip(
+              showCheckmark: false,
+              label: Text(entry.value),
+              selected: channel == entry.key,
+              onSelected: (_) => onChannel!(entry.key),
             ),
-          ),
+            const SizedBox(width: 8),
+          ],
+          const SizedBox(width: 4),
         ],
+        _MenuChip<CommunityVideoOrder>(
+          tooltip: '排序',
+          label: _orders[query.order]!,
+          values: _orders,
+          onSelected: (order) => onChanged(query.copyWith(order: order)),
+        ),
+        const SizedBox(width: 8),
+        _MenuChip<int>(
+          tooltip: '时间范围',
+          label: _windows[query.withinDays ?? 0] ?? '全部时间',
+          values: _windows,
+          onSelected: (days) => onChanged(
+            days == 0
+                ? query.copyWith(clearDays: true)
+                : query.copyWith(withinDays: days),
+          ),
+        ),
       ],
+    ),
+  );
+}
+
+class _MenuChip<T> extends StatelessWidget {
+  const _MenuChip({
+    required this.tooltip,
+    required this.label,
+    required this.values,
+    required this.onSelected,
+  });
+  final String tooltip;
+  final String label;
+  final Map<T, String> values;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton<T>(
+    tooltip: tooltip,
+    onSelected: onSelected,
+    itemBuilder: (_) => [
+      for (final entry in values.entries)
+        PopupMenuItem(value: entry.key, child: Text(entry.value)),
+    ],
+    child: Chip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text(label), const Icon(Icons.arrow_drop_down, size: 18)],
+      ),
     ),
   );
 }

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/backup/presentation/backup_page.dart';
+import '../../features/content/application/content_providers.dart';
+import '../../features/content/domain/community_video_repository.dart';
 import '../../features/content/presentation/content_page.dart';
 import '../../features/mine/presentation/mine_page.dart';
 import '../../features/library/presentation/library_pages.dart';
@@ -31,12 +33,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   '/calendar',
                   '/mine',
                   '/content',
+                  '/content/videos',
                   '/content/fanart',
-                  '/content/clips',
-                  '/content/latest',
-                  '/content/subscriptions',
-                  '/content/replays',
                   '/content/dynamics',
+                  '/content/novels',
                 }.contains(state.uri.path),
               ),
             ),
@@ -57,25 +57,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/content',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   key: ValueKey('content'),
-                  child: ContentPage(),
+                  child: ContentPage(channel: 'videos'),
                 ),
               ),
               GoRoute(
                 path: '/content/:channel',
-                redirect: (context, state) =>
-                    const {
-                      'fanart',
-                      'clips',
-                      'latest',
-                      'subscriptions',
-                      'replays',
-                      'dynamics',
-                    }.contains(state.pathParameters['channel'])
-                    ? null
-                    : '/content',
+                redirect: (context, state) {
+                  final slug = state.pathParameters['channel'];
+                  if (ContentChannel.values.any((c) => c.slug == slug)) {
+                    return null;
+                  }
+                  // An old video channel keeps its kind as a filter.
+                  if (CommunityChannel.values.any((c) => c.name == slug)) {
+                    return '/content/videos?kind=$slug';
+                  }
+                  return '/content';
+                },
                 pageBuilder: (context, state) => NoTransitionPage(
                   key: const ValueKey('content'),
-                  child: ContentPage(channel: state.pathParameters['channel']!),
+                  child: ContentPage(
+                    channel: state.pathParameters['channel']!,
+                    videoKind: state.uri.queryParameters['kind'],
+                  ),
                 ),
               ),
             ],

@@ -120,9 +120,7 @@ class _TodayPageState extends ConsumerState<TodayPage> {
         item: item,
         onLongPress: () =>
             showContentActions(context, ContentSnapshots.fanart(item)),
-        onTap: () => Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute<void>(builder: (_) => FanartDetailPage(item: item)),
-        ),
+        onTap: () => openFanart(context, ref, item),
       ),
     );
     final clipsShelf = _ContentShelf(
@@ -154,73 +152,76 @@ class _TodayPageState extends ConsumerState<TodayPage> {
           ),
         ],
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1360),
-          child: RefreshIndicator(
-            onRefresh: () => _refresh(true),
-            edgeOffset: MediaQuery.paddingOf(context).top,
-            child: ListView(
-              key: const PageStorageKey('today-scroll'),
-              padding: pageInsets(context, top: 4),
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final schedule = settings.shows(HomeSection.calendar)
-                        ? _ScheduleSection(day: day, onCalendar: _calendar)
-                        : null;
-                    if (constraints.maxWidth >= 900 && schedule != null) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Builder(
+        // Inside the body, so MediaQuery carries the page bar height.
+        builder: (context) => Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1360),
+            child: RefreshIndicator(
+              onRefresh: () => _refresh(true),
+              edgeOffset: MediaQuery.paddingOf(context).top,
+              child: ListView(
+                key: const PageStorageKey('today-scroll'),
+                padding: pageInsets(context, top: 4),
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final schedule = settings.shows(HomeSection.calendar)
+                          ? _ScheduleSection(day: day, onCalendar: _calendar)
+                          : null;
+                      if (constraints.maxWidth >= 900 && schedule != null) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: schedule),
+                            const SizedBox(width: 24),
+                            const Expanded(child: UpdatesSection()),
+                          ],
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(child: schedule),
-                          const SizedBox(width: 24),
-                          const Expanded(child: UpdatesSection()),
+                          if (schedule != null) ...[
+                            schedule,
+                            const SizedBox(height: 16),
+                          ],
+                          const UpdatesSection(),
                         ],
                       );
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (schedule != null) ...[
-                          schedule,
-                          const SizedBox(height: 16),
-                        ],
-                        const UpdatesSection(),
-                      ],
-                    );
-                  },
-                ),
-                if (showFanart || showClips) ...[
-                  const SizedBox(height: 24),
-                  LayoutBuilder(
-                    builder: (context, constraints) =>
-                        constraints.maxWidth >= 960 && showFanart && showClips
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: fanartShelf),
-                              const SizedBox(width: 24),
-                              Expanded(child: clipsShelf),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              if (showFanart) fanartShelf,
-                              if (showFanart && showClips)
-                                const SizedBox(height: 24),
-                              if (showClips) clipsShelf,
-                            ],
-                          ),
+                    },
                   ),
+                  if (showFanart || showClips) ...[
+                    const SizedBox(height: 24),
+                    LayoutBuilder(
+                      builder: (context, constraints) =>
+                          constraints.maxWidth >= 960 && showFanart && showClips
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: fanartShelf),
+                                const SizedBox(width: 24),
+                                Expanded(child: clipsShelf),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                if (showFanart) fanartShelf,
+                                if (showFanart && showClips)
+                                  const SizedBox(height: 24),
+                                if (showClips) clipsShelf,
+                              ],
+                            ),
+                    ),
+                  ],
+                  if (settings.shows(HomeSection.history)) ...[
+                    const SizedBox(height: 24),
+                    const OnThisDaySection(),
+                  ],
                 ],
-                if (settings.shows(HomeSection.history)) ...[
-                  const SizedBox(height: 24),
-                  const OnThisDaySection(),
-                ],
-              ],
+              ),
             ),
           ),
         ),

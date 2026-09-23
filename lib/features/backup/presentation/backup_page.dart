@@ -98,45 +98,50 @@ class _BackupPageState extends ConsumerState<BackupPage> {
     child: Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const AppPageBar(title: Text('备份与恢复')),
-      body: LibraryBody(
-        child: ListView(
-          padding: pageInsets(context, top: 4),
-          children: [
-            if (_busy && !_previewing) const LinearProgressIndicator(),
-            Card(
-              child: Column(
-                children: [
-                  Builder(
-                    builder: (anchor) => ListTile(
-                      leading: const Icon(Icons.file_upload_outlined),
-                      title: const Text('导出备份'),
+      body: Builder(
+        // Inside the body, so MediaQuery carries the page bar height.
+        builder: (context) => LibraryBody(
+          child: ListView(
+            padding: pageInsets(context, top: 4),
+            children: [
+              if (_busy && !_previewing) const LinearProgressIndicator(),
+              Card(
+                child: Column(
+                  children: [
+                    Builder(
+                      builder: (anchor) => ListTile(
+                        leading: const Icon(Icons.file_upload_outlined),
+                        title: const Text('导出备份'),
+                        trailing: const Icon(Icons.chevron_right),
+                        enabled: !_busy,
+                        onTap: () => _export(anchor),
+                      ),
+                    ),
+                    const Divider(indent: 56),
+                    ListTile(
+                      leading: const Icon(Icons.file_download_outlined),
+                      title: const Text('导入备份'),
                       trailing: const Icon(Icons.chevron_right),
                       enabled: !_busy,
-                      onTap: () => _export(anchor),
+                      onTap: _import,
                     ),
-                  ),
-                  const Divider(indent: 56),
-                  ListTile(
-                    leading: const Icon(Icons.file_download_outlined),
-                    title: const Text('导入备份'),
-                    trailing: const Icon(Icons.chevron_right),
-                    enabled: !_busy,
-                    onTap: _import,
-                  ),
-                ],
-              ),
-            ),
-            if (_status != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  _status!,
-                  style: TextStyle(
-                    color: _failed ? Theme.of(context).colorScheme.error : null,
-                  ),
+                  ],
                 ),
               ),
-          ],
+              if (_status != null)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    _status!,
+                    style: TextStyle(
+                      color: _failed
+                          ? Theme.of(context).colorScheme.error
+                          : null,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     ),

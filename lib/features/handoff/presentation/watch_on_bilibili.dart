@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/video_summary.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/library_common.dart';
 import '../application/handoff_coordinator.dart';
-import '../application/handoff_providers.dart';
 import '../domain/return_context.dart';
 
 /// Where the user was picking from when they chose to watch something.
@@ -62,39 +61,4 @@ Future<void> watchOnBilibili(
     query: origin.query,
     anchor: origin.anchorOf?.call(),
   );
-}
-
-/// The cover affordance that says where a tap goes.
-///
-/// Without it the same unlabelled area opens details in one list and Bilibili in
-/// another. The title and metadata keep opening native details.
-class WatchOverlayButton extends ConsumerWidget {
-  const WatchOverlayButton({
-    required this.video,
-    this.origin = WatchOrigin.today,
-    super.key,
-  });
-
-  final VideoSummary video;
-  final WatchOrigin origin;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final coordinator = ref.watch(handoffCoordinatorProvider);
-    return ListenableBuilder(
-      listenable: coordinator,
-      builder: (context, _) => Tooltip(
-        message: '去 B 站看',
-        child: IconButton.filled(
-          // Disabled while a handoff is in flight: one tap, one opening.
-          onPressed: coordinator.busy
-              ? null
-              : () => watchOnBilibili(context, ref, video, origin: origin),
-          iconSize: 20,
-          visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.play_arrow),
-        ),
-      ),
-    );
-  }
 }

@@ -33,63 +33,68 @@ class SavedContentPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: ListView(
-            padding: pageInsets(context, horizontal: 20, top: 12),
-            children: [
-              Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              CreatorLink(
-                mid: item.creator?.mid,
-                child: Text(
-                  item.authorName.isEmpty ? '未知作者' : item.authorName,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (item.identity.source == ContentSource.bilibiliVideo &&
-                  validBvid(item.identity.value))
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () =>
-                        openVideoDetail(context, item.identity.value),
-                    icon: const Icon(Icons.smart_display_outlined),
-                    label: const Text('视频详情'),
+      body: Builder(
+        // Inside the body, so MediaQuery carries the page bar height.
+        builder: (context) => Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: ListView(
+              padding: pageInsets(context, horizontal: 20, top: 12),
+              children: [
+                Text(item.title, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                CreatorLink(
+                  mid: item.creator?.mid,
+                  child: Text(
+                    item.authorName.isEmpty ? '未知作者' : item.authorName,
+                    style: Theme.of(context).textTheme.labelLarge,
                   ),
                 ),
-              if (item.body.isNotEmpty) SelectableText(item.body),
-              const SizedBox(height: 16),
-              for (var index = 0; index < item.images.length; index++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: GestureDetector(
-                    onTap: () =>
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => FanartImageViewer(
-                              images: item.images,
-                              initial: index,
+                const SizedBox(height: 20),
+                if (item.identity.source == ContentSource.bilibiliVideo &&
+                    validBvid(item.identity.value))
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () =>
+                          openVideoDetail(context, item.identity.value),
+                      icon: const Icon(Icons.smart_display_outlined),
+                      label: const Text('视频详情'),
+                    ),
+                  ),
+                if (item.body.isNotEmpty) SelectableText(item.body),
+                const SizedBox(height: 16),
+                for (var index = 0; index < item.images.length; index++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: GestureDetector(
+                      onTap: () =>
+                          Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => FanartImageViewer(
+                                images: item.images,
+                                initial: index,
+                              ),
                             ),
                           ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.cardRadius,
                         ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-                      child: Image.network(
-                        item.images[index].toString(),
-                        fit: BoxFit.fitWidth,
-                        errorBuilder: (_, _, _) => const SizedBox(
-                          height: 100,
-                          child: Center(child: Text('图片加载失败')),
+                        child: Image.network(
+                          item.images[index].toString(),
+                          fit: BoxFit.fitWidth,
+                          errorBuilder: (_, _, _) => const SizedBox(
+                            height: 100,
+                            child: Center(child: Text('图片加载失败')),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

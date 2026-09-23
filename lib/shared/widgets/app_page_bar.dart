@@ -203,7 +203,9 @@ class _AppPageBarState extends State<AppPageBar> {
 }
 
 /// List padding that clears the floating page bar and the bottom navigation,
-/// both of which the shell and [AppPageBar] report through MediaQuery.
+/// both of which the shell and [AppPageBar] report through MediaQuery. Call it
+/// with a context inside the Scaffold body; the page's own context sits
+/// outside the Scaffold and does not include the bar.
 EdgeInsets pageInsets(
   BuildContext context, {
   double horizontal = 16,

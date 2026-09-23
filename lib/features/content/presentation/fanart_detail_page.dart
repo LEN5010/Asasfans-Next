@@ -2,6 +2,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../rules/application/feed_visibility.dart';
 import 'package:flutter/material.dart';
+
+import '../../handoff/domain/return_context.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -14,6 +16,32 @@ import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../library/presentation/history_recorder.dart';
 import '../../library/presentation/library_common.dart';
+
+/// Opens a fanart item where it can be seen: a video on Bilibili, anything
+/// else in the app's own detail page.
+void openFanart(
+  BuildContext context,
+  WidgetRef ref,
+  FanartItem item, {
+  ReturnTarget returnTo = ReturnTarget.today,
+  String? channel,
+}) {
+  if (item.contentType == FanartContentType.video && item.sourceUrl != null) {
+    openContentSource(
+      context,
+      ref,
+      ContentSnapshots.fanart(item),
+      url: item.sourceUrl,
+      returnTo: returnTo,
+      channel: channel,
+    );
+    return;
+  }
+  Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push(MaterialPageRoute<void>(builder: (_) => FanartDetailPage(item: item)));
+}
 
 /// Reading view for one fanart post.
 ///

@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 void main() {
-  test('chrome retains reference tint and package optical defaults', () {
+  test('chrome keeps a legible tint and package optical defaults', () {
     const defaults = LiquidGlassSettings();
     for (final brightness in Brightness.values) {
       final settings = AppGlassStyle.settings(brightness);
@@ -21,7 +21,7 @@ void main() {
       expect(settings.chromaticAberration, defaults.chromaticAberration);
       expect(
         settings.glassColor.a,
-        closeTo(brightness == Brightness.dark ? .24 : .10, .001),
+        closeTo(brightness == Brightness.dark ? .24 : .35, .001),
       );
     }
   });
