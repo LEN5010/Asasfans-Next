@@ -17,6 +17,7 @@ Future<VisibleRandom> drawVisibleFanart(
   required FanartQuery query,
   required RequestCancellation cancellation,
 }) async {
+  var userFiltered = false;
   for (var attempt = 0; attempt < 4; attempt++) {
     await rules.ready();
     if (cancellation.isCancelled) {
@@ -34,12 +35,16 @@ Future<VisibleRandom> drawVisibleFanart(
     if (cancellation.isCancelled) {
       throw const ApiFailure(ApiFailureKind.cancelled);
     }
-    if (!ContentRuleEvaluator(
+    final evaluation = ContentRuleEvaluator(
       policy.snapshot!,
       policy.now,
-    ).evaluate(RuleSubjects.fanart(item)).blocked) {
+    ).evaluate(RuleSubjects.fanart(item));
+    if (!evaluation.blocked) {
       return VisibleRandom(item: item);
     }
+    userFiltered |= evaluation.matches.any(
+      (match) => match.ruleId != ContentRuleEvaluator.builtInCarol,
+    );
   }
-  return const VisibleRandom(filtered: true);
+  return VisibleRandom(filtered: userFiltered);
 }

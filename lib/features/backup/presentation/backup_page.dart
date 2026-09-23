@@ -1,6 +1,8 @@
 import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/presentation/library_common.dart';
@@ -108,22 +110,23 @@ class _BackupPageState extends ConsumerState<BackupPage> {
               Card(
                 child: Column(
                   children: [
-                    Builder(
-                      builder: (anchor) => ListTile(
-                        leading: const Icon(Icons.file_upload_outlined),
-                        title: const Text('导出备份'),
-                        trailing: const Icon(Icons.chevron_right),
-                        enabled: !_busy,
-                        onTap: () => _export(anchor),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Builder(
+                        builder: (anchor) => AppGlassButton.withIcon(
+                          icon: const Icon(Icons.file_upload_outlined),
+                          label: const Text('导出备份'),
+                          onPressed: _busy ? null : () => _export(anchor),
+                        ),
                       ),
                     ),
-                    const Divider(indent: 56),
-                    ListTile(
-                      leading: const Icon(Icons.file_download_outlined),
-                      title: const Text('导入备份'),
-                      trailing: const Icon(Icons.chevron_right),
-                      enabled: !_busy,
-                      onTap: _import,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: AppGlassButton.withIcon(
+                        icon: const Icon(Icons.file_download_outlined),
+                        label: const Text('导入备份'),
+                        onPressed: _busy ? null : _import,
+                      ),
                     ),
                   ],
                 ),
@@ -194,11 +197,12 @@ class _ImportPreview extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        AppGlassButton(
           onPressed: () => Navigator.pop(context, false),
           child: const Text('取消'),
         ),
-        FilledButton(
+        AppGlassButton(
+          selected: true,
           onPressed: () => Navigator.pop(context, true),
           child: const Text('确认合并'),
         ),

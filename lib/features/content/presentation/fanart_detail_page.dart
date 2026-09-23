@@ -3,6 +3,8 @@ import '../../../shared/widgets/app_page_bar.dart';
 import '../../rules/application/feed_visibility.dart';
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+
 import '../../handoff/domain/return_context.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -73,7 +75,7 @@ class FanartDetailPage extends ConsumerWidget {
               ruleSubject: RuleSubjects.fanart(item),
             ),
             if (item.sourceUrl != null)
-              IconButton(
+              AppGlassButton.icon(
                 tooltip: '打开原动态',
                 icon: const Icon(Icons.open_in_new),
                 onPressed: () => openContentSource(
@@ -202,7 +204,7 @@ class _AuthorRow extends ConsumerWidget {
           ),
         ),
         if (mid != null || item.authorSpaceUrl != null)
-          TextButton(
+          AppGlassButton(
             onPressed: mid != null
                 ? () => openCreatorPage(context, mid)
                 : () => ref

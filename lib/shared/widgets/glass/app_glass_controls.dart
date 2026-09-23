@@ -15,7 +15,9 @@ class AppGlassButton extends StatelessWidget {
     required this.onPressed,
     required this.child,
     this.selected = false,
+    this.radius = 100,
     this.tooltip,
+    this.leading,
   }) : iconOnly = false;
 
   const AppGlassButton.icon({
@@ -24,12 +26,28 @@ class AppGlassButton extends StatelessWidget {
     required Widget icon,
     required this.tooltip,
     this.selected = false,
+    this.radius = 100,
   }) : child = icon,
+       leading = null,
        iconOnly = true;
 
+  const AppGlassButton.withIcon({
+    super.key,
+    required this.onPressed,
+    required Widget icon,
+    required Widget label,
+    this.selected = false,
+    this.radius = 100,
+    this.tooltip,
+  }) : child = label,
+       leading = icon,
+       iconOnly = false;
+
+  final Widget? leading;
   final VoidCallback? onPressed;
   final Widget child;
   final bool selected;
+  final double radius;
   final String? tooltip;
   final bool iconOnly;
 
@@ -53,7 +71,16 @@ class AppGlassButton extends StatelessWidget {
             horizontal: iconOnly ? 10 : 16,
             vertical: 10,
           ),
-          child: child,
+          child: leading == null
+              ? child
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    leading!,
+                    const SizedBox(width: 8),
+                    Flexible(child: child),
+                  ],
+                ),
         ),
       ),
     );
@@ -70,7 +97,7 @@ class AppGlassButton extends StatelessWidget {
                       ? colors.secondary.withValues(alpha: .65)
                       : null,
                 ),
-            shape: const LiquidRoundedRectangle(borderRadius: 100),
+            shape: LiquidRoundedRectangle(borderRadius: radius),
             stretch: policy.canAnimate ? .12 : 0,
             interactionScale: policy.canAnimate ? .96 : 1,
             anchorStretch: policy.canAnimate,
@@ -96,7 +123,9 @@ class AppGlassButton extends StatelessWidget {
                   ? colors.secondaryContainer
                   : colors.surfaceContainerHigh,
               disabledForegroundColor: colors.onSurface.withValues(alpha: .38),
-              shape: const StadiumBorder(),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radius),
+              ),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Opacity(
@@ -106,6 +135,31 @@ class AppGlassButton extends StatelessWidget {
           );
     return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
   }
+}
+
+/// Selection chips use the same material/press path as other controls.
+class AppGlassChoice extends StatelessWidget {
+  const AppGlassChoice({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+    this.avatar,
+  });
+  final Widget label;
+  final Widget? avatar;
+  final bool selected;
+  final ValueChanged<bool>? onSelected;
+  @override
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    child: AppGlassButton(
+      selected: selected,
+      leading: avatar,
+      onPressed: onSelected == null ? null : () => onSelected!(!selected),
+      child: label,
+    ),
+  );
 }
 
 class AppGlassSegments<T> extends StatelessWidget {
@@ -316,18 +370,33 @@ class AppGlassSwitch extends StatelessWidget {
     final policy = AppGlassScope.of(context);
     final enabled = onChanged != null;
     final control = policy.usesLiquid && policy.canAnimate
-        ? GlassSwitch(
-            value: value,
-            onChanged: (next) => onChanged?.call(next),
-            semanticLabel: label,
-            activeColor: colors.secondary,
-            inactiveColor: colors.surfaceContainerHighest,
-            height: 30,
-            width: 60,
-            useOwnLayer: true,
-            quality: GlassQuality.standard,
-            settings: AppGlassStyle.settings(Theme.of(context).brightness),
-            enableHaptics: false,
+        ? TextButton(
+            onPressed: enabled ? () => onChanged!(!value) : null,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(60, 48),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shape: const StadiumBorder(),
+            ),
+            child: ExcludeFocus(
+              child: IgnorePointer(
+                child: GlassSwitch(
+                  value: value,
+                  onChanged: (_) {},
+                  semanticLabel: label,
+                  activeColor: colors.secondary,
+                  inactiveColor: colors.surfaceContainerHighest,
+                  height: 30,
+                  width: 60,
+                  useOwnLayer: true,
+                  quality: GlassQuality.standard,
+                  settings: AppGlassStyle.settings(
+                    Theme.of(context).brightness,
+                  ),
+                  enableHaptics: false,
+                ),
+              ),
+            ),
           )
         : TextButton(
             onPressed: enabled ? () => onChanged!(!value) : null,

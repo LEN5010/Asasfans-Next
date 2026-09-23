@@ -162,6 +162,7 @@ class _AppPageBarState extends State<AppPageBar> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  spacing: 8,
                   children: [
                     if (canPop) ...[
                       AppGlassButton.icon(
@@ -175,7 +176,6 @@ class _AppPageBarState extends State<AppPageBar> {
                         ),
                         onPressed: () => Navigator.maybePop(context),
                       ),
-                      const SizedBox(width: 8),
                     ],
                     Expanded(
                       child: Align(
@@ -211,7 +211,6 @@ class _AppPageBarState extends State<AppPageBar> {
                       ),
                     ),
                     if (actions.isNotEmpty && !widget.actionsBelow) ...[
-                      const SizedBox(width: 8),
                       ...actions,
                     ],
                   ],

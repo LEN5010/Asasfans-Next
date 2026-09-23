@@ -6,6 +6,8 @@ import '../../rules/presentation/blocking_actions.dart';
 import '../../rules/presentation/rule_common.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/library_providers.dart';
@@ -29,7 +31,7 @@ class ContentActionsButton extends StatelessWidget {
   final ContentSnapshot item;
   final RuleSubject? ruleSubject;
   @override
-  Widget build(BuildContext context) => IconButton(
+  Widget build(BuildContext context) => AppGlassButton.icon(
     tooltip: '收藏与稍后看',
     icon: const Icon(Icons.bookmark_add_outlined),
     onPressed: () =>
@@ -100,15 +102,18 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                 empty: '还没有收藏夹',
                 header: Column(
                   children: [
-                    SwitchListTile(
+                    ListTile(
                       title: const Text('稍后看'),
-                      secondary: const Icon(Icons.watch_later_outlined),
-                      value: state.later,
-                      onChanged: disabled
-                          ? null
-                          : (value) => _act(
-                              () => repository.setLater(widget.item, value),
-                            ),
+                      leading: const Icon(Icons.watch_later_outlined),
+                      trailing: AppGlassSwitch(
+                        label: '稍后看',
+                        value: state.later,
+                        onChanged: disabled
+                            ? null
+                            : (value) => _act(
+                                () => repository.setLater(widget.item, value),
+                              ),
+                      ),
                     ),
                     if (widget.item.creator case final creator?)
                       subscriptions.when(
@@ -121,28 +126,31 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                         ),
                         error: (error, _) => ListTile(
                           title: Text(libraryError(error)),
-                          trailing: IconButton(
+                          trailing: AppGlassButton.icon(
                             tooltip: '重试订阅',
                             onPressed: () =>
                                 ref.invalidate(subscriptionProvider),
                             icon: const Icon(Icons.refresh),
                           ),
                         ),
-                        data: (subscribed) => SwitchListTile(
+                        data: (subscribed) => ListTile(
                           title: Text(
                             creator.name.isEmpty
                                 ? '订阅 UP ${creator.mid}'
                                 : '订阅 ${creator.name}',
                           ),
-                          secondary: const Icon(Icons.person_add_alt),
-                          value: subscribed,
-                          onChanged: _busy || subscriptions.isLoading
-                              ? null
-                              : (value) => _act(
-                                  () => value
-                                      ? repository.subscribe(creator)
-                                      : repository.unsubscribe(creator.mid),
-                                ),
+                          leading: const Icon(Icons.person_add_alt),
+                          trailing: AppGlassSwitch(
+                            label: '本地订阅',
+                            value: subscribed,
+                            onChanged: _busy || subscriptions.isLoading
+                                ? null
+                                : (value) => _act(
+                                    () => value
+                                        ? repository.subscribe(creator)
+                                        : repository.unsubscribe(creator.mid),
+                                  ),
+                          ),
                         ),
                       ),
                     ListTile(

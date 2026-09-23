@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../application/library_pager.dart';
@@ -84,7 +86,7 @@ class _LibraryPagedListState<T> extends State<LibraryPagedList<T>> {
                             children: [
                               Text(libraryError(state.failure!)),
                               const SizedBox(height: 8),
-                              OutlinedButton(
+                              AppGlassButton(
                                 onPressed: widget.pager.retry,
                                 child: const Text('重试'),
                               ),

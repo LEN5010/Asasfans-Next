@@ -2,6 +2,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/presentation/library_common.dart';
@@ -34,7 +36,7 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
       appBar: AppPageBar(
         title: const Text('更新'),
         actions: [
-          IconButton(
+          AppGlassButton.icon(
             tooltip: '全部标记已读',
             onPressed: state.items.isEmpty ? null : controller.markAllRead,
             icon: const Icon(Icons.done_all),

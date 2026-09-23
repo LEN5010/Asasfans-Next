@@ -2,6 +2,8 @@ import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
@@ -213,30 +215,32 @@ class _FilterRow extends StatelessWidget {
   static const _windows = {0: '全部时间', 7: '一周内', 30: '一月内'};
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-    child: Row(
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+    child: Wrap(
+      spacing: 12,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        if (onChannel != null) ...[
-          for (final entry in _kinds.entries) ...[
-            ChoiceChip(
-              showCheckmark: false,
-              label: Text(entry.value),
-              selected: channel == entry.key,
-              onSelected: (_) => onChannel!(entry.key),
+        if (onChannel != null)
+          SizedBox(
+            width: 220,
+            child: AppGlassSegments<CommunityChannel>(
+              values: _kinds.keys.toList(),
+              selected: channel,
+              labelOf: (value) => _kinds[value]!,
+              onChanged: onChannel,
             ),
-            const SizedBox(width: 8),
-          ],
-          const SizedBox(width: 4),
-        ],
-        _MenuChip<CommunityVideoOrder>(
-          tooltip: '排序',
-          label: _orders[query.order]!,
-          values: _orders,
-          onSelected: (order) => onChanged(query.copyWith(order: order)),
+          ),
+        SizedBox(
+          width: 144,
+          child: AppGlassSegments<CommunityVideoOrder>(
+            values: _orders.keys.toList(),
+            selected: query.order,
+            labelOf: (value) => _orders[value]!,
+            onChanged: (order) => onChanged(query.copyWith(order: order)),
+          ),
         ),
-        const SizedBox(width: 8),
         _MenuChip<int>(
           tooltip: '时间范围',
           label: _windows[query.withinDays ?? 0] ?? '全部时间',
@@ -265,18 +269,20 @@ class _MenuChip<T> extends StatelessWidget {
   final ValueChanged<T> onSelected;
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton<T>(
-    tooltip: tooltip,
-    onSelected: onSelected,
-    itemBuilder: (_) => [
+  Widget build(BuildContext context) => MenuAnchor(
+    menuChildren: [
       for (final entry in values.entries)
-        PopupMenuItem(value: entry.key, child: Text(entry.value)),
+        MenuItemButton(
+          onPressed: () => onSelected(entry.key),
+          child: Text(entry.value),
+        ),
     ],
-    child: Chip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [Text(label), const Icon(Icons.arrow_drop_down, size: 18)],
-      ),
+    builder: (context, controller, _) => AppGlassButton.withIcon(
+      tooltip: tooltip,
+      icon: const Icon(Icons.expand_more, size: 18),
+      label: Text(label),
+      onPressed: () =>
+          controller.isOpen ? controller.close() : controller.open(),
     ),
   );
 }

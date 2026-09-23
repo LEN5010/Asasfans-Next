@@ -1,6 +1,8 @@
 import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/library_providers.dart';
@@ -41,7 +43,7 @@ class ContinueWatchingPage extends ConsumerWidget {
       appBar: AppPageBar(
         title: const Text('继续观看'),
         actions: [
-          IconButton(
+          AppGlassButton.icon(
             tooltip: '清空播放进度',
             icon: const Icon(Icons.delete_sweep_outlined),
             onPressed: state.items.isEmpty || state.loading
@@ -101,7 +103,7 @@ class ContinueWatchingPage extends ConsumerWidget {
                   builder: (_) => SavedContentPage(item: item),
                 ),
               ),
-              trailing: IconButton(
+              trailing: AppGlassButton.icon(
                 tooltip: '移除这条进度',
                 icon: const Icon(Icons.close),
                 onPressed: () => libraryAction(
@@ -240,11 +242,11 @@ class _BookmarkDialogState extends State<_BookmarkDialog> {
       ],
     ),
     actions: [
-      TextButton(
+      AppGlassButton(
         onPressed: () => Navigator.pop(context),
         child: const Text('取消'),
       ),
-      TextButton(
+      AppGlassButton(
         onPressed: () =>
             Navigator.pop(context, (title: _title.text, note: _note.text)),
         child: const Text('保存'),

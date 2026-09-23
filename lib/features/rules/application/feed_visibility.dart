@@ -72,6 +72,16 @@ class FeedVisibility<T> {
        hidden = List.unmodifiable(hidden);
   final List<T> items;
   final List<HiddenContent<T>> hidden;
+
+  // Only user-authored rules have a product-facing history. Raw hidden rows
+  // remain available to the existing projection/pagination logic.
+  List<HiddenContent<T>> get userHidden => hidden
+      .where(
+        (entry) => !entry.evaluation.matches.any(
+          (match) => match.ruleId == ContentRuleEvaluator.builtInCarol,
+        ),
+      )
+      .toList();
   final int tagsUnknownCount;
   final bool prioritized;
   final int epoch;
@@ -96,7 +106,11 @@ FeedVisibility<T> projectFeed<T>(
   for (final item in raw) {
     final subject = subjectOf(item);
     final evaluation = evaluator.evaluate(subject);
-    if (evaluation.tagsUnknown) unknown++;
+    if (evaluation.tagsUnknown &&
+        !evaluation.matches.any(
+          (match) => match.ruleId == ContentRuleEvaluator.builtInCarol,
+        ))
+      unknown++;
     if (evaluation.blocked) {
       hidden.add(
         HiddenContent(item: item, subject: subject, evaluation: evaluation),

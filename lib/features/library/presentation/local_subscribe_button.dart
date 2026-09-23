@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/library_providers.dart';
 import '../domain/library_models.dart';
@@ -18,14 +20,15 @@ class _LocalSubscribeButtonState extends ConsumerState<LocalSubscribeButton> {
   Widget build(BuildContext context) {
     final subscribed = ref.watch(isSubscribedProvider(widget.creator.mid));
     if (subscribed.hasError) {
-      return OutlinedButton(
+      return AppGlassButton(
         onPressed: () =>
             ref.invalidate(isSubscribedProvider(widget.creator.mid)),
         child: const Text('重试订阅状态'),
       );
     }
     final value = subscribed.valueOrNull;
-    return FilledButton.tonalIcon(
+    return AppGlassButton.withIcon(
+      selected: true,
       icon: Icon(
         value == true ? Icons.person_remove_outlined : Icons.person_add_alt_1,
         size: 18,

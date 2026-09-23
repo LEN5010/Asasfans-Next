@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -97,7 +99,7 @@ class UpdateCard extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (event.kind == UpdateKind.subscriptionVideo)
-                    IconButton(
+                    AppGlassButton.icon(
                       tooltip: '去 B 站看',
                       // One handoff at a time, matching every other video entry.
                       onPressed: coordinator.busy
@@ -105,7 +107,7 @@ class UpdateCard extends ConsumerWidget {
                           : () => _open(context, ref),
                       icon: const Icon(Icons.play_arrow),
                     ),
-                  IconButton(
+                  AppGlassButton.icon(
                     tooltip: unread ? '标记已读' : '标记未读',
                     onPressed: () =>
                         controller.markRead([event.id], read: unread),
@@ -115,7 +117,7 @@ class UpdateCard extends ConsumerWidget {
                           : Icons.mark_email_unread_outlined,
                     ),
                   ),
-                  IconButton(
+                  AppGlassButton.icon(
                     tooltip: event.archived ? '移回收件箱' : '归档',
                     onPressed: () => controller.archive([
                       event.id,

@@ -1,6 +1,8 @@
 import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/presentation/library_common.dart';
@@ -54,14 +56,14 @@ class _RulesPageState extends ConsumerState<RulesPage> {
       appBar: AppPageBar(
         title: const Text('内容规则'),
         actions: [
-          IconButton(
+          AppGlassButton.icon(
             tooltip: '刷新规则',
             onPressed: _busy
                 ? null
                 : () => ref.read(rulesControllerProvider.notifier).reload(),
             icon: const Icon(Icons.refresh),
           ),
-          IconButton(
+          AppGlassButton.icon(
             tooltip: '添加规则',
             onPressed: disabled
                 ? null
@@ -85,41 +87,23 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    SwitchListTile(
-                      title: const Text('订阅优先'),
-                      secondary: const Icon(Icons.person_pin_outlined),
-                      value: policy.snapshot?.prioritizeSubscribed ?? false,
-                      onChanged: disabled
-                          ? null
-                          : (value) async {
-                              setState(() => _busy = true);
-                              await libraryAction(
-                                context,
-                                () => repository.setSubscriptionPriority(value),
-                              );
-                              if (mounted) setState(() => _busy = false);
-                            },
-                    ),
-                    const Divider(indent: 56),
                     ListTile(
-                      leading: const Icon(Icons.filter_alt_outlined),
-                      title: const Text('视频默认过滤'),
-                      subtitle: const Text('珈乐 · Carol'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => showDialog<void>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('视频默认过滤'),
-                          content: const Text(
-                            'UID 351609538\n标题、简介、Tag、UP 名称：珈乐 / Carol',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('关闭'),
-                            ),
-                          ],
-                        ),
+                      leading: const Icon(Icons.person_pin_outlined),
+                      title: const Text('订阅优先'),
+                      trailing: AppGlassSwitch(
+                        label: '订阅优先',
+                        value: policy.snapshot?.prioritizeSubscribed ?? false,
+                        onChanged: disabled
+                            ? null
+                            : (value) async {
+                                setState(() => _busy = true);
+                                await libraryAction(
+                                  context,
+                                  () =>
+                                      repository.setSubscriptionPriority(value),
+                                );
+                                if (mounted) setState(() => _busy = false);
+                              },
                       ),
                     ),
                   ],
@@ -133,7 +117,7 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                     for (final kind in [null, ...RuleKind.values])
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
+                        child: AppGlassChoice(
                           label: Text(
                             kind == null ? '全部' : ruleKindLabel(kind),
                           ),
@@ -157,7 +141,7 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                   child: Column(
                     children: [
                       Text(ruleError(policy.failure!)),
-                      TextButton(
+                      AppGlassButton(
                         onPressed: () =>
                             ref.read(rulesControllerProvider.notifier).reload(),
                         child: const Text('重试'),
@@ -219,7 +203,8 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Switch(
+                                  AppGlassSwitch(
+                                    label: '启用规则',
                                     value: draft.enabled,
                                     onChanged: disabled
                                         ? null
@@ -236,7 +221,7 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                                             ),
                                           ),
                                   ),
-                                  IconButton(
+                                  AppGlassButton.icon(
                                     tooltip: '删除规则',
                                     icon: const Icon(Icons.delete_outline),
                                     onPressed: disabled

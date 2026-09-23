@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'glass/app_glass_controls.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 
 /// Completes short pages after layout, including empty intermediate pages.
@@ -101,7 +103,7 @@ class _AutoFillViewportState extends State<AutoFillViewport> {
                 right: 0,
                 bottom: MediaQuery.paddingOf(context).bottom + 12,
                 child: Center(
-                  child: FilledButton.tonal(
+                  child: AppGlassButton(
                     onPressed: () {
                       setState(() {
                         _remaining = _pageBudget;

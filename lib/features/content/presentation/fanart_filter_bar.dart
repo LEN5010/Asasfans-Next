@@ -18,23 +18,26 @@ class FanartFilterBar extends StatelessWidget {
   final ValueChanged<FanartQuery> onChanged;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
+  Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-    child: Row(
+    child: Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (query.keyword.isNotEmpty) ...[
-          InputChip(
+          AppGlassButton.withIcon(
+            tooltip: '清除搜索',
+            icon: const Icon(Icons.close, size: 18),
             label: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 180),
               child: Text(query.keyword, overflow: TextOverflow.ellipsis),
             ),
-            onDeleted: () => onChanged(query.copyWith(keyword: '')),
+            onPressed: () => onChanged(query.copyWith(keyword: '')),
           ),
-          const SizedBox(width: 8),
         ],
         for (final character in FanartCharacter.values) ...[
-          FilterChip(
+          AppGlassChoice(
             label: Text(character.wire),
             selected: query.characters.contains(character),
             onSelected: (selected) => onChanged(
@@ -48,7 +51,6 @@ class FanartFilterBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
         ],
         if (FanartFilterRules.count(query) > 0)
           AppGlassButton(
@@ -222,7 +224,7 @@ class _Options<T> extends StatelessWidget {
           runSpacing: 6,
           children: [
             for (final entry in values.entries)
-              ChoiceChip(
+              AppGlassChoice(
                 label: Text(entry.value),
                 selected: value == entry.key,
                 onSelected: (_) => onChanged(entry.key),

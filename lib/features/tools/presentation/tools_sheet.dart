@@ -5,6 +5,8 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_panel.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/glass/app_glass_surface.dart';
 import '../domain/community_tool.dart';
 
 Future<void> showToolsSheet(BuildContext context) async {
@@ -57,19 +59,23 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: TextField(
-            maxLength: 100,
-            textInputAction: TextInputAction.search,
-            decoration: const InputDecoration(
-              hintText: '搜索工具',
-              counterText: '',
-              isDense: true,
-              prefixIcon: Icon(AppIcons.search),
+          child: AppGlassSurface(
+            radius: 22,
+            child: TextField(
+              maxLength: 100,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                hintText: '搜索工具',
+                filled: false,
+                counterText: '',
+                isDense: true,
+                prefixIcon: Icon(AppIcons.search),
+              ),
+              onChanged: (value) => setState(() {
+                _keyword = value;
+                _openFailed = false;
+              }),
             ),
-            onChanged: (value) => setState(() {
-              _keyword = value;
-              _openFailed = false;
-            }),
           ),
         ),
         const SizedBox(height: 8),
@@ -92,7 +98,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                     final scaler = MediaQuery.textScalerOf(context);
                     final minimum =
                         (constraints.maxWidth >= 560 ? 128 : 92) *
-                        scaler.scale(1).clamp(1.0, 1.65);
+                        scaler.scale(1);
                     final columns =
                         ((constraints.maxWidth - 40 + 12) / (minimum + 12))
                             .floor()
@@ -132,7 +138,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                                       mainAxisSpacing: 10,
                                       crossAxisSpacing: 10,
                                       mainAxisExtent:
-                                          62 +
+                                          64 +
                                           (scaler.scale(14) * 1.35)
                                                   .ceilToDouble() *
                                               2,
@@ -170,45 +176,35 @@ class _ToolTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    // Every tool opens in the browser; the tooltip names where it goes.
-    return Tooltip(
-      message: Uri.parse(tool.url).host,
-      child: Material(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    _toolIcon(tool.id),
-                    size: 22,
-                    color: colors.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  tool.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, height: 1.35),
-                ),
-              ],
+    return AppGlassButton(
+      tooltip: Uri.parse(tool.url).host,
+      radius: AppTokens.cardRadius,
+      onPressed: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              _toolIcon(tool.id),
+              size: 22,
+              color: colors.onPrimaryContainer,
             ),
           ),
-        ),
+          const SizedBox(height: 6),
+          Text(
+            tool.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, height: 1.35),
+          ),
+        ],
       ),
     );
   }

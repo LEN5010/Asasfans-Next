@@ -1,5 +1,6 @@
 import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 
 import '../domain/content_rules.dart';
 import '../domain/rules_repository.dart';
@@ -141,8 +142,8 @@ class _BlockingActionsState extends State<_BlockingActions> {
                     runSpacing: 8,
                     children: [
                       for (final tag in tags)
-                        ActionChip(
-                          avatar: const Icon(Icons.tag, size: 16),
+                        AppGlassButton.withIcon(
+                          icon: const Icon(Icons.tag, size: 16),
                           label: Text(tag),
                           onPressed: _busy
                               ? null

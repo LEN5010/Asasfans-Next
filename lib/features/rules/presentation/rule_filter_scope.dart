@@ -1,5 +1,7 @@
 import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/feed_visibility.dart';
@@ -42,7 +44,7 @@ class RuleFilterScope<T> extends ConsumerWidget {
             children: [
               const Text('内容规则读取失败'),
               const SizedBox(height: 8),
-              OutlinedButton(
+              AppGlassButton(
                 onPressed: () =>
                     ref.read(rulesControllerProvider.notifier).reload(),
                 child: const Text('重试'),
@@ -64,7 +66,8 @@ class RuleStatusBar<T> extends StatelessWidget {
   final FeedVisibility<T> visibility;
   @override
   Widget build(BuildContext context) {
-    if (visibility.hidden.isEmpty &&
+    final hidden = visibility.userHidden;
+    if (hidden.isEmpty &&
         visibility.tagsUnknownCount == 0 &&
         !visibility.prioritized) {
       return const SizedBox.shrink();
@@ -80,15 +83,15 @@ class RuleStatusBar<T> extends StatelessWidget {
               label: Text('订阅优先'),
               visualDensity: VisualDensity.compact,
             ),
-          if (visibility.hidden.isNotEmpty)
-            TextButton.icon(
+          if (hidden.isNotEmpty)
+            AppGlassButton.withIcon(
               icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
-              label: Text('已屏蔽 ${visibility.hidden.length}'),
+              label: Text('已屏蔽 ${hidden.length}'),
               onPressed: () => showAppPanel<void>(
                 context: context,
 
                 maxWidth: 640,
-                builder: (_) => _HiddenItems(visibility: visibility),
+                builder: (_) => _HiddenItems(items: hidden),
               ),
             ),
           if (visibility.tagsUnknownCount > 0)
@@ -103,17 +106,17 @@ class RuleStatusBar<T> extends StatelessWidget {
 }
 
 class _HiddenItems<T> extends StatelessWidget {
-  const _HiddenItems({required this.visibility});
-  final FeedVisibility<T> visibility;
+  const _HiddenItems({required this.items});
+  final List<HiddenContent<T>> items;
   @override
   Widget build(BuildContext context) => Column(
     children: [
       const AppPanelHeader(title: '屏蔽记录'),
       Expanded(
         child: ListView.builder(
-          itemCount: visibility.hidden.length,
+          itemCount: items.length,
           itemBuilder: (_, index) {
-            final entry = visibility.hidden[index];
+            final entry = items[index];
             return ListTile(
               title: Text(
                 entry.subject.displayTitle,

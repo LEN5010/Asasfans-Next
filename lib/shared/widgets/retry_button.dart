@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'glass/app_glass_controls.dart';
+
 import '../../core/network/api_failure.dart';
 
 /// Server cooldown controls both the visible action and the transport gate.
@@ -59,7 +61,7 @@ class _RetryButtonState extends State<RetryButton> {
     final action = _waiting ? null : widget.onRetry;
     final text = Text(_waiting ? '稍后重试' : widget.label);
     return widget.filled
-        ? FilledButton(onPressed: action, child: text)
-        : OutlinedButton(onPressed: action, child: text);
+        ? AppGlassButton(selected: true, onPressed: action, child: text)
+        : AppGlassButton(onPressed: action, child: text);
   }
 }
