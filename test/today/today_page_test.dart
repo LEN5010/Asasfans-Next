@@ -266,14 +266,14 @@ void main() {
         ..items = [_event('九月安排', 30), _event('十月安排', 31)];
       await tester.pumpWidget(_host(calendar, clock: () => now));
       await tester.pumpAndSettle();
-      expect(find.text('9 月 30 日 · 今日安排'), findsOneWidget);
+      expect(find.text('今日 · 9 月 30 日'), findsOneWidget);
       final container = ProviderScope.containerOf(
         tester.element(find.byType(TodayPage)),
       );
       now = now.add(const Duration(seconds: 2));
       container.read(shanghaiDateProvider.notifier).resync();
       await tester.pumpAndSettle();
-      expect(find.text('10 月 1 日 · 今日安排'), findsOneWidget);
+      expect(find.text('今日 · 10 月 1 日'), findsOneWidget);
       expect(find.text('十月安排'), findsOneWidget);
       expect(find.text('九月安排'), findsNothing);
       expect(calendar.forced, [false, false]);

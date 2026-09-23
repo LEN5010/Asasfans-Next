@@ -136,6 +136,8 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     );
     return Scaffold(
       extendBodyBehindAppBar: true,
+      // The shell's backdrop shows through the main pages.
+      backgroundColor: Colors.transparent,
       appBar: AppPageBar(
         title: Text('今日 · ${CalendarAgenda.date(day)}'),
         actions: [

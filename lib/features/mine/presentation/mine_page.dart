@@ -83,6 +83,8 @@ class _MinePageState extends State<MinePage> {
     ];
     return Scaffold(
       extendBodyBehindAppBar: true,
+      // The shell's backdrop shows through the main pages.
+      backgroundColor: Colors.transparent,
       appBar: const AppPageBar(title: Text('我的')),
       body: LayoutBuilder(
         builder: (context, constraints) {

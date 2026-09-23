@@ -51,27 +51,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
+              // Channels are one page updated in place: the same page key
+              // with no route transition, so switching only slides the feed.
               GoRoute(
                 path: '/content',
-                builder: (context, state) => const ContentPage(),
-                routes: [
-                  GoRoute(
-                    path: ':channel',
-                    redirect: (context, state) =>
-                        const {
-                          'fanart',
-                          'clips',
-                          'latest',
-                          'subscriptions',
-                          'replays',
-                          'dynamics',
-                        }.contains(state.pathParameters['channel'])
-                        ? null
-                        : '/content',
-                    builder: (context, state) =>
-                        ContentPage(channel: state.pathParameters['channel']!),
-                  ),
-                ],
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  key: ValueKey('content'),
+                  child: ContentPage(),
+                ),
+              ),
+              GoRoute(
+                path: '/content/:channel',
+                redirect: (context, state) =>
+                    const {
+                      'fanart',
+                      'clips',
+                      'latest',
+                      'subscriptions',
+                      'replays',
+                      'dynamics',
+                    }.contains(state.pathParameters['channel'])
+                    ? null
+                    : '/content',
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: const ValueKey('content'),
+                  child: ContentPage(channel: state.pathParameters['channel']!),
+                ),
               ),
             ],
           ),

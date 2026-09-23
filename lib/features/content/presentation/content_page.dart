@@ -37,29 +37,115 @@ import 'feed_status_footer.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 
-class ContentPage extends ConsumerWidget {
+class ContentPage extends ConsumerStatefulWidget {
   const ContentPage({this.channel = 'fanart', super.key});
   final String channel;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = ContentChannel.fromSlug(channel) ?? ContentChannel.fanart;
+  ConsumerState<ContentPage> createState() => _ContentPageState();
+}
+
+/// Channels are one page: switching slides the feed inside the page, and a
+/// visited feed stays mounted offstage so its scroll and loaded pages return
+/// with it.
+class _ContentPageState extends ConsumerState<ContentPage>
+    with SingleTickerProviderStateMixin {
+  late ContentChannel _current = _parse(widget.channel);
+  ContentChannel? _previous;
+  late final _visited = <ContentChannel>{_current};
+  late final _slide = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+    value: 1,
+  );
+
+  static ContentChannel _parse(String slug) =>
+      ContentChannel.fromSlug(slug) ?? ContentChannel.fanart;
+
+  @override
+  void didUpdateWidget(ContentPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = _parse(widget.channel);
+    if (next == _current) return;
+    setState(() {
+      _previous = _current;
+      _current = next;
+      _visited.add(next);
+    });
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _slide.value = 1;
+    } else {
+      _slide.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _slide.dispose();
+    super.dispose();
+  }
+
+  Widget _feed(ContentChannel channel) => switch (channel) {
+    ContentChannel.subscriptions => const SubscriptionFeedView(),
+    ContentChannel.fanart => _FanartFeed(channel: channel),
+    ContentChannel.dynamics => const DynamicFeedView(),
+    _ => CommunityFeedView(channel: channel.communityChannel!),
+  };
+
+  // One stable structure per channel, so moving between active, leaving and
+  // offstage never remounts the feed.
+  Widget _entry(ContentChannel channel, Widget feed) {
+    final active = channel == _current;
+    final leaving = channel == _previous && _slide.isAnimating;
+    final direction = _previous == null || _current.index >= _previous!.index
+        ? 1.0
+        : -1.0;
+    final curve = CurvedAnimation(parent: _slide, curve: Curves.easeOutCubic);
+    final Animation<Offset> position = active
+        ? Tween(begin: Offset(direction, 0), end: Offset.zero).animate(curve)
+        : leaving
+        ? Tween(begin: Offset.zero, end: Offset(-direction, 0)).animate(curve)
+        : const AlwaysStoppedAnimation(Offset.zero);
+    return KeyedSubtree(
+      key: ValueKey(channel),
+      child: Offstage(
+        offstage: !active && !leaving,
+        child: TickerMode(
+          enabled: active || leaving,
+          child: SlideTransition(position: position, child: feed),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final feeds = {for (final channel in _visited) channel: _feed(channel)};
     return LayoutBuilder(
       builder: (context, constraints) => Scaffold(
         extendBodyBehindAppBar: true,
+        // The shell's backdrop shows through the main pages.
+        backgroundColor: Colors.transparent,
         appBar: AppPageBar(
-          title: _ChannelStrip(current: current),
-          actions: [_headerActions(ref, current, constraints.maxWidth >= 1040)],
+          // A new channel starts with its controls visible.
+          key: ValueKey(_current),
+          title: _ChannelStrip(current: _current),
+          actions: [
+            _headerActions(ref, _current, constraints.maxWidth >= 1040),
+          ],
         ),
-        body: switch (current) {
-          ContentChannel.subscriptions => const SubscriptionFeedView(),
-          ContentChannel.fanart => _FanartFeed(channel: current),
-          ContentChannel.dynamics => const DynamicFeedView(),
-          _ => CommunityFeedView(
-            key: ValueKey(current),
-            channel: current.communityChannel!,
+        body: ClipRect(
+          child: AnimatedBuilder(
+            animation: _slide,
+            builder: (context, _) => Stack(
+              fit: StackFit.expand,
+              children: [
+                for (final entry in feeds.entries)
+                  _entry(entry.key, entry.value),
+              ],
+            ),
           ),
-        },
+        ),
       ),
     );
   }

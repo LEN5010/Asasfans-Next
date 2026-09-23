@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/app_theme.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/horizontal_choices.dart';
@@ -152,6 +153,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
     return Scaffold(
       extendBodyBehindAppBar: true,
+      // The shell's backdrop shows through the main pages.
+      backgroundColor: Colors.transparent,
       appBar: AppPageBar(
         title: const Text('日历'),
         actions: [
@@ -307,6 +310,10 @@ class _CalendarFilters extends StatelessWidget {
     final roles = [
       for (final name in EventClassifier.memberAliases.keys)
         FilterChip(
+          avatar: CircleAvatar(
+            backgroundColor: AppTheme.memberColors[name],
+            radius: 6,
+          ),
           label: Text(name),
           selected: members.contains(name),
           onSelected: (_) => onMember(name),
@@ -378,7 +385,7 @@ class _MonthGrid extends StatelessWidget {
                 final day = DateTime.utc(month.year, month.month, number);
                 return _DayCell(
                   day: day,
-                  count: byDay[day]?.length ?? 0,
+                  events: byDay[day] ?? const [],
                   isSelected: day == selected,
                   isToday: day == today,
                   onTap: () => onSelect(day),
@@ -420,10 +427,10 @@ class _WeekStrip extends StatelessWidget {
                   Expanded(
                     child: _DayCell(
                       day: monday.add(Duration(days: i)),
-                      count: CalendarAgenda.onDay(
+                      events: CalendarAgenda.onDay(
                         events,
                         monday.add(Duration(days: i)),
-                      ).length,
+                      ),
                       isSelected: selected == monday.add(Duration(days: i)),
                       isToday: today == monday.add(Duration(days: i)),
                       onTap: () => onSelect(monday.add(Duration(days: i))),
@@ -462,19 +469,20 @@ class _Weekdays extends StatelessWidget {
 class _DayCell extends StatelessWidget {
   const _DayCell({
     required this.day,
-    required this.count,
+    required this.events,
     required this.isSelected,
     required this.isToday,
     required this.onTap,
   });
   final DateTime day;
-  final int count;
+  final List<CalendarEvent> events;
   final bool isSelected;
   final bool isToday;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final count = events.length;
     return Semantics(
       button: true,
       selected: isSelected,
@@ -510,16 +518,21 @@ class _DayCell extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    for (var i = 0; i < count.clamp(0, 3); i++)
+                    // One dot per event in its member's colour; the selected
+                    // day's pink fill would swallow a pink dot, so it rings.
+                    for (final event in events.take(3))
                       Container(
-                        width: 5,
-                        height: 5,
+                        width: 6,
+                        height: 6,
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected
-                              ? colors.onSecondaryContainer
-                              : colors.secondary,
+                          color: event.isCancelled
+                              ? colors.outlineVariant
+                              : calendarEventColor(event),
+                          border: isSelected
+                              ? Border.all(color: Colors.white, width: 1)
+                              : null,
                         ),
                       ),
                   ],

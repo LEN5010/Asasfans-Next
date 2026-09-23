@@ -7,6 +7,16 @@ abstract final class AppTheme {
   static const deepRose = Color(0xFF8A3E59);
   static const ink = Color(0xFF451E2C);
 
+  /// Official support colours, keyed by the calendar's member names.
+  static const memberColors = <String, Color>{
+    'A-SOUL': Color(0xFFFC966E),
+    '嘉然': Color(0xFFE799B0),
+    '乃琳': Color(0xFF576690),
+    '贝拉': Color(0xFFDB7D74),
+    '心宜': Color(0xFFC93773),
+    '思诺': Color(0xFF7252C0),
+  };
+
   static final light = _build(Brightness.light);
   static final dark = _build(Brightness.dark);
 

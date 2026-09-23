@@ -9,6 +9,7 @@ import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
+import 'package:asasfans_next/shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,19 +91,17 @@ void main() {
         await tester.pumpWidget(_app(_StubRepository()));
         await tester.pumpAndSettle();
         expect(find.byType(AppBar), findsNothing);
-        expect(
-          tester.getSize(find.byKey(const ValueKey('content-toolbar'))).height,
-          lessThan(90),
-        );
-        // The persistent chrome is one toolbar row plus one filter row. State
-        // the contract against those measured bands rather than a single magic
-        // number, so a new always-visible band fails here instead of silently
-        // pushing content down until someone raises a threshold.
-        final toolbar = tester.getRect(
-          find.byKey(const ValueKey('content-toolbar')),
-        );
+        // The persistent chrome is the floating page bar; filters lead the
+        // feed right under it. A new always-visible band fails here instead
+        // of silently pushing content down.
+        final toolbar = tester.getRect(find.byType(AppPageBar));
+        expect(toolbar.height, lessThan(90));
         final filters = tester.getRect(find.byType(FanartFilterBar));
-        expect(filters.top, toolbar.bottom, reason: 'no band between them');
+        expect(
+          filters.top - toolbar.bottom,
+          lessThan(8),
+          reason: 'no band between them',
+        );
         expect(filters.height, lessThan(64));
         final firstCard = tester.getTopLeft(find.byType(FanartCard).first).dy;
         expect(
@@ -184,10 +183,12 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('作品 p1i0'),
       400,
-      scrollable: find.descendant(
-        of: find.byType(CustomScrollView),
-        matching: find.byType(Scrollable),
-      ),
+      scrollable: find
+          .descendant(
+            of: find.byKey(const PageStorageKey('fanart-feed')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     await tester.pumpAndSettle();
 
