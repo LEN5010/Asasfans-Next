@@ -162,6 +162,11 @@ class GlassProbeSceneState extends State<GlassProbeScene>
   }
 
   @override
+  void didChangeMetrics() {
+    if (collecting) invalidReasons.add('window_metrics_changed');
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (collecting) _validateSample();
@@ -175,6 +180,9 @@ class GlassProbeSceneState extends State<GlassProbeScene>
     }
     if (measuredMode == GlassMaterialMode.liquid && !policy.usesLiquid) {
       invalidReasons.add('liquid_not_effective:${policy.fallback.name}');
+    }
+    if (measuredMode == GlassMaterialMode.liquid && widget.nativeContent) {
+      invalidReasons.add('native_background_forces_clear');
     }
   }
 
@@ -326,7 +334,18 @@ class GlassProbeSceneState extends State<GlassProbeScene>
         'shaderFiltersSupported': ui.ImageFilter.isShaderFilterSupported,
         'refreshRate': refresh,
         'frameBudgetMs': budget,
-        'windowLogicalSize': MediaQuery.sizeOf(context).toString(),
+        'sourceRevision': const String.fromEnvironment(
+          'ASASFANS_PROBE_REVISION',
+          defaultValue: 'unrecorded',
+        ),
+        'windowLogicalSize': {
+          'width': MediaQuery.sizeOf(context).width,
+          'height': MediaQuery.sizeOf(context).height,
+        },
+        'devicePixelRatio': MediaQuery.devicePixelRatioOf(context),
+        'theme': Theme.of(context).brightness.name,
+        'reduceMotion': AppGlassScope.of(context).reduceMotion,
+        'nativeBackground': widget.nativeContent,
         'rssBytes': ProcessInfo.currentRss,
         'idleFramesIn3Seconds': idleFrames,
         'rounds': rounds,

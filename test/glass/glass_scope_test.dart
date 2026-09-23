@@ -39,6 +39,8 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       expect(scene.invalidReasons, contains('application_inactive'));
+      scene.didChangeMetrics();
+      expect(scene.invalidReasons, contains('window_metrics_changed'));
       scene.collecting = false;
     },
   );
