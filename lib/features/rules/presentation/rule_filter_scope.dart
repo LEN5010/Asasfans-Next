@@ -1,7 +1,7 @@
 import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/feed_visibility.dart';
@@ -44,7 +44,7 @@ class RuleFilterScope<T> extends ConsumerWidget {
             children: [
               const Text('内容规则读取失败'),
               const SizedBox(height: 8),
-              AppGlassButton(
+              AppButton(
                 onPressed: () =>
                     ref.read(rulesControllerProvider.notifier).reload(),
                 child: const Text('重试'),
@@ -84,7 +84,7 @@ class RuleStatusBar<T> extends StatelessWidget {
               visualDensity: VisualDensity.compact,
             ),
           if (hidden.isNotEmpty)
-            AppGlassButton.withIcon(
+            AppButton.withIcon(
               icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
               label: Text('已屏蔽 ${hidden.length}'),
               onPressed: () => showAppPanel<void>(

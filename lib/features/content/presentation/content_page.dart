@@ -10,7 +10,7 @@ import '../../rules/presentation/rule_filter_scope.dart';
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -145,7 +145,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
           // A new channel starts with its controls visible.
           revealKey: _current,
           titleIsControl: true,
-          controlExtent: AppGlassSegments.heightFor(context),
+          controlExtent: AppSegments.heightFor(context),
           actionsBelow: constraints.maxWidth < 760,
           title: _ChannelStrip(current: _current),
           actions: [
@@ -197,7 +197,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
               onOpen: (spec) => controller.applyQuery(spec.toFanart()),
             ),
             if (wide)
-              AppGlassButton.icon(
+              AppButton.icon(
                 tooltip: '刷新',
                 onPressed: controller.state.isBusy ? null : controller.refresh,
                 icon: const Icon(Icons.refresh),
@@ -227,7 +227,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
               currentSpec: () => ChannelSpec.ofDynamic(controller.state.query),
               onOpen: (spec) => controller.applyQuery(spec.toDynamic()),
             ),
-            AppGlassButton.icon(
+            AppButton.icon(
               tooltip: '刷新',
               onPressed: controller.state.isBusy ? null : controller.refresh,
               icon: const Icon(Icons.refresh),
@@ -239,7 +239,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
     final controller = ref.watch(communityFeedControllerProvider(_kind));
     return ListenableBuilder(
       listenable: controller,
-      builder: (_, _) => AppGlassButton.icon(
+      builder: (_, _) => AppButton.icon(
         tooltip: '刷新',
         onPressed: controller.state.isBusy ? null : controller.refresh,
         icon: const Icon(Icons.refresh),
@@ -255,7 +255,8 @@ class _ChannelStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 400),
-    child: AppGlassSegments<ContentChannel>(
+    child: AppSegments<ContentChannel>(
+      navigation: true,
       values: ContentChannel.values,
       labelOf: (value) => value.label,
       selected: current,
@@ -339,7 +340,7 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
   }
 
   @override
-  Widget build(BuildContext context) => AppGlassButton.icon(
+  Widget build(BuildContext context) => AppButton.icon(
     tooltip: '随机二创',
     onPressed: _loading ? null : _draw,
     icon: _loading

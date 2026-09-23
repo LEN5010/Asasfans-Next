@@ -10,7 +10,7 @@ import 'package:asasfans_next/features/preferences/presentation/preferences_cont
 import 'package:asasfans_next/features/today/application/today_providers.dart';
 import 'package:asasfans_next/features/today/presentation/today_page.dart';
 import 'package:flutter/material.dart';
-import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -76,9 +76,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<AppGlassSwitch>(
+            .widget<AppSwitch>(
               find.byWidgetPredicate(
-                (w) => w is AppGlassSwitch && w.label == '首页切片',
+                (w) => w is AppSwitch && w.label == '首页切片',
               ),
             )
             .value,
@@ -90,9 +90,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<AppGlassSwitch>(
+            .widget<AppSwitch>(
               find.byWidgetPredicate(
-                (w) => w is AppGlassSwitch && w.label == '首页切片',
+                (w) => w is AppSwitch && w.label == '首页切片',
               ),
             )
             .value,

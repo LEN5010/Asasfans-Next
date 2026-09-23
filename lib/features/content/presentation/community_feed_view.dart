@@ -3,7 +3,7 @@ import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
@@ -225,7 +225,7 @@ class _FilterRow extends StatelessWidget {
         if (onChannel != null)
           SizedBox(
             width: 220,
-            child: AppGlassSegments<CommunityChannel>(
+            child: AppSegments<CommunityChannel>(
               values: _kinds.keys.toList(),
               selected: channel,
               labelOf: (value) => _kinds[value]!,
@@ -234,7 +234,7 @@ class _FilterRow extends StatelessWidget {
           ),
         SizedBox(
           width: 144,
-          child: AppGlassSegments<CommunityVideoOrder>(
+          child: AppSegments<CommunityVideoOrder>(
             values: _orders.keys.toList(),
             selected: query.order,
             labelOf: (value) => _orders[value]!,
@@ -277,7 +277,7 @@ class _MenuChip<T> extends StatelessWidget {
           child: Text(entry.value),
         ),
     ],
-    builder: (context, controller, _) => AppGlassButton.withIcon(
+    builder: (context, controller, _) => AppButton.withIcon(
       tooltip: tooltip,
       icon: const Icon(Icons.expand_more, size: 18),
       label: Text(label),

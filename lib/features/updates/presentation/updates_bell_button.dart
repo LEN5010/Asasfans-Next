@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../application/update_providers.dart';
 
 /// The bell that carries the unread count.
@@ -16,7 +16,7 @@ class UpdatesBellButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final counts = ref.watch(unreadUpdateCountProvider).valueOrNull;
     final unread = counts?.unread ?? 0;
-    return AppGlassButton.icon(
+    return AppButton.icon(
       tooltip: '应用内更新',
       onPressed: () => context.go('/mine/updates'),
       icon: Badge(

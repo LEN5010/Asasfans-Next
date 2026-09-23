@@ -5,7 +5,7 @@ import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/app_panel.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../content/presentation/content_images.dart';
 import '../../content/presentation/content_search_control.dart';
@@ -162,7 +162,7 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                AppGlassButton.icon(
+                AppButton.icon(
                   tooltip: '筛选与排序',
                   icon: const Icon(Icons.tune),
                   selected: query != const NovelQuery(),
@@ -213,7 +213,7 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
                   ),
                 ),
                 if (query != const NovelQuery())
-                  AppGlassButton.icon(
+                  AppButton.icon(
                     tooltip: '清除小说筛选',
                     icon: const Icon(Icons.close),
                     onPressed: () => widget.onChanged(const NovelQuery()),
@@ -272,13 +272,13 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            AppGlassButton(
+            AppButton(
               selected: _draft.characters.isEmpty,
               onPressed: () => _change(_draft.copyWith(characters: {})),
               child: const Text('全部'),
             ),
             for (final character in NovelCharacter.values)
-              AppGlassButton(
+              AppButton(
                 selected: _draft.characters.contains(character),
                 onPressed: () => _change(
                   _draft.copyWith(
@@ -298,7 +298,7 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
           ),
       ]),
       group('分级', [
-        AppGlassSegments<NovelRatingFilter>(
+        AppSegments<NovelRatingFilter>(
           values: NovelRatingFilter.values,
           selected: _draft.rating,
           labelOf: (value) => value.label,
@@ -317,7 +317,7 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
           ),
       ]),
       group('搜索范围', [
-        AppGlassSegments<NovelSearchScope>(
+        AppSegments<NovelSearchScope>(
           values: NovelSearchScope.values,
           selected: _draft.scope,
           labelOf: (value) => value.label,
@@ -325,7 +325,7 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
         ),
       ]),
       group('排序', [
-        AppGlassSegments<NovelSort>(
+        AppSegments<NovelSort>(
           values: NovelSort.values,
           selected: _draft.sort,
           labelOf: (value) => value.label,
@@ -357,7 +357,7 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
             title: '筛选小说',
             onClose: widget.onClose,
             actions: [
-              AppGlassButton(
+              AppButton(
                 onPressed: () => _change(const NovelQuery()),
                 child: const Text('重置'),
               ),
@@ -374,13 +374,10 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Row(
                 children: [
-                  AppGlassButton(
-                    onPressed: widget.onClose,
-                    child: const Text('取消'),
-                  ),
+                  AppButton(onPressed: widget.onClose, child: const Text('取消')),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: AppGlassButton(
+                    child: AppButton(
                       selected: true,
                       onPressed: () => widget.onApply(_draft),
                       child: const Text('应用筛选'),
@@ -509,7 +506,7 @@ class _NovelCard extends ConsumerWidget {
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
-                AppGlassButton(
+                AppButton(
                   onPressed: item.isR18 && item.sourceUrl != null
                       ? () => openNovelSource(context, ref, item.sourceUrl!)
                       : () => openNovel(context, item),

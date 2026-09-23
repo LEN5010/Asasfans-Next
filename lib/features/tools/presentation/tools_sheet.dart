@@ -5,8 +5,7 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_panel.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
-import '../../../shared/widgets/glass/app_glass_surface.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../domain/community_tool.dart';
 
 Future<void> showToolsSheet(BuildContext context) async {
@@ -59,23 +58,20 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: AppGlassSurface(
-            radius: 22,
-            child: TextField(
-              maxLength: 100,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                hintText: '搜索工具',
-                filled: false,
-                counterText: '',
-                isDense: true,
-                prefixIcon: Icon(AppIcons.search),
-              ),
-              onChanged: (value) => setState(() {
-                _keyword = value;
-                _openFailed = false;
-              }),
+          child: TextField(
+            maxLength: 100,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: '搜索工具',
+              filled: true,
+              counterText: '',
+              isDense: true,
+              prefixIcon: Icon(AppIcons.search),
             ),
+            onChanged: (value) => setState(() {
+              _keyword = value;
+              _openFailed = false;
+            }),
           ),
         ),
         const SizedBox(height: 8),
@@ -138,7 +134,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                                       mainAxisSpacing: 10,
                                       crossAxisSpacing: 10,
                                       mainAxisExtent:
-                                          64 +
+                                          50 +
                                           (scaler.scale(14) * 1.35)
                                                   .ceilToDouble() *
                                               2,
@@ -176,7 +172,7 @@ class _ToolTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return AppGlassButton(
+    return AppButton(
       tooltip: Uri.parse(tool.url).host,
       radius: AppTokens.cardRadius,
       onPressed: onTap,
@@ -184,15 +180,15 @@ class _ToolTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: colors.primaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               _toolIcon(tool.id),
-              size: 22,
+              size: 20,
               color: colors.onPrimaryContainer,
             ),
           ),

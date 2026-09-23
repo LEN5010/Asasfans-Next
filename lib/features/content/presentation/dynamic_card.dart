@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/bilibili_id.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/media_cover.dart';
 import '../../creator/presentation/creator_link.dart';
@@ -170,7 +170,7 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
                         const SizedBox(height: 10),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: AppGlassButton(
+                          child: AppButton(
                             onPressed: () => open(original.sourceUrl!),
                             child: const Text('查看原文 ↗'),
                           ),
@@ -186,7 +186,7 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
                 padding: const EdgeInsets.only(top: 12),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: AppGlassButton(
+                  child: AppButton(
                     onPressed: () => setState(() => _expanded = !_expanded),
                     child: Text(_expanded ? '收起正文' : '展开全文'),
                   ),
@@ -208,7 +208,7 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
                   style: theme.textTheme.bodySmall,
                 ),
                 if (post.sourceUrl != null)
-                  AppGlassButton(
+                  AppButton(
                     onPressed: () => open(post.sourceUrl!),
                     child: Text(
                       post.type == DynamicType.forward ? '查看这条转发 ↗' : '查看原动态 ↗',
@@ -401,7 +401,7 @@ class _MediaCard extends StatelessWidget {
                       video: media.kind == DynamicMediaKind.video,
                     ),
                     if (media.kind == DynamicMediaKind.video && target != null)
-                      AppGlassButton.icon(
+                      AppButton.icon(
                         onPressed: () => onOpen(target),
                         icon: const Icon(Icons.play_arrow),
                         tooltip: '去 B 站看',
@@ -452,7 +452,7 @@ class _MediaCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 10),
                     child: expired
                         ? Text('已过期', style: theme.textTheme.labelMedium)
-                        : AppGlassButton(
+                        : AppButton(
                             onPressed: () => onOpen(target!),
                             child: Text(
                               reserve

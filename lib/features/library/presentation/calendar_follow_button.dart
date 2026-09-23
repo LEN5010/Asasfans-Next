@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -39,18 +39,18 @@ class _CalendarFollowButtonState extends ConsumerState<CalendarFollowButton> {
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         entries.when(
-          loading: () => AppGlassButton.withIcon(
+          loading: () => AppButton.withIcon(
             onPressed: null,
             icon: Icon(Icons.star_border),
             label: Text('关注日程'),
           ),
-          error: (error, _) => AppGlassButton.withIcon(
+          error: (error, _) => AppButton.withIcon(
             onPressed: () => ref.invalidate(provider),
             icon: const Icon(Icons.refresh),
             label: const Text('重试关注状态'),
           ),
           data: (followed) {
-            return AppGlassButton.withIcon(
+            return AppButton.withIcon(
               icon: Icon(followed ? Icons.star : Icons.star_border),
               label: Text(followed ? '已关注' : '关注日程'),
               onPressed: _busy || entries.isLoading

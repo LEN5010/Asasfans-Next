@@ -2,7 +2,7 @@ import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/time/calendar_time.dart';
@@ -48,7 +48,7 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
     appBar: AppPageBar(
       title: const Text('关注日程'),
       actions: [
-        AppGlassButton.icon(
+        AppButton.icon(
           tooltip: '刷新当前日历',
           onPressed: _refreshing ? null : _refresh,
           icon: const Icon(Icons.refresh),
@@ -86,7 +86,7 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
             ),
             onTap: () =>
                 showCalendarEvent(context, event, source: entry.key.source),
-            trailing: AppGlassButton.icon(
+            trailing: AppButton.icon(
               tooltip: '取消关注',
               icon: const Icon(Icons.star),
               onPressed: () => libraryAction(

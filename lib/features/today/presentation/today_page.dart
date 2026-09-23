@@ -13,7 +13,7 @@ import '../../../core/network/api_failure.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
@@ -133,7 +133,7 @@ class _TodayPageState extends ConsumerState<TodayPage> {
         title: Text('今日 · ${CalendarAgenda.date(day)}'),
         actions: [
           const UpdatesBellButton(),
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '刷新今日',
             onPressed: _refreshing ? null : () => _refresh(true),
             icon: _refreshing
@@ -250,7 +250,7 @@ class _ScheduleSection extends ConsumerWidget {
                   if (entries.length > 2)
                     Align(
                       alignment: Alignment.centerRight,
-                      child: AppGlassButton(
+                      child: AppButton(
                         onPressed: onCalendar,
                         child: Text('还有 ${entries.length - 2} 项安排'),
                       ),
@@ -351,7 +351,7 @@ class _SectionHeader extends StatelessWidget {
       Expanded(
         child: Text(title, style: Theme.of(context).textTheme.titleMedium),
       ),
-      AppGlassButton(onPressed: onAll, child: Text(action)),
+      AppButton(onPressed: onAll, child: Text(action)),
     ],
   );
 }

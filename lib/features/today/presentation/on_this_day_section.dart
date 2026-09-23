@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_failure.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../content/application/content_providers.dart';
 import '../../content/domain/dynamic_repository.dart';
 import '../../content/presentation/dynamic_card.dart';
@@ -32,7 +32,7 @@ class OnThisDaySection extends ConsumerWidget {
             Text('历史上的今天', style: Theme.of(context).textTheme.titleMedium),
             SizedBox(
               width: 200,
-              child: AppGlassSegments<OnThisDaySort>(
+              child: AppSegments<OnThisDaySort>(
                 values: OnThisDaySort.values,
                 selected: sort,
                 labelOf: (value) => switch (value) {
@@ -58,7 +58,7 @@ class OnThisDaySection extends ConsumerWidget {
               children: [
                 Text(error is ApiFailure ? error.message : '内容加载失败'),
                 const SizedBox(height: 8),
-                AppGlassButton(
+                AppButton(
                   onPressed: () => ref.invalidate(onThisDayProvider),
                   child: const Text('重试'),
                 ),

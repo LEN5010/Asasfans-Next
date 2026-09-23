@@ -2,7 +2,7 @@ import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -350,7 +350,7 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
                           ),
                         ),
                       ),
-                    AppGlassButton.withIcon(
+                    AppButton.withIcon(
                       selected: true,
                       icon: const Icon(Icons.open_in_new, size: 18),
                       label: const Text('打开原站'),

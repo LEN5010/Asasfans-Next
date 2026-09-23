@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/app_panel.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/sliver_content_masonry.dart';
 import 'content_images.dart';
 import 'dynamic_card.dart';
@@ -174,7 +174,7 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
             children: [
               Row(
                 children: [
-                  AppGlassButton(
+                  AppButton(
                     selected: _expanded || query != const DynamicQuery(),
                     onPressed: () async {
                       if (wide) {
@@ -210,7 +210,7 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
                     ),
                   ),
                   if (query != const DynamicQuery())
-                    AppGlassButton.icon(
+                    AppButton.icon(
                       tooltip: '清除筛选',
                       onPressed: () => apply(const DynamicQuery()),
                       icon: const Icon(Icons.close),
@@ -311,7 +311,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
       padding: const EdgeInsets.only(top: 18, bottom: 10),
       child: Text(text, style: theme.textTheme.titleSmall),
     );
-    Widget memberButton(DynamicMember member) => AppGlassButton(
+    Widget memberButton(DynamicMember member) => AppButton(
       tooltip: member.name,
       selected: _draft.memberId == member.id,
       onPressed: () =>
@@ -336,7 +336,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              AppGlassButton(
+              AppButton(
                 selected: _draft.memberId == null,
                 onPressed: () =>
                     setState(() => _draft = _draft.copyWith(clearMember: true)),
@@ -349,7 +349,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
             Row(
               children: [
                 const Expanded(child: Text('成员暂时加载失败')),
-                AppGlassButton(
+                AppButton(
                   onPressed: () => ref.invalidate(dynamicMembersProvider),
                   child: const Text('重试'),
                 ),
@@ -377,14 +377,14 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              AppGlassButton(
+              AppButton(
                 selected: _draft.type == null,
                 onPressed: () =>
                     setState(() => _draft = _draft.copyWith(clearType: true)),
                 child: const Text('全部'),
               ),
               for (final type in DynamicType.values)
-                AppGlassButton(
+                AppButton(
                   selected: _draft.type == type,
                   onPressed: () =>
                       setState(() => _draft = _draft.copyWith(type: type)),
@@ -398,7 +398,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              AppGlassButton(
+              AppButton(
                 onPressed: _pickRange,
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -414,7 +414,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
                   '${_day(_draft.from!)} — ${_day(_draft.to!.subtract(const Duration(milliseconds: 1)))}',
                 ),
               if (_draft.from != null || _draft.to != null)
-                AppGlassButton.icon(
+                AppButton.icon(
                   tooltip: '清除日期',
                   icon: const Icon(Icons.close),
                   onPressed: () => setState(
@@ -424,7 +424,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
             ],
           ),
           heading('排序'),
-          AppGlassSegments<DynamicSort>(
+          AppSegments<DynamicSort>(
             values: DynamicSort.values,
             labelOf: _sortLabel,
             selected: _draft.sort,
@@ -442,7 +442,7 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
           title: '筛选动态',
           onClose: widget.onClose,
           actions: [
-            AppGlassButton(
+            AppButton(
               onPressed: () => setState(() => _draft = const DynamicQuery()),
               child: const Text('重置'),
             ),
@@ -458,13 +458,10 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
             child: Row(
               children: [
-                AppGlassButton(
-                  onPressed: widget.onClose,
-                  child: const Text('取消'),
-                ),
+                AppButton(onPressed: widget.onClose, child: const Text('取消')),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: AppGlassButton(
+                  child: AppButton(
                     selected: true,
                     onPressed: () => widget.onApply(_draft),
                     child: const Text('应用筛选'),

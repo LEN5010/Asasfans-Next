@@ -6,7 +6,7 @@ import 'package:asasfans_next/features/rules/data/sqlite_rules_repository.dart';
 import 'package:asasfans_next/features/rules/domain/content_rules.dart';
 import 'package:asasfans_next/features/rules/presentation/rules_page.dart';
 import 'package:flutter/material.dart';
-import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,19 +68,16 @@ void main() {
     expect(find.textContaining('Carol'), findsNothing);
     expect(find.text('视频默认过滤'), findsNothing);
     writes.fail = true;
-    await tester.tap(find.byType(AppGlassSwitch).last);
+    await tester.tap(find.byType(AppSwitch).last);
     await tester.pumpAndSettle();
     expect((await repository.load()).rules.single.draft.enabled, isTrue);
-    expect(
-      tester.widget<AppGlassSwitch>(find.byType(AppGlassSwitch).last).value,
-      isTrue,
-    );
+    expect(tester.widget<AppSwitch>(find.byType(AppSwitch).last).value, isTrue);
     expect(find.text('本地资料暂时无法读写，请重试'), findsOneWidget);
     // Clear it before acting again: the delete queues its own snackbar behind
     // this one, and settling would run both lifetimes out, taking the undo
     // action away before it can be tapped.
     ScaffoldMessenger.of(
-      tester.element(find.byType(AppGlassSwitch).last),
+      tester.element(find.byType(AppSwitch).last),
     ).removeCurrentSnackBar();
     await tester.pumpAndSettle();
     writes.fail = false;

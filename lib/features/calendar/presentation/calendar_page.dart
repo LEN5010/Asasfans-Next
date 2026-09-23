@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../../app/theme/app_theme.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
@@ -160,12 +160,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       appBar: AppPageBar(
         title: const Text('日历'),
         actions: [
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '回到今天',
             onPressed: _today,
             icon: const Icon(Icons.today_outlined),
           ),
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '刷新',
             onPressed: _refreshing ? null : () => _refresh(month),
             icon: const Icon(Icons.refresh),
@@ -251,7 +251,7 @@ class _MonthHeader extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     child: Row(
       children: [
-        AppGlassButton.icon(
+        AppButton.icon(
           tooltip: '上个月',
           icon: const Icon(Icons.chevron_left),
           onPressed: () => onChange(-1),
@@ -265,13 +265,13 @@ class _MonthHeader extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
-        AppGlassButton.icon(
+        AppButton.icon(
           tooltip: '下个月',
           icon: const Icon(Icons.chevron_right),
           onPressed: () => onChange(1),
         ),
         if (collapsible)
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: expanded ? '收起月历' : '展开月历',
             onPressed: onToggle,
             icon: Icon(
@@ -302,7 +302,7 @@ class _CalendarFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     final types = [
       for (final value in CalendarFilter.values)
-        AppGlassChoice(
+        AppChoice(
           label: Text(value.label),
           selected: value == filter,
           onSelected: (_) => onFilter(value),
@@ -310,7 +310,7 @@ class _CalendarFilters extends StatelessWidget {
     ];
     final roles = [
       for (final name in EventClassifier.memberAliases.keys)
-        AppGlassChoice(
+        AppChoice(
           avatar: CircleAvatar(
             backgroundColor: AppTheme.memberColors[name],
             radius: 6,
@@ -336,7 +336,7 @@ class _CalendarFilters extends StatelessWidget {
           ],
           row(roles),
           if (filter != CalendarFilter.all || members.isNotEmpty)
-            AppGlassButton(onPressed: onReset, child: const Text('重置筛选')),
+            AppButton(onPressed: onReset, child: const Text('重置筛选')),
         ],
       ),
     );

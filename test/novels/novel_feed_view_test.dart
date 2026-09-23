@@ -2,7 +2,7 @@ import 'package:asasfans_next/features/novels/application/novel_providers.dart';
 import 'package:asasfans_next/features/novels/domain/novel_repository.dart';
 import 'package:asasfans_next/features/novels/presentation/novel_feed_view.dart';
 import 'package:flutter/material.dart';
-import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -126,7 +126,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(
-        of: find.byType(AppGlassSegments<NovelRatingFilter>),
+        of: find.byType(AppSegments<NovelRatingFilter>),
         matching: find.text('R18'),
       ),
     );

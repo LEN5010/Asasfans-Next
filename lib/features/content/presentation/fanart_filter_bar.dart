@@ -2,7 +2,7 @@ import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
@@ -26,7 +26,7 @@ class FanartFilterBar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (query.keyword.isNotEmpty) ...[
-          AppGlassButton.withIcon(
+          AppButton.withIcon(
             tooltip: '清除搜索',
             icon: const Icon(Icons.close, size: 18),
             label: ConstrainedBox(
@@ -37,7 +37,7 @@ class FanartFilterBar extends StatelessWidget {
           ),
         ],
         for (final character in FanartCharacter.values) ...[
-          AppGlassChoice(
+          AppChoice(
             label: Text(character.wire),
             selected: query.characters.contains(character),
             onSelected: (selected) => onChanged(
@@ -53,7 +53,7 @@ class FanartFilterBar extends StatelessWidget {
           ),
         ],
         if (FanartFilterRules.count(query) > 0)
-          AppGlassButton(
+          AppButton(
             onPressed: () => onChanged(FanartFilterRules.reset(query)),
             child: const Text('重置筛选'),
           ),
@@ -74,7 +74,7 @@ class FanartFilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = FanartFilterRules.count(query);
-    return AppGlassButton.icon(
+    return AppButton.icon(
       tooltip: '筛选',
       icon: Badge(
         isLabelVisible: count > 0,
@@ -116,7 +116,7 @@ class _FilterPanelState extends State<_FilterPanel> {
           title: '筛选',
           closeLabel: '关闭筛选',
           actions: [
-            AppGlassButton(
+            AppButton(
               onPressed: () => _change(FanartFilterRules.reset(_draft)),
               child: const Text('重置'),
             ),
@@ -188,7 +188,7 @@ class _FilterPanelState extends State<_FilterPanel> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: AppGlassButton(
+            child: AppButton(
               selected: true,
               onPressed: () => Navigator.pop(context, _draft),
               child: const Text('应用筛选'),
@@ -224,7 +224,7 @@ class _Options<T> extends StatelessWidget {
           runSpacing: 6,
           children: [
             for (final entry in values.entries)
-              AppGlassChoice(
+              AppChoice(
                 label: Text(entry.value),
                 selected: value == entry.key,
                 onSelected: (_) => onChanged(entry.key),

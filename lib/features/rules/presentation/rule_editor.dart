@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 
 import '../domain/content_rules.dart';
 import '../domain/rules_repository.dart';
@@ -192,11 +192,11 @@ class _RuleEditorState extends State<_RuleEditor> {
         ),
       ),
       actions: [
-        AppGlassButton(
+        AppButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
           child: const Text('取消'),
         ),
-        AppGlassButton(
+        AppButton(
           selected: true,
           onPressed: _busy ? null : _save,
           child: const Text('保存'),

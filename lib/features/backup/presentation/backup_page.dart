@@ -2,7 +2,7 @@ import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/presentation/library_common.dart';
@@ -113,7 +113,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Builder(
-                        builder: (anchor) => AppGlassButton.withIcon(
+                        builder: (anchor) => AppButton.withIcon(
                           icon: const Icon(Icons.file_upload_outlined),
                           label: const Text('导出备份'),
                           onPressed: _busy ? null : () => _export(anchor),
@@ -122,7 +122,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                      child: AppGlassButton.withIcon(
+                      child: AppButton.withIcon(
                         icon: const Icon(Icons.file_download_outlined),
                         label: const Text('导入备份'),
                         onPressed: _busy ? null : _import,
@@ -197,11 +197,11 @@ class _ImportPreview extends StatelessWidget {
         ),
       ),
       actions: [
-        AppGlassButton(
+        AppButton(
           onPressed: () => Navigator.pop(context, false),
           child: const Text('取消'),
         ),
-        AppGlassButton(
+        AppButton(
           selected: true,
           onPressed: () => Navigator.pop(context, true),
           child: const Text('确认合并'),

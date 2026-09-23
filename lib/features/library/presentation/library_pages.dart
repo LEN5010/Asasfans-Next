@@ -2,7 +2,7 @@ import '../../../shared/widgets/app_page_bar.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,7 +27,7 @@ class CollectionsPage extends ConsumerWidget {
       appBar: AppPageBar(
         title: const Text('收藏夹'),
         actions: [
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '新建收藏夹',
             icon: const Icon(Icons.create_new_folder_outlined),
             onPressed: () async {
@@ -155,12 +155,12 @@ class _WatchLaterPageState extends ConsumerState<WatchLaterPage> {
             child: Wrap(
               spacing: 8,
               children: [
-                AppGlassChoice(
+                AppChoice(
                   label: const Text('待处理'),
                   selected: _pendingOnly,
                   onSelected: (_) => setState(() => _pendingOnly = true),
                 ),
-                AppGlassChoice(
+                AppChoice(
                   label: const Text('全部'),
                   selected: !_pendingOnly,
                   onSelected: (_) => setState(() => _pendingOnly = false),
@@ -206,7 +206,7 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
       appBar: AppPageBar(
         title: const Text('历史记录'),
         actions: [
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '清空当前历史',
             icon: const Icon(Icons.delete_sweep_outlined),
             onPressed: records.items.isEmpty || records.loading
@@ -238,7 +238,7 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
                 for (final action in [null, ...HistoryAction.values])
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: AppGlassChoice(
+                    child: AppChoice(
                       label: Text(action == null ? '全部' : historyLabel(action)),
                       selected: _filter == action,
                       onSelected: (_) => setState(() => _filter = action),
@@ -371,7 +371,7 @@ class SubscriptionsPage extends ConsumerWidget {
       appBar: AppPageBar(
         title: const Text('本地订阅'),
         actions: [
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '添加 UP',
             icon: const Icon(Icons.person_add_alt),
             onPressed: () async {
@@ -415,7 +415,7 @@ class SubscriptionsPage extends ConsumerWidget {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AppGlassButton.icon(
+                  AppButton.icon(
                     tooltip: '在 B 站打开 UP 主页',
                     icon: const Icon(Icons.open_in_new),
                     onPressed: () async {
@@ -429,7 +429,7 @@ class SubscriptionsPage extends ConsumerWidget {
                       }
                     },
                   ),
-                  AppGlassButton.icon(
+                  AppButton.icon(
                     tooltip: '取消订阅',
                     icon: const Icon(Icons.person_remove_outlined),
                     onPressed: () async {
@@ -492,11 +492,11 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
       ),
     ),
     actions: [
-      AppGlassButton(
+      AppButton(
         onPressed: () => Navigator.pop(context),
         child: const Text('取消'),
       ),
-      AppGlassButton(
+      AppButton(
         selected: true,
         onPressed: LocalSubscription.validMid(_mid.text.trim())
             ? () => Navigator.pop(

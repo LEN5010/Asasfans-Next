@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/storage/storage_failure.dart';
@@ -121,11 +121,11 @@ class _LibraryNameDialogState extends State<_LibraryNameDialog> {
       },
     ),
     actions: [
-      AppGlassButton(
+      AppButton(
         onPressed: () => Navigator.pop(context),
         child: const Text('取消'),
       ),
-      AppGlassButton(
+      AppButton(
         selected: true,
         onPressed: _controller.text.trim().isEmpty
             ? null
@@ -147,11 +147,11 @@ Future<bool> confirmLibraryAction(
         title: Text(title),
         content: body == null ? null : Text(body),
         actions: [
-          AppGlassButton(
+          AppButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('取消'),
           ),
-          AppGlassButton(
+          AppButton(
             selected: true,
             onPressed: () => Navigator.pop(context, true),
             child: const Text('确认'),
@@ -182,7 +182,7 @@ class LibraryAsync<T> extends StatelessWidget {
           children: [
             Text(libraryError(error)),
             const SizedBox(height: 12),
-            AppGlassButton(onPressed: retry, child: const Text('重试')),
+            AppButton(onPressed: retry, child: const Text('重试')),
           ],
         ),
       ),

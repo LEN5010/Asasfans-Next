@@ -7,7 +7,7 @@ import '../../rules/presentation/rule_common.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/library_providers.dart';
@@ -31,7 +31,7 @@ class ContentActionsButton extends StatelessWidget {
   final ContentSnapshot item;
   final RuleSubject? ruleSubject;
   @override
-  Widget build(BuildContext context) => AppGlassButton.icon(
+  Widget build(BuildContext context) => AppButton.icon(
     tooltip: '收藏与稍后看',
     icon: const Icon(Icons.bookmark_add_outlined),
     onPressed: () =>
@@ -105,7 +105,7 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                     ListTile(
                       title: const Text('稍后看'),
                       leading: const Icon(Icons.watch_later_outlined),
-                      trailing: AppGlassSwitch(
+                      trailing: AppSwitch(
                         label: '稍后看',
                         value: state.later,
                         onChanged: disabled
@@ -126,7 +126,7 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                         ),
                         error: (error, _) => ListTile(
                           title: Text(libraryError(error)),
-                          trailing: AppGlassButton.icon(
+                          trailing: AppButton.icon(
                             tooltip: '重试订阅',
                             onPressed: () =>
                                 ref.invalidate(subscriptionProvider),
@@ -140,7 +140,7 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                                 : '订阅 ${creator.name}',
                           ),
                           leading: const Icon(Icons.person_add_alt),
-                          trailing: AppGlassSwitch(
+                          trailing: AppSwitch(
                             label: '本地订阅',
                             value: subscribed,
                             onChanged: _busy || subscriptions.isLoading

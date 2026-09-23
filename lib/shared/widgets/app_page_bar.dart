@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'glass/app_glass_surface.dart';
-import 'glass/app_glass_controls.dart';
+import 'app_controls.dart';
 
-/// Floating page controls: a back button, a title/control and glass actions. Use it with `Scaffold(extendBodyBehindAppBar: true)`; the Scaffold
+/// Floating page controls: a back button, a title/control and ordinary actions. Use it with `Scaffold(extendBodyBehindAppBar: true)`; the Scaffold
 /// then adds this bar to `MediaQuery.padding.top`, so lists reserve the space
 /// inside their own scroll extent (see [pageInsets]).
 ///
 /// The bar slides away while the body scrolls down and returns on the way up,
 /// so it never sits on top of what is being read. Its fade appears only once
-/// content has scrolled beneath it; at rest the glass sits on the page.
+/// content has scrolled beneath it; at rest the title has no decorative material.
 class AppPageBar extends StatefulWidget implements PreferredSizeWidget {
   const AppPageBar({
     super.key,
@@ -28,7 +27,7 @@ class AppPageBar extends StatefulWidget implements PreferredSizeWidget {
   final Object? revealKey;
 
   static const rowHeight = 58.0;
-  static const controlHeight = 44.0;
+  static const controlHeight = 48.0;
 
   @override
   Size get preferredSize => Size.fromHeight(
@@ -165,7 +164,7 @@ class _AppPageBarState extends State<AppPageBar> {
                   spacing: 8,
                   children: [
                     if (canPop) ...[
-                      AppGlassButton.icon(
+                      AppButton.icon(
                         tooltip: route is PageRoute && route.fullscreenDialog
                             ? '关闭'
                             : '返回',
@@ -182,29 +181,18 @@ class _AppPageBarState extends State<AppPageBar> {
                         alignment: Alignment.centerLeft,
                         child: widget.titleIsControl
                             ? title
-                            : AppGlassSurface(
-                                radius: controlHeight / 2,
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minHeight: controlHeight,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
+                            : SizedBox(
+                                height: controlHeight,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: DefaultTextStyle.merge(
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    child: DefaultTextStyle.merge(
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        widthFactor: 1,
-                                        child: title,
-                                      ),
-                                    ),
+                                    child: title,
                                   ),
                                 ),
                               ),

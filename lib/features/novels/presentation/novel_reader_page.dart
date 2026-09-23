@@ -7,7 +7,7 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/app_page_bar.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../content/presentation/content_images.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../application/novel_providers.dart';
@@ -63,7 +63,7 @@ class NovelReaderPage extends ConsumerWidget {
         title: Text(item.title.isEmpty ? '小说' : item.title),
         actions: [
           if (source != null)
-            AppGlassButton.icon(
+            AppButton.icon(
               tooltip: '打开豆瓣原帖',
               icon: const Icon(Icons.open_in_new),
               onPressed: () => openNovelSource(context, ref, source),
@@ -341,7 +341,7 @@ class _LinkTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
-    child: AppGlassButton(
+    child: AppButton(
       onPressed: () => openNovelSource(context, ref, link.url),
       child: Row(
         children: [

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'glass/app_glass_controls.dart';
+import 'app_controls.dart';
 
 import '../../core/network/api_failure.dart';
 
@@ -61,7 +61,7 @@ class _RetryButtonState extends State<RetryButton> {
     final action = _waiting ? null : widget.onRetry;
     final text = Text(_waiting ? '稍后重试' : widget.label);
     return widget.filled
-        ? AppGlassButton(selected: true, onPressed: action, child: text)
-        : AppGlassButton(onPressed: action, child: text);
+        ? AppButton(selected: true, onPressed: action, child: text)
+        : AppButton(onPressed: action, child: text);
   }
 }

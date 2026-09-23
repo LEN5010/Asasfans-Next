@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter/services.dart';
 
 /// Root-navigator artwork route: touch/trackpad zoom, keyboard paging and a
@@ -137,22 +137,22 @@ class _FanartImageViewerState extends State<FanartImageViewer> {
             maxLines: 1,
           ),
           actions: [
-            AppGlassButton.icon(
+            AppButton.icon(
               tooltip: '缩小',
               onPressed: _zoomed ? () => _zoom(1 / 1.5) : null,
               icon: const Icon(Icons.remove),
             ),
-            AppGlassButton.icon(
+            AppButton.icon(
               tooltip: '放大',
               onPressed: widget.images.isEmpty ? null : () => _zoom(1.5),
               icon: const Icon(Icons.add),
             ),
-            AppGlassButton.icon(
+            AppButton.icon(
               tooltip: '重置缩放',
               onPressed: _zoomed ? _reset : null,
               icon: const Icon(Icons.fit_screen),
             ),
-            AppGlassButton.icon(
+            AppButton.icon(
               tooltip: _reading ? '适应屏幕' : '长图阅读',
               onPressed: widget.images.isEmpty
                   ? null
@@ -203,7 +203,7 @@ class _FanartImageViewerState extends State<FanartImageViewer> {
                           widget.images.length > 1) ...[
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: AppGlassButton.icon(
+                          child: AppButton.icon(
                             tooltip: '上一张',
                             onPressed: _index == 0 ? null : () => _page(-1),
                             icon: const Icon(Icons.chevron_left),
@@ -211,7 +211,7 @@ class _FanartImageViewerState extends State<FanartImageViewer> {
                         ),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: AppGlassButton.icon(
+                          child: AppButton.icon(
                             tooltip: '下一张',
                             onPressed: _index == widget.images.length - 1
                                 ? null

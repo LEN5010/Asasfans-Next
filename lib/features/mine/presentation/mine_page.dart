@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../preferences/presentation/preferences_controls.dart';
 import '../../account/application/account_providers.dart';
 import '../../account/presentation/local_login_cleanup_tile.dart';
@@ -27,7 +27,7 @@ class _MinePageState extends ConsumerState<MinePage> {
       for (final entry in entries)
         Padding(
           padding: const EdgeInsets.all(8),
-          child: AppGlassButton(
+          child: AppButton(
             onPressed: () => context.go('/mine/${entry.$2}'),
             child: Row(
               children: [
@@ -84,7 +84,7 @@ class _MinePageState extends ConsumerState<MinePage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8),
-            child: AppGlassButton(
+            child: AppButton(
               onPressed: () => showLicensePage(
                 context: context,
                 applicationName: 'Asasfans Next',
@@ -126,7 +126,7 @@ class _MinePageState extends ConsumerState<MinePage> {
                       ])
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: AppGlassButton(
+                          child: AppButton(
                             selected: _section == entry.$1,
                             onPressed: () =>
                                 setState(() => _section = entry.$1),

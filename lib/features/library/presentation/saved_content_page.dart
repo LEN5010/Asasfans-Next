@@ -4,7 +4,7 @@ import '../../creator/presentation/creator_link.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../content/presentation/fanart_image_viewer.dart';
@@ -28,7 +28,7 @@ class SavedContentPage extends ConsumerWidget {
         title: const Text('内容详情'),
         actions: [
           ContentActionsButton(item: item),
-          AppGlassButton.icon(
+          AppButton.icon(
             tooltip: '打开原站',
             onPressed: () => openContentSource(context, ref, item),
             icon: const Icon(Icons.open_in_new),
@@ -59,7 +59,7 @@ class SavedContentPage extends ConsumerWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     // Videos are watched on Bilibili; the app has no detail page.
-                    child: AppGlassButton.withIcon(
+                    child: AppButton.withIcon(
                       onPressed: () => openContentSource(
                         context,
                         ref,

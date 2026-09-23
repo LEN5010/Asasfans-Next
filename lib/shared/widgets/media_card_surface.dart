@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_tokens.dart';
-import 'glass/app_glass_controls.dart';
+import 'app_controls.dart';
 import 'glass/app_glass_scope.dart';
 
 /// One stable content surface. Hover/focus changes its border, never its size.
@@ -75,7 +75,7 @@ class MediaMoreButton extends StatelessWidget {
   final VoidCallback onPressed;
   static const reserve = 44.0;
   @override
-  Widget build(BuildContext context) => AppGlassButton.icon(
+  Widget build(BuildContext context) => AppButton.icon(
     tooltip: '更多操作',
     onPressed: onPressed,
     icon: const Icon(Icons.more_horiz, size: 20),

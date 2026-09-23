@@ -1,5 +1,5 @@
 import '../helpers/library_fixture.dart';
-import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:asasfans_next/features/content/presentation/dynamic_card.dart';
 import 'package:asasfans_next/features/content/presentation/dynamic_rich_text.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
@@ -140,7 +140,7 @@ void main() {
 
       await tester.tap(find.text('筛选与排序'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(AppGlassButton, '视频'));
+      await tester.tap(find.widgetWithText(AppButton, '视频'));
       await tester.pumpAndSettle();
       expect(repository.queries.last.type, isNull);
       await tester.tap(find.text('取消'));
@@ -148,7 +148,7 @@ void main() {
       expect(repository.queries.last.type, isNull);
       await tester.tap(find.text('筛选与排序'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(AppGlassButton, '视频'));
+      await tester.tap(find.widgetWithText(AppButton, '视频'));
       await tester.tap(find.text('应用筛选'));
       await tester.pumpAndSettle();
       expect(repository.queries.last.type, DynamicType.video);
@@ -175,7 +175,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('网络连接失败'), findsOneWidget);
-    await tester.tap(find.widgetWithText(AppGlassButton, '重试'));
+    await tester.tap(find.widgetWithText(AppButton, '重试'));
     await tester.pumpAndSettle();
 
     expect(find.text('动态 p0i0'), findsOneWidget);

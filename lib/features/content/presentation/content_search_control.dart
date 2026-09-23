@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/glass/app_glass_controls.dart';
-import '../../../shared/widgets/glass/app_glass_surface.dart';
+import '../../../shared/widgets/app_controls.dart';
 
 import '../../../shared/theme/app_icons.dart';
 
@@ -22,18 +21,15 @@ class ContentSearchControl extends StatelessWidget {
   Widget build(BuildContext context) => expanded
       ? SizedBox(
           width: 240,
-          height: AppGlassSegments.heightFor(context),
-          child: AppGlassSurface(
-            radius: 22,
-            child: _SearchInput(
-              key: ValueKey(value),
-              value: value,
-              hint: hint,
-              onSubmitted: onSubmitted,
-            ),
+          height: AppSegments.heightFor(context),
+          child: _SearchInput(
+            key: ValueKey(value),
+            value: value,
+            hint: hint,
+            onSubmitted: onSubmitted,
           ),
         )
-      : AppGlassButton.icon(
+      : AppButton.icon(
           tooltip: '搜索',
           selected: value.isNotEmpty,
           icon: const Icon(AppIcons.search),
@@ -77,19 +73,19 @@ class _SearchInputState extends State<_SearchInput> {
       context,
     ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.25),
     maxLength: 200,
-    // Fits the page bar's action capsule.
+    // Ordinary search surface; the text controller survives material changes.
     decoration: InputDecoration(
       hintText: widget.hint,
-      filled: false,
+      filled: true,
       counterText: '',
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(vertical: 8),
       border: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(22)),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
       ),
       prefixIconConstraints: const BoxConstraints.tightFor(width: 36),
@@ -142,16 +138,16 @@ class _SearchDialogState extends State<_SearchDialog> {
       ),
     ),
     actions: [
-      AppGlassButton(
+      AppButton(
         onPressed: () => Navigator.pop(context),
         child: const Text('取消'),
       ),
       if (widget.value.isNotEmpty)
-        AppGlassButton(
+        AppButton(
           onPressed: () => Navigator.pop(context, ''),
           child: const Text('清除'),
         ),
-      AppGlassButton(
+      AppButton(
         selected: true,
         onPressed: () => Navigator.pop(context, _controller.text.trim()),
         child: const Text('搜索'),

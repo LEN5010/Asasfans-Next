@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'glass/app_glass_controls.dart';
+import 'app_controls.dart';
 
 /// A bounded choice strip with a discoverable, keyboard-accessible next action.
 class HorizontalChoices extends StatefulWidget {
@@ -33,7 +33,7 @@ class _HorizontalChoicesState extends State<HorizontalChoices> {
           ),
         ),
       ),
-      AppGlassButton.icon(
+      AppButton.icon(
         tooltip: '滚动筛选项',
         icon: const Icon(Icons.chevron_right),
         onPressed: () {

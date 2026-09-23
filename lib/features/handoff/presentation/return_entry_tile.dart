@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/platform/return_entry_service.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../application/handoff_providers.dart';
 
 /// The opt-in for the floating return entry.
@@ -55,7 +55,7 @@ class _ReturnEntryTileState extends ConsumerState<ReturnEntryTile> {
             : '去 B 站看之后，屏幕上留一颗球，点它回到刚才的列表。'
                   '这颗球会一直显示到你点它返回或手动结束，应用不会去检测你当前在用哪个程序',
       ),
-      trailing: AppGlassSwitch(
+      trailing: AppSwitch(
         label: '悬浮返回入口',
         value: controller.enabled,
         onChanged: tooOld

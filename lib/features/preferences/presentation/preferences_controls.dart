@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../handoff/presentation/return_entry_tile.dart';
 import '../../../shared/theme/app_icons.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../application/preferences_controller.dart';
 import '../domain/app_preferences.dart';
 
@@ -28,7 +28,7 @@ class PreferencesControls extends ConsumerWidget {
                   state.failure!.message,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
-                AppGlassButton(
+                AppButton(
                   onPressed: state.loading || state.saving
                       ? null
                       : controller.reload,
@@ -41,9 +41,7 @@ class PreferencesControls extends ConsumerWidget {
           const ListTile(leading: Icon(AppIcons.appearance), title: Text('主题')),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: AppGlassSegments<AppAppearance>(
-              // Reset a dragged preview only if the commit failed.
-              key: ValueKey(state.failure),
+            child: AppSegments<AppAppearance>(
               values: AppAppearance.values,
               labelOf: _appearance,
               selected: state.values.appearance,
@@ -54,8 +52,7 @@ class PreferencesControls extends ConsumerWidget {
           const ListTile(leading: Icon(AppIcons.material), title: Text('界面材质')),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: AppGlassSegments<AppMaterial>(
-              key: ValueKey(state.failure),
+            child: AppSegments<AppMaterial>(
               values: AppMaterial.values,
               labelOf: _material,
               selected: state.values.material,
@@ -77,8 +74,7 @@ class PreferencesControls extends ConsumerWidget {
                       !state.values.shows(section),
                     )
                   : null,
-              trailing: AppGlassSwitch(
-                key: ValueKey(state.failure),
+              trailing: AppSwitch(
                 label: _section(section),
                 value: state.values.shows(section),
                 onChanged: state.canEdit

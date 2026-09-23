@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/media_cover.dart';
 import '../../../shared/widgets/media_card_surface.dart';
-import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../../creator/presentation/creator_link.dart';
 import 'content_images.dart';
 import 'dynamic_rich_text.dart';
@@ -157,7 +157,7 @@ class FanartCard extends StatelessWidget {
                   video: true,
                   badge: '视频',
                 ),
-                AppGlassButton.icon(
+                AppButton.icon(
                   onPressed: onTap,
                   tooltip: '去 B 站看',
                   icon: const Icon(Icons.play_arrow),
@@ -247,7 +247,7 @@ class FanartCard extends StatelessWidget {
                         '${item.favoriteCount} 收藏',
                         style: theme.textTheme.bodySmall,
                       ),
-                    AppGlassButton(
+                    AppButton(
                       onPressed: onTap,
                       child: Text(video ? '去 B 站看 ↗' : '查看作品'),
                     ),
