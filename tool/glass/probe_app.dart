@@ -10,9 +10,10 @@ import 'package:asasfans_next/shared/widgets/glass/glass_policy.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_runtime.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 
 import 'refraction_comparison.dart';
 
@@ -205,7 +206,7 @@ class GlassProbeSceneState extends State<GlassProbeScene>
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: AppGlassSurface(
-            nativeContent: widget.nativeContent,
+            nativeContent: true,
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -231,7 +232,7 @@ class GlassProbeSceneState extends State<GlassProbeScene>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('一块玻璃外壳，文字和输入控件不参加折射。'),
+                  const Text('正文使用清晰内容面，玻璃只用于浮动控制。'),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
@@ -467,237 +468,85 @@ class GlassProbeSceneState extends State<GlassProbeScene>
               ),
               Text(status, maxLines: 1, overflow: TextOverflow.ellipsis),
               Expanded(
-                child: Stack(
-                  children: [
-                    ListView.builder(
-                      controller: scroll,
-                      padding: const EdgeInsets.only(bottom: 140),
-                      itemCount: 36,
-                      itemExtent: 120,
-                      itemBuilder: (context, index) => CustomPaint(
-                        painter: _Pattern(index),
-                        child: Center(
-                          child: Text(
-                            '背景 ${index + 1} / Aa 枝江 0123456789',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: index.isEven ? Colors.black : Colors.white,
-                              backgroundColor: index.isEven
-                                  ? Colors.white
-                                  : Colors.black,
+                child: GlassContentAwareScope(
+                  child: Stack(
+                    children: [
+                      GlassContentAwareContent(
+                        child: ListView.builder(
+                          controller: scroll,
+                          padding: const EdgeInsets.only(bottom: 140),
+                          itemCount: 36,
+                          itemExtent: 120,
+                          itemBuilder: (context, index) => CustomPaint(
+                            painter: _Pattern(index),
+                            child: Center(
+                              child: Text(
+                                '背景 ${index + 1} / Aa 枝江 0123456789',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: index.isEven
+                                      ? Colors.black
+                                      : Colors.white,
+                                  backgroundColor: index.isEven
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      right: 16,
-                      top: 16,
-                      child: AppGlassSurface(
-                        nativeContent: widget.nativeContent,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: '刷新原型',
-                              onPressed: () => setState(() => actions++),
-                              icon: const Icon(Icons.refresh),
-                            ),
-                            IconButton(
-                              tooltip: '筛选原型',
-                              onPressed: _panel,
-                              icon: const Icon(Icons.tune),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12),
-                              child: Text('$actions'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 520),
-                          child: ProbeNavigation(
-                            selected: selected,
-                            nativeContent: widget.nativeContent,
-                            toolsFocus: toolsFocus,
-                            onSelect: (index) =>
-                                setState(() => selected = index),
-                            onTools: _panel,
+                      Positioned(
+                        right: 16,
+                        top: 16,
+                        child: AppGlassSurface(
+                          nativeContent: widget.nativeContent,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: '刷新原型',
+                                onPressed: () => setState(() => actions++),
+                                icon: const Icon(Icons.refresh),
+                              ),
+                              IconButton(
+                                tooltip: '筛选原型',
+                                onPressed: _panel,
+                                icon: const Icon(Icons.tune),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Text('$actions'),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 520),
+                            child: AppGlassNavigation(
+                              selected: selected,
+                              nativeContent: widget.nativeContent,
+                              toolsFocus: toolsFocus,
+                              onSelect: (index) =>
+                                  setState(() => selected = index),
+                              onTools: _panel,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Five-slot prototype, with Tools deliberately excluded from drag dispatch.
-class ProbeNavigation extends StatefulWidget {
-  const ProbeNavigation({
-    super.key,
-    required this.selected,
-    required this.onSelect,
-    required this.onTools,
-    required this.toolsFocus,
-    this.nativeContent = false,
-  });
-  final int selected;
-  final ValueChanged<int> onSelect;
-  final VoidCallback onTools;
-  final FocusNode toolsFocus;
-  final bool nativeContent;
-  @override
-  State<ProbeNavigation> createState() => _ProbeNavigationState();
-}
-
-class _ProbeNavigationState extends State<ProbeNavigation>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController press = AnimationController.unbounded(
-    vsync: this,
-    value: 0,
-  );
-  int? dragIndex;
-  bool reduceMotion = false;
-  static const labels = ['今日', '内容', '工具', '日历', '我的'];
-  static const icons = [
-    Icons.home_outlined,
-    Icons.grid_view_rounded,
-    Icons.workspaces_outline,
-    Icons.calendar_month_outlined,
-    Icons.person_outline,
-  ];
-
-  void _press(bool down) {
-    if (reduceMotion) {
-      press.value = 0;
-      return;
-    }
-    press.animateWith(
-      SpringSimulation(
-        const SpringDescription(mass: 1, stiffness: 360, damping: 26),
-        press.value,
-        down ? 1 : 0,
-        0,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    press.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    reduceMotion = !AppGlassScope.of(context).canAnimate;
-    if (reduceMotion && press.isAnimating) press.stop();
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int indexAt(double x) =>
-            (x / (constraints.maxWidth / 5)).floor().clamp(0, 4);
-        return GestureDetector(
-          onHorizontalDragStart: (d) {
-            _press(true);
-            setState(() => dragIndex = indexAt(d.localPosition.dx));
-          },
-          onHorizontalDragUpdate: (d) =>
-              setState(() => dragIndex = indexAt(d.localPosition.dx)),
-          onHorizontalDragEnd: (_) {
-            final index = dragIndex;
-            setState(() => dragIndex = null);
-            _press(false);
-            if (index != null && index != 2) widget.onSelect(index);
-          },
-          onHorizontalDragCancel: () {
-            setState(() => dragIndex = null);
-            _press(false);
-          },
-          child: AnimatedBuilder(
-            animation: press,
-            builder: (context, child) => AppGlassSurface(
-              press: press.value,
-              nativeContent: widget.nativeContent,
-              child: child!,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Row(
-                children: [
-                  for (var i = 0; i < 5; i++)
-                    Expanded(
-                      child: Semantics(
-                        button: true,
-                        selected: i != 2 && widget.selected == i,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            focusNode: i == 2 ? widget.toolsFocus : null,
-                            borderRadius: BorderRadius.circular(18),
-                            onHighlightChanged: _press,
-                            onTap: () =>
-                                i == 2 ? widget.onTools() : widget.onSelect(i),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color:
-                                          (dragIndex ?? widget.selected) == i &&
-                                              i != 2
-                                          ? const Color(0xFFF8E8EE)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      child: Icon(
-                                        icons[i],
-                                        size: 23,
-                                        color:
-                                            (dragIndex ?? widget.selected) ==
-                                                    i &&
-                                                i != 2
-                                            ? const Color(0xFF8A3E59)
-                                            : null,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    labels[i],
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

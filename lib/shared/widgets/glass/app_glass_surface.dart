@@ -1,27 +1,27 @@
+// Reference integration: LoveIwara (MIT), see third_party/LoveIwara-LICENSE.
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+import 'app_glass_chrome.dart';
 import 'app_glass_scope.dart';
+import 'app_glass_style.dart';
 
-/// One bounded decorative glass layer behind an unchanged foreground subtree.
-/// No per-card capture, screenshot, network state or PlatformView sampling.
-class AppGlassSurface extends StatelessWidget {
+/// One bounded chrome surface. The actual content is inside AdaptiveGlass,
+/// matching the reference integration, rather than above an empty glass layer.
+class AppGlassSurface extends StatefulWidget {
   const AppGlassSurface({
     super.key,
     required this.child,
     this.radius = 24,
     this.nativeContent = false,
-    this.press = 0,
-    this.refractiveIndex = 1.22,
+    this.refractiveIndex = 1.2,
   });
 
   final Widget child;
   final double radius;
   final bool nativeContent;
-  final double press;
 
-  /// The prototype compares 1.0 against the default with all other parameters
-  /// identical, to distinguish actual displacement from blur/tint alone.
+  /// Used by the offline optical comparison; production uses package defaults.
   final double refractiveIndex;
 
   static Color surfaceColor(Brightness brightness) =>
@@ -30,75 +30,64 @@ class AppGlassSurface extends StatelessWidget {
       brightness == Brightness.dark
       ? const Color(0xFFF1F0F3)
       : const Color(0xFF25252B);
-  static double readabilityOpacity(Brightness brightness) =>
-      brightness == Brightness.dark ? .80 : .66;
 
   @override
-  Widget build(BuildContext context) {
-    final policy = AppGlassScope.of(context);
-    final liquid = policy.usesLiquid && !nativeContent;
-    final brightness = Theme.of(context).brightness;
-    final dark = brightness == Brightness.dark;
-    final surface = surfaceColor(brightness);
-    final foreground = foregroundColor(brightness);
-    final p = policy.reduceMotion ? 0.0 : press.clamp(0.0, 1.0);
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ExcludeSemantics(
-              child: liquid
-                  ? Transform.scale(
-                      scale: 1 - p * .012,
-                      child: AdaptiveGlass(
-                        quality: GlassQuality.premium,
-                        shape: LiquidRoundedSuperellipse(borderRadius: radius),
-                        settings: LiquidGlassSettings(
-                          thickness: 24 + p * 8,
-                          blur: 2,
-                          refractiveIndex: refractiveIndex,
-                          chromaticAberration: .01,
-                          lightIntensity: .6 + p * .12,
-                          saturation: 1.05,
-                          glassColor: surface.withValues(alpha: .12),
-                          shadowElevation: 0,
-                        ),
-                        child: const SizedBox.expand(),
-                      ),
-                    )
-                  : DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: surface,
-                        borderRadius: BorderRadius.circular(radius),
-                        border: Border.all(
-                          color: dark
-                              ? const Color(0xFF68656F)
-                              : const Color(0xFFABA7B2),
-                        ),
-                      ),
-                    ),
-            ),
+  State<AppGlassSurface> createState() => _AppGlassSurfaceState();
+}
+
+class _AppGlassSurfaceState extends State<AppGlassSurface> {
+  // Material changes reparent this subtree rather than recreating its form,
+  // focus or scroll state. There is only one mounted copy of the content.
+  final contentKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) => AppGlassChrome(
+    nativeContent: widget.nativeContent,
+    builder: (context) {
+      final liquid =
+          AppGlassScope.of(context).usesLiquid && !widget.nativeContent;
+      final brightness = Theme.of(context).brightness;
+      final foreground = AppGlassSurface.foregroundColor(brightness);
+      final content = KeyedSubtree(
+        key: contentKey,
+        child: DefaultTextStyle.merge(
+          style: TextStyle(color: foreground),
+          child: IconTheme.merge(
+            data: IconThemeData(color: foreground),
+            child: widget.child,
           ),
         ),
-        // The readable interior is deliberately independent of backdrop
-        // sampling. Edge refraction remains visible; text isn't distorted.
-        // Keeping this wrapper in BOTH modes preserves focus/scroll/state.
-        DecoratedBox(
+      );
+      if (liquid) {
+        return DecoratedBox(
           decoration: BoxDecoration(
-            color: liquid
-                ? surface.withValues(alpha: readabilityOpacity(brightness))
-                : null,
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: BorderRadius.circular(widget.radius),
+            boxShadow: AppGlassStyle.shadows(brightness),
           ),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(color: foreground),
-            child: IconTheme.merge(
-              data: IconThemeData(color: foreground),
-              child: child,
+          child: AdaptiveGlass(
+            quality: AppGlassStyle.quality,
+            shape: LiquidRoundedSuperellipse(borderRadius: widget.radius),
+            settings: AppGlassStyle.settings(
+              brightness,
+              refractiveIndex: widget.refractiveIndex,
             ),
+            clipExpansion: const EdgeInsets.all(16),
+            child: content,
+          ),
+        );
+      }
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppGlassSurface.surfaceColor(brightness),
+          borderRadius: BorderRadius.circular(widget.radius),
+          border: Border.all(
+            color: brightness == Brightness.dark
+                ? const Color(0xFF68656F)
+                : const Color(0xFFABA7B2),
           ),
         ),
-      ],
-    );
-  }
+        child: content,
+      );
+    },
+  );
 }

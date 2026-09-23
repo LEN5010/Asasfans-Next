@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:asasfans_next/core/platform/transparency_preference.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_scope.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_surface.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_policy.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_runtime.dart';
 import 'package:flutter/material.dart';
@@ -239,23 +240,23 @@ void main() {
       addTearDown(runtime.dispose);
       await tester.pumpWidget(GlassProbeApp(runtime: runtime));
       await tester.pumpAndSettle();
-      final navigation = find.byType(ProbeNavigation);
+      final navigation = find.byType(AppGlassNavigation);
       final center = tester.getCenter(navigation);
       await tester.dragFrom(
         Offset(tester.getTopLeft(navigation).dx + 30, center.dy),
         const Offset(235, 0),
       );
       await tester.pumpAndSettle();
-      expect(tester.widget<ProbeNavigation>(navigation).selected, 0);
+      expect(tester.widget<AppGlassNavigation>(navigation).selected, 0);
       expect(find.text('工具面板 · 离线原型'), findsNothing);
       await tester.tap(find.text('工具'));
       await tester.pumpAndSettle();
       expect(find.text('工具面板 · 离线原型'), findsOneWidget);
       await tester.tap(find.byTooltip('关闭面板'));
       await tester.pumpAndSettle();
-      expect(tester.widget<ProbeNavigation>(navigation).selected, 0);
+      expect(tester.widget<AppGlassNavigation>(navigation).selected, 0);
       expect(
-        tester.widget<ProbeNavigation>(navigation).toolsFocus.hasFocus,
+        tester.widget<AppGlassNavigation>(navigation).toolsFocus.hasFocus,
         isTrue,
       );
       expect(tester.takeException(), isNull);

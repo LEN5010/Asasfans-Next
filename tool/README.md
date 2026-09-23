@@ -39,10 +39,12 @@ tool/flutterw run -d macos --target tool/preview/main.dart
 tool/flutterw run -d macos --profile --target tool/glass/main.dart
 ```
 
-该入口只绘制本地网格与文字，禁止网络，不读取个人库、Keychain 或 WebView。三个场景是五槽导航、按钮组与 root overlay 面板。系统透明度桥接只读；原型开关是应用内模拟，不会更改 OS 设置。
+该入口只绘制本地网格与文字，禁止网络，不读取个人库、Keychain 或 WebView。三个场景是五槽导航、按钮组与 root overlay 面板；正文面板采用实色阅读面，玻璃限于控制层。系统透明度桥接只读；原型开关是应用内模拟，不会更改 OS 设置。
 
-- **折射 A/B 对照**：两份相同网格、形状、模糊与色调，只改变折射率 1.0 / 1.22。回退路径不可作为真折射证据。
+- **折射 A/B 对照**：两份相同网格、形状、模糊与色调，只改变折射率 1.0 / 1.2。回退路径不可作为真折射证据。
 - **运行 3×30 秒对照**：同一 Profile 进程分别记录清晰与液态三轮滚动、UI/raster 帧时间、刷新率、原始样本与静止帧数。运行期间不要锁屏、切换应用或并发执行测试/构建；锁屏/失效路径标记的轮次无效。
 - 控制台 `GLASS_PROBE_OUTPUT` / `GLASS_REFRACTION_OUTPUT` 指向当前应用沙盒中本次生成的临时 JSON/PNG。PNG 是 Flutter render capture，不冒称 OS 录屏。复制到本地证据目录后只清理该已确认的临时目录。
 
 `ImageFilter.isShaderFilterSupported` 与 shader 加载成功只是能力信号。没有原生折射、性能、生命周期和各设备证据时，不把源码/Widget 测试记成玻璃验收完成。主库失败采用真正的实色层，不把其 standard/minimal 模糊路径称为完整液态或清晰模式。Windows/Android 尚无独立减少透明度桥接，明确返回 unavailable，而不是假称该设置已关闭。
+
+接法对照本地 LoveIwara `888d4b9`：`AdaptiveGlass` 直接承载实际内容，采用库默认光学参数及轻色调；导航使用 `GlassTabBar.bottom`，不自绘弹簧。背景采样只注册 Flutter 列表，控制层在采样区域之外；减少透明度/清晰/原生背景路径不注册控制层采样。Windows/Linux 的 standard 选择沿用参考的启动折中，不称为 premium 折射验收。参考授权说明见 `third_party/README.md`。

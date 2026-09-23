@@ -11,6 +11,9 @@ void main() {
     yield LicenseEntryWithLineBreaks([
       'Asasfans Next',
     ], await rootBundle.loadString('LICENSE'));
+    yield LicenseEntryWithLineBreaks([
+      'LoveIwara glass integration',
+    ], await rootBundle.loadString('third_party/LoveIwara-LICENSE'));
   });
   runApp(const ProviderScope(child: AsasfansApp()));
 }

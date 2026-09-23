@@ -74,7 +74,7 @@ class _RefractionComparisonState extends State<RefractionComparison> {
                   spacing: 16,
                   runSpacing: 16,
                   children: [
-                    for (final index in [1.0, 1.22])
+                    for (final index in [1.0, 1.2])
                       SizedBox(
                         width: 256,
                         child: Column(
@@ -100,7 +100,9 @@ class _RefractionComparisonState extends State<RefractionComparison> {
                                     bottom: 35,
                                     child: AppGlassSurface(
                                       refractiveIndex: index,
-                                      child: const SizedBox.expand(),
+                                      child: const Center(
+                                        child: Icon(Icons.play_arrow, size: 28),
+                                      ),
                                     ),
                                   ),
                                 ],

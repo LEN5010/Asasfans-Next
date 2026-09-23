@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // Analytic lower bound for DEFAULT glyphs, not a claim that every caller's
+  // Analytic lower bound for CLEAR MODE glyphs, not a claim that every caller's
   // custom color, image or antialiased screenshot has been contrast-accepted.
   for (final brightness in Brightness.values) {
-    test('$brightness default glyphs exceed 4.5:1 on worst-case backdrop', () {
+    test('$brightness clear-mode glyphs exceed 4.5:1', () {
       final foreground = AppGlassSurface.foregroundColor(brightness);
-      final veil = AppGlassSurface.surfaceColor(
-        brightness,
-      ).withValues(alpha: AppGlassSurface.readabilityOpacity(brightness));
+      final veil = AppGlassSurface.surfaceColor(brightness);
       for (final backdrop in [
         Colors.black,
         Colors.white,
