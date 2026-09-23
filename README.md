@@ -24,7 +24,7 @@
 | Bilibili 账号 | 安全存储、扫码、官方网页登录、会话取消、退出失败重试 | 原生桥接/四端验收、自动 Cookie 刷新；平台限制见下文 |
 | 视频与评论 | 原生详情、分 P、只读评论/楼中楼/图片；取流与媒体网络基础 | **播放仍外跳 B 站，尚无内置播放器**；评论富文本、播放与生命周期验收 |
 
-当前新增实现经过依赖解析和 Dart 静态分析；新增测试源码未执行，原生插件、真实来源和四端设备行为未完成验收。历史测试结果不能覆盖本次新增代码。
+2026-09-23 的 SDK 升级检查通过格式校验、零问题静态分析、754 项离线测试和 macOS Debug 构建。iOS 构建受本机缺少 iOS 26.0 平台组件阻断；Android 构建受 NDK 28.2 下载包错误阻断；Windows 尚未在新 SDK 下构建。没有执行本轮真机或业务 API 验收，UI 改造尚未开始。
 
 网页登录源码面向 Android/iOS/macOS，Windows 当前仅扫码。Android API 28+ 使用独立浏览器目录；API 24–27 开发包可网页登录，**生产包的旧浏览器存储隔离尚未解决，当前禁用该路径**。不会以提高最低 Android 版本代替解决此问题。
 
@@ -32,23 +32,26 @@
 
 - 手机导航：今日 / 内容 / 工具（居中抽屉）/ 日历 / 我的；宽屏使用侧栏。订阅管理位于“我的”。[LoveIwara](https://github.com/FoxSensei001/LoveIwara) 仅为布局参考，不复制其代码、素材或配色。
 - 本地订阅不修改 B 站关注；收藏不等于下载；浏览、外部打开、更新已读均不等于实际观看。评论只读。
-- 个人资料使用独立 SQLite，新库 schema v6；备份导出 v4、兼容 v1–v3，以事务合并而非清空替换。手机导出交给系统分享，桌面使用保存对话框。
+- 个人资料使用独立 SQLite，新库 schema v9；备份导出 v6、兼容受支持的旧格式，以事务合并而非清空替换。手机导出交给系统分享，桌面使用保存对话框。
 - 账号凭据使用系统安全存储，不进入普通数据库、备份、二创 API、日历或工具站请求；媒体请求独立处理鉴权，签名播放地址不持久化。
-- **旧 Android 数据迁移已取消**：Flutter 个人资料从零建立，不读取、修改或删除旧数据库与凭据。新库不兼容或损坏时不以清库恢复。用原签名可以覆盖安装 1.3.6 / 2.0.0，不必卸载，但**订阅、屏蔽名单、收藏与历史不会带过来**；旧数据仍留在设备上，只是不再被读取。
+- **旧 Android 数据迁移已取消**：Flutter 个人资料从零建立，不读取、修改或删除旧数据库与凭据。新库不兼容或损坏时不以清库恢复。覆盖安装须核对实际旧 APK 与新包的签名证书、版本号并进行设备验收；即使允许覆盖，**订阅、屏蔽名单、收藏与历史也不会自动带过来**；旧数据仍留在设备上，只是不再被读取。
 
 ## 开发
 
-固定 Flutter **3.35.4** / Dart **3.9.2**（见 `.flutter-version`），依赖锁定在 `pubspec.lock`。
+固定 Flutter **3.47.3** / Dart **3.13.3**。官方下载地址、SHA-256 和完整 revision 见 `tool/flutter-sdk.json`；`.flutter-version` 与 CI 同步固定版本，依赖锁定在 `pubspec.lock`。启动脚本校验已安装的 Flutter，也可通过 `ASASFANS_FLUTTER_SDK` 显式指定目录，不自动替换错误版本。安装与校验步骤见 [工具链说明](tool/README.md)。
 
 ```sh
-flutter pub get --enforce-lockfile
-flutter analyze --no-pub
+tool/flutterw --verify-sdk
+tool/flutterw pub get --enforce-lockfile
+tool/flutterw analyze --no-pub
 # 以下由开发者按需执行，不代表当前已运行通过：
-flutter test --no-pub
-flutter run -d macos
+tool/flutterw test --no-pub
+tool/flutterw run -d macos
 ```
 
-Android：JDK 17、SDK 36、AGP 8.13.1 / Gradle 8.13、最低 API 24、targetSdk 34。Flutter 可能优先使用 Android Studio 自带 JDK，先确认实际工具链选择。iOS/macOS 需要 Xcode、平台组件和签名；Windows 需要 Windows 与 Visual Studio C++ 桌面工具链，不能在 Mac 上交叉验收。
+Windows 使用 `tool/flutterw.ps1`。格式化使用 `tool/flutterw --dart format`，避免 PATH 中的 Dart 与项目 Flutter 不一致。Apple 最低系统为 iOS 15 / macOS 12；Android API 24 保留。新 SDK/UI 的四端运行与性能验收单独记录，旧版本的测试或 CI 成功不构成新版本验证。
+
+Android：Java 编译目标 17、SDK 36、AGP 8.13.1 / Gradle 8.14.3 / Kotlin 2.2.20、最低 API 24、targetSdk 34。这是满足目标 Flutter 最低要求的兼容组合，不使用跳过依赖检查的参数。Flutter 可能优先使用 Android Studio 自带 JDK，先确认实际选择。Apple 工程采用目标 Flutter 的 Swift Package Manager 接线，不支持它的安全存储插件仍由 CocoaPods 管理；原生依赖锁文件一起保留。iOS/macOS 需要 Xcode、平台组件和签名；Windows 需要 Windows 与 Visual Studio C++ 桌面工具链，不能在 Mac 上交叉验收。
 
 | 路径 | 职责 |
 | --- | --- |
@@ -63,7 +66,7 @@ Android：JDK 17、SDK 36、AGP 8.13.1 / Gradle 8.13、最低 API 24、targetSdk
 
 ## CI 与发布
 
-`Flutter Checks` 配置格式检查、静态分析和离线测试；手动开启 `build_platforms` 才构建四端 debug/未签名产物，当前仍待远端验证。没有 Flutter 正式发布工作流，也不因标签自动创建 Release。
+`Flutter Checks` 配置 SDK 精确校验、格式检查、静态分析和离线测试；手动开启 `build_platforms` 会构建 Android 正式签名 APK、macOS ad-hoc DMG、未签名 Windows 安装包和未签名 iOS 包，**不是四端 debug 烟测**。本轮没有推送或执行新 SDK 的远端 CI。没有自动发布 Release 的工作流。
 
 Android 开发包为 `asasfans.next.flutterdev`；未来生产包保持 `asasfans.next` 与原签名。release 构建目前由签名验收门槛阻断，不使用 debug key 兜底。Apple bundle ID `dev.asasfans.next`、Apple 分发和 Windows 安装身份尚待确认；Apple/Windows 品牌图标也待完善。
 

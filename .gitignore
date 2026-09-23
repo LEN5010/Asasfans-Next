@@ -26,6 +26,8 @@ AGENTS.md
 /.kotlin/
 
 # Flutter / Dart
+# Project-local SDKs: the version manifest is tracked, binaries are not.
+/.toolchains/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies

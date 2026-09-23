@@ -1,0 +1,29 @@
+{
+  "version": "3.47.3",
+  "channel": "stable",
+  "revision": "e8113bf45620cbeb8aff64947ee4c93e16adb4cf",
+  "dartVersion": "3.13.3",
+  "releaseIndex": "https://storage.googleapis.com/flutter_infra_release/releases/releases_{platform}.json",
+  "artifacts": {
+    "macos-x64": {
+      "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_3.47.3-stable.zip",
+      "sha256": "cd1e1a877db74b8928251225d38469077994e904b1b5bb359f3376c43ac0495c",
+      "releaseDate": "2026-09-09T18:05:03.680362Z"
+    },
+    "macos-arm64": {
+      "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_3.47.3-stable.zip",
+      "sha256": "66144a7cd691059c8c73bfce24178fb9ea2c95d798db8d56d1e2411e760f6583",
+      "releaseDate": "2026-09-09T17:58:20.184497Z"
+    },
+    "linux-x64": {
+      "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.3-stable.tar.xz",
+      "sha256": "988665565cad9091db1baa54bf6d3868bb40e29719592f3c3a164deefd4208e1",
+      "releaseDate": "2026-09-09T18:13:37.902677Z"
+    },
+    "windows-x64": {
+      "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.47.3-stable.zip",
+      "sha256": "44822ab53afb543c6fb446c078ba4f495e3eeddaafb88d879bde606447ddce24",
+      "releaseDate": "2026-09-09T18:06:06.715367Z"
+    }
+  }
+}

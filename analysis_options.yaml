@@ -2,9 +2,14 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   exclude:
+    - .toolchains/**
     - docs/**
     - build/**
     - app/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
   language:
     strict-casts: true
     strict-inference: true

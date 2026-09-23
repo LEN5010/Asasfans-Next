@@ -4,24 +4,33 @@ import WebKit
 import webview_flutter_wkwebview
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var loginCookies: FlutterMethodChannel?
+  private weak var loginRegistry: FlutterPluginRegistry?
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-    if let controller = window?.rootViewController as? FlutterViewController {
-      loginCookies = FlutterMethodChannel(name: "asasfans.next/bilibili_login_cookies", binaryMessenger: controller.binaryMessenger)
-      loginCookies?.setMethodCallHandler { [weak self] call, result in
-        guard let self else {
-          result(FlutterError(code: "LOGIN_COOKIES", message: "Login browser unavailable", details: nil))
-          return
-        }
-        BiliLoginCookieBridge.handle(call, registry: self, result: result)
-      }
-    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    loginRegistry = engineBridge.pluginRegistry
+    // UIScene owns the window. Bind to the actual engine instead of relying on
+    // window.rootViewController during process launch (before a scene exists).
+    loginCookies?.setMethodCallHandler(nil)
+    loginCookies = FlutterMethodChannel(
+      name: "asasfans.next/bilibili_login_cookies",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    loginCookies?.setMethodCallHandler { [weak self] call, result in
+      guard let registry = self?.loginRegistry else {
+        result(FlutterError(code: "LOGIN_COOKIES", message: "Login browser unavailable", details: nil))
+        return
+      }
+      BiliLoginCookieBridge.handle(call, registry: registry, result: result)
+    }
   }
 }
 

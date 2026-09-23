@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+# Only locate the SDK here; flutter_sdk.dart parses and validates the full pin.
+version="$(sed -nE 's/^  "version": "([0-9.]+)",$/\1/p' "$root/tool/flutter-sdk.json")"
+if [[ -z "$version" ]]; then
+  echo 'Cannot read tool/flutter-sdk.json. Restore the SDK manifest.' >&2
+  exit 78
+fi
+sdk="${ASASFANS_FLUTTER_SDK:-}"
+if [[ -z "$sdk" ]]; then
+  flutter="$(command -v flutter || true)"
+  if [[ -z "$flutter" ]]; then
+    echo "Flutter $version is not on PATH. Set ASASFANS_FLUTTER_SDK; see tool/README.md." >&2
+    exit 78
+  fi
+  # Homebrew and other manual installations may expose a symlink in PATH.
+  links=0
+  while [[ -L "$flutter" ]]; do
+    links=$((links + 1))
+    if [[ "$links" -gt 20 ]]; then
+      echo 'Flutter executable has a symlink cycle.' >&2
+      exit 78
+    fi
+    target="$(readlink "$flutter")"
+    if [[ "$target" = /* ]]; then flutter="$target"
+    else flutter="$(dirname -- "$flutter")/$target"; fi
+  done
+  sdk="$(cd -- "$(dirname -- "$flutter")/.." && pwd)"
+fi
+dart="$sdk/bin/cache/dart-sdk/bin/dart"
+if [[ ! -x "$dart" ]]; then
+  echo "Flutter $version is missing at $sdk. See tool/README.md; no other SDK will be substituted." >&2
+  exit 78
+fi
+exec "$dart" "$root/tool/flutter_sdk.dart" "$root" "$sdk" "$@"

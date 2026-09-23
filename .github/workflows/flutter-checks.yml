@@ -26,11 +26,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.4'
+          flutter-version: '3.47.3'
           channel: stable
           cache: true
+      - name: Verify the pinned SDK
+        run: ASASFANS_FLUTTER_SDK="$FLUTTER_ROOT" tool/flutterw --verify-sdk
       - run: flutter pub get --enforce-lockfile
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none --set-exit-if-changed lib test tool
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub
 
@@ -62,13 +64,8 @@ jobs:
             os: macos-latest
             command: flutter build ios --release --no-codesign --no-pub
             artifact: build/flutter-ios-release.tar.gz
-          # Pinned to windows-2022 rather than windows-latest, which now ships
-          # Visual Studio 18. Flutter 3.35.4 predates that release: its VS
-          # detection does not recognise 18, and it falls back to asking CMake
-          # for the "Visual Studio 16 2019" generator, which no current runner
-          # has. Activating the 18 toolchain by hand does not help, because the
-          # generator name is what fails. Revisit when the pinned Flutter
-          # version knows about VS 18.
+          # Keep the existing VS/runner baseline while upgrading Flutter.
+          # Moving to windows-latest is a separate, independently verified change.
           - platform: windows
             os: windows-2022
             command: flutter build windows --release --no-pub
@@ -111,9 +108,18 @@ jobs:
         run: choco install innosetup --no-progress
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.4'
+          flutter-version: '3.47.3'
           channel: stable
           cache: true
+      - name: Verify the pinned SDK (Apple and Android hosts)
+        if: matrix.platform != 'windows'
+        run: ASASFANS_FLUTTER_SDK="$FLUTTER_ROOT" tool/flutterw --verify-sdk
+      - name: Verify the pinned SDK (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $env:ASASFANS_FLUTTER_SDK = $env:FLUTTER_ROOT
+          ./tool/flutterw.ps1 --verify-sdk
       - run: flutter pub get --enforce-lockfile
       # Recorded so the next toolchain failure is readable rather than guessed
       # at from a CMake generator name.
