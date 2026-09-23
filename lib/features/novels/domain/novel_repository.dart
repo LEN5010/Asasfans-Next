@@ -17,8 +17,8 @@ enum NovelCharacter {
 enum NovelRating { sfw, nsfw }
 
 enum NovelRatingFilter {
-  sfw('全年龄'),
   all('全部'),
+  sfw('全年龄'),
   nsfw('R18');
 
   const NovelRatingFilter(this.label);
@@ -49,7 +49,7 @@ class NovelQuery {
     this.keyword = '',
     this.scope = NovelSearchScope.all,
     this.characters = const {},
-    this.rating = NovelRatingFilter.sfw,
+    this.rating = NovelRatingFilter.all,
     this.sort = NovelSort.newest,
     this.limit = 24,
   });

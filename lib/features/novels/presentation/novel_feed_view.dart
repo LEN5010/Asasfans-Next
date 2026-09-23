@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_card_surface.dart';
+import '../../../shared/widgets/app_panel.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/sliver_content_masonry.dart';
+import '../../content/presentation/content_images.dart';
+import '../../content/presentation/content_search_control.dart';
 import '../../content/application/fanart_feed_controller.dart' show FeedStatus;
 import '../../content/presentation/feed_status_footer.dart';
 import '../application/novel_feed_controller.dart';
@@ -97,13 +101,11 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView> {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverConstrainedCrossAxis(
-            maxExtent: 760,
-            sliver: SliverList.separated(
-              itemCount: state.items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) =>
-                  _NovelCard(item: state.items[index]),
+          sliver: SliverContentMasonry(
+            itemCount: state.items.length,
+            itemBuilder: (context, index) => _NovelCard(
+              key: ValueKey(state.items[index].identity),
+              item: state.items[index],
             ),
           ),
         ),
@@ -120,296 +122,401 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView> {
   }
 }
 
-/// Filters lead the list and scroll with it: search, sort and characters on
-/// the first row, rating on the second.
-class _NovelFilters extends ConsumerWidget {
+class _NovelFilters extends ConsumerStatefulWidget {
   const _NovelFilters({
     required this.query,
     required this.total,
     required this.onChanged,
   });
-
   final NovelQuery query;
   final int? total;
   final ValueChanged<NovelQuery> onChanged;
+  @override
+  ConsumerState<_NovelFilters> createState() => _NovelFiltersState();
+}
 
-  Future<void> _search(BuildContext context) async {
-    final result = await showDialog<({String keyword, NovelSearchScope scope})>(
-      context: context,
-      builder: (_) =>
-          _NovelSearchDialog(value: query.keyword, scope: query.scope),
-    );
-    if (result == null) return;
-    onChanged(query.copyWith(keyword: result.keyword, scope: result.scope));
+class _NovelFiltersState extends ConsumerState<_NovelFilters> {
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final wide = constraints.maxWidth >= 760;
+      final query = widget.query;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: ContentSearchControl(
+                    value: query.keyword,
+                    hint: query.scope == NovelSearchScope.all
+                        ? '搜索标题、作者或正文'
+                        : '搜索${query.scope.label}',
+                    expanded: true,
+                    onSubmitted: (keyword) =>
+                        widget.onChanged(query.copyWith(keyword: keyword)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                AppGlassButton.icon(
+                  tooltip: '筛选与排序',
+                  icon: const Icon(Icons.tune),
+                  selected: query != const NovelQuery(),
+                  onPressed: () async {
+                    if (wide) {
+                      setState(() => _expanded = !_expanded);
+                      return;
+                    }
+                    final next = await showAppPanel<NovelQuery>(
+                      context: context,
+                      builder: (context) => _NovelFilterPanel(
+                        query: query,
+                        onApply: (query) => Navigator.pop(context, query),
+                        onClose: () => Navigator.pop(context),
+                      ),
+                    );
+                    if (next != null && mounted) widget.onChanged(next);
+                  },
+                ),
+              ],
+            ),
+            if (wide && _expanded)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Card(
+                  child: _NovelFilterPanel(
+                    key: ValueKey(query),
+                    query: query,
+                    embedded: true,
+                    onApply: widget.onChanged,
+                    onClose: () => setState(() => _expanded = false),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    [
+                      '${query.rating.label}作品',
+                      if (widget.total != null) '${widget.total} 部',
+                      if (query.characters.isNotEmpty)
+                        query.characters.map((value) => value.wire).join(' + '),
+                      query.sort.label,
+                    ].join(' · '),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                if (query != const NovelQuery())
+                  AppGlassButton.icon(
+                    tooltip: '清除小说筛选',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => widget.onChanged(const NovelQuery()),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _NovelFilterPanel extends ConsumerStatefulWidget {
+  const _NovelFilterPanel({
+    super.key,
+    required this.query,
+    required this.onApply,
+    required this.onClose,
+    this.embedded = false,
+  });
+  final NovelQuery query;
+  final ValueChanged<NovelQuery> onApply;
+  final VoidCallback onClose;
+  final bool embedded;
+  @override
+  ConsumerState<_NovelFilterPanel> createState() => _NovelFilterPanelState();
+}
+
+class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
+  late NovelQuery _draft = widget.query;
+
+  void _change(NovelQuery next) {
+    setState(() => _draft = next);
+    if (widget.embedded) widget.onApply(next);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final facets = ref.watch(novelFacetsProvider).valueOrNull;
-    final scope = query.scope == NovelSearchScope.all
-        ? ''
-        : '${query.scope.label}：';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Row(
-            children: [
-              if (query.keyword.isEmpty)
-                ActionChip(
-                  avatar: const Icon(AppIcons.search, size: 18),
-                  label: const Text('搜索'),
-                  onPressed: () => _search(context),
-                )
-              else
-                InputChip(
-                  avatar: const Icon(AppIcons.search, size: 18),
-                  label: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 180),
-                    child: Text(
-                      '$scope${query.keyword}',
-                      overflow: TextOverflow.ellipsis,
-                    ),
+    Widget group(String title, List<Widget> children) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: theme.textTheme.labelLarge),
+          const SizedBox(height: 8),
+          ...children,
+        ],
+      ),
+    );
+    final groups = [
+      group('角色', [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            AppGlassButton(
+              selected: _draft.characters.isEmpty,
+              onPressed: () => _change(_draft.copyWith(characters: {})),
+              child: const Text('全部'),
+            ),
+            for (final character in NovelCharacter.values)
+              AppGlassButton(
+                selected: _draft.characters.contains(character),
+                onPressed: () => _change(
+                  _draft.copyWith(
+                    characters: _draft.characters.contains(character)
+                        ? ({..._draft.characters}..remove(character))
+                        : {..._draft.characters, character},
                   ),
-                  onPressed: () => _search(context),
-                  onDeleted: () => onChanged(query.copyWith(keyword: '')),
                 ),
-              const SizedBox(width: 8),
-              PopupMenuButton<NovelSort>(
-                tooltip: '排序',
-                initialValue: query.sort,
-                onSelected: (sort) => onChanged(query.copyWith(sort: sort)),
-                itemBuilder: (_) => [
-                  for (final sort in NovelSort.values)
-                    PopupMenuItem(value: sort, child: Text(sort.label)),
-                ],
-                child: Chip(
-                  avatar: const Icon(Icons.sort, size: 18),
-                  label: Text(query.sort.label),
-                ),
+                child: Text(character.wire),
               ),
-              for (final character in NovelCharacter.values) ...[
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: Text(character.wire),
-                  selected: query.characters.contains(character),
-                  onSelected: (selected) => onChanged(
-                    query.copyWith(
-                      characters: {
-                        ...query.characters.where(
-                          (value) => selected || value != character,
-                        ),
-                        if (selected) character,
-                      },
+          ],
+        ),
+        if (_draft.characters.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('同时包含所选角色', style: theme.textTheme.bodySmall),
+          ),
+      ]),
+      group('分级', [
+        AppGlassSegments<NovelRatingFilter>(
+          values: NovelRatingFilter.values,
+          selected: _draft.rating,
+          labelOf: (value) => value.label,
+          onChanged: (value) => _change(_draft.copyWith(rating: value)),
+        ),
+        if (facets != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              [
+                for (final rating in NovelRatingFilter.values)
+                  '${rating.label} ${facets.count(rating)}',
+              ].join(' · '),
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+      ]),
+      group('搜索范围', [
+        AppGlassSegments<NovelSearchScope>(
+          values: NovelSearchScope.values,
+          selected: _draft.scope,
+          labelOf: (value) => value.label,
+          onChanged: (value) => _change(_draft.copyWith(scope: value)),
+        ),
+      ]),
+      group('排序', [
+        AppGlassSegments<NovelSort>(
+          values: NovelSort.values,
+          selected: _draft.sort,
+          labelOf: (value) => value.label,
+          onChanged: (value) => _change(_draft.copyWith(sort: value)),
+        ),
+      ]),
+    ];
+    final fields = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: widget.embedded
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: Column(children: groups.take(2).toList())),
+                const SizedBox(width: 24),
+                Expanded(child: Column(children: groups.skip(2).toList())),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: groups,
+            ),
+    );
+    return Column(
+      mainAxisSize: widget.embedded ? MainAxisSize.min : MainAxisSize.max,
+      children: [
+        if (!widget.embedded)
+          AppPanelHeader(
+            title: '筛选小说',
+            onClose: widget.onClose,
+            actions: [
+              AppGlassButton(
+                onPressed: () => _change(const NovelQuery()),
+                child: const Text('重置'),
+              ),
+            ],
+          ),
+        if (widget.embedded)
+          fields
+        else
+          Expanded(child: SingleChildScrollView(child: fields)),
+        if (!widget.embedded)
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: Row(
+                children: [
+                  AppGlassButton(
+                    onPressed: widget.onClose,
+                    child: const Text('取消'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppGlassButton(
+                      selected: true,
+                      onPressed: () => widget.onApply(_draft),
+                      child: const Text('应用筛选'),
                     ),
                   ),
-                ),
-              ],
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Row(
-            children: [
-              for (final rating in NovelRatingFilter.values) ...[
-                ChoiceChip(
-                  label: Text(
-                    facets == null
-                        ? rating.label
-                        : '${rating.label} ${facets.count(rating)}',
-                  ),
-                  selected: query.rating == rating,
-                  onSelected: (_) => onChanged(query.copyWith(rating: rating)),
-                ),
-                const SizedBox(width: 8),
-              ],
-              if (total != null) ...[
-                const SizedBox(width: 4),
-                Text(
-                  // Several characters narrow to works tagged with all of them.
-                  '共 $total 部${query.characters.length > 1 ? ' · 同时包含所选角色' : ''}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
       ],
     );
   }
 }
 
-/// Search is applied on submit, never per keystroke, to spare the shared
-/// rate limit.
-class _NovelSearchDialog extends StatefulWidget {
-  const _NovelSearchDialog({required this.value, required this.scope});
-  final String value;
-  final NovelSearchScope scope;
-  @override
-  State<_NovelSearchDialog> createState() => _NovelSearchDialogState();
-}
-
-class _NovelSearchDialogState extends State<_NovelSearchDialog> {
-  late final _controller = TextEditingController(text: widget.value);
-  late NovelSearchScope _scope = widget.scope;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit([String? value]) => Navigator.pop(context, (
-    keyword: (value ?? _controller.text).trim(),
-    scope: _scope,
-  ));
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('搜索小说'),
-    content: SizedBox(
-      width: 400,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            maxLength: 200,
-            textInputAction: TextInputAction.search,
-            decoration: const InputDecoration(
-              hintText: '标题、作者或正文',
-              counterText: '',
-            ),
-            onSubmitted: _submit,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final scope in NovelSearchScope.values)
-                ChoiceChip(
-                  label: Text(scope.label),
-                  selected: _scope == scope,
-                  onSelected: (_) => setState(() => _scope = scope),
-                ),
-            ],
-          ),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('取消'),
-      ),
-      if (widget.value.isNotEmpty)
-        TextButton(onPressed: () => _submit(''), child: const Text('清除')),
-      FilledButton(onPressed: _submit, child: const Text('搜索')),
-    ],
-  );
-}
-
-class _NovelCard extends StatelessWidget {
-  const _NovelCard({required this.item});
+class _NovelCard extends ConsumerWidget {
+  const _NovelCard({super.key, required this.item});
   final NovelSummary item;
 
-  static final _space = RegExp(r'\s+');
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurfaceVariant;
-    final meta = [
-      item.authorName.isEmpty ? '匿名作者' : item.authorName,
-      if (item.createdAt != null) formatNovelDate(item.createdAt!),
-    ].join(' · ');
+    final author = item.authorName.isEmpty ? '匿名作者' : item.authorName;
     return MediaCardSurface(
       onTap: () => openNovel(context, item),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ContentAvatar(name: author),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(author, style: theme.textTheme.titleSmall),
+                      if (item.createdAt != null)
+                        Text(
+                          formatNovelDate(item.createdAt!, includeTime: true),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ),
+                if (item.isR18) const NovelR18Badge(),
+              ],
+            ),
+            if (item.characters.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: NovelCharacterTags(characters: item.characters),
+              ),
+            const SizedBox(height: 14),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHigh.withValues(
+                  alpha: .55,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: item.isR18
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 22,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '仅提供作品信息与原帖链接',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (item.images.isNotEmpty) ...[
+                            ContentImageGallery(
+                              images: item.images,
+                              preview: true,
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          Text(
+                            item.excerpt.isEmpty
+                                ? '暂无预览文本'
+                                : item.excerpt.trim(),
+                            maxLines: 6,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontFamily: 'serif',
+                              fontFamilyFallback: const [
+                                'Songti SC',
+                                'Noto Serif CJK SC',
+                              ],
+                              height: 1.65,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              item.title.isEmpty ? '无题' : item.title,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            Row(
               children: [
                 Expanded(
                   child: Text(
-                    item.title.isEmpty ? '无题' : item.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    formatNovelCharCount(item.charCount),
+                    style: theme.textTheme.bodySmall,
                   ),
                 ),
-                if (item.isR18) ...[
-                  const SizedBox(width: 8),
-                  const Padding(
-                    padding: EdgeInsets.only(top: 3),
-                    child: NovelR18Badge(),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              meta,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium?.copyWith(color: muted),
-            ),
-            if (item.characters.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              NovelCharacterTags(characters: item.characters),
-            ],
-            const SizedBox(height: 8),
-            if (item.isR18)
-              Row(
-                children: [
-                  Icon(Icons.lock_outline, size: 16, color: muted),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'R18 作品，应用内不显示正文，可在详情中前往原帖',
-                      style: theme.textTheme.bodySmall?.copyWith(color: muted),
-                    ),
-                  ),
-                ],
-              )
-            else
-              Text(
-                item.excerpt.isEmpty
-                    ? '暂无预览文本'
-                    : item.excerpt.replaceAll(_space, ' '),
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
-              ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  formatNovelCharCount(item.charCount),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.outline,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  item.isR18 ? '查看原帖' : '阅读全文',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
+                AppGlassButton(
+                  onPressed: item.isR18 && item.sourceUrl != null
+                      ? () => openNovelSource(context, ref, item.sourceUrl!)
+                      : () => openNovel(context, item),
+                  child: Text(
+                    item.isR18
+                        ? (item.sourceUrl == null ? '作品信息' : '查看原帖 ↗')
+                        : '阅读全文',
                   ),
                 ),
               ],

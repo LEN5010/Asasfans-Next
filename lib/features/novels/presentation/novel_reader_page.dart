@@ -7,6 +7,8 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/app_page_bar.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../content/presentation/content_images.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../application/novel_providers.dart';
 import '../domain/novel_repository.dart';
@@ -26,12 +28,17 @@ String formatNovelCharCount(int count) {
 }
 
 /// Archive times are Shanghai wall-clock values; show the calendar date.
-String formatNovelDate(DateTime value) =>
+String formatNovelDate(DateTime value, {bool includeTime = false}) =>
     '${value.year.toString().padLeft(4, '0')}-'
     '${value.month.toString().padLeft(2, '0')}-'
-    '${value.day.toString().padLeft(2, '0')}';
+    '${value.day.toString().padLeft(2, '0')}'
+    '${includeTime ? ' ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}' : ''}';
 
-Future<void> _openLink(BuildContext context, WidgetRef ref, Uri url) async {
+Future<void> openNovelSource(
+  BuildContext context,
+  WidgetRef ref,
+  Uri url,
+) async {
   final opened = await ref.read(externalLinkServiceProvider).open(url);
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(
@@ -56,10 +63,10 @@ class NovelReaderPage extends ConsumerWidget {
         title: Text(item.title.isEmpty ? '小说' : item.title),
         actions: [
           if (source != null)
-            IconButton(
+            AppGlassButton.icon(
               tooltip: '打开豆瓣原帖',
               icon: const Icon(Icons.open_in_new),
-              onPressed: () => _openLink(context, ref, source),
+              onPressed: () => openNovelSource(context, ref, source),
             ),
         ],
       ),
@@ -287,26 +294,10 @@ class _BlockView extends StatelessWidget {
         child: Text('　　$text', style: body),
       ),
       NovelImageBlock(:final url, :final alt) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-          child: Image.network(
-            url.toString(),
-            fit: BoxFit.fitWidth,
-            width: double.infinity,
-            semanticLabel: alt.isEmpty ? null : alt,
-            errorBuilder: (context, error, stack) => Container(
-              height: 120,
-              color: theme.colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Text(
-                '图片加载失败',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                ),
-              ),
-            ),
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Semantics(
+          label: alt.isEmpty ? null : alt,
+          child: ContentImageGallery(images: [url]),
         ),
       ),
       NovelDividerBlock() => const Padding(
@@ -348,19 +339,36 @@ class _LinkTile extends ConsumerWidget {
   final NovelExternalLink link;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(
-      link.kind == NovelLinkKind.source ? Icons.forum_outlined : Icons.link,
+  Widget build(BuildContext context, WidgetRef ref) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: AppGlassButton(
+      onPressed: () => openNovelSource(context, ref, link.url),
+      child: Row(
+        children: [
+          Icon(
+            link.kind == NovelLinkKind.source
+                ? Icons.forum_outlined
+                : Icons.link,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(link.label),
+                Text(
+                  '${link.url.host}${link.url.path}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.open_in_new, size: 18),
+        ],
+      ),
     ),
-    title: Text(link.label),
-    subtitle: Text(
-      '${link.url.host}${link.url.path}',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    ),
-    trailing: const Icon(Icons.open_in_new, size: 20),
-    onTap: () => _openLink(context, ref, link.url),
   );
 }
 
@@ -403,7 +411,7 @@ class NovelCharacterTags extends StatelessWidget {
         for (final character in characters)
           DecoratedBox(
             decoration: BoxDecoration(
-              color: theme.colorScheme.secondaryContainer,
+              color: theme.colorScheme.tertiaryContainer.withValues(alpha: .45),
               borderRadius: BorderRadius.circular(AppTokens.inputRadius),
             ),
             child: Padding(
@@ -411,7 +419,7 @@ class NovelCharacterTags extends StatelessWidget {
               child: Text(
                 character.wire,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSecondaryContainer,
+                  color: theme.colorScheme.onTertiaryContainer,
                 ),
               ),
             ),

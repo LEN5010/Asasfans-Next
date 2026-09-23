@@ -22,7 +22,7 @@ class ContentSearchControl extends StatelessWidget {
   Widget build(BuildContext context) => expanded
       ? SizedBox(
           width: 240,
-          height: 44,
+          height: AppGlassSegments.heightFor(context),
           child: AppGlassSurface(
             radius: 22,
             child: _SearchInput(
@@ -73,6 +73,9 @@ class _SearchInputState extends State<_SearchInput> {
   Widget build(BuildContext context) => TextField(
     controller: _controller,
     textInputAction: TextInputAction.search,
+    style: Theme.of(
+      context,
+    ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.25),
     maxLength: 200,
     // Fits the page bar's action capsule.
     decoration: InputDecoration(
@@ -80,7 +83,7 @@ class _SearchInputState extends State<_SearchInput> {
       filled: false,
       counterText: '',
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8),
       border: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(22)),
         borderSide: BorderSide.none,
