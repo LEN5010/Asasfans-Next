@@ -1,3 +1,5 @@
+import 'package:asasfans_next/features/content/presentation/dynamic_card.dart';
+import 'package:asasfans_next/features/content/presentation/dynamic_rich_text.dart';
 import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
@@ -68,6 +70,45 @@ void main() {
     // The year label uses the source's Shanghai calendar.
     expect(find.textContaining('2021 年'), findsOneWidget);
   });
+
+  testWidgets(
+    'UX3: equal history previews open full text without growing the shelf',
+    (tester) async {
+      final body = '完整的历史正文\n' * 30;
+      await tester.pumpWidget(
+        _app(
+          _StubRepository(
+            posts: [
+              _post('1'),
+              _post('2', text: body),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final cards = find.byType(DynamicCard);
+      final height = tester.getSize(cards.first).height;
+      expect(tester.getSize(cards.last).height, height);
+      await tester.tap(find.text('查看全文').first);
+      await tester.pumpAndSettle();
+      final full = find.byWidgetPredicate(
+        (w) => w is DynamicCard && !w.historyPreview,
+      );
+      expect(full, findsOneWidget);
+      expect(
+        tester
+            .widget<DynamicRichText>(
+              find.descendant(of: full, matching: find.byType(DynamicRichText)),
+            )
+            .maxLines,
+        isNull,
+      );
+      await tester.tap(find.byTooltip('关闭'));
+      await tester.pumpAndSettle();
+      expect(tester.getSize(cards.first).height, height);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('a failing module retains its heading and retry', (tester) async {
     await tester.pumpWidget(

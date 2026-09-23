@@ -68,7 +68,7 @@ void main() {
                 find.descendant(
                   of: tile,
                   matching: find.byWidgetPredicate(
-                    (widget) => widget is Icon && widget.size == 22,
+                    (widget) => widget is Icon && widget.size == 20,
                   ),
                 ),
               )
@@ -126,7 +126,7 @@ void main() {
     );
   });
 
-  testWidgets('narrow drawer supports large text and an open keyboard', (
+  testWidgets('UX3: narrow drawer supports large text and an open keyboard', (
     tester,
   ) async {
     tester.view

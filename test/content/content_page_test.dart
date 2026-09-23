@@ -80,6 +80,49 @@ Widget _app(FanartRepository repository) => ProviderScope(
 );
 
 void main() {
+  testWidgets(
+    'UX3: phone fanart is compact and secondary actions stay usable in menus',
+    (tester) async {
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final repository = _StubRepository(pages: 1);
+      await tester.pumpWidget(_app(repository));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<FanartCard>(find.byType(FanartCard).first).expanded,
+        isFalse,
+      );
+      expect(find.byType(FanartFilterButton), findsOneWidget);
+      expect(find.text('嘉然'), findsNothing);
+      await tester.tap(find.byTooltip('更多内容操作'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('保存频道'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('保存当前筛选'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, '我的二创');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('保存').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('更多内容操作'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('保存频道'));
+      await tester.pumpAndSettle();
+      expect(find.text('我的二创'), findsOneWidget);
+      await tester.tap(find.byTooltip('关闭频道'));
+      await tester.pumpAndSettle();
+      tester.view.physicalSize = const Size(1200, 900);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<FanartCard>(find.byType(FanartCard).first).expanded,
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('slow upward scrolling reveals the hidden page bar', (
     tester,
   ) async {
@@ -341,12 +384,14 @@ void main() {
     expect(repository.queries.last.keyword, '嘉然');
   });
 
-  testWidgets('the random draw opens a post directly', (tester) async {
+  testWidgets('UX3: the random draw opens a post directly', (tester) async {
     final repository = _StubRepository();
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('随机二创'));
+    await tester.tap(find.byTooltip('更多内容操作'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('随机二创'));
     await tester.pumpAndSettle();
 
     expect(repository.randomDraws, 1);
@@ -368,7 +413,9 @@ void main() {
       await tester.enterText(find.byType(TextField), '生日');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('随机二创'));
+      await tester.tap(find.byTooltip('更多内容操作'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('随机二创'));
       await tester.pumpAndSettle();
       expect(repository.randomQueries.single.keyword, '生日');
       expect(repository.randomQueries.single.characters, {

@@ -133,12 +133,16 @@ void main() {
   testWidgets(
     'UI UX: dynamic filters apply drafts and discard cancelled changes',
     (tester) async {
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final repository = _StubRepository();
       await tester.pumpWidget(_app(repository));
       await tester.pumpAndSettle();
       expect(repository.queries.last.type, isNull);
 
-      await tester.tap(find.text('筛选与排序'));
+      await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(AppButton, '视频'));
       await tester.pumpAndSettle();
@@ -146,7 +150,7 @@ void main() {
       await tester.tap(find.text('取消'));
       await tester.pumpAndSettle();
       expect(repository.queries.last.type, isNull);
-      await tester.tap(find.text('筛选与排序'));
+      await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(AppButton, '视频'));
       await tester.tap(find.text('应用筛选'));

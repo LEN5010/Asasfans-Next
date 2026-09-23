@@ -34,7 +34,7 @@ void main() {
       FanartContentType.video,
       FanartContentType.text,
     ]) {
-      testWidgets('$type uses its own media shape at text scale $scale', (
+      testWidgets('UX3: $type uses aligned previews at text scale $scale', (
         tester,
       ) async {
         final uri = Uri.parse('https://fixture.test/cover');
@@ -69,12 +69,9 @@ void main() {
           expect(find.byType(Image), findsNothing);
         } else {
           final rect = tester.getSize(find.byType(MediaCover));
+          expect(rect.width / rect.height, closeTo(16 / 9, .001));
           expect(
-            rect.width / rect.height,
-            closeTo(type == FanartContentType.video ? 16 / 9 : 4 / 3, .001),
-          );
-          expect(
-            find.text(type == FanartContentType.image ? '2 张' : '视频'),
+            find.text(type == FanartContentType.image ? '2 张' : '去 B 站看 ↗'),
             findsOneWidget,
           );
         }

@@ -1,3 +1,4 @@
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:asasfans_next/features/content/application/fanart_filter_rules.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
@@ -41,7 +42,7 @@ void main() {
     // Test against the unqualified finder: `.last` on an empty match throws
     // StateError from evaluate(), so the emptiness guard never ran and an
     // option that merely had not been built yet looked like a missing one.
-    final matches = find.widgetWithText(ChoiceChip, option);
+    final matches = find.widgetWithText(AppChoice, option);
     if (matches.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
         matches,
@@ -60,23 +61,30 @@ void main() {
   }
 
   Future<void> apply(WidgetTester tester) async {
-    await tester.tap(find.widgetWithText(FilledButton, '应用筛选'));
+    await tester.tap(find.widgetWithText(AppButton, '应用筛选'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('characters remain immediate and accumulate as before', (
-    tester,
-  ) async {
-    await pump(tester, const FanartQuery());
-    await tester.tap(find.widgetWithText(FilterChip, '嘉然'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilterChip, '贝拉'));
-    await tester.pumpAndSettle();
-    expect(query.characters, {FanartCharacter.diana, FanartCharacter.bella});
-    await tester.tap(find.widgetWithText(FilterChip, '嘉然'));
-    await tester.pumpAndSettle();
-    expect(query.characters, {FanartCharacter.bella});
-  });
+  testWidgets(
+    'UX3: member filters are draft-only and accumulate in the panel',
+    (tester) async {
+      await pump(tester, const FanartQuery());
+      expect(find.text('嘉然'), findsNothing);
+      await open(tester);
+      await pick(tester, '嘉然');
+      await pick(tester, '贝拉');
+      expect(query.characters, isEmpty);
+      await apply(tester);
+      expect(query.characters, {FanartCharacter.diana, FanartCharacter.bella});
+      expect(changes, 1);
+      await open(tester);
+      await pick(tester, '嘉然');
+      await tester.tap(find.byTooltip('关闭筛选'));
+      await tester.pumpAndSettle();
+      expect(query.characters, {FanartCharacter.diana, FanartCharacter.bella});
+      expect(changes, 1);
+    },
+  );
 
   testWidgets('several draft changes issue exactly one application', (
     tester,
