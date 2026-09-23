@@ -115,7 +115,12 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
         key: const PageStorageKey('historical-dynamics-feed'),
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          24 + MediaQuery.paddingOf(context).bottom,
+        ),
         itemCount: state.items.length + 1,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) => index == state.items.length

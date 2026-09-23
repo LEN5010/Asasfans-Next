@@ -229,6 +229,11 @@ class _SubscriptionFeedViewState extends ConsumerState<SubscriptionFeedView> {
                           SliverToBoxAdapter(
                             child: _footer(controller, items.isEmpty),
                           ),
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                              height: MediaQuery.paddingOf(context).bottom,
+                            ),
+                          ),
                         ],
                       ),
                     );

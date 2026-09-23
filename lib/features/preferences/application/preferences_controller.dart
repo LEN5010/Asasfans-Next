@@ -74,6 +74,8 @@ class PreferencesController extends StateNotifier<PreferencesState> {
     }
   }
 
+  Future<bool> setMaterial(AppMaterial value) =>
+      _write(() => _repository.setMaterial(value));
   Future<bool> setAppearance(AppAppearance value) =>
       _write(() => _repository.setAppearance(value));
   Future<bool> setHomeSection(HomeSection section, bool visible) =>

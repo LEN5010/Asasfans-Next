@@ -517,6 +517,9 @@ class _FanartGrid extends StatelessWidget {
                 onRefresh: onRefresh,
               ),
             ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: MediaQuery.paddingOf(context).bottom),
+            ),
           ],
         );
       },

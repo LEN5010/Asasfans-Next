@@ -1,4 +1,6 @@
 import 'package:asasfans_next/app/asasfans_app.dart';
+import 'package:asasfans_next/app/router/app_shell.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +22,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(AppGlassNavigation), findsOneWidget);
       await tester.tap(find.text('工具').last);
       await tester.pumpAndSettle();
       expect(find.text('录音棚'), findsOneWidget);
@@ -28,7 +30,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byTooltip('刷新今日'), findsOneWidget);
       expect(find.text('录音棚'), findsNothing);
-      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(AppGlassNavigation), findsOneWidget);
     },
   );
 
@@ -44,8 +46,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(AppSidebar), findsOneWidget);
+    expect(find.byType(AppGlassNavigation), findsNothing);
   });
   testWidgets(
     'Mine opens real rules management with source ordering as the default',

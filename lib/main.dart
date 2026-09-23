@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/asasfans_app.dart';
+import 'app/glass_providers.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,5 +16,10 @@ void main() {
       'LoveIwara glass integration',
     ], await rootBundle.loadString('third_party/LoveIwara-LICENSE'));
   });
-  runApp(const ProviderScope(child: AsasfansApp()));
+  runApp(
+    ProviderScope(
+      overrides: [observeGlassRendererErrors()],
+      child: const AsasfansApp(),
+    ),
+  );
 }

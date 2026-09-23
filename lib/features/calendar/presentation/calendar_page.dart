@@ -194,7 +194,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           }
           return ListView(
             key: const ValueKey('calendar-compact'),
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: EdgeInsets.only(
+              bottom: 24 + MediaQuery.paddingOf(context).bottom,
+            ),
             children: [
               monthHeader(collapsible: true),
               if (_monthExpanded)

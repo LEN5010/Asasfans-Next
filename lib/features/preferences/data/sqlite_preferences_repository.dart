@@ -15,6 +15,9 @@ class SqlitePreferencesRepository implements PreferencesRepository {
   Future<AppPreferences> load() async =>
       _decode((await _database.batch([_read])).single);
   @override
+  Future<AppPreferences> setMaterial(AppMaterial material) =>
+      _set('ui.material', material.name);
+  @override
   Future<AppPreferences> setAppearance(AppAppearance appearance) =>
       _set('appearance', appearance.name);
   @override
@@ -43,6 +46,13 @@ class SqlitePreferencesRepository implements PreferencesRepository {
     if (appearance != null && matched == null) {
       throw const StorageFailure(StorageFailureKind.invalidData);
     }
+    final material = values['ui.material'];
+    final matchedMaterial = AppMaterial.values
+        .where((value) => value.name == material)
+        .firstOrNull;
+    if (material != null && matchedMaterial == null) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
     final hidden = <HomeSection>{};
     for (final section in HomeSection.values) {
       final visible = values['home.${section.name}.visible'];
@@ -53,6 +63,7 @@ class SqlitePreferencesRepository implements PreferencesRepository {
     }
     return AppPreferences(
       appearance: matched ?? AppAppearance.system,
+      material: matchedMaterial ?? AppMaterial.liquid,
       hiddenHomeSections: Set.unmodifiable(hidden),
     );
   }

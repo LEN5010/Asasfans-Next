@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 abstract final class MediaCardMetrics {
   static double line(TextScaler scaler, double size, double height) =>
@@ -31,6 +32,12 @@ class MediaCover extends StatelessWidget {
             image.toString(),
             fit: BoxFit.cover,
             cacheWidth: 800,
+            frameBuilder: (context, child, frame, synchronous) {
+              if (frame == 0 && !synchronous) {
+                GlassContentAwareScope.maybeOf(context)?.requestSample();
+              }
+              return child;
+            },
             errorBuilder: (_, _, _) => _fallback(context),
             loadingBuilder: (_, child, progress) => progress == null
                 ? child

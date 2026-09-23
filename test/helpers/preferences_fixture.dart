@@ -14,6 +14,13 @@ class MemoryPreferencesRepository implements PreferencesRepository {
   }
 
   @override
+  Future<AppPreferences> setMaterial(AppMaterial value) async {
+    if (failure != null) throw failure!;
+    writes++;
+    return values = values.withMaterial(value);
+  }
+
+  @override
   Future<AppPreferences> setAppearance(AppAppearance value) async {
     if (failure != null) throw failure!;
     writes++;

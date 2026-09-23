@@ -134,13 +134,7 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     );
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset('assets/brand/asasfans.png', width: 28, height: 28),
-            const SizedBox(width: 10),
-            const Text('今日'),
-          ],
-        ),
+        title: const Text('今日'),
         actions: [
           const UpdatesBellButton(),
           IconButton(
@@ -163,7 +157,12 @@ class _TodayPageState extends ConsumerState<TodayPage> {
             onRefresh: () => _refresh(true),
             child: ListView(
               key: const PageStorageKey('today-scroll'),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                8,
+                16,
+                28 + MediaQuery.paddingOf(context).bottom,
+              ),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 if (settings.shows(HomeSection.calendar)) ...[

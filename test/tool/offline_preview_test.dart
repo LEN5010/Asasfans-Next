@@ -1,4 +1,5 @@
 import 'package:asasfans_next/app/asasfans_app.dart';
+import 'package:asasfans_next/app/router/app_shell.dart';
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
 import 'package:asasfans_next/features/account/application/account_providers.dart';
@@ -59,7 +60,7 @@ void main() {
       for (final label in ['内容', '日历', '我的', '今日']) {
         await tester.tap(
           find.descendant(
-            of: find.byType(NavigationRail),
+            of: find.byType(AppSidebar),
             matching: find.text(label),
           ),
         );
@@ -67,10 +68,7 @@ void main() {
         expect(tester.takeException(), isNull, reason: label);
       }
       await tester.tap(
-        find.descendant(
-          of: find.byType(NavigationRail),
-          matching: find.text('工具'),
-        ),
+        find.descendant(of: find.byType(AppSidebar), matching: find.text('工具')),
       );
       await tester.pumpAndSettle();
       expect(find.text('录音棚'), findsOneWidget);

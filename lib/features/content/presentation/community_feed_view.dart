@@ -171,6 +171,9 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
                   onRefresh: _controller.refresh,
                 ),
               ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: MediaQuery.paddingOf(context).bottom),
+              ),
             ],
           ),
         );

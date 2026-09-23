@@ -1,3 +1,4 @@
+import '../../../shared/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,10 +25,10 @@ class _MinePageState extends State<MinePage> {
             // Named for what it actually is: updates the app collected while
             // running, not notifications the system delivered.
             ('应用内更新', 'updates', Icons.notifications_none),
-            ('收藏', 'saved', Icons.bookmark_border),
+            ('收藏', 'saved', AppIcons.saved),
             ('稍后看', 'later', Icons.watch_later_outlined),
             ('继续观看', 'continue', Icons.play_circle_outline),
-            ('时间书签', 'bookmarks', Icons.bookmark_outline),
+            ('时间书签', 'bookmarks', AppIcons.bookmark),
             ('历史记录', 'history', Icons.history),
             ('订阅管理', 'subscriptions', Icons.person_add_alt),
             ('关注日程', 'calendar-follows', Icons.event_available_outlined),
@@ -109,7 +110,12 @@ class _MinePageState extends State<MinePage> {
             );
           }
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + MediaQuery.paddingOf(context).bottom,
+            ),
             children: [
               for (final group in groups)
                 Padding(

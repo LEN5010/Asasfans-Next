@@ -22,7 +22,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             // Wraps the shell so a return lands before any branch is chosen.
-            ReturnRestorer(child: AppShell(navigationShell: navigationShell)),
+            ReturnRestorer(
+              child: AppShell(
+                navigationShell: navigationShell,
+                isTabRoot: const {
+                  '/today',
+                  '/calendar',
+                  '/mine',
+                  '/content',
+                  '/content/fanart',
+                  '/content/clips',
+                  '/content/latest',
+                  '/content/subscriptions',
+                  '/content/replays',
+                  '/content/dynamics',
+                }.contains(state.uri.path),
+              ),
+            ),
         branches: [
           StatefulShellBranch(
             routes: [

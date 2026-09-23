@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../shared/widgets/app_panel.dart';
 import '../domain/community_tool.dart';
 
-Future<void> showToolsSheet(BuildContext context) => showModalBottomSheet<void>(
-  context: context,
-  useRootNavigator: true,
-  showDragHandle: true,
-  isScrollControlled: true,
-  useSafeArea: true,
-  constraints: const BoxConstraints(maxWidth: 720),
-  builder: (context) => Padding(
-    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-    child: const ToolsSheet(),
-  ),
-);
+Future<void> showToolsSheet(BuildContext context) async {
+  await showAppPanel<void>(
+    context: context,
+    builder: (_) => const ToolsSheet(),
+  );
+}
 
 class ToolsSheet extends ConsumerStatefulWidget {
   const ToolsSheet({super.key});
@@ -53,134 +48,129 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
           (tool) => '${tool.name} ${tool.id}'.toLowerCase().contains(query),
         )
         .toList();
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * .78,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 8, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '工具',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                IconButton(
-                  tooltip: '关闭',
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              maxLength: 100,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                hintText: '搜索工具',
-                counterText: '',
-                isDense: true,
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) => setState(() {
-                _keyword = value;
-                _openFailed = false;
-              }),
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (_openFailed)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              child: Semantics(
-                liveRegion: true,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 8, 12),
+          child: Row(
+            children: [
+              Expanded(
                 child: Text(
-                  '无法打开链接',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  '工具',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-            ),
-          Expanded(
-            child: visible.isEmpty
-                ? const Center(child: Text('没有匹配的工具'))
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final scaler = MediaQuery.textScalerOf(context);
-                      final minimum = 128 * scaler.scale(1).clamp(1.0, 1.4);
-                      final columns =
-                          ((constraints.maxWidth - 40 + 12) / (minimum + 12))
-                              .floor()
-                              .clamp(1, 5);
-                      return CustomScrollView(
-                        slivers: [
-                          for (final category in ToolCategory.values) ...[
-                            if (visible.any(
-                              (tool) => tool.category == category,
-                            )) ...[
-                              SliverToBoxAdapter(
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    20,
-                                    14,
-                                    20,
-                                    10,
-                                  ),
-                                  child: Text(
-                                    switch (category) {
-                                      ToolCategory.content => '内容',
-                                      ToolCategory.community => '社区',
-                                      ToolCategory.utility => '实用工具',
-                                    },
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleSmall,
-                                  ),
-                                ),
-                              ),
-                              SliverPadding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                sliver: SliverGrid(
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: columns,
-                                        mainAxisSpacing: 10,
-                                        crossAxisSpacing: 10,
-                                        mainAxisExtent:
-                                            80 +
-                                            (scaler.scale(14) * 1.35)
-                                                    .ceilToDouble() *
-                                                2,
-                                      ),
-                                  delegate: SliverChildListDelegate([
-                                    for (final tool in visible.where(
-                                      (tool) => tool.category == category,
-                                    ))
-                                      _ToolTile(
-                                        tool: tool,
-                                        onTap: _opening
-                                            ? null
-                                            : () => _open(tool),
-                                      ),
-                                  ]),
-                                ),
-                              ),
-                            ],
-                          ],
-                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                        ],
-                      );
-                    },
-                  ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: TextField(
+            maxLength: 100,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: '搜索工具',
+              counterText: '',
+              isDense: true,
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: (value) => setState(() {
+              _keyword = value;
+              _openFailed = false;
+            }),
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (_openFailed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                '无法打开链接',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          ),
+        Expanded(
+          child: visible.isEmpty
+              ? const Center(child: Text('没有匹配的工具'))
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scaler = MediaQuery.textScalerOf(context);
+                    final minimum = 128 * scaler.scale(1).clamp(1.0, 1.4);
+                    final columns =
+                        ((constraints.maxWidth - 40 + 12) / (minimum + 12))
+                            .floor()
+                            .clamp(1, 5);
+                    return CustomScrollView(
+                      slivers: [
+                        for (final category in ToolCategory.values) ...[
+                          if (visible.any(
+                            (tool) => tool.category == category,
+                          )) ...[
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  14,
+                                  20,
+                                  10,
+                                ),
+                                child: Text(
+                                  switch (category) {
+                                    ToolCategory.content => '内容',
+                                    ToolCategory.community => '社区',
+                                    ToolCategory.utility => '实用工具',
+                                  },
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                              ),
+                            ),
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              sliver: SliverGrid(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: columns,
+                                      mainAxisSpacing: 10,
+                                      crossAxisSpacing: 10,
+                                      mainAxisExtent:
+                                          80 +
+                                          (scaler.scale(14) * 1.35)
+                                                  .ceilToDouble() *
+                                              2,
+                                    ),
+                                delegate: SliverChildListDelegate([
+                                  for (final tool in visible.where(
+                                    (tool) => tool.category == category,
+                                  ))
+                                    _ToolTile(
+                                      tool: tool,
+                                      onTap: _opening
+                                          ? null
+                                          : () => _open(tool),
+                                    ),
+                                ]),
+                              ),
+                            ),
+                          ],
+                        ],
+                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                      ],
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

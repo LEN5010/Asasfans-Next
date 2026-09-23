@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+import '../../theme/app_icons.dart';
 import 'app_glass_chrome.dart';
 import 'app_glass_scope.dart';
 import 'app_glass_style.dart';
@@ -30,6 +31,8 @@ class AppGlassNavigation extends StatefulWidget {
   final FocusNode toolsFocus;
   final bool nativeContent;
 
+  static double heightFor(TextScaler scaler) => 52 + scaler.scale(16);
+
   @override
   State<AppGlassNavigation> createState() => _AppGlassNavigationState();
 }
@@ -37,18 +40,18 @@ class AppGlassNavigation extends StatefulWidget {
 class _AppGlassNavigationState extends State<AppGlassNavigation> {
   static const labels = ['今日', '内容', '工具', '日历', '我的'];
   static const icons = [
-    Icons.home_outlined,
-    Icons.grid_view_outlined,
-    Icons.widgets_outlined,
-    Icons.calendar_month_outlined,
-    Icons.person_outline,
+    AppIcons.today,
+    AppIcons.content,
+    AppIcons.tools,
+    AppIcons.calendar,
+    AppIcons.mine,
   ];
   static const activeIcons = [
-    Icons.home,
-    Icons.grid_view_rounded,
-    Icons.widgets_outlined,
-    Icons.calendar_month,
-    Icons.person,
+    AppIcons.todaySelected,
+    AppIcons.contentSelected,
+    AppIcons.tools,
+    AppIcons.calendarSelected,
+    AppIcons.mineSelected,
   ];
   int? pointer;
   Offset down = Offset.zero;
@@ -201,7 +204,9 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         final policy = AppGlassScope.of(context);
         final colors = Theme.of(context).colorScheme;
         // Grow the bar for large type instead of clamping accessibility text.
-        final height = 52 + MediaQuery.textScalerOf(context).scale(16);
+        final height = AppGlassNavigation.heightFor(
+          MediaQuery.textScalerOf(context),
+        );
         final labelWidth = (constraints.maxWidth / 5 - 8).clamp(
           24.0,
           double.infinity,

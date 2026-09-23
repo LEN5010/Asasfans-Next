@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:asasfans_next/app/asasfans_app.dart';
+import 'package:asasfans_next/app/glass_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +13,7 @@ void main() {
   HttpOverrides.global = OfflinePreviewHttpOverrides();
   runApp(
     ProviderScope(
-      overrides: offlinePreviewOverrides(),
+      overrides: [...offlinePreviewOverrides(), observeGlassRendererErrors()],
       child: const Directionality(
         textDirection: TextDirection.ltr,
         child: Banner(
