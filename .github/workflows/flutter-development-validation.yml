@@ -8,6 +8,7 @@ on:
       - '.flutter-version'
       - 'pubspec.*'
       - 'lib/**'
+      - 'assets/**'
       - 'tool/**'
       - 'android/**'
       - 'ios/**'
@@ -26,7 +27,7 @@ concurrency:
 
 jobs:
   development-build:
-    name: ${{ matrix.platform }} debug
+    name: ${{ matrix.platform }} development
     strategy:
       fail-fast: false
       matrix:
@@ -38,15 +39,15 @@ jobs:
           - platform: ios
             os: macos-latest
             command: flutter build ios --debug --no-codesign --no-pub
-            artifact: build/ios/iphoneos/*.app
+            artifact: build/asasfans-development-ios.tar.gz
           - platform: macos
             os: macos-latest
-            command: flutter build macos --debug --no-pub
-            artifact: build/macos/Build/Products/Debug/*.app
+            command: flutter build macos --profile --no-pub
+            artifact: build/asasfans-development-macos.tar.gz
           - platform: windows
             os: windows-2022
-            command: flutter build windows --debug --no-pub
-            artifact: build/windows/x64/runner/Debug/**
+            command: flutter build windows --profile --no-pub
+            artifact: build/windows/x64/runner/Profile/**
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:
@@ -76,6 +77,12 @@ jobs:
       - run: flutter pub get --enforce-lockfile
       - name: Build development application
         run: ${{ matrix.command }}
+      - name: Preserve macOS application bundle and executable modes
+        if: matrix.platform == 'macos'
+        run: tar -czf build/asasfans-development-macos.tar.gz -C build/macos/Build/Products/Profile 'Asasfans Next.app'
+      - name: Preserve unsigned iOS application bundle
+        if: matrix.platform == 'ios'
+        run: tar -czf build/asasfans-development-ios.tar.gz -C build/ios/iphoneos Runner.app
       # Build evidence only: not signed installers and never a GitHub Release.
       - uses: actions/upload-artifact@v4
         with:

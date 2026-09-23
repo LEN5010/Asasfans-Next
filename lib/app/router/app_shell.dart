@@ -205,7 +205,7 @@ class AppSidebar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/brand/asasfans.png',
+                      'assets/brand/asasfans_mark.png',
                       width: 36,
                       height: 36,
                     ),

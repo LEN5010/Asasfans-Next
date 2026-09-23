@@ -40,5 +40,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand/asasfans.png
+    - assets/brand/asasfans_mark.png
     - LICENSE
     - third_party/LoveIwara-LICENSE
