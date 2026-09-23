@@ -177,63 +177,79 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                spacing: 8,
-                children: [
-                  Expanded(
-                    child: ContentSearchControl(
-                      value: query.keyword,
-                      hint: '搜索历史动态',
-                      expanded: true,
-                      onSubmitted: (keyword) =>
-                          apply(query.copyWith(keyword: keyword)),
-                      filter: AppButton.icon(
-                        tooltip: '筛选与排序',
-                        selected: _expanded || query != const DynamicQuery(),
-                        icon: const Icon(Icons.tune),
-                        onPressed: () async {
-                          if (wide) {
-                            setState(() => _expanded = !_expanded);
-                            return;
-                          }
-                          final next = await showAppPanel<DynamicQuery>(
-                            context: context,
-                            builder: (context) => _DynamicFilterPanel(
-                              query: query,
-                              onApply: (next) => Navigator.pop(context, next),
-                              onClose: () => Navigator.pop(context),
-                            ),
-                          );
-                          if (next != null && mounted) apply(next);
-                        },
-                      ),
-                    ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: ContentSearchControl.rowWidth,
                   ),
-                  MenuAnchor(
-                    menuChildren: [
-                      SavedChannelBar(
-                        menuItem: true,
-                        feed: ChannelFeed.dynamic,
-                        currentSpec: () => ChannelSpec.ofDynamic(query),
-                        onOpen: (spec) => apply(spec.toDynamic()),
+                  child: Row(
+                    spacing: 8,
+                    children: [
+                      Expanded(
+                        child: ContentSearchControl(
+                          value: query.keyword,
+                          hint: '搜索历史动态',
+                          expanded: true,
+                          onSubmitted: (keyword) =>
+                              apply(query.copyWith(keyword: keyword)),
+                          filter: AppButton.icon(
+                            tooltip: '筛选与排序',
+                            selected:
+                                _expanded || query != const DynamicQuery(),
+                            icon: const Icon(Icons.tune),
+                            onPressed: () async {
+                              if (wide) {
+                                setState(() => _expanded = !_expanded);
+                                return;
+                              }
+                              final next = await showAppPanel<DynamicQuery>(
+                                context: context,
+                                builder: (context) => _DynamicFilterPanel(
+                                  query: query,
+                                  onApply: (next) =>
+                                      Navigator.pop(context, next),
+                                  onClose: () => Navigator.pop(context),
+                                ),
+                              );
+                              if (next != null && mounted) apply(next);
+                            },
+                          ),
+                        ),
                       ),
-                      MenuItemButton(
-                        onPressed:
-                            ref.read(dynamicFeedControllerProvider).state.isBusy
-                            ? null
-                            : ref.read(dynamicFeedControllerProvider).refresh,
-                        leadingIcon: const Icon(Icons.refresh),
-                        child: const Text('刷新'),
+                      MenuAnchor(
+                        menuChildren: [
+                          SavedChannelBar(
+                            menuItem: true,
+                            feed: ChannelFeed.dynamic,
+                            currentSpec: () => ChannelSpec.ofDynamic(query),
+                            onOpen: (spec) => apply(spec.toDynamic()),
+                          ),
+                          MenuItemButton(
+                            onPressed:
+                                ref
+                                    .read(dynamicFeedControllerProvider)
+                                    .state
+                                    .isBusy
+                                ? null
+                                : ref
+                                      .read(dynamicFeedControllerProvider)
+                                      .refresh,
+                            leadingIcon: const Icon(Icons.refresh),
+                            child: const Text('刷新'),
+                          ),
+                        ],
+                        builder: (context, menu, _) => AppButton.icon(
+                          tooltip: '更多内容操作',
+                          filled: true,
+                          onPressed: () =>
+                              menu.isOpen ? menu.close() : menu.open(),
+                          icon: const Icon(Icons.more_horiz),
+                        ),
                       ),
                     ],
-                    builder: (context, menu, _) => AppButton.icon(
-                      tooltip: '更多内容操作',
-                      filled: true,
-                      onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-                      icon: const Icon(Icons.more_horiz),
-                    ),
                   ),
-                ],
+                ),
               ),
               if (query != const DynamicQuery())
                 Row(

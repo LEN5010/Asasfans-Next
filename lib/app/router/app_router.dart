@@ -147,6 +147,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'backup',
                     builder: (_, _) => const BackupPage(),
                   ),
+                  GoRoute(
+                    path: 'credits',
+                    builder: (_, _) => const CreditsPage(),
+                  ),
                 ],
               ),
             ],

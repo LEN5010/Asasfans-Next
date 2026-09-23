@@ -134,10 +134,9 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                                       mainAxisSpacing: 10,
                                       crossAxisSpacing: 10,
                                       mainAxisExtent:
-                                          50 +
+                                          56 +
                                           (scaler.scale(14) * 1.35)
-                                                  .ceilToDouble() *
-                                              2,
+                                              .ceilToDouble(),
                                     ),
                                 delegate: SliverChildListDelegate([
                                   for (final tool in visible.where(
@@ -193,12 +192,16 @@ class _ToolTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            tool.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, height: 1.35),
+          // One line on every width: a long name shrinks a little rather
+          // than breaking mid-word and pushing its icon out of line.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              tool.name,
+              maxLines: 1,
+              softWrap: false,
+              style: const TextStyle(fontSize: 14, height: 1.35),
+            ),
           ),
         ],
       ),

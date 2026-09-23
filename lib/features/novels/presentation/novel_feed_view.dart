@@ -150,40 +150,49 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: ContentSearchControl(
-                    value: query.keyword,
-                    hint: query.scope == NovelSearchScope.all
-                        ? '搜索标题、作者或正文'
-                        : '搜索${query.scope.label}',
-                    expanded: true,
-                    onSubmitted: (keyword) =>
-                        widget.onChanged(query.copyWith(keyword: keyword)),
-                    filter: AppButton.icon(
-                      tooltip: '筛选与排序',
-                      icon: const Icon(Icons.tune),
-                      selected: query != const NovelQuery(),
-                      onPressed: () async {
-                        if (wide) {
-                          setState(() => _expanded = !_expanded);
-                          return;
-                        }
-                        final next = await showAppPanel<NovelQuery>(
-                          context: context,
-                          builder: (context) => _NovelFilterPanel(
-                            query: query,
-                            onApply: (query) => Navigator.pop(context, query),
-                            onClose: () => Navigator.pop(context),
-                          ),
-                        );
-                        if (next != null && mounted) widget.onChanged(next);
-                      },
-                    ),
-                  ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: ContentSearchControl.rowWidth,
                 ),
-              ],
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ContentSearchControl(
+                        value: query.keyword,
+                        hint: query.scope == NovelSearchScope.all
+                            ? '搜索标题、作者或正文'
+                            : '搜索${query.scope.label}',
+                        expanded: true,
+                        onSubmitted: (keyword) =>
+                            widget.onChanged(query.copyWith(keyword: keyword)),
+                        filter: AppButton.icon(
+                          tooltip: '筛选与排序',
+                          icon: const Icon(Icons.tune),
+                          selected: query != const NovelQuery(),
+                          onPressed: () async {
+                            if (wide) {
+                              setState(() => _expanded = !_expanded);
+                              return;
+                            }
+                            final next = await showAppPanel<NovelQuery>(
+                              context: context,
+                              builder: (context) => _NovelFilterPanel(
+                                query: query,
+                                onApply: (query) =>
+                                    Navigator.pop(context, query),
+                                onClose: () => Navigator.pop(context),
+                              ),
+                            );
+                            if (next != null && mounted) widget.onChanged(next);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             // The inline panel grows open and folds away instead of jumping.
             AnimatedSize(

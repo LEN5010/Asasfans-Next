@@ -20,15 +20,6 @@ class MinePage extends ConsumerStatefulWidget {
 class _MinePageState extends ConsumerState<MinePage> {
   int _section = 0;
 
-  Future<void> _open(Uri uri) async {
-    final opened = await ref.read(externalLinkServiceProvider).open(uri);
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('无法打开 $uri')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final hasLocalLogin = ref.watch(
@@ -46,23 +37,6 @@ class _MinePageState extends ConsumerState<MinePage> {
                 const SizedBox(width: 12),
                 Expanded(child: Text(entry.$1)),
                 const Icon(Icons.chevron_right, size: 20),
-              ],
-            ),
-          ),
-        ),
-    ];
-    List<Widget> external(List<(String, String, IconData)> entries) => [
-      for (final entry in entries)
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: AppButton(
-            onPressed: () => _open(Uri.parse(entry.$2)),
-            child: Row(
-              children: [
-                Icon(entry.$3, size: 22),
-                const SizedBox(width: 12),
-                Expanded(child: Text(entry.$1)),
-                const Icon(Icons.open_in_new, size: 18),
               ],
             ),
           ),
@@ -107,69 +81,26 @@ class _MinePageState extends ConsumerState<MinePage> {
         ],
       ),
       const _SettingsGroup(title: '偏好', children: [PreferencesControls()]),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      _SettingsGroup(
+        title: '应用',
         children: [
-          _SettingsGroup(
-            title: '作者 · LEN5010',
-            children: external(const [
-              ('GitHub 主页', 'https://github.com/LEN5010', Icons.code),
-              (
-                '哔哩哔哩主页',
-                'https://space.bilibili.com/107261543',
-                Icons.live_tv_outlined,
+          ...links(const [('作者与致谢', 'credits', Icons.people_outline)]),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: AppButton(
+              onPressed: () => showLicensePage(
+                context: context,
+                applicationName: 'Asasfans Next',
               ),
-              (
-                '项目仓库',
-                'https://github.com/LEN5010/Asasfans-Next',
-                Icons.source_outlined,
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline),
+                  SizedBox(width: 12),
+                  Expanded(child: Text('关于')),
+                  Icon(Icons.chevron_right),
+                ],
               ),
-            ]),
-          ),
-          const SizedBox(height: 20),
-          _SettingsGroup(
-            title: '致谢',
-            children: external(const [
-              (
-                '原项目 A-SoulFan/as-as-fans',
-                'https://github.com/A-SoulFan/as-as-fans',
-                Icons.history_edu_outlined,
-              ),
-              (
-                'jiarandiana0307 维护的 Fork（2025）',
-                'https://github.com/jiarandiana0307/as-as-fans',
-                Icons.fork_right,
-              ),
-              ('枝江站', 'https://asoul.love/', Icons.favorite_border),
-              (
-                'ASOUL 录音棚',
-                'https://studio.asoul.us.kg/',
-                Icons.mic_none_outlined,
-              ),
-            ]),
-          ),
-          const SizedBox(height: 20),
-          _SettingsGroup(
-            title: '应用',
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: AppButton(
-                  onPressed: () => showLicensePage(
-                    context: context,
-                    applicationName: 'Asasfans Next',
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline),
-                      SizedBox(width: 12),
-                      Expanded(child: Text('关于')),
-                      Icon(Icons.chevron_right),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -277,4 +208,98 @@ class _SettingsGroup extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// The author's links and the projects this app grew from.
+class CreditsPage extends ConsumerWidget {
+  const CreditsPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Future<void> open(String url) async {
+      final opened = await ref
+          .read(externalLinkServiceProvider)
+          .open(Uri.parse(url));
+      if (!opened && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('无法打开 $url')));
+      }
+    }
+
+    List<Widget> rows(List<(String, String, IconData)> entries) => [
+      for (final entry in entries)
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: AppButton(
+            onPressed: () => open(entry.$2),
+            child: Row(
+              children: [
+                Icon(entry.$3, size: 22),
+                const SizedBox(width: 12),
+                Expanded(child: Text(entry.$1)),
+                const Icon(Icons.open_in_new, size: 18),
+              ],
+            ),
+          ),
+        ),
+    ];
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: const AppPageBar(title: Text('作者与致谢')),
+      body: Builder(
+        // Inside the body, so MediaQuery carries the page bar height.
+        builder: (context) => Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: pageInsets(context, top: 4),
+              children: [
+                _SettingsGroup(
+                  title: '作者 · LEN5010',
+                  children: rows(const [
+                    ('GitHub 主页', 'https://github.com/LEN5010', Icons.code),
+                    (
+                      '哔哩哔哩主页',
+                      'https://space.bilibili.com/107261543',
+                      Icons.live_tv_outlined,
+                    ),
+                    (
+                      '项目仓库',
+                      'https://github.com/LEN5010/Asasfans-Next',
+                      Icons.source_outlined,
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 20),
+                _SettingsGroup(
+                  title: '致谢',
+                  children: rows(const [
+                    (
+                      '原项目 A-SoulFan/as-as-fans',
+                      'https://github.com/A-SoulFan/as-as-fans',
+                      Icons.history_edu_outlined,
+                    ),
+                    (
+                      'jiarandiana0307 维护的 Fork（2025）',
+                      'https://github.com/jiarandiana0307/as-as-fans',
+                      Icons.fork_right,
+                    ),
+                    ('枝江站', 'https://asoul.love/', Icons.favorite_border),
+                    (
+                      'ASOUL 录音棚',
+                      'https://studio.asoul.us.kg/',
+                      Icons.mic_none_outlined,
+                    ),
+                  ]),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

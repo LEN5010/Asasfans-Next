@@ -67,6 +67,9 @@ class AppButton extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         minimumSize: Size(target, target),
+        // Desktop compact density would shrink the square below the field.
+        fixedSize: filled && iconOnly ? Size.square(target) : null,
+        visualDensity: filled ? VisualDensity.standard : null,
         padding: EdgeInsets.symmetric(
           horizontal: iconOnly ? 8 : 12,
           vertical: 6,

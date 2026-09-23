@@ -136,62 +136,26 @@ class _ContentPageState extends ConsumerState<ContentPage>
   @override
   Widget build(BuildContext context) {
     final feeds = {for (final channel in _visited) channel: _feed(channel)};
-    return LayoutBuilder(
-      builder: (context, constraints) => Scaffold(
-        extendBodyBehindAppBar: true,
-        // The shell's backdrop shows through the main pages.
-        backgroundColor: Colors.transparent,
-        appBar: AppPageBar(
-          // A new channel starts with its controls visible.
-          revealKey: _current,
-          titleIsControl: true,
-          controlExtent: AppSegments.heightFor(context),
-          actionsBelow: constraints.maxWidth < 1040,
-          title: _ChannelStrip(current: _current),
-          actions: [?_headerActions(ref, _current, constraints.maxWidth)],
-        ),
-        body: ClipRect(
-          child: AnimatedBuilder(
-            animation: _slide,
-            builder: (context, _) => Stack(
-              fit: StackFit.expand,
-              children: [
-                for (final entry in feeds.entries)
-                  _entry(entry.key, entry.value),
-              ],
-            ),
-          ),
-        ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      // The shell's backdrop shows through the main pages.
+      backgroundColor: Colors.transparent,
+      appBar: AppPageBar(
+        // A new channel starts with its controls visible.
+        revealKey: _current,
+        titleIsControl: true,
+        controlExtent: AppSegments.heightFor(context),
+        title: _ChannelStrip(current: _current),
       ),
-    );
-  }
-
-  Widget? _headerActions(WidgetRef ref, ContentChannel channel, double width) {
-    if (channel != ContentChannel.fanart) return null;
-    final controller = ref.watch(fanartFeedControllerProvider(channel));
-    return SizedBox(
-      width: width >= 1040 ? 400 : width - 24,
-      child: ListenableBuilder(
-        listenable: controller,
-        builder: (context, _) => Row(
-          spacing: 8,
-          children: [
-            Expanded(
-              child: ContentSearchControl(
-                value: controller.state.query.keyword,
-                hint: '搜索正文或作者',
-                expanded: true,
-                onSubmitted: (keyword) => controller.applyQuery(
-                  controller.state.query.copyWith(keyword: keyword),
-                ),
-                filter: FanartFilterButton(
-                  query: controller.state.query,
-                  onChanged: controller.applyQuery,
-                ),
-              ),
-            ),
-            _FanartMoreActions(channel: channel),
-          ],
+      body: ClipRect(
+        child: AnimatedBuilder(
+          animation: _slide,
+          builder: (context, _) => Stack(
+            fit: StackFit.expand,
+            children: [
+              for (final entry in feeds.entries) _entry(entry.key, entry.value),
+            ],
+          ),
         ),
       ),
     );
@@ -420,9 +384,42 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      final filters = FanartFilterBar(
-        query: state.query,
-        onChanged: _applyQuery,
+      // Search sits at the head of the feed, as in dynamics and novels.
+      final filters = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: ContentSearchControl.rowWidth,
+                ),
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: ContentSearchControl(
+                        value: state.query.keyword,
+                        hint: '搜索正文或作者',
+                        expanded: true,
+                        onSubmitted: (keyword) =>
+                            _applyQuery(state.query.copyWith(keyword: keyword)),
+                        filter: FanartFilterButton(
+                          query: state.query,
+                          onChanged: _applyQuery,
+                        ),
+                      ),
+                    ),
+                    _FanartMoreActions(channel: widget.channel),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          FanartFilterBar(query: state.query, onChanged: _applyQuery),
+        ],
       );
       return RuleFilterScope(
         items: state.items,

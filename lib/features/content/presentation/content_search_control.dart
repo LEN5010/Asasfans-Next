@@ -21,6 +21,9 @@ class ContentSearchControl extends StatelessWidget {
   /// The feed's filter action, carried at the field's trailing end.
   final Widget? filter;
 
+  /// A feed's search row stays this wide on large windows, left-aligned.
+  static const rowWidth = 560.0;
+
   @override
   Widget build(BuildContext context) => expanded
       ? SizedBox(
@@ -76,6 +79,7 @@ class _SearchInputState extends State<_SearchInput> {
   Widget build(BuildContext context) => TextField(
     controller: _controller,
     textInputAction: TextInputAction.search,
+    textAlignVertical: TextAlignVertical.center,
     style: Theme.of(
       context,
     ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.25),
@@ -85,7 +89,9 @@ class _SearchInputState extends State<_SearchInput> {
       hintText: widget.hint,
       filled: true,
       counterText: '',
-      isDense: true,
+      // Not dense: the 48 minimum is clipped to the control height, so the
+      // fill spans it on every density and lines up with the square buttons.
+      isDense: false,
       contentPadding: const EdgeInsets.symmetric(vertical: 8),
       border: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
