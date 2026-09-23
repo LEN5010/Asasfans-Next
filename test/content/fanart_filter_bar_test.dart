@@ -54,6 +54,7 @@ void main() {
     }
     final finder = matches.last;
     await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
     await tester.tap(finder);
     await tester.pumpAndSettle();
   }

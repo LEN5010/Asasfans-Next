@@ -20,9 +20,8 @@ Widget _host(_Links links, {double scale = 1}) => ProviderScope(
   overrides: [externalLinkServiceProvider.overrideWithValue(links)],
   child: MaterialApp(
     builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(
-        context,
-      ).copyWith(textScaler: TextScaler.linear(scale)),
+      data: MediaQuery.of(context)
+          .copyWith(textScaler: TextScaler.linear(scale)),
       child: child!,
     ),
     home: Scaffold(
@@ -64,7 +63,13 @@ void main() {
         icons.add(
           tester
               .widget<Icon>(
-                find.descendant(of: tile, matching: find.byType(Icon)),
+                // The small external-link hint is not the tool's own glyph.
+                find.descendant(
+                  of: tile,
+                  matching: find.byWidgetPredicate(
+                    (widget) => widget is Icon && widget.size == 22,
+                  ),
+                ),
               )
               .icon!,
         );

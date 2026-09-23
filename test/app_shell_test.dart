@@ -65,6 +65,11 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('我的').last);
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.widgetWithText(ListTile, '内容规则'),
+        180,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, '内容规则'));
       await tester.pumpAndSettle();
       expect(find.text('视频默认过滤'), findsOneWidget);
