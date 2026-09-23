@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../rules/application/feed_visibility.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ class FanartDetailPage extends ConsumerWidget {
     return HistoryRecorder(
       item: ContentSnapshots.fanart(item),
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppPageBar(
           title: Text(item.authorName.isEmpty ? '二创详情' : item.authorName),
           actions: [
@@ -91,7 +93,7 @@ class FanartDetailPage extends ConsumerWidget {
                   Expanded(
                     child: ListView(
                       key: const ValueKey('fanart-detail-gallery'),
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                      padding: pageInsets(context, horizontal: 24),
                       children: images,
                     ),
                   ),
@@ -100,7 +102,7 @@ class FanartDetailPage extends ConsumerWidget {
                     width: (constraints.maxWidth * .34).clamp(340, 440),
                     child: ListView(
                       key: const ValueKey('fanart-detail-info'),
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      padding: pageInsets(context, horizontal: 20),
                       children: info,
                     ),
                   ),
@@ -112,7 +114,7 @@ class FanartDetailPage extends ConsumerWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 780),
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                  padding: pageInsets(context),
                   children: [
                     ...info,
                     if (images.isNotEmpty) const SizedBox(height: 16),
@@ -200,7 +202,7 @@ class _DetailImage extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         child: Image.network(
           item.images[index].toString(),
           fit: BoxFit.fitWidth,

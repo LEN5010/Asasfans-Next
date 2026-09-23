@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
-import '../../shared/theme/app_icons.dart';
+import '../theme/app_tokens.dart';
 import '../../shared/widgets/glass/app_glass_navigation.dart';
 
 class AppShell extends StatefulWidget {
@@ -173,21 +173,9 @@ class AppSidebar extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onSelect;
   final FocusNode toolsFocus;
-  static const labels = ['今日', '内容', '工具', '日历', '我的'];
-  static const icons = [
-    AppIcons.today,
-    AppIcons.content,
-    AppIcons.tools,
-    AppIcons.calendar,
-    AppIcons.mine,
-  ];
-  static const active = [
-    AppIcons.todaySelected,
-    AppIcons.contentSelected,
-    AppIcons.tools,
-    AppIcons.calendarSelected,
-    AppIcons.mineSelected,
-  ];
+  static const labels = AppGlassNavigation.labels;
+  static const icons = AppGlassNavigation.icons;
+  static const active = AppGlassNavigation.activeIcons;
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +231,9 @@ class AppSidebar extends StatelessWidget {
                           vertical: 12,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.cardRadius,
+                          ),
                         ),
                       ),
                       child: expanded

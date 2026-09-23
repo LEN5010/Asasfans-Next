@@ -291,12 +291,14 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
           failure.kind == ApiFailureKind.cancelled) {
         return;
       }
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(failure.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message)));
     } catch (error) {
       if (mounted && feed.generation == generation) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(ruleError(error))));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(ruleError(error))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

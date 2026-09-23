@@ -38,7 +38,7 @@ class PreferencesControls extends ConsumerWidget {
           ),
         if (state.ready) ...[
           ListTile(
-            leading: const Icon(Icons.brightness_6_outlined),
+            leading: const Icon(AppIcons.appearance),
             title: const Text('主题'),
             subtitle: Text(_appearance(state.values.appearance)),
             trailing: const Icon(Icons.chevron_right),

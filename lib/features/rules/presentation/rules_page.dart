@@ -1,4 +1,5 @@
 import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -49,6 +50,7 @@ class _RulesPageState extends ConsumerState<RulesPage> {
         <ContentRule>[];
     final disabled = _busy || !policy.ready;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('内容规则'),
         actions: [
@@ -74,46 +76,56 @@ class _RulesPageState extends ConsumerState<RulesPage> {
         ],
       ),
       body: LibraryBody(
-        child: Column(
+        child: ListView(
+          padding: pageInsets(context, horizontal: 12, top: 4),
           children: [
-            SwitchListTile(
-              title: const Text('订阅优先'),
-              secondary: const Icon(Icons.person_pin_outlined),
-              value: policy.snapshot?.prioritizeSubscribed ?? false,
-              onChanged: disabled
-                  ? null
-                  : (value) async {
-                      setState(() => _busy = true);
-                      await libraryAction(
-                        context,
-                        () => repository.setSubscriptionPriority(value),
-                      );
-                      if (mounted) setState(() => _busy = false);
-                    },
-            ),
-            ListTile(
-              leading: const Icon(Icons.filter_alt_outlined),
-              title: const Text('视频默认过滤'),
-              subtitle: const Text('珈乐 · Carol'),
-              onTap: () => showDialog<void>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('视频默认过滤'),
-                  content: const Text(
-                    'UID 351609538\n标题、简介、Tag、UP 名称：珈乐 / Carol',
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text('订阅优先'),
+                    secondary: const Icon(Icons.person_pin_outlined),
+                    value: policy.snapshot?.prioritizeSubscribed ?? false,
+                    onChanged: disabled
+                        ? null
+                        : (value) async {
+                            setState(() => _busy = true);
+                            await libraryAction(
+                              context,
+                              () => repository.setSubscriptionPriority(value),
+                            );
+                            if (mounted) setState(() => _busy = false);
+                          },
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('关闭'),
+                  const Divider(indent: 56),
+                  ListTile(
+                    leading: const Icon(Icons.filter_alt_outlined),
+                    title: const Text('视频默认过滤'),
+                    subtitle: const Text('珈乐 · Carol'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('视频默认过滤'),
+                        content: const Text(
+                          'UID 351609538\n标题、简介、Tag、UP 名称：珈乐 / Carol',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('关闭'),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 children: [
                   for (final kind in [null, ...RuleKind.values])
@@ -128,101 +140,113 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 8),
             if (_busy) const LinearProgressIndicator(),
-            Expanded(
-              child: policy.loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : !policy.ready
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(ruleError(policy.failure!)),
-                          TextButton(
-                            onPressed: () => ref
-                                .read(rulesControllerProvider.notifier)
-                                .reload(),
-                            child: const Text('重试'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : rules.isEmpty
-                  ? const Center(child: Text('没有屏蔽规则'))
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(12),
-                      itemCount: rules.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final rule = rules[index];
-                        final draft = rule.draft;
-                        final expiry = draft.expiresAt?.toLocal();
-                        return ListTile(
-                          leading: Icon(ruleIcon(draft.kind)),
-                          title: Text(
-                            draft.value,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            [
-                              ruleKindLabel(draft.kind),
-                              if (draft.scope.isNotEmpty)
-                                ruleScopeLabel(draft.scope),
-                              if (expiry != null)
-                                policy.now.isBefore(draft.expiresAt!)
-                                    ? '至 ${expiry.year}-${expiry.month}-${expiry.day} ${expiry.hour.toString().padLeft(2, '0')}:${expiry.minute.toString().padLeft(2, '0')}'
-                                    : '已到期',
-                            ].join(' · '),
-                          ),
-                          onTap: disabled
-                              ? null
-                              : () async {
-                                  final change = await editRule(
-                                    context,
-                                    repository,
-                                    previous: rule,
-                                  );
-                                  if (change != null && context.mounted) {
-                                    showRuleUndo(context, repository, change);
-                                  }
-                                },
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Switch(
-                                value: draft.enabled,
-                                onChanged: disabled
-                                    ? null
-                                    : (value) => _act(
-                                        () => repository.save(
-                                          RuleDraft(
-                                            kind: draft.kind,
-                                            scope: draft.scope,
-                                            value: draft.value,
-                                            enabled: value,
-                                            expiresAt: draft.expiresAt,
-                                          ),
-                                          previous: rule,
-                                        ),
-                                      ),
-                              ),
-                              IconButton(
-                                tooltip: '删除规则',
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: disabled
-                                    ? null
-                                    : () => _act(
-                                        () => repository.remove(rule),
-                                        label: '规则已删除',
-                                      ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+            if (policy.loading)
+              const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (!policy.ready)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Text(ruleError(policy.failure!)),
+                    TextButton(
+                      onPressed: () =>
+                          ref.read(rulesControllerProvider.notifier).reload(),
+                      child: const Text('重试'),
                     ),
-            ),
+                  ],
+                ),
+              )
+            else if (rules.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: Text('没有屏蔽规则')),
+              )
+            else
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (var index = 0; index < rules.length; index++) ...[
+                      if (index > 0) const Divider(indent: 56),
+                      Builder(
+                        builder: (context) {
+                          final rule = rules[index];
+                          final draft = rule.draft;
+                          final expiry = draft.expiresAt?.toLocal();
+                          return ListTile(
+                            leading: Icon(ruleIcon(draft.kind)),
+                            title: Text(
+                              draft.value,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              [
+                                ruleKindLabel(draft.kind),
+                                if (draft.scope.isNotEmpty)
+                                  ruleScopeLabel(draft.scope),
+                                if (expiry != null)
+                                  policy.now.isBefore(draft.expiresAt!)
+                                      ? '至 ${expiry.year}-${expiry.month}-${expiry.day} ${expiry.hour.toString().padLeft(2, '0')}:${expiry.minute.toString().padLeft(2, '0')}'
+                                      : '已到期',
+                              ].join(' · '),
+                            ),
+                            onTap: disabled
+                                ? null
+                                : () async {
+                                    final change = await editRule(
+                                      context,
+                                      repository,
+                                      previous: rule,
+                                    );
+                                    if (change != null && context.mounted) {
+                                      showRuleUndo(context, repository, change);
+                                    }
+                                  },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Switch(
+                                  value: draft.enabled,
+                                  onChanged: disabled
+                                      ? null
+                                      : (value) => _act(
+                                          () => repository.save(
+                                            RuleDraft(
+                                              kind: draft.kind,
+                                              scope: draft.scope,
+                                              value: draft.value,
+                                              enabled: value,
+                                              expiresAt: draft.expiresAt,
+                                            ),
+                                            previous: rule,
+                                          ),
+                                        ),
+                                ),
+                                IconButton(
+                                  tooltip: '删除规则',
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: disabled
+                                      ? null
+                                      : () => _act(
+                                          () => repository.remove(rule),
+                                          label: '规则已删除',
+                                        ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
           ],
         ),
       ),

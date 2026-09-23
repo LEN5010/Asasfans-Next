@@ -33,11 +33,7 @@ class AppGlassNavigation extends StatefulWidget {
 
   static double heightFor(TextScaler scaler) => 52 + scaler.scale(16);
 
-  @override
-  State<AppGlassNavigation> createState() => _AppGlassNavigationState();
-}
-
-class _AppGlassNavigationState extends State<AppGlassNavigation> {
+  /// Shared with the desktop sidebar; index 2 is the Tools action.
   static const labels = ['今日', '内容', '工具', '日历', '我的'];
   static const icons = [
     AppIcons.today,
@@ -53,6 +49,15 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
     AppIcons.calendarSelected,
     AppIcons.mineSelected,
   ];
+
+  @override
+  State<AppGlassNavigation> createState() => _AppGlassNavigationState();
+}
+
+class _AppGlassNavigationState extends State<AppGlassNavigation> {
+  static const labels = AppGlassNavigation.labels;
+  static const icons = AppGlassNavigation.icons;
+  static const activeIcons = AppGlassNavigation.activeIcons;
   int? pointer;
   Offset down = Offset.zero;
   bool moved = false;

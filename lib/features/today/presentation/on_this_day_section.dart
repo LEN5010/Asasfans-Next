@@ -65,9 +65,9 @@ class OnThisDaySection extends ConsumerWidget {
                   SizedBox(
                     height:
                         188 *
-                        MediaQuery.textScalerOf(context)
-                            .scale(1)
-                            .clamp(1.0, 1.6),
+                        MediaQuery.textScalerOf(
+                          context,
+                        ).scale(1).clamp(1.0, 1.6),
                     child: _posts(context, visible.items),
                   ),
               ],

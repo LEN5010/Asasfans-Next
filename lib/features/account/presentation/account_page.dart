@@ -1,5 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -92,10 +96,11 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     final account = ref.watch(accountControllerProvider);
     final profile = account.profile;
     return Scaffold(
-      appBar: AppBar(title: const Text('Bilibili 账号')),
+      extendBodyBehindAppBar: true,
+      appBar: const AppPageBar(title: Text('Bilibili 账号')),
       body: LibraryBody(
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: pageInsets(context, horizontal: 24, top: 12),
           children: [
             if (account.busy || account.mode == AccountMode.loading)
               const LinearProgressIndicator(),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../application/library_pager.dart';
 import 'library_common.dart';
@@ -33,6 +34,7 @@ class _LibraryPagedListState<T> extends State<LibraryPagedList<T>> {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
+    final padding = MediaQuery.paddingOf(context);
     return AutoFillViewport(
       controller: _scroll,
       resetKey: (widget.pager, state.epoch),
@@ -41,29 +43,38 @@ class _LibraryPagedListState<T> extends State<LibraryPagedList<T>> {
       onLoadMore: widget.pager.loadMore,
       child: RefreshIndicator(
         onRefresh: widget.pager.refresh,
+        edgeOffset: padding.top,
         child: Scrollbar(
           controller: _scroll,
           child: CustomScrollView(
             controller: _scroll,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              SliverToBoxAdapter(child: SizedBox(height: padding.top + 4)),
               if (widget.header != null)
                 SliverToBoxAdapter(child: widget.header),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                sliver: SliverList.builder(
-                  itemCount: state.items.length,
-                  itemBuilder: (context, index) => Column(
-                    children: [
-                      if (index > 0) const Divider(height: 1),
-                      widget.itemBuilder(context, state.items[index]),
-                    ],
+              if (state.items.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                  sliver: DecoratedSliver(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+                    ),
+                    sliver: SliverList.builder(
+                      itemCount: state.items.length,
+                      itemBuilder: (context, index) => Column(
+                        children: [
+                          if (index > 0) const Divider(indent: 16),
+                          widget.itemBuilder(context, state.items[index]),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.fromLTRB(24, 20, 24, 20 + padding.bottom),
                   child: Center(
                     child: state.loading
                         ? const CircularProgressIndicator()
@@ -79,11 +90,14 @@ class _LibraryPagedListState<T> extends State<LibraryPagedList<T>> {
                               ),
                             ],
                           )
-                        : state.items.isEmpty
-                        ? Text(widget.empty)
-                        : state.next == null
-                        ? const Text('已显示全部')
-                        : const SizedBox.shrink(),
+                        : Text(
+                            state.items.isEmpty
+                                ? widget.empty
+                                : state.next == null
+                                ? '已显示全部'
+                                : '',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                   ),
                 ),
               ),

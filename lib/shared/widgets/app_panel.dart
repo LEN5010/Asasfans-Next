@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../theme/app_icons.dart';
+
 /// A root-overlay panel: bottom sheet on compact windows, centered on desktop.
 /// Its builder receives bounded, keyboard-aware space for a scrolling body.
 Future<T?> showAppPanel<T>({
@@ -93,7 +95,7 @@ class AppPanelHeader extends StatelessWidget {
             onPressed: canClose
                 ? (onClose ?? () => Navigator.pop(context))
                 : null,
-            icon: const Icon(Icons.close),
+            icon: const Icon(AppIcons.close),
           ),
         ],
       ),

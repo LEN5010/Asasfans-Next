@@ -1,10 +1,13 @@
 import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/domain/bilibili_id.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../content/application/fanart_feed_controller.dart' show FeedStatus;
@@ -38,9 +41,9 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
   @override
   Widget build(BuildContext context) {
     if (!validBilibiliMid(widget.mid)) {
-      return Scaffold(
-        appBar: AppPageBar(title: const Text('UP 主页')),
-        body: const Center(child: Text('UID 无效')),
+      return const Scaffold(
+        appBar: AppPageBar(title: Text('UP 主页')),
+        body: Center(child: Text('UID 无效')),
       );
     }
     final controller = ref.watch(creatorControllerProvider(widget.mid));
@@ -48,6 +51,7 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
     return CreatorRouteScope(
       mid: widget.mid,
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppPageBar(
           title: Text(
             controller.profile?.name ?? 'UP 主页',
@@ -78,52 +82,52 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
             ),
           ],
         ),
-        body: SafeArea(
-          top: false,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final wide =
-                  constraints.maxWidth >= 1000 &&
-                  MediaQuery.textScalerOf(context).scale(1) <= 1.6;
-              final profile = _ProfilePanel(controller: controller);
-              final archives = RuleFilterScope<VideoSummary>(
-                items: state.items,
-                subjectOf: RuleSubjects.video,
-                allowPriority: false,
-                unavailableBuilder: (status) => _scrollView(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide =
+                constraints.maxWidth >= 1000 &&
+                MediaQuery.textScalerOf(context).scale(1) <= 1.6;
+            final profile = _ProfilePanel(controller: controller);
+            final archives = RuleFilterScope<VideoSummary>(
+              items: state.items,
+              subjectOf: RuleSubjects.video,
+              allowPriority: false,
+              unavailableBuilder: (status) => _scrollView(
+                controller,
+                wide: wide,
+                profile: profile,
+                placeholder: status,
+              ),
+              builder: (visible) => AutoFillViewport(
+                controller: _scroll,
+                resetKey: (controller.archiveGeneration, visible.epoch),
+                scrollResetKey: state.query,
+                canLoadMore: state.status == FeedStatus.ready,
+                onLoadMore: () => controller.loadMore(automatic: true),
+                child: _scrollView(
                   controller,
                   wide: wide,
                   profile: profile,
-                  placeholder: status,
+                  visible: visible,
                 ),
-                builder: (visible) => AutoFillViewport(
-                  controller: _scroll,
-                  resetKey: (controller.archiveGeneration, visible.epoch),
-                  scrollResetKey: state.query,
-                  canLoadMore: state.status == FeedStatus.ready,
-                  onLoadMore: () => controller.loadMore(automatic: true),
-                  child: _scrollView(
-                    controller,
-                    wide: wide,
-                    profile: profile,
-                    visible: visible,
+              ),
+            );
+            if (!wide) return archives;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 300,
+                  child: SingleChildScrollView(
+                    padding: pageInsets(context, horizontal: 0, top: 0),
+                    child: profile,
                   ),
                 ),
-              );
-              if (!wide) return archives;
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 300,
-                    child: SingleChildScrollView(child: profile),
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: archives),
-                ],
-              );
-            },
-          ),
+                const VerticalDivider(width: 1),
+                Expanded(child: archives),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -149,79 +153,61 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
           constraints.maxWidth,
           columns,
         );
-        return RefreshIndicator(
+        return FeedScrollView(
+          storageKey: PageStorageKey('creator-${widget.mid}'),
+          controller: _scroll,
           onRefresh: controller.refresh,
-          child: CustomScrollView(
-            key: PageStorageKey('creator-${widget.mid}'),
-            controller: _scroll,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              if (!wide) SliverToBoxAdapter(child: profile),
-              SliverToBoxAdapter(
-                child: _ArchiveToolbar(controller: controller),
-              ),
-              if (visible != null)
-                SliverToBoxAdapter(child: RuleStatusBar(visibility: visible)),
-              if (placeholder != null)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: placeholder,
-                  ),
-                )
-              else ...[
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  sliver: SliverGrid.builder(
-                    gridDelegate: MediaGridDelegate(
-                      spacing: MediaGridDelegate.spacingFor(
-                        constraints.maxWidth,
-                      ),
-                      crossAxisCount: columns,
-                      itemExtents: [
-                        for (final item in items)
-                          VideoCard.extentFor(item, width, scaler),
-                      ],
-                    ),
-                    itemCount: items.length,
-                    // This page is pushed on the root navigator with no named
-                    // route, so a cold start cannot rebuild it. Keep the
-                    // default rather than storing a target the restorer would
-                    // have to invent a path for; a warm return still comes back
-                    // here because the route is still on the stack.
-                    itemBuilder: (_, index) => VideoCard(
-                      key: ValueKey(items[index].identity),
-                      video: items[index],
-                    ),
-                  ),
+          header: [
+            if (!wide) profile,
+            _ArchiveToolbar(controller: controller),
+            if (visible != null) RuleStatusBar(visibility: visible),
+          ],
+          placeholder: placeholder,
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              sliver: SliverGrid.builder(
+                gridDelegate: MediaGridDelegate(
+                  spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
+                  crossAxisCount: columns,
+                  itemExtents: [
+                    for (final item in items)
+                      VideoCard.extentFor(item, width, scaler),
+                  ],
                 ),
-                if (items.isEmpty && state.status == FeedStatus.endOfList)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Center(
-                        child: Text(
-                          state.items.isNotEmpty
-                              ? '当前投稿已被屏蔽'
-                              : state.query.keyword.isNotEmpty
-                              ? '没有匹配的投稿'
-                              : '还没有投稿',
-                        ),
-                      ),
-                    ),
-                  ),
-                if (items.isNotEmpty || state.status != FeedStatus.endOfList)
-                  SliverToBoxAdapter(
-                    child: FeedStatusFooter(
-                      status: state.status,
-                      failure: state.failure,
-                      onRetry: controller.loadMore,
-                      onRefresh: controller.refreshArchives,
-                    ),
-                  ),
-              ],
-            ],
-          ),
+                itemCount: items.length,
+                // This page is pushed on the root navigator with no named
+                // route, so a cold start cannot rebuild it. Keep the default
+                // rather than storing a target the restorer would have to
+                // invent a path for; a warm return still comes back here
+                // because the route is still on the stack.
+                itemBuilder: (_, index) => VideoCard(
+                  key: ValueKey(items[index].identity),
+                  video: items[index],
+                ),
+              ),
+            ),
+            if (items.isEmpty && state.status == FeedStatus.endOfList)
+              SliverToBoxAdapter(
+                child: FeedMessage(
+                  icon: Icons.video_library_outlined,
+                  text: state.items.isNotEmpty
+                      ? '当前投稿已被屏蔽'
+                      : state.query.keyword.isNotEmpty
+                      ? '没有匹配的投稿'
+                      : '还没有投稿',
+                ),
+              ),
+            if (items.isNotEmpty || state.status != FeedStatus.endOfList)
+              SliverToBoxAdapter(
+                child: FeedStatusFooter(
+                  status: state.status,
+                  failure: state.failure,
+                  onRetry: controller.loadMore,
+                  onRefresh: controller.refreshArchives,
+                ),
+              ),
+          ],
         );
       },
     );
@@ -314,7 +300,7 @@ class _ProfilePanel extends StatelessWidget {
         children: [
           if (profile?.banner != null) ...[
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTokens.cardRadius),
               child: Image.network(
                 profile!.banner.toString(),
                 height: 96,

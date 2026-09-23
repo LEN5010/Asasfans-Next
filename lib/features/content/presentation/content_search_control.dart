@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/theme/app_icons.dart';
+
 class ContentSearchControl extends StatelessWidget {
   const ContentSearchControl({
     required this.value,
@@ -28,7 +30,7 @@ class ContentSearchControl extends StatelessWidget {
       : IconButton(
           tooltip: '搜索',
           isSelected: value.isNotEmpty,
-          icon: const Icon(Icons.search),
+          icon: const Icon(AppIcons.search),
           onPressed: () async {
             final keyword = await showDialog<String>(
               context: context,
@@ -81,12 +83,12 @@ class _SearchInputState extends State<_SearchInput> {
         borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
       ),
       prefixIconConstraints: const BoxConstraints.tightFor(width: 36),
-      prefixIcon: const Icon(Icons.search, size: 20),
+      prefixIcon: const Icon(AppIcons.search, size: 20),
       suffixIcon: _controller.text.isEmpty
           ? null
           : IconButton(
               tooltip: '清除搜索',
-              icon: const Icon(Icons.close, size: 18),
+              icon: const Icon(AppIcons.close, size: 18),
               onPressed: () {
                 _controller.clear();
                 setState(() {});

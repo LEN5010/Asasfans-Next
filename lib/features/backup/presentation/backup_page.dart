@@ -1,4 +1,5 @@
 import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -95,10 +96,11 @@ class _BackupPageState extends ConsumerState<BackupPage> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_merging,
     child: Scaffold(
-      appBar: AppPageBar(title: const Text('备份与恢复')),
+      extendBodyBehindAppBar: true,
+      appBar: const AppPageBar(title: Text('备份与恢复')),
       body: LibraryBody(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: pageInsets(context, top: 4),
           children: [
             if (_busy && !_previewing) const LinearProgressIndicator(),
             Card(
@@ -113,7 +115,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
                       onTap: () => _export(anchor),
                     ),
                   ),
-                  const Divider(height: 1, indent: 56),
+                  const Divider(indent: 56),
                   ListTile(
                     leading: const Icon(Icons.file_download_outlined),
                     title: const Text('导入备份'),

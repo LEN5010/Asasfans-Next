@@ -1,5 +1,7 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../creator/presentation/creator_link.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,6 +21,7 @@ class SavedContentPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => HistoryRecorder(
     item: item,
     child: Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('内容详情'),
         actions: [
@@ -35,7 +38,7 @@ class SavedContentPage extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: pageInsets(context, horizontal: 20, top: 12),
             children: [
               Text(item.title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
@@ -74,7 +77,7 @@ class SavedContentPage extends ConsumerWidget {
                           ),
                         ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
                       child: Image.network(
                         item.images[index].toString(),
                         fit: BoxFit.fitWidth,

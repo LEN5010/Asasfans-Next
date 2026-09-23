@@ -1,4 +1,5 @@
 import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,6 +42,7 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    extendBodyBehindAppBar: true,
     appBar: AppPageBar(
       title: const Text('关注日程'),
       actions: [

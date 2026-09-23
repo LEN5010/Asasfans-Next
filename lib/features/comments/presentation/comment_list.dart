@@ -34,6 +34,7 @@ class _CommentListState extends ConsumerState<CommentList> {
     final visible = controller.visible;
     final pinned = controller.pinned.map((c) => c.id).toSet();
     final root = controller.root;
+    final padding = MediaQuery.paddingOf(context);
     return AutoFillViewport(
       controller: _scroll,
       resetKey: (controller, controller.generation),
@@ -42,10 +43,12 @@ class _CommentListState extends ConsumerState<CommentList> {
       onLoadMore: () => controller.loadMore(automatic: true),
       child: RefreshIndicator(
         onRefresh: controller.refresh,
+        edgeOffset: padding.top,
         child: CustomScrollView(
           controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
             if (widget.header != null) SliverToBoxAdapter(child: widget.header),
             if (root != null)
               SliverToBoxAdapter(
@@ -139,6 +142,7 @@ class _CommentListState extends ConsumerState<CommentList> {
                   onRefresh: controller.refresh,
                 ),
               ),
+            SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
           ],
         ),
       ),
@@ -168,16 +172,14 @@ class CommentTile extends StatelessWidget {
     void openReplies() => Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-          appBar: AppPageBar(title: const Text('评论回复')),
-          body: SafeArea(
-            top: false,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 850),
-                child: CommentList(
-                  query: CommentQuery(oid: comment.oid, root: comment.id),
-                ),
+          extendBodyBehindAppBar: true,
+          appBar: const AppPageBar(title: Text('评论回复')),
+          body: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 850),
+              child: CommentList(
+                query: CommentQuery(oid: comment.oid, root: comment.id),
               ),
             ),
           ),

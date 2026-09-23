@@ -13,6 +13,7 @@ import '../../features/library/presentation/calendar_follows.dart';
 import '../../features/handoff/presentation/return_restorer.dart';
 import '../../features/today/presentation/today_page.dart';
 import '../../features/updates/presentation/updates_page.dart';
+import '../../shared/widgets/app_page_bar.dart';
 import 'app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -141,7 +142,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('页面不存在')),
+      appBar: const AppPageBar(title: Text('页面不存在')),
       body: Center(
         child: FilledButton(
           onPressed: () => context.go('/today'),

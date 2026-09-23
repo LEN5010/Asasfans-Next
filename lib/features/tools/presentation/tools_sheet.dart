@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../domain/community_tool.dart';
 
@@ -62,7 +63,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
               hintText: '搜索工具',
               counterText: '',
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(AppIcons.search),
             ),
             onChanged: (value) => setState(() {
               _keyword = value;

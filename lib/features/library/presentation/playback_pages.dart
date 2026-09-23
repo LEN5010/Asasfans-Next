@@ -1,4 +1,5 @@
 import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,6 +37,7 @@ class ContinueWatchingPage extends ConsumerWidget {
     final pager = ref.read(playbackProgressProvider.notifier);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('继续观看'),
         actions: [
@@ -123,6 +125,7 @@ class BookmarksPage extends ConsumerWidget {
     final pager = ref.read(playbackBookmarksProvider.notifier);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(title: const Text('时间书签')),
       body: LibraryBody(
         child: LibraryPagedList(

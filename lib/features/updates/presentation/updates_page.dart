@@ -1,4 +1,6 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,6 +31,7 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
     final state = ref.watch(updateListProvider(_filter));
     final pager = ref.read(updateListProvider(_filter).notifier);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('更新'),
         actions: [
@@ -62,7 +65,7 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                 child: SegmentedButton<UpdateFilter>(
                   showSelectedIcon: false,
                   segments: const [
@@ -118,7 +121,7 @@ class UpdateStatusBanner extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

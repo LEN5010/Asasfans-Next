@@ -47,8 +47,9 @@ class FeedStatusFooter extends StatelessWidget {
       FeedStatus.endOfList => Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: Theme.of(context).colorScheme.outline),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
         ),
       ),
       _ => const SizedBox(height: 4),

@@ -1,4 +1,5 @@
 import '../../../shared/widgets/app_panel.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,9 +38,9 @@ class VideoDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!validBvid(bvid)) {
-      return Scaffold(
-        appBar: AppPageBar(title: const Text('视频详情')),
-        body: const Center(child: Text('视频编号无效')),
+      return const Scaffold(
+        appBar: AppPageBar(title: Text('视频详情')),
+        body: Center(child: Text('视频编号无效')),
       );
     }
     final controller = ref.watch(videoDetailProvider(bvid));
@@ -57,6 +58,7 @@ class VideoDetailPage extends ConsumerWidget {
           )
         : ContentSnapshots.video(detail.video);
     final scaffold = Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('视频详情'),
         actions: [
@@ -87,40 +89,12 @@ class VideoDetailPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        top: false,
-        child: Column(
+      // Status floats just under the page bar; the details scroll behind both.
+      body: Builder(
+        builder: (context) => Stack(
           children: [
-            if (controller.loading) const LinearProgressIndicator(),
-            if (controller.failure != null)
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(controller.failure!.message),
-                    RetryButton(
-                      failure: controller.failure,
-                      onRetry: controller.loading ? null : controller.refresh,
-                    ),
-                    if (controller.failure!.kind ==
-                        ApiFailureKind.loginRequired)
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.of(context, rootNavigator: true).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const AccountPage(),
-                              ),
-                            ),
-                        child: const Text('登录 B 站'),
-                      ),
-                  ],
-                ),
-              ),
             if (detail != null)
-              Expanded(
+              Positioned.fill(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final panel = _VideoPanel(
@@ -136,6 +110,12 @@ class VideoDetailPage extends ConsumerWidget {
                             flex: 3,
                             child: SingleChildScrollView(
                               key: const ValueKey('video-details-column'),
+                              padding: pageInsets(
+                                context,
+                                horizontal: 0,
+                                top: 0,
+                                bottom: 0,
+                              ),
                               child: panel,
                             ),
                           ),
@@ -158,6 +138,52 @@ class VideoDetailPage extends ConsumerWidget {
                   },
                 ),
               ),
+            Positioned(
+              top: MediaQuery.paddingOf(context).top,
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  if (controller.loading) const LinearProgressIndicator(),
+                  if (controller.failure != null)
+                    Card(
+                      margin: const EdgeInsets.all(12),
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(controller.failure!.message),
+                            RetryButton(
+                              failure: controller.failure,
+                              onRetry: controller.loading
+                                  ? null
+                                  : controller.refresh,
+                            ),
+                            if (controller.failure!.kind ==
+                                ApiFailureKind.loginRequired)
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(
+                                      context,
+                                      rootNavigator: true,
+                                    ).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const AccountPage(),
+                                      ),
+                                    ),
+                                child: const Text('登录 B 站'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -190,7 +216,7 @@ class _VideoPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
             child: MediaCover(
               image: video.coverUrl,
               aspectRatio: 16 / 9,

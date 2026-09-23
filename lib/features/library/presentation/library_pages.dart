@@ -1,6 +1,8 @@
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../creator/presentation/creator_link.dart';
+import '../../subscriptions/application/subscription_providers.dart';
 import '../../subscriptions/presentation/subscription_feed_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +24,7 @@ class CollectionsPage extends ConsumerWidget {
     final folders = ref.watch(libraryFoldersProvider);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('收藏夹'),
         actions: [
@@ -102,14 +105,15 @@ class CollectionPage extends ConsumerWidget {
     final folderState = ref.watch(collectionFolderProvider(folderId));
     final folder = folderState.valueOrNull;
     if (folderState.hasValue && !folderState.isLoading && folder == null) {
-      return Scaffold(
-        appBar: AppPageBar(title: const Text('收藏夹')),
-        body: const Center(child: Text('收藏夹不存在')),
+      return const Scaffold(
+        appBar: AppPageBar(title: Text('收藏夹')),
+        body: Center(child: Text('收藏夹不存在')),
       );
     }
     final name = folder?.name ?? '收藏夹';
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(title: Text(name)),
       body: LibraryBody(
         child: LibraryRecordList(
@@ -143,46 +147,40 @@ class _WatchLaterPageState extends ConsumerState<WatchLaterPage> {
     final records = ref.watch(provider);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(title: const Text('稍后看')),
       body: LibraryBody(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('待处理'),
-                    selected: _pendingOnly,
-                    onSelected: (_) => setState(() => _pendingOnly = true),
-                  ),
-                  ChoiceChip(
-                    label: const Text('全部'),
-                    selected: !_pendingOnly,
-                    onSelected: (_) => setState(() => _pendingOnly = false),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: LibraryRecordList(
-                state: records,
-                pager: ref.read(provider.notifier),
-                empty: _pendingOnly ? '没有待处理的内容' : '稍后看里还没有内容',
-                removeLabel: '移出稍后看',
-                onRemove: (entry) => libraryAction(
-                  context,
-                  () => repository.setLater(entry.item, false),
+        child: LibraryRecordList(
+          header: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+            child: Wrap(
+              spacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('待处理'),
+                  selected: _pendingOnly,
+                  onSelected: (_) => setState(() => _pendingOnly = true),
                 ),
-                onDone: (entry) => libraryAction(
-                  context,
-                  () =>
-                      repository.setLaterDone(entry.item.identity, !entry.done),
+                ChoiceChip(
+                  label: const Text('全部'),
+                  selected: !_pendingOnly,
+                  onSelected: (_) => setState(() => _pendingOnly = false),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
+          state: records,
+          pager: ref.read(provider.notifier),
+          empty: _pendingOnly ? '没有待处理的内容' : '稍后看里还没有内容',
+          removeLabel: '移出稍后看',
+          onRemove: (entry) => libraryAction(
+            context,
+            () => repository.setLater(entry.item, false),
+          ),
+          onDone: (entry) => libraryAction(
+            context,
+            () => repository.setLaterDone(entry.item.identity, !entry.done),
+          ),
         ),
       ),
     );
@@ -205,6 +203,7 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
     final repository = ref.read(libraryRepositoryProvider);
     final records = ref.watch(provider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('历史记录'),
         actions: [
@@ -231,43 +230,32 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
         ],
       ),
       body: LibraryBody(
-        child: Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  for (final action in [null, ...HistoryAction.values])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(
-                          action == null ? '全部' : historyLabel(action),
-                        ),
-                        selected: _filter == action,
-                        onSelected: (_) => setState(() => _filter = action),
-                      ),
+        child: LibraryRecordList(
+          header: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+            child: Row(
+              children: [
+                for (final action in [null, ...HistoryAction.values])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(action == null ? '全部' : historyLabel(action)),
+                      selected: _filter == action,
+                      onSelected: (_) => setState(() => _filter = action),
                     ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: LibraryRecordList(
-                state: records,
-                pager: ref.read(provider.notifier),
-                empty: '暂无记录',
-                removeLabel: '删除这条记录',
-                onRemove: (entry) => libraryAction(
-                  context,
-                  () => repository.removeHistory(
-                    entry.item.identity,
-                    entry.action!,
                   ),
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
+          state: records,
+          pager: ref.read(provider.notifier),
+          empty: '暂无记录',
+          removeLabel: '删除这条记录',
+          onRemove: (entry) => libraryAction(
+            context,
+            () => repository.removeHistory(entry.item.identity, entry.action!),
+          ),
         ),
       ),
     );
@@ -288,8 +276,10 @@ class LibraryRecordList extends StatelessWidget {
     required this.removeLabel,
     required this.onRemove,
     this.onDone,
+    this.header,
     super.key,
   });
+  final Widget? header;
   final LibraryListState<LibraryRecord> state;
   final LibraryPager<LibraryRecord> pager;
   final String empty;
@@ -302,6 +292,7 @@ class LibraryRecordList extends StatelessWidget {
       state: state,
       pager: pager,
       empty: empty,
+      header: header,
       itemBuilder: (context, entry) {
         final item = entry.item;
         final image = item.images.firstOrNull;
@@ -377,6 +368,7 @@ class SubscriptionsPage extends ConsumerWidget {
     final subscriptions = ref.watch(localSubscriptionsProvider);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppPageBar(
         title: const Text('本地订阅'),
         actions: [
@@ -386,7 +378,24 @@ class SubscriptionsPage extends ConsumerWidget {
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute<void>(
                 builder: (_) => Scaffold(
-                  appBar: AppPageBar(title: const Text('订阅更新')),
+                  extendBodyBehindAppBar: true,
+                  appBar: AppPageBar(
+                    title: const Text('订阅更新'),
+                    actions: [
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final feed = ref.watch(
+                            subscriptionFeedControllerProvider,
+                          );
+                          return IconButton(
+                            tooltip: '刷新订阅更新',
+                            onPressed: feed.loading ? null : feed.refresh,
+                            icon: const Icon(Icons.refresh),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                   body: const SubscriptionFeedView(),
                 ),
               ),

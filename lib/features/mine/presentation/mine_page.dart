@@ -103,9 +103,9 @@ class _MinePageState extends State<MinePage> {
                       ])
                         ListTile(
                           selected: _section == entry.$1,
-                          selectedTileColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
+                          selectedTileColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               AppTokens.cardRadius,
@@ -162,8 +162,9 @@ class _SettingsGroup extends StatelessWidget {
         padding: const EdgeInsets.only(left: 8, bottom: 10),
         child: Text(
           title,
-          style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
       Card(

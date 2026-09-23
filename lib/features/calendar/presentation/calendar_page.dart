@@ -71,8 +71,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       await ref.read(refreshCalendarProvider)(month);
     } on ApiFailure catch (failure) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(failure.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
       }
     } finally {
       if (mounted) setState(() => _refreshing = false);
@@ -498,8 +499,9 @@ class _DayCell extends StatelessWidget {
                 child: Text(
                   '${day.day}',
                   maxLines: 1,
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(fontSize: 14, height: 1.4),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.4),
                 ),
               ),
               const SizedBox(height: 3),
