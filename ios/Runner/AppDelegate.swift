@@ -7,6 +7,8 @@ import webview_flutter_wkwebview
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var loginCookies: FlutterMethodChannel?
   private weak var loginRegistry: FlutterPluginRegistry?
+  private var transparencyPreference: TransparencyPreferenceBridge?
+  deinit { transparencyPreference?.dispose() }
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -16,6 +18,10 @@ import webview_flutter_wkwebview
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    transparencyPreference?.dispose()
+    transparencyPreference = TransparencyPreferenceBridge(
+      messenger: engineBridge.applicationRegistrar.messenger()
+    )
     loginRegistry = engineBridge.pluginRegistry
     // UIScene owns the window. Bind to the actual engine instead of relying on
     // window.rootViewController during process launch (before a scene exists).
@@ -32,6 +38,55 @@ import webview_flutter_wkwebview
       BiliLoginCookieBridge.handle(call, registry: registry, result: result)
     }
   }
+}
+
+// UIScene-independent, engine-bound and read-only. Separate from high contrast.
+private final class TransparencyPreferenceBridge: NSObject, FlutterStreamHandler {
+  private let events: FlutterEventChannel
+  private let state: FlutterMethodChannel
+  private var observer: NSObjectProtocol?
+
+  init(messenger: FlutterBinaryMessenger) {
+    events = FlutterEventChannel(name: "asasfans.next/reduce_transparency", binaryMessenger: messenger)
+    state = FlutterMethodChannel(name: "asasfans.next/reduce_transparency_state", binaryMessenger: messenger)
+    super.init()
+    state.setMethodCallHandler { call, result in
+      if call.method == "read" {
+        result(UIAccessibility.isReduceTransparencyEnabled)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    events.setStreamHandler(self)
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    stopObserving()
+    observer = NotificationCenter.default.addObserver(
+      forName: UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+      object: nil, queue: .main
+    ) { _ in events(UIAccessibility.isReduceTransparencyEnabled) }
+    events(UIAccessibility.isReduceTransparencyEnabled)
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    stopObserving()
+    return nil
+  }
+
+  private func stopObserving() {
+    if let observer = observer { NotificationCenter.default.removeObserver(observer) }
+    observer = nil
+  }
+
+  func dispose() {
+    stopObserving()
+    events.setStreamHandler(nil)
+    state.setMethodCallHandler(nil)
+  }
+
+  deinit { stopObserving() }
 }
 
 private enum BiliLoginCookieBridge {

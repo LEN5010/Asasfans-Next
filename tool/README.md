@@ -32,3 +32,17 @@ tool/flutterw run -d macos --target tool/preview/main.dart
 ```
 
 这是显式的开发入口，带 `OFFLINE` 标记，不由正式 `lib/main.dart` 引用。使用与测试相同的内存 SQLite、内存凭证和固定日程，内容源为空；不读取应用个人库或 Keychain，不打开登录浏览器或外链，并禁止创建 HTTP 客户端。用于验证真实原生启动、窗口、导航与材质能力，不冒充真实来源/账号/数据验收。不要用生产入口代替它做“离线”检查。
+
+## U2 材质原型（尚未接入正式页面）
+
+```sh
+tool/flutterw run -d macos --profile --target tool/glass/main.dart
+```
+
+该入口只绘制本地网格与文字，禁止网络，不读取个人库、Keychain 或 WebView。三个场景是五槽导航、按钮组与 root overlay 面板。系统透明度桥接只读；原型开关是应用内模拟，不会更改 OS 设置。
+
+- **折射 A/B 对照**：两份相同网格、形状、模糊与色调，只改变折射率 1.0 / 1.22。回退路径不可作为真折射证据。
+- **运行 3×30 秒对照**：同一 Profile 进程分别记录清晰与液态三轮滚动、UI/raster 帧时间、刷新率、原始样本与静止帧数。运行期间不要锁屏、切换应用或并发执行测试/构建；锁屏/失效路径标记的轮次无效。
+- 控制台 `GLASS_PROBE_OUTPUT` / `GLASS_REFRACTION_OUTPUT` 指向当前应用沙盒中本次生成的临时 JSON/PNG。PNG 是 Flutter render capture，不冒称 OS 录屏。复制到本地证据目录后只清理该已确认的临时目录。
+
+`ImageFilter.isShaderFilterSupported` 与 shader 加载成功只是能力信号。没有原生折射、性能、生命周期和各设备证据时，不把源码/Widget 测试记成玻璃验收完成。主库失败采用真正的实色层，不把其 standard/minimal 模糊路径称为完整液态或清晰模式。Windows/Android 尚无独立减少透明度桥接，明确返回 unavailable，而不是假称该设置已关闭。

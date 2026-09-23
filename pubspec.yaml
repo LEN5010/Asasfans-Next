@@ -29,6 +29,7 @@ dependencies:
   sqlite3_flutter_libs: 0.5.39
   file_selector: 1.0.3
   share_plus: 11.1.0
+  liquid_glass_widgets: 0.30.2
 
 dev_dependencies:
   flutter_test:

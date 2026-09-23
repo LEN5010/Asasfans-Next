@@ -5,6 +5,8 @@ import webview_flutter_wkwebview
 
 class MainFlutterWindow: NSWindow {
   private var loginCookies: FlutterMethodChannel?
+  private var transparencyPreference: TransparencyPreferenceBridge?
+  deinit { transparencyPreference?.dispose() }
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -12,6 +14,9 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    transparencyPreference = TransparencyPreferenceBridge(
+      messenger: flutterViewController.engine.binaryMessenger
+    )
     loginCookies = FlutterMethodChannel(name: "asasfans.next/bilibili_login_cookies", binaryMessenger: flutterViewController.engine.binaryMessenger)
     loginCookies?.setMethodCallHandler { [weak flutterViewController] call, result in
       guard let registry = flutterViewController else {
@@ -23,6 +28,55 @@ class MainFlutterWindow: NSWindow {
 
     super.awakeFromNib()
   }
+}
+
+// Independent read-only accessibility signal; no browser/data access.
+private final class TransparencyPreferenceBridge: NSObject, FlutterStreamHandler {
+  private let events: FlutterEventChannel
+  private let state: FlutterMethodChannel
+  private var observer: NSObjectProtocol?
+
+  init(messenger: FlutterBinaryMessenger) {
+    events = FlutterEventChannel(name: "asasfans.next/reduce_transparency", binaryMessenger: messenger)
+    state = FlutterMethodChannel(name: "asasfans.next/reduce_transparency_state", binaryMessenger: messenger)
+    super.init()
+    state.setMethodCallHandler { call, result in
+      if call.method == "read" {
+        result(NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    events.setStreamHandler(self)
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    stopObserving()
+    observer = NSWorkspace.shared.notificationCenter.addObserver(
+      forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+      object: nil, queue: .main
+    ) { _ in events(NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency) }
+    events(NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency)
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    stopObserving()
+    return nil
+  }
+
+  private func stopObserving() {
+    if let observer = observer { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
+    observer = nil
+  }
+
+  func dispose() {
+    stopObserving()
+    events.setStreamHandler(nil)
+    state.setMethodCallHandler(nil)
+  }
+
+  deinit { stopObserving() }
 }
 
 private enum BiliLoginCookieBridge {
