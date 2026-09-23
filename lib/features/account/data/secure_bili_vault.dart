@@ -1,13 +1,10 @@
-import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../../core/domain/bilibili_id.dart';
 import '../../../core/storage/local_database.dart';
 import '../domain/bili_account.dart';
 
 abstract interface class SecretKeyStore {
   Future<String?> read();
-  Future<void> write(String value);
   Future<void> delete();
 }
 
@@ -34,83 +31,18 @@ class PlatformBiliKeyStore implements SecretKeyStore {
   @override
   Future<String?> read() => _store.read(key: _key);
   @override
-  Future<void> write(String value) => _store.write(key: _key, value: value);
-  @override
   Future<void> delete() => _store.delete(key: _key);
 }
 
+/// The session envelope an earlier build wrote. It is no longer parsed:
+/// whatever sits under the key, well-formed or not, is only there to be removed.
 class SecureBiliVault implements BiliCredentialVault {
   SecureBiliVault(this._store);
   final SecretKeyStore _store;
   @override
-  Future<StoredBiliSession?> read() async {
+  Future<bool> stored() async {
     try {
-      final raw = await _store.read();
-      if (raw == null) return null;
-      if (raw.length > 40000) {
-        throw const AccountFailure(AccountFailureKind.storage);
-      }
-      final value = jsonDecode(raw);
-      if (value is! Map ||
-          value['v'] != 1 ||
-          value['cookies'] is! Map ||
-          value['profile'] is! Map) {
-        throw const AccountFailure(AccountFailureKind.storage);
-      }
-      final credentials = BiliCredentials(
-        Map<String, String>.from(value['cookies'] as Map),
-        refreshToken: value['refreshToken'] as String?,
-      );
-      final profile = value['profile'] as Map;
-      if (profile['mid'] != credentials.mid ||
-          !validBilibiliMid(profile['mid'] as String) ||
-          profile['name'] is! String ||
-          (profile['name'] as String).trim().isEmpty ||
-          (profile['name'] as String).length > 1000) {
-        throw const AccountFailure(AccountFailureKind.storage);
-      }
-      final avatar = Uri.tryParse(profile['avatar'] as String? ?? '');
-      return StoredBiliSession(
-        credentials,
-        BiliAccountProfile(
-          mid: credentials.mid,
-          name: profile['name'] as String,
-          avatar:
-              avatar?.scheme == 'https' &&
-                  avatar!.host.isNotEmpty &&
-                  avatar.userInfo.isEmpty &&
-                  avatar.toString().length <= 4096
-              ? avatar
-              : null,
-        ),
-      );
-    } catch (_) {
-      throw const AccountFailure(AccountFailureKind.storage);
-    }
-  }
-
-  @override
-  Future<void> write(StoredBiliSession session) async {
-    try {
-      if (session.profile.mid != session.credentials.mid ||
-          session.profile.name.trim().isEmpty ||
-          session.profile.name.length > 1000) {
-        throw const AccountFailure(AccountFailureKind.storage);
-      }
-      final raw = jsonEncode({
-        'v': 1,
-        'cookies': session.credentials.cookies,
-        'refreshToken': session.credentials.refreshToken,
-        'profile': {
-          'mid': session.profile.mid,
-          'name': session.profile.name,
-          'avatar': session.profile.avatar?.toString(),
-        },
-      });
-      await _store.write(raw);
-      if (await _store.read() != raw) {
-        throw const AccountFailure(AccountFailureKind.storage);
-      }
+      return await _store.read() != null;
     } catch (_) {
       throw const AccountFailure(AccountFailureKind.storage);
     }

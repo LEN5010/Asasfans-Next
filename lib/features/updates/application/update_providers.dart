@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/storage/storage_providers.dart';
 import '../../../core/time/shanghai_date_provider.dart';
-import '../../creator/application/creator_providers.dart';
 import '../../library/application/library_providers.dart';
 import '../../library/application/library_pager.dart';
 import '../data/sqlite_update_repository.dart';
@@ -20,10 +19,7 @@ final updateRepositoryProvider = Provider<UpdateRepository>((ref) {
 });
 
 final updateCollectorProvider = Provider<UpdateCollector>(
-  (ref) => UpdateCollector(
-    ref.watch(creatorRepositoryProvider),
-    clock: ref.watch(currentTimeProvider),
-  ),
+  (ref) => UpdateCollector(clock: ref.watch(currentTimeProvider)),
 );
 
 /// No `onDispose`: ChangeNotifierProvider already disposes the notifier it

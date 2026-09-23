@@ -1,7 +1,4 @@
 import 'package:asasfans_next/core/storage/storage_providers.dart';
-import 'package:asasfans_next/features/creator/application/creator_providers.dart';
-import 'package:asasfans_next/features/creator/presentation/creator_page.dart';
-import '../helpers/creator_fixture.dart';
 import 'package:asasfans_next/features/library/domain/library_repository.dart';
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
@@ -69,7 +66,6 @@ Widget _host(LibraryRepository repository, Widget child, {_Links? links}) =>
           ref.onDispose(db.close);
           return db;
         }),
-        creatorRepositoryProvider.overrideWithValue(OfflineCreatorRepository()),
         if (links != null) externalLinkServiceProvider.overrideWithValue(links),
       ],
       child: MaterialApp(home: child),
@@ -180,6 +176,33 @@ void main() {
     expect(await repository.history(action: HistoryAction.playback), isEmpty);
   });
 
+  testWidgets('a saved video is watched on Bilibili', (tester) async {
+    final links = _Links();
+    await tester.pumpWidget(
+      _host(
+        repository,
+        const SavedContentPage(
+          item: ContentSnapshot(
+            identity: ContentIdentity(
+              source: ContentSource.bilibiliVideo,
+              value: 'BV1xx411c7mD',
+            ),
+            title: '保存的视频',
+            body: '',
+            authorName: '作者',
+          ),
+        ),
+        links: links,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('在 B 站观看'));
+    await tester.pumpAndSettle();
+    expect(links.opened, [
+      Uri.parse('https://www.bilibili.com/video/BV1xx411c7mD'),
+    ]);
+  });
+
   testWidgets(
     'history filtering and removal do not affect favorites or other actions',
     (tester) async {
@@ -225,10 +248,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(links.opened, isEmpty);
       expect((await repository.subscriptions()).single.mid, '123');
-      await tester.tap(find.text('测试 UP'));
-      await tester.pumpAndSettle();
-      expect(find.byType(CreatorPage), findsOneWidget);
-      expect(links.opened, isEmpty);
+      expect(find.byTooltip('订阅更新'), findsNothing);
       await tester.tap(find.byTooltip('在 B 站打开 UP 主页'));
       await tester.pumpAndSettle();
       expect(links.opened, [Uri.parse('https://space.bilibili.com/123')]);

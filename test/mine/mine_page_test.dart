@@ -20,7 +20,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('账号'), findsOneWidget);
+      // No sign-in from an earlier build on this device, so nothing to clear.
+      expect(find.text('账号'), findsNothing);
       expect(find.text('我的内容'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('偏好'), 180);
       expect(find.text('偏好'), findsOneWidget);
@@ -61,4 +62,36 @@ void main() {
       expect(find.byType(LicensePage), findsOneWidget);
     },
   );
+
+  testWidgets('a stored sign-in is only cleared after confirmation', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(390, 844)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final vault = MemoryAccountVault()..value = true;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          offlinePreferences(),
+          offlineAccount(vault: vault),
+        ],
+        child: const MaterialApp(home: MinePage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('账号'), findsOneWidget);
+    await tester.tap(find.text('清除本地 B 站登录信息'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(vault.value, isTrue);
+    await tester.tap(find.text('清除本地 B 站登录信息'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('确认'));
+    await tester.pumpAndSettle();
+    expect(vault.value, isFalse);
+    expect(find.text('账号'), findsNothing);
+  });
 }
