@@ -20,8 +20,9 @@ Widget _host(_Links links, {double scale = 1}) => ProviderScope(
   overrides: [externalLinkServiceProvider.overrideWithValue(links)],
   child: MaterialApp(
     builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(context)
-          .copyWith(textScaler: TextScaler.linear(scale)),
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(scale)),
       child: child!,
     ),
     home: Scaffold(
