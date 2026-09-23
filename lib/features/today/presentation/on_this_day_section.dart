@@ -139,30 +139,18 @@ class _PostCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (image != null)
-                if (visible.items.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '往年今天还没有记录',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: 96,
-                    width: double.infinity,
-                    child: Image.network(
-                      image.toString(),
-                      fit: BoxFit.cover,
-                      cacheWidth: 440,
-                      errorBuilder: (context, error, stack) => ColoredBox(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
+                SizedBox(
+                  height: 96,
+                  width: double.infinity,
+                  child: Image.network(
+                    image.toString(),
+                    fit: BoxFit.cover,
+                    cacheWidth: 440,
+                    errorBuilder: (context, error, stack) => ColoredBox(
+                      color: theme.colorScheme.surfaceContainerHighest,
                     ),
                   ),
+                ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
