@@ -81,7 +81,7 @@ Widget _app(FanartRepository repository) => ProviderScope(
 
 void main() {
   testWidgets(
-    'UX3: phone fanart is compact and secondary actions stay usable in menus',
+    'Density: fanart stays compact across widths and menus remain usable',
     (tester) async {
       tester.view
         ..physicalSize = const Size(390, 844)
@@ -91,8 +91,12 @@ void main() {
       await tester.pumpWidget(_app(repository));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<FanartCard>(find.byType(FanartCard).first).expanded,
-        isFalse,
+        tester.getSize(find.byType(FanartCard).first).width,
+        lessThan(200),
+      );
+      expect(
+        tester.getTopLeft(find.byType(FanartCard).at(1)).dx,
+        greaterThan(tester.getTopLeft(find.byType(FanartCard).first).dx),
       );
       expect(find.byType(FanartFilterButton), findsOneWidget);
       expect(find.text('嘉然'), findsNothing);
@@ -116,8 +120,8 @@ void main() {
       tester.view.physicalSize = const Size(1200, 900);
       await tester.pumpAndSettle();
       expect(
-        tester.widget<FanartCard>(find.byType(FanartCard).first).expanded,
-        isTrue,
+        tester.getSize(find.byType(FanartCard).first).width,
+        lessThan(280),
       );
       expect(tester.takeException(), isNull);
     },

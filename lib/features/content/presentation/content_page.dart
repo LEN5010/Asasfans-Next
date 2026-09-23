@@ -500,13 +500,13 @@ class _FanartGrid extends ConsumerWidget {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
             sliver: SliverContentMasonry(
-              minColumnWidth: 300,
+              minColumnWidth: constraints.maxWidth < 760 ? 160 : 220,
               itemCount: state.items.length,
               itemBuilder: (context, index) {
                 final item = state.items[index];
                 return FanartCard(
                   key: ValueKey(item.identity),
-                  expanded: constraints.maxWidth >= 760,
+                  masonry: true,
                   item: item,
                   onLongPress: () => showContentActions(
                     context,

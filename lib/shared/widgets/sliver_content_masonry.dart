@@ -18,12 +18,13 @@ class SliverContentMasonry extends StatelessWidget {
   Widget build(BuildContext context) => SliverLayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.crossAxisExtent;
-      final spacing = width >= 760 ? 20.0 : 12.0;
+      final spacing = width >= 760 ? 16.0 : 12.0;
       final minWidth =
           minColumnWidth * MediaQuery.textScalerOf(context).scale(1);
-      final columns = width < 760
-          ? 1
-          : ((width + spacing) / (minWidth + spacing)).floor().clamp(1, 4);
+      final columns = ((width + spacing) / (minWidth + spacing)).floor().clamp(
+        1,
+        6,
+      );
       return SliverMasonryGrid.count(
         crossAxisCount: columns,
         mainAxisSpacing: spacing,

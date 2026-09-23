@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,21 +43,6 @@ class DynamicCard extends ConsumerWidget {
   final ReturnTarget returnTo;
   final bool historyPreview;
 
-  static double historyExtentFor(double width, TextScaler scaler) =>
-      24 +
-      math.max(
-        48,
-        MediaCardMetrics.line(scaler, 15, 1.4) +
-            MediaCardMetrics.line(scaler, 12, 1.35) +
-            4,
-      ) +
-      12 +
-      math.max(64, MediaCardMetrics.line(scaler, 14, 1.45) * 2) +
-      12 +
-      (width - 24) / (16 / 9) +
-      12 +
-      math.max(48, MediaCardMetrics.line(scaler, 12, 1.35) * 2);
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (historyPreview) return _history(context, ref);
@@ -82,13 +66,13 @@ class DynamicCard extends ConsumerWidget {
       // Prose is selectable; only explicit media/source controls leave the app.
       onMore: actions,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
             _author(context, actions),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             DynamicBody(
               text: post.text,
               images: post.images,
@@ -98,7 +82,7 @@ class DynamicCard extends ConsumerWidget {
               onOpen: open,
             ),
             if (original != null) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               DecoratedBox(
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHigh,
@@ -149,7 +133,7 @@ class DynamicCard extends ConsumerWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 14,
               runSpacing: 8,
@@ -228,7 +212,6 @@ class DynamicCard extends ConsumerWidget {
 
   Widget _history(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final scaler = MediaQuery.textScalerOf(context);
     final original = post.forwardedFrom;
     final visual = post.media
         .where((m) => m.kind != DynamicMediaKind.emoji && m.url != null)
@@ -270,90 +253,65 @@ class DynamicCard extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: math.max(
-                48,
-                MediaCardMetrics.line(scaler, 15, 1.4) +
-                    MediaCardMetrics.line(scaler, 12, 1.35) +
-                    4,
-              ),
-              child: _author(
+            _author(
+              context,
+              () => showContentActions(
                 context,
-                () => showContentActions(
-                  context,
-                  ContentSnapshots.dynamic(post),
-                  ruleSubject: RuleSubjects.dynamic(post),
-                ),
+                ContentSnapshots.dynamic(post),
+                ruleSubject: RuleSubjects.dynamic(post),
               ),
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: cover == null
-                  ? Align(
-                      alignment: Alignment.centerLeft,
-                      child: ClipRect(
-                        child: DynamicRichText(
-                          text: text.isEmpty
-                              ? '查看这一天的${dynamicTypeLabel(post.type)}记录'
-                              : text,
-                          media: [...post.media, ...?original?.media],
-                          maxLines: 8,
-                        ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: DynamicRichText(
+                    text: text.isNotEmpty
+                        ? text
+                        : visual?.title ??
+                              originalVisual?.title ??
+                              '查看这一天的${dynamicTypeLabel(post.type)}记录',
+                    media: [...post.media, ...?original?.media],
+                    maxLines: 3,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                if (cover != null) ...[
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 88,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: MediaCover(
+                        image: cover,
+                        aspectRatio: 1,
+                        fit: BoxFit.contain,
+                        badge: visual?.durationText.isNotEmpty == true
+                            ? visual!.durationText
+                            : null,
                       ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          height: math.max(
-                            64,
-                            MediaCardMetrics.line(scaler, 14, 1.45) * 2,
-                          ),
-                          child: ClipRect(
-                            child: DynamicRichText(
-                              text: text.isEmpty
-                                  ? visual?.title ?? originalVisual?.title ?? ''
-                                  : text,
-                              media: [...post.media, ...?original?.media],
-                              maxLines: 2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: MediaCover(
-                              image: cover,
-                              aspectRatio: 16 / 9,
-                              fit: BoxFit.contain,
-                              badge: visual?.durationText.isNotEmpty == true
-                                  ? visual!.durationText
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: math.max(48, MediaCardMetrics.line(scaler, 12, 1.35) * 2),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '赞 ${post.likeCount} · 评论 ${post.commentCount}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall,
                     ),
                   ),
-                  AppButton(onPressed: showFull, child: const Text('查看全文')),
                 ],
-              ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '赞 ${post.likeCount} · 评论 ${post.commentCount}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+                AppButton(onPressed: showFull, child: const Text('查看全文')),
+              ],
             ),
           ],
         ),

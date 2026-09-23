@@ -13,6 +13,7 @@ import '../../../core/network/api_failure.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
+import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
@@ -154,24 +155,54 @@ class _TodayPageState extends ConsumerState<TodayPage> {
             child: RefreshIndicator(
               onRefresh: () => _refresh(true),
               edgeOffset: MediaQuery.paddingOf(context).top,
-              child: ListView(
-                key: const PageStorageKey('today-scroll'),
-                padding: pageInsets(context, top: 4),
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  for (final (index, module) in <Widget>[
-                    if (settings.shows(HomeSection.calendar))
-                      _ScheduleSection(day: day, onCalendar: _calendar),
-                    if (settings.shows(HomeSection.history))
-                      const OnThisDaySection(),
-                    if (showClips) clipsShelf,
-                    if (showFanart) fanartShelf,
-                  ].indexed)
-                    Padding(
-                      padding: EdgeInsets.only(top: index == 0 ? 0 : 24),
-                      child: module,
-                    ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final calendar = settings.shows(HomeSection.calendar);
+                  final history = settings.shows(HomeSection.history);
+                  final paired =
+                      calendar &&
+                      history &&
+                      constraints.maxWidth >=
+                          840 * MediaQuery.textScalerOf(context).scale(1);
+                  return ListView(
+                    key: const PageStorageKey('today-scroll'),
+                    padding: pageInsets(context, top: 4),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      for (final (index, module) in <Widget>[
+                        if (paired)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: (constraints.maxWidth * .32).clamp(
+                                  280,
+                                  360,
+                                ),
+                                child: _ScheduleSection(
+                                  day: day,
+                                  onCalendar: _calendar,
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              const Expanded(child: OnThisDaySection()),
+                            ],
+                          )
+                        else ...[
+                          if (calendar)
+                            _ScheduleSection(day: day, onCalendar: _calendar),
+                          if (history) const OnThisDaySection(),
+                        ],
+                        if (showClips) clipsShelf,
+                        if (showFanart) fanartShelf,
+                      ].indexed)
+                        Padding(
+                          padding: EdgeInsets.only(top: index == 0 ? 0 : 20),
+                          child: module,
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -237,33 +268,16 @@ class _ScheduleSection extends ConsumerWidget {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final columns =
-                          constraints.maxWidth >=
-                              760 * MediaQuery.textScalerOf(context).scale(1)
-                          ? 2
-                          : 1;
-                      return Wrap(
-                        spacing: 16,
-                        runSpacing: 8,
-                        children: [
-                          for (final event in entries.take(2))
-                            SizedBox(
-                              width:
-                                  (constraints.maxWidth - 16 * (columns - 1)) /
-                                  columns,
-                              child: CalendarEventTile(
-                                event: event,
-                                day: next ? null : day,
-                                showDate: next,
-                                compact: true,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  for (final event in entries.take(2))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: CalendarEventTile(
+                        event: event,
+                        day: next ? null : day,
+                        showDate: next,
+                        compact: true,
+                      ),
+                    ),
                   if (entries.length > 2)
                     Align(
                       alignment: Alignment.centerRight,
@@ -356,8 +370,16 @@ class _ContentShelfState<T> extends State<_ContentShelf<T>> {
       ? const _EmptySection('暂时没有内容')
       : LayoutBuilder(
           builder: (context, constraints) {
-            final width = math.min(280.0, constraints.maxWidth * .76);
             final scaler = MediaQuery.textScalerOf(context);
+            // Match the existing video grid instead of enlarging shelf cards.
+            final columns = MediaGridDelegate.columnsFor(
+              constraints.maxWidth + 32,
+              textScale: scaler.scale(1),
+            );
+            final width = MediaGridDelegate.cellWidth(
+              constraints.maxWidth + 32,
+              columns,
+            );
             final height = values
                 .map((value) => widget.extent(value, width, scaler))
                 .reduce(math.max);
@@ -397,13 +419,13 @@ class _SectionHeader extends StatelessWidget {
       Expanded(
         child: Text(title, style: Theme.of(context).textTheme.titleMedium),
       ),
-      if (onPrevious != null)
+      if (onPrevious != null && MediaQuery.sizeOf(context).width >= 760)
         AppButton.icon(
           tooltip: '上一组$title',
           onPressed: onPrevious,
           icon: const Icon(Icons.chevron_left),
         ),
-      if (onNext != null)
+      if (onNext != null && MediaQuery.sizeOf(context).width >= 760)
         AppButton.icon(
           tooltip: '下一组$title',
           onPressed: onNext,

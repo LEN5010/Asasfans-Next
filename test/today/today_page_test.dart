@@ -120,27 +120,37 @@ void _size(WidgetTester tester, Size value) {
 }
 
 void main() {
-  testWidgets('UI UX: home order is calendar history clips fanart on desktop', (
-    tester,
-  ) async {
-    _size(tester, const Size(1280, 1100));
-    final calendar = _Calendar()..items = [_event('今日歌会', 21)];
-    await tester.pumpWidget(_host(calendar));
-    await tester.pumpAndSettle();
-    expect(find.text('今日歌会'), findsOneWidget);
-    expect(find.text('最新二创正文'), findsOneWidget);
-    expect(find.text('最新切片标题'), findsOneWidget);
-    expect(find.text('Asasfans Next'), findsNothing);
-    final art = tester.getRect(find.byType(FanartCard));
-    final clip = tester.getRect(find.byType(VideoCard));
-    expect(art.top, greaterThan(clip.bottom));
-    expect(find.text('最近更新'), findsNothing);
-    expect(
-      tester.getTopLeft(find.text('今日歌会')).dy,
-      lessThan(tester.getTopLeft(find.text('历史上的今天')).dy),
-    );
-    expect(tester.getTopLeft(find.text('历史上的今天')).dy, lessThan(clip.top));
-  });
+  testWidgets(
+    'Density: desktop pairs modules but keeps schedule events vertical',
+    (tester) async {
+      _size(tester, const Size(1280, 1100));
+      final calendar = _Calendar()
+        ..items = [_event('今日歌会', 21), _event('今日杂谈', 21)];
+      await tester.pumpWidget(_host(calendar));
+      await tester.pumpAndSettle();
+      expect(find.text('今日歌会'), findsOneWidget);
+      expect(find.text('最新二创正文'), findsOneWidget);
+      expect(find.text('最新切片标题'), findsOneWidget);
+      expect(find.text('Asasfans Next'), findsNothing);
+      final art = tester.getRect(find.byType(FanartCard));
+      final clip = tester.getRect(find.byType(VideoCard));
+      expect(art.top, greaterThan(clip.bottom));
+      expect(find.text('最近更新'), findsNothing);
+      expect(
+        tester.getTopLeft(find.text('今日安排')).dx,
+        lessThan(tester.getTopLeft(find.text('历史上的今天')).dx),
+      );
+      expect(tester.getTopLeft(find.text('历史上的今天')).dy, lessThan(clip.top));
+      expect(
+        tester.getTopLeft(find.text('今日歌会')).dx,
+        tester.getTopLeft(find.text('今日杂谈')).dx,
+      );
+      expect(
+        tester.getTopLeft(find.text('今日歌会')).dy,
+        isNot(tester.getTopLeft(find.text('今日杂谈')).dy),
+      );
+    },
+  );
 
   testWidgets(
     'empty today falls forward to the first non-cancelled event within seven days',

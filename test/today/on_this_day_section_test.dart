@@ -72,7 +72,7 @@ void main() {
   });
 
   testWidgets(
-    'UX3: equal history previews open full text without growing the shelf',
+    'Density: natural history previews open full text without growing the shelf',
     (tester) async {
       final body = '完整的历史正文\n' * 30;
       await tester.pumpWidget(
@@ -88,7 +88,8 @@ void main() {
       await tester.pumpAndSettle();
       final cards = find.byType(DynamicCard);
       final height = tester.getSize(cards.first).height;
-      expect(tester.getSize(cards.last).height, height);
+      expect(tester.getSize(cards.last).height, greaterThan(height));
+      expect(height, lessThan(200));
       await tester.tap(find.text('查看全文').first);
       await tester.pumpAndSettle();
       final full = find.byWidgetPredicate(

@@ -162,13 +162,13 @@ class CalendarEventTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: compact ? 64 : 0),
+                      constraints: BoxConstraints(minHeight: compact ? 44 : 0),
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
                           compact ? 12 : 14,
-                          10,
+                          compact ? 8 : 10,
                           12,
-                          10,
+                          compact ? 8 : 10,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

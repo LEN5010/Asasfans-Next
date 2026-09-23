@@ -12,8 +12,7 @@ import '../../handoff/domain/return_context.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
-/// A bounded set of large, naturally sized cards. Horizontal scrolling has no
-/// timer or auto-play; equal preview slots leave full reading to the panel.
+/// A small, bounded history shelf with natural-height summaries, no autoplay.
 class OnThisDaySection extends ConsumerStatefulWidget {
   const OnThisDaySection({super.key});
 
@@ -79,19 +78,21 @@ class _OnThisDaySectionState extends ConsumerState<OnThisDaySection> {
                 onPressed: () => menu.isOpen ? menu.close() : menu.open(),
               ),
             ),
-            AppButton.icon(
-              tooltip: '上一张历史',
-              onPressed: () => _move(-1),
-              icon: const Icon(Icons.chevron_left),
-            ),
-            AppButton.icon(
-              tooltip: '下一张历史',
-              onPressed: () => _move(1),
-              icon: const Icon(Icons.chevron_right),
-            ),
+            if (MediaQuery.sizeOf(context).width >= 760)
+              AppButton.icon(
+                tooltip: '上一张历史',
+                onPressed: () => _move(-1),
+                icon: const Icon(Icons.chevron_left),
+              ),
+            if (MediaQuery.sizeOf(context).width >= 760)
+              AppButton.icon(
+                tooltip: '下一张历史',
+                onPressed: () => _move(1),
+                icon: const Icon(Icons.chevron_right),
+              ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         posts.when(
           loading: () => const SizedBox(
             height: 64,
@@ -128,27 +129,30 @@ class _OnThisDaySectionState extends ConsumerState<OnThisDaySection> {
                 else
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final width = math.min(420.0, constraints.maxWidth * .88);
-                      return SizedBox(
-                        height: DynamicCard.historyExtentFor(
-                          width,
-                          MediaQuery.textScalerOf(context),
-                        ),
-                        child: ListView.separated(
-                          key: const PageStorageKey('on-this-day-cards'),
-                          controller: _scroll,
-                          scrollDirection: Axis.horizontal,
-                          itemCount: visible.items.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 16),
-                          itemBuilder: (_, index) => SizedBox(
-                            width: width,
-                            child: DynamicCard(
-                              key: ValueKey(visible.items[index].identity),
-                              post: visible.items[index],
-                              historyPreview: true,
-                              returnTo: ReturnTarget.today,
-                            ),
-                          ),
+                      final width = math.min(300.0, constraints.maxWidth * .9);
+                      // The endpoint supplies at most eight history items;
+                      // natural card heights need no cross-card measurement.
+                      return SingleChildScrollView(
+                        key: const PageStorageKey('on-this-day-cards'),
+                        controller: _scroll,
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final (index, post)
+                                in visible.items.indexed) ...[
+                              if (index > 0) const SizedBox(width: 12),
+                              SizedBox(
+                                width: width,
+                                child: DynamicCard(
+                                  key: ValueKey(post.identity),
+                                  post: post,
+                                  historyPreview: true,
+                                  returnTo: ReturnTarget.today,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       );
                     },
