@@ -71,12 +71,7 @@ class FanartCard extends StatelessWidget {
                       : null,
                 ),
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                  12,
-                  textOnly ? 10 : 8,
-                  textOnly ? 52 : 12,
-                  0,
-                ),
+                padding: EdgeInsets.fromLTRB(12, textOnly ? 10 : 8, 12, 0),
                 child: SizedBox(
                   height:
                       MediaCardMetrics.line(scaler, 14, textOnly ? 1.45 : 1.4) *
@@ -103,7 +98,12 @@ class FanartCard extends StatelessWidget {
               ),
               SizedBox(height: textOnly ? 8 : 4),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                padding: const EdgeInsets.fromLTRB(
+                  12,
+                  0,
+                  MediaMoreButton.reserve,
+                  10,
+                ),
                 child: SizedBox(
                   height: MediaCardMetrics.line(scaler, 12, 1.35),
                   child: Text(
@@ -121,9 +121,8 @@ class FanartCard extends StatelessWidget {
             ],
           ),
           Positioned(
-            top: 0,
-            left: textOnly ? null : 0,
-            right: textOnly ? 0 : null,
+            right: 2,
+            bottom: 2,
             child: MediaMoreButton(onPressed: more),
           ),
         ],

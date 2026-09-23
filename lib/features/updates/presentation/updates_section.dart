@@ -75,13 +75,21 @@ class UpdatesSection extends ConsumerWidget {
                     ),
                   ),
                 )
-              : Column(
-                  children: [
-                    for (final event in events)
-                      // A return from here lands on Today, which is where the
-                      // user actually left from.
-                      UpdateCard(event: event, returnTo: ReturnTarget.today),
-                  ],
+              : Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < events.length; i++) ...[
+                        if (i > 0) const Divider(indent: 64),
+                        // A return from here lands on Today, which is where
+                        // the user actually left from.
+                        UpdateCard(
+                          event: events[i],
+                          returnTo: ReturnTarget.today,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
         ),
       ],

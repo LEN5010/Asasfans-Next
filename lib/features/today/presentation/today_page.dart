@@ -354,7 +354,7 @@ class _ContentShelf<T> extends StatelessWidget {
       ? const _EmptySection('暂时没有内容')
       : LayoutBuilder(
           builder: (context, constraints) {
-            final width = math.min(240.0, constraints.maxWidth * .78);
+            final width = math.min(220.0, constraints.maxWidth * .72);
             final scaler = MediaQuery.textScalerOf(context);
             final height = values
                 .map((value) => extent(value, width, scaler))

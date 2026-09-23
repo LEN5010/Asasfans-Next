@@ -1,4 +1,5 @@
 import '../../rules/application/feed_visibility.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -51,95 +52,110 @@ class VideoCard extends ConsumerWidget {
           ? openVideoDetail(context, video.identity.value)
           : openContentSource(context, ref, ContentSnapshots.video(video)),
       onMore: more,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(
         children: [
-          Stack(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              MediaCover(
-                image: video.coverUrl,
-                aspectRatio: 16 / 9,
-                video: true,
-                badgeLeading: true,
-                badge: video.duration == null
-                    ? null
-                    : _duration(video.duration!),
+              Stack(
+                children: [
+                  MediaCover(
+                    image: video.coverUrl,
+                    aspectRatio: 16 / 9,
+                    video: true,
+                    badgeLeading: true,
+                    badge: video.duration == null
+                        ? null
+                        : _duration(video.duration!),
+                  ),
+                  // Only a Bilibili video can be handed to Bilibili; anything
+                  // else on this card has no external player to go to.
+                  if (video.identity.source == ContentSource.bilibiliVideo)
+                    Positioned(
+                      right: 8,
+                      bottom: 8,
+                      child: WatchOverlayButton(video: video, origin: origin),
+                    ),
+                ],
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                child: MediaMoreButton(onPressed: more),
-              ),
-              // Only a Bilibili video can be handed to Bilibili; anything
-              // else on this card has no external player to go to.
-              if (video.identity.source == ContentSource.bilibiliVideo)
-                Positioned(
-                  right: 8,
-                  bottom: 8,
-                  child: WatchOverlayButton(video: video, origin: origin),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: SizedBox(
+                  height: MediaCardMetrics.line(scaler, 14, 1.4) * 2,
+                  child: Text(
+                    video.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      height: 1.4,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  12,
+                  0,
+                  MediaMoreButton.reserve,
+                  0,
+                ),
+                child: SizedBox(
+                  height: MediaCardMetrics.line(scaler, 12, 1.35),
+                  child: CreatorLink(
+                    mid: video.creatorId,
+                    child: Text(
+                      video.creatorName.isEmpty ? '未知作者' : video.creatorName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (_hasMeta(video)) ...[
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    12,
+                    0,
+                    MediaMoreButton.reserve,
+                    0,
+                  ),
+                  child: SizedBox(
+                    height: MediaCardMetrics.line(scaler, 11, 1.35),
+                    child: Text(
+                      [
+                        if (video.viewCount != null)
+                          '${_count(video.viewCount!)} 播放',
+                        if (video.publishedAt != null)
+                          _date(video.publishedAt!),
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 11,
+                        height: 1.35,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 10),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: SizedBox(
-              height: MediaCardMetrics.line(scaler, 14, 1.4) * 2,
-              child: Text(
-                video.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  height: 1.4,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
+          Positioned(
+            right: 2,
+            bottom: 2,
+            child: MediaMoreButton(onPressed: more),
           ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: SizedBox(
-              height: MediaCardMetrics.line(scaler, 12, 1.35),
-              child: CreatorLink(
-                mid: video.creatorId,
-                child: Text(
-                  video.creatorName.isEmpty ? '未知作者' : video.creatorName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontSize: 12,
-                    height: 1.35,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (_hasMeta(video)) ...[
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: SizedBox(
-                height: MediaCardMetrics.line(scaler, 11, 1.35),
-                child: Text(
-                  [
-                    if (video.viewCount != null)
-                      '${_count(video.viewCount!)} 播放',
-                    if (video.publishedAt != null) _date(video.publishedAt!),
-                  ].join(' · '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: 11,
-                    height: 1.35,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 10),
         ],
       ),
     );

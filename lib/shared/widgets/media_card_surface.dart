@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
+
 /// One stable content surface. Hover/focus changes its border, never its size.
 class MediaCardSurface extends StatefulWidget {
   const MediaCardSurface({
@@ -21,7 +23,7 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
       side: BorderSide(
         color: focused
             ? colors.primary
@@ -46,21 +48,22 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
   }
 }
 
+/// The card's trailing action, pinned to its bottom-right corner. Caption rows
+/// beside it keep [reserve] clear so text never runs under the button.
 class MediaMoreButton extends StatelessWidget {
   const MediaMoreButton({super.key, required this.onPressed});
   final VoidCallback onPressed;
+  static const reserve = 34.0;
   @override
-  Widget build(BuildContext context) => IconButton.filledTonal(
+  Widget build(BuildContext context) => IconButton(
     tooltip: '更多操作',
     onPressed: onPressed,
     iconSize: 20,
     style: IconButton.styleFrom(
-      backgroundColor: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerLow.withValues(alpha: .94),
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
-      minimumSize: const Size.square(48),
+      minimumSize: const Size.square(40),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
     ),
-    icon: const Icon(Icons.more_horiz),
+    icon: const Icon(Icons.more_vert),
   );
 }
