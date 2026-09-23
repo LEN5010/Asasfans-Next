@@ -83,7 +83,11 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
                           minHeight: controlHeight,
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          // Plain titles get a text inset; custom title
+                          // controls (channel tabs) bring their own.
+                          padding: EdgeInsets.symmetric(
+                            horizontal: title is Text ? 16 : 4,
+                          ),
                           child: DefaultTextStyle.merge(
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
