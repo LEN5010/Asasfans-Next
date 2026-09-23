@@ -2,6 +2,8 @@ import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
 
@@ -49,7 +51,7 @@ class FanartFilterBar extends StatelessWidget {
           const SizedBox(width: 8),
         ],
         if (FanartFilterRules.count(query) > 0)
-          TextButton(
+          AppGlassButton(
             onPressed: () => onChanged(FanartFilterRules.reset(query)),
             child: const Text('重置筛选'),
           ),
@@ -70,7 +72,7 @@ class FanartFilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = FanartFilterRules.count(query);
-    return IconButton(
+    return AppGlassButton.icon(
       tooltip: '筛选',
       icon: Badge(
         isLabelVisible: count > 0,
@@ -112,7 +114,7 @@ class _FilterPanelState extends State<_FilterPanel> {
           title: '筛选',
           closeLabel: '关闭筛选',
           actions: [
-            TextButton(
+            AppGlassButton(
               onPressed: () => _change(FanartFilterRules.reset(_draft)),
               child: const Text('重置'),
             ),
@@ -184,7 +186,8 @@ class _FilterPanelState extends State<_FilterPanel> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: FilledButton(
+            child: AppGlassButton(
+              selected: true,
               onPressed: () => Navigator.pop(context, _draft),
               child: const Text('应用筛选'),
             ),

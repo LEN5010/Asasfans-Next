@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_icons.dart';
+import 'glass/app_glass_controls.dart';
 
 /// A root-overlay panel: bottom sheet on compact windows, centered on desktop.
 /// Its builder receives bounded, keyboard-aware space for a scrolling body.
@@ -90,7 +91,7 @@ class AppPanelHeader extends StatelessWidget {
             ),
           ),
           ...actions,
-          IconButton(
+          AppGlassButton.icon(
             tooltip: closeLabel,
             onPressed: canClose
                 ? (onClose ?? () => Navigator.pop(context))

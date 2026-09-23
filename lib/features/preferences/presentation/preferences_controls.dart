@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../handoff/presentation/return_entry_tile.dart';
 import '../../../shared/theme/app_icons.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import '../application/preferences_controller.dart';
 import '../domain/app_preferences.dart';
 
@@ -27,7 +28,7 @@ class PreferencesControls extends ConsumerWidget {
                   state.failure!.message,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
-                TextButton(
+                AppGlassButton(
                   onPressed: state.loading || state.saving
                       ? null
                       : controller.reload,
@@ -37,95 +38,47 @@ class PreferencesControls extends ConsumerWidget {
             ),
           ),
         if (state.ready) ...[
-          ListTile(
-            leading: const Icon(AppIcons.appearance),
-            title: const Text('主题'),
-            subtitle: Text(_appearance(state.values.appearance)),
-            trailing: const Icon(Icons.chevron_right),
-            enabled: state.canEdit,
-            onTap: state.canEdit
-                ? () async {
-                    final choice = await showDialog<AppAppearance>(
-                      context: context,
-                      builder: (context) => SimpleDialog(
-                        title: const Text('主题'),
-                        children: [
-                          for (final value in AppAppearance.values)
-                            SimpleDialogOption(
-                              onPressed: () => Navigator.pop(context, value),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    value == state.values.appearance
-                                        ? Icons.check_circle
-                                        : Icons.circle_outlined,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: Text(_appearance(value))),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                    if (choice != null && context.mounted) {
-                      await controller.setAppearance(choice);
-                    }
-                  }
-                : null,
+          const ListTile(leading: Icon(AppIcons.appearance), title: Text('主题')),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: AppGlassSegments<AppAppearance>(
+              // Reset a dragged preview only if the commit failed.
+              key: ValueKey(state.failure),
+              values: AppAppearance.values,
+              labelOf: _appearance,
+              selected: state.values.appearance,
+              onChanged: state.canEdit ? controller.setAppearance : null,
+            ),
           ),
           const Divider(height: 1, indent: 56),
-          ListTile(
-            leading: const Icon(AppIcons.material),
-            title: const Text('界面材质'),
-            subtitle: Text(_material(state.values.material)),
-            trailing: const Icon(Icons.chevron_right),
-            enabled: state.canEdit,
-            onTap: !state.canEdit
-                ? null
-                : () async {
-                    final choice = await showDialog<AppMaterial>(
-                      context: context,
-                      builder: (context) => SimpleDialog(
-                        title: const Text('界面材质'),
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
-                            child: Text('系统无障碍设置优先；不支持时自动使用清晰模式。'),
-                          ),
-                          for (final value in AppMaterial.values)
-                            SimpleDialogOption(
-                              onPressed: () => Navigator.pop(context, value),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    value == state.values.material
-                                        ? Icons.check_circle
-                                        : Icons.circle_outlined,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: Text(_material(value))),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                    if (choice != null && context.mounted) {
-                      await controller.setMaterial(choice);
-                    }
-                  },
+          const ListTile(leading: Icon(AppIcons.material), title: Text('界面材质')),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: AppGlassSegments<AppMaterial>(
+              key: ValueKey(state.failure),
+              values: AppMaterial.values,
+              labelOf: _material,
+              selected: state.values.material,
+              onChanged: state.canEdit ? controller.setMaterial : null,
+            ),
           ),
           const Divider(height: 1, indent: 56),
-          for (final section in HomeSection.values)
-            SwitchListTile.adaptive(
+          for (final section in const [
+            HomeSection.calendar,
+            HomeSection.history,
+            HomeSection.clips,
+            HomeSection.fanart,
+          ])
+            ListTile(
               title: Text(_section(section)),
-              value: state.values.shows(section),
-              onChanged: state.canEdit
-                  ? (visible) => controller.setHomeSection(section, visible)
-                  : null,
+              trailing: AppGlassSwitch(
+                key: ValueKey(state.failure),
+                label: _section(section),
+                value: state.values.shows(section),
+                onChanged: state.canEdit
+                    ? (visible) => controller.setHomeSection(section, visible)
+                    : null,
+              ),
             ),
           // Device-local: the permission and the running service belong to this
           // installation, so the choice is not something a backup carries to

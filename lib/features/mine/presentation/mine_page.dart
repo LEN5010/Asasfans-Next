@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import '../../preferences/presentation/preferences_controls.dart';
 import '../../account/application/account_providers.dart';
 import '../../account/presentation/local_login_cleanup_tile.dart';
@@ -25,14 +25,19 @@ class _MinePageState extends ConsumerState<MinePage> {
     );
     List<Widget> links(List<(String, String, IconData)> entries) => [
       for (final entry in entries)
-        ListTile(
-          leading: Icon(entry.$3, size: 22),
-          title: Text(entry.$1),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          minLeadingWidth: 24,
-          horizontalTitleGap: 12,
-          trailing: const Icon(Icons.chevron_right, size: 20),
-          onTap: () => context.go('/mine/${entry.$2}'),
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: AppGlassButton(
+            onPressed: () => context.go('/mine/${entry.$2}'),
+            child: Row(
+              children: [
+                Icon(entry.$3, size: 22),
+                const SizedBox(width: 12),
+                Expanded(child: Text(entry.$1)),
+                const Icon(Icons.chevron_right, size: 20),
+              ],
+            ),
+          ),
         ),
     ];
     final groups = [
@@ -77,13 +82,21 @@ class _MinePageState extends ConsumerState<MinePage> {
       _SettingsGroup(
         title: '应用',
         children: [
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('关于'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => showLicensePage(
-              context: context,
-              applicationName: 'Asasfans Next',
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: AppGlassButton(
+              onPressed: () => showLicensePage(
+                context: context,
+                applicationName: 'Asasfans Next',
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline),
+                  SizedBox(width: 12),
+                  Expanded(child: Text('关于')),
+                  Icon(Icons.chevron_right),
+                ],
+              ),
             ),
           ),
         ],
@@ -111,16 +124,20 @@ class _MinePageState extends ConsumerState<MinePage> {
                         (1, '偏好', Icons.tune),
                         (2, '应用', Icons.apps_outlined),
                       ])
-                        ListTile(
-                          selected: _section == entry.$1,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.cardRadius,
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: AppGlassButton(
+                            selected: _section == entry.$1,
+                            onPressed: () =>
+                                setState(() => _section = entry.$1),
+                            child: Row(
+                              children: [
+                                Icon(entry.$3),
+                                const SizedBox(width: 10),
+                                Expanded(child: Text(entry.$2)),
+                              ],
                             ),
                           ),
-                          leading: Icon(entry.$3),
-                          title: Text(entry.$2),
-                          onTap: () => setState(() => _section = entry.$1),
                         ),
                     ],
                   ),

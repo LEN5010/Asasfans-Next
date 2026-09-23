@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'glass/app_glass_surface.dart';
+import 'glass/app_glass_controls.dart';
 
-/// Floating page controls: a back button, a title pill and one action
-/// capsule. Use it with `Scaffold(extendBodyBehindAppBar: true)`; the Scaffold
+/// Floating page controls: a back button, a title/control and glass actions. Use it with `Scaffold(extendBodyBehindAppBar: true)`; the Scaffold
 /// then adds this bar to `MediaQuery.padding.top`, so lists reserve the space
 /// inside their own scroll extent (see [pageInsets]).
 ///
@@ -11,15 +11,33 @@ import 'glass/app_glass_surface.dart';
 /// so it never sits on top of what is being read. Its fade appears only once
 /// content has scrolled beneath it; at rest the glass sits on the page.
 class AppPageBar extends StatefulWidget implements PreferredSizeWidget {
-  const AppPageBar({super.key, required this.title, this.actions});
+  const AppPageBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.titleIsControl = false,
+    this.actionsBelow = false,
+    this.controlExtent = controlHeight,
+    this.revealKey,
+  });
   final Widget title;
   final List<Widget>? actions;
+  final bool titleIsControl;
+  final bool actionsBelow;
+  final double controlExtent;
+  final Object? revealKey;
 
   static const rowHeight = 58.0;
   static const controlHeight = 44.0;
 
   @override
-  Size get preferredSize => const Size.fromHeight(rowHeight);
+  Size get preferredSize => Size.fromHeight(
+    controlExtent +
+        14 +
+        (actionsBelow && (actions?.isNotEmpty ?? false)
+            ? controlHeight + 8
+            : 0),
+  );
 
   @override
   State<AppPageBar> createState() => _AppPageBarState();
@@ -40,6 +58,16 @@ class _AppPageBarState extends State<AppPageBar> {
     if (observer != _observer) {
       _observer?.removeListener(_onScroll);
       _observer = observer?..addListener(_onScroll);
+    }
+  }
+
+  @override
+  void didUpdateWidget(AppPageBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.revealKey != widget.revealKey) {
+      _hidden = false;
+      _scrolled = false;
+      _scrollTravel = 0;
     }
   }
 
@@ -84,8 +112,8 @@ class _AppPageBarState extends State<AppPageBar> {
     final canPop = route?.impliesAppBarDismissal ?? false;
     final actions = widget.actions ?? const [];
     final title = widget.title;
-    const rowHeight = AppPageBar.rowHeight;
-    const controlHeight = AppPageBar.controlHeight;
+    final rowHeight = widget.preferredSize.height;
+    final controlHeight = widget.controlExtent;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : const Duration(milliseconds: 220);
@@ -130,78 +158,75 @@ class _AppPageBarState extends State<AppPageBar> {
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(12, top + 10, 12, 4),
-            child: IconButtonTheme(
-              data: IconButtonThemeData(
-                style: IconButton.styleFrom(
-                  minimumSize: const Size.square(40),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              child: Row(
-                children: [
-                  if (canPop) ...[
-                    AppGlassSurface(
-                      radius: controlHeight / 2,
-                      child: SizedBox.square(
-                        dimension: controlHeight,
-                        child: route is PageRoute && route.fullscreenDialog
-                            ? const CloseButton()
-                            : const BackButton(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    if (canPop) ...[
+                      AppGlassButton.icon(
+                        tooltip: route is PageRoute && route.fullscreenDialog
+                            ? '关闭'
+                            : '返回',
+                        icon: Icon(
+                          route is PageRoute && route.fullscreenDialog
+                              ? Icons.close
+                              : Icons.arrow_back,
+                        ),
+                        onPressed: () => Navigator.maybePop(context),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: widget.titleIsControl
+                            ? title
+                            : AppGlassSurface(
+                                radius: controlHeight / 2,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: controlHeight,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    child: DefaultTextStyle.merge(
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        widthFactor: 1,
+                                        child: title,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    if (actions.isNotEmpty && !widget.actionsBelow) ...[
+                      const SizedBox(width: 8),
+                      ...actions,
+                    ],
                   ],
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppGlassSurface(
-                        radius: controlHeight / 2,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            minHeight: controlHeight,
-                          ),
-                          child: Padding(
-                            // Plain titles get a text inset; custom title
-                            // controls (channel tabs) bring their own.
-                            padding: EdgeInsets.symmetric(
-                              horizontal: title is Text ? 16 : 4,
-                            ),
-                            child: DefaultTextStyle.merge(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                widthFactor: 1,
-                                child: title,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                ),
+                if (actions.isNotEmpty && widget.actionsBelow) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: actions,
                     ),
                   ),
-                  if (actions.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    AppGlassSurface(
-                      radius: controlHeight / 2,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: SizedBox(
-                          height: controlHeight,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: actions,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
           ),
         ],

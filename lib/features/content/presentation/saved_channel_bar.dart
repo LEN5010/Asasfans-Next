@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/presentation/library_common.dart';
@@ -36,7 +38,7 @@ class SavedChannelBar extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
+  Widget build(BuildContext context, WidgetRef ref) => AppGlassButton.icon(
     tooltip: '保存频道',
     icon: const Icon(Icons.bookmarks_outlined),
     onPressed: () async {
@@ -49,7 +51,7 @@ class SavedChannelBar extends ConsumerWidget {
               title: Row(
                 children: [
                   const Expanded(child: Text('保存频道')),
-                  IconButton(
+                  AppGlassButton.icon(
                     tooltip: '关闭频道',
                     onPressed: () => Navigator.pop(dialogContext),
                     icon: const Icon(Icons.close),
@@ -66,7 +68,7 @@ class SavedChannelBar extends ConsumerWidget {
                 if (channels.hasError)
                   ListTile(
                     title: Text(libraryError(channels.error!)),
-                    trailing: IconButton(
+                    trailing: AppGlassButton.icon(
                       tooltip: '重试频道',
                       icon: const Icon(Icons.refresh),
                       onPressed: () =>
@@ -78,7 +80,7 @@ class SavedChannelBar extends ConsumerWidget {
                   ListTile(
                     title: Text(channel.name),
                     onTap: () => Navigator.pop(dialogContext, (channel, false)),
-                    trailing: IconButton(
+                    trailing: AppGlassButton.icon(
                       tooltip: '删除频道「${channel.name}」',
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () =>
@@ -143,13 +145,13 @@ class _NameDialogState extends State<_NameDialog> {
       onSubmitted: (value) => Navigator.pop(context, value.trim()),
     ),
     actions: [
-      TextButton(
+      AppGlassButton(
         onPressed: () => Navigator.pop(context),
         child: const Text('取消'),
       ),
       ValueListenableBuilder(
         valueListenable: _controller,
-        builder: (context, value, _) => TextButton(
+        builder: (context, value, _) => AppGlassButton(
           onPressed: value.text.trim().isEmpty
               ? null
               : () => Navigator.pop(context, value.text.trim()),

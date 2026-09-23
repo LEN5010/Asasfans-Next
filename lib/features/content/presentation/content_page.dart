@@ -10,6 +10,7 @@ import '../../rules/presentation/rule_filter_scope.dart';
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +59,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
   late final _visited = <ContentChannel>{_current};
   late final _slide = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 280),
+    duration: const Duration(milliseconds: 220),
     value: 1,
   );
 
@@ -142,7 +143,10 @@ class _ContentPageState extends ConsumerState<ContentPage>
         backgroundColor: Colors.transparent,
         appBar: AppPageBar(
           // A new channel starts with its controls visible.
-          key: ValueKey(_current),
+          revealKey: _current,
+          titleIsControl: true,
+          controlExtent: AppGlassSegments.heightFor(context),
+          actionsBelow: constraints.maxWidth < 760,
           title: _ChannelStrip(current: _current),
           actions: [
             ?_headerActions(ref, _current, constraints.maxWidth >= 1040),
@@ -172,6 +176,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
         listenable: controller,
         builder: (context, _) => Row(
           mainAxisSize: MainAxisSize.min,
+          spacing: 6,
           children: [
             ContentSearchControl(
               value: controller.state.query.keyword,
@@ -192,7 +197,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
               onOpen: (spec) => controller.applyQuery(spec.toFanart()),
             ),
             if (wide)
-              IconButton(
+              AppGlassButton.icon(
                 tooltip: '刷新',
                 onPressed: controller.state.isBusy ? null : controller.refresh,
                 icon: const Icon(Icons.refresh),
@@ -207,6 +212,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
         listenable: controller,
         builder: (_, _) => Row(
           mainAxisSize: MainAxisSize.min,
+          spacing: 6,
           children: [
             ContentSearchControl(
               value: controller.state.query.keyword,
@@ -221,7 +227,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
               currentSpec: () => ChannelSpec.ofDynamic(controller.state.query),
               onOpen: (spec) => controller.applyQuery(spec.toDynamic()),
             ),
-            IconButton(
+            AppGlassButton.icon(
               tooltip: '刷新',
               onPressed: controller.state.isBusy ? null : controller.refresh,
               icon: const Icon(Icons.refresh),
@@ -233,7 +239,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
     final controller = ref.watch(communityFeedControllerProvider(_kind));
     return ListenableBuilder(
       listenable: controller,
-      builder: (_, _) => IconButton(
+      builder: (_, _) => AppGlassButton.icon(
         tooltip: '刷新',
         onPressed: controller.state.isBusy ? null : controller.refresh,
         icon: const Icon(Icons.refresh),
@@ -242,73 +248,20 @@ class _ContentPageState extends ConsumerState<ContentPage>
   }
 }
 
-/// Channel tabs inside the page bar's title pill.
-class _ChannelStrip extends StatefulWidget {
+/// One stable segmented control, with no outer glass shell.
+class _ChannelStrip extends StatelessWidget {
   const _ChannelStrip({required this.current});
   final ContentChannel current;
   @override
-  State<_ChannelStrip> createState() => _ChannelStripState();
-}
-
-class _ChannelStripState extends State<_ChannelStrip> {
-  final _selected = GlobalKey();
-  @override
-  void initState() {
-    super.initState();
-    _revealSelected();
-  }
-
-  @override
-  void didUpdateWidget(_ChannelStrip oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.current != oldWidget.current) _revealSelected();
-  }
-
-  void _revealSelected() => WidgetsBinding.instance.addPostFrameCallback((_) {
-    final selectedContext = _selected.currentContext;
-    if (mounted && selectedContext != null) {
-      Scrollable.ensureVisible(selectedContext, alignment: .5);
-    }
-  });
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return SingleChildScrollView(
-      key: const PageStorageKey('content-channel-strip'),
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final value in ContentChannel.values)
-            Semantics(
-              selected: widget.current == value,
-              child: TextButton(
-                key: widget.current == value ? _selected : ValueKey(value),
-                onPressed: () => context.go('/content/${value.slug}'),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(0, 34),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: const StadiumBorder(),
-                  backgroundColor: widget.current == value
-                      ? colors.secondaryContainer
-                      : null,
-                  foregroundColor: widget.current == value
-                      ? colors.onSecondaryContainer
-                      : colors.onSurface,
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    fontWeight: widget.current == value
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                  ),
-                ),
-                child: Text(value.label),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 400),
+    child: AppGlassSegments<ContentChannel>(
+      values: ContentChannel.values,
+      labelOf: (value) => value.label,
+      selected: current,
+      onChanged: (value) => context.go('/content/${value.slug}'),
+    ),
+  );
 }
 
 /// Draws one random post and opens it directly.
@@ -386,7 +339,7 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
   }
 
   @override
-  Widget build(BuildContext context) => IconButton(
+  Widget build(BuildContext context) => AppGlassButton.icon(
     tooltip: '随机二创',
     onPressed: _loading ? null : _draw,
     icon: _loading

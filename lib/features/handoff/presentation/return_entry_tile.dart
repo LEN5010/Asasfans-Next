@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/platform/return_entry_service.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import '../application/handoff_providers.dart';
 
 /// The opt-in for the floating return entry.
@@ -43,7 +44,7 @@ class _ReturnEntryTileState extends ConsumerState<ReturnEntryTile> {
       return const SizedBox.shrink();
     }
     final tooOld = capability.block == ReturnEntryBlock.osTooOld;
-    return SwitchListTile(
+    return ListTile(
       title: const Text('悬浮返回入口'),
       subtitle: Text(
         tooOld
@@ -54,24 +55,27 @@ class _ReturnEntryTileState extends ConsumerState<ReturnEntryTile> {
             : '去 B 站看之后，屏幕上留一颗球，点它回到刚才的列表。'
                   '这颗球会一直显示到你点它返回或手动结束，应用不会去检测你当前在用哪个程序',
       ),
-      value: controller.enabled,
-      onChanged: tooOld
-          ? null
-          : (value) async {
-              final controller = ref.read(returnEntryControllerProvider);
-              if (!value) {
-                controller.disable();
-                return;
-              }
-              final granted = await controller.enable();
-              if (granted || !context.mounted) return;
-              // enable() returns false both for a refusal and for a permission
-              // request still in flight; the message says what is true in
-              // either case without claiming the request failed.
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('需要在系统设置里允许显示悬浮窗，授权后回到这里再打开一次')),
-              );
-            },
+      trailing: AppGlassSwitch(
+        label: '悬浮返回入口',
+        value: controller.enabled,
+        onChanged: tooOld
+            ? null
+            : (value) async {
+                final controller = ref.read(returnEntryControllerProvider);
+                if (!value) {
+                  controller.disable();
+                  return;
+                }
+                final granted = await controller.enable();
+                if (granted || !context.mounted) return;
+                // enable() returns false both for a refusal and for a permission
+                // request still in flight; the message says what is true in
+                // either case without claiming the request failed.
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('需要在系统设置里允许显示悬浮窗，授权后回到这里再打开一次')),
+                );
+              },
+      ),
     );
   }
 }

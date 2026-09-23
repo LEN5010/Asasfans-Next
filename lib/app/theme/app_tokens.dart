@@ -16,6 +16,9 @@ abstract final class AppTokens {
   static const dividerDark = Color(0xFF3E363A);
   static const selectedLight = Color(0xFFF9DCE6);
   static const selectedDark = Color(0xFF4A2A37);
+  static const controlHeight = 44.0;
+  static const controlMotion = Duration(milliseconds: 220);
+  static const pressMotion = Duration(milliseconds: 140);
   static const cardRadius = 14.0;
   static const inputRadius = 12.0;
   static const panelRadius = 24.0;
