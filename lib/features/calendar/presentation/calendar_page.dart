@@ -485,7 +485,7 @@ class _DayCell extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-            color: isSelected ? colors.primaryContainer : null,
+            color: isSelected ? colors.secondaryContainer : null,
             border: isToday
                 ? Border.all(color: colors.primary, width: 1.5)
                 : null,
@@ -517,7 +517,9 @@ class _DayCell extends StatelessWidget {
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: colors.primary,
+                          color: isSelected
+                              ? colors.onSecondaryContainer
+                              : colors.secondary,
                         ),
                       ),
                   ],

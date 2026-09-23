@@ -1,5 +1,5 @@
-// Release-to-commit handling adapted from LoveIwara (MIT).
-// See third_party/LoveIwara-LICENSE. Product routes and Tools remain our own.
+// Release-to-commit handling and the tab-bar-plus-action layout adapted from
+// LoveIwara (MIT). See third_party/LoveIwara-LICENSE. Routes are our own.
 import 'dart:async';
 
 import 'package:flutter/gestures.dart' show kTouchSlop;
@@ -7,48 +7,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+import '../../../app/theme/app_theme.dart';
 import '../../theme/app_icons.dart';
 import 'app_glass_chrome.dart';
 import 'app_glass_scope.dart';
 import 'app_glass_style.dart';
 import 'app_glass_surface.dart';
 
-/// The library owns optical/jelly effects. We only translate completed gestures
-/// into routes: the middle slot is an action, never a drag destination.
+/// The four routes as one capsule, with Tools as a separate round action on
+/// the same glass layer. Tools is never a tab, so the indicator cannot land
+/// on it. Indices are shell branch indices.
 class AppGlassNavigation extends StatefulWidget {
   const AppGlassNavigation({
     super.key,
     required this.selected,
     required this.onSelect,
     required this.onTools,
-    required this.toolsFocus,
     this.nativeContent = false,
-  }) : assert(selected >= 0 && selected < 5 && selected != 2);
+  }) : assert(selected >= 0 && selected < 4);
 
   final int selected;
   final ValueChanged<int> onSelect;
   final VoidCallback onTools;
-  final FocusNode toolsFocus;
   final bool nativeContent;
 
   static double heightFor(TextScaler scaler) => 52 + scaler.scale(16);
 
-  /// Shared with the desktop sidebar; index 2 is the Tools action.
-  static const labels = ['今日', '内容', '工具', '日历', '我的'];
+  /// Shared with the desktop sidebar.
+  static const labels = ['今日', '内容', '日历', '我的'];
   static const icons = [
     AppIcons.today,
     AppIcons.content,
-    AppIcons.tools,
     AppIcons.calendar,
     AppIcons.mine,
   ];
   static const activeIcons = [
     AppIcons.todaySelected,
     AppIcons.contentSelected,
-    AppIcons.tools,
     AppIcons.calendarSelected,
     AppIcons.mineSelected,
   ];
+  static const toolsLabel = '工具';
 
   @override
   State<AppGlassNavigation> createState() => _AppGlassNavigationState();
@@ -56,8 +55,6 @@ class AppGlassNavigation extends StatefulWidget {
 
 class _AppGlassNavigationState extends State<AppGlassNavigation> {
   static const labels = AppGlassNavigation.labels;
-  static const icons = AppGlassNavigation.icons;
-  static const activeIcons = AppGlassNavigation.activeIcons;
   int? pointer;
   Offset down = Offset.zero;
   bool moved = false;
@@ -66,78 +63,64 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
   bool pendingWhileDown = false;
   int? visual;
   bool scheduled = false;
-  final routeFocus = List.generate(5, (_) => FocusNode());
-
-  FocusNode _focus(int index) =>
-      index == 2 ? widget.toolsFocus : routeFocus[index];
+  final focus = List.generate(5, (_) => FocusNode());
 
   @override
   void dispose() {
-    for (final node in routeFocus) {
+    for (final node in focus) {
       node.dispose();
     }
     super.dispose();
   }
 
-  void _activate(int index) {
-    if (index == 2) {
-      widget.onTools();
-    } else {
-      widget.onSelect(index);
-    }
-  }
+  void _activate(int index) =>
+      index == 4 ? widget.onTools() : widget.onSelect(index);
 
-  // The package assumes every slot is a persistent tab, and can suppress a
-  // repeated activation of its internally selected slot. Own the semantics and
-  // keyboard actions so Tools remains repeatable without becoming a route.
-  Widget _accessibleSlot(int index) {
-    final node = _focus(index);
-    Widget target = Focus(
-      focusNode: node,
-      includeSemantics: false,
-      onFocusChange: (_) => setState(() {}),
-      onKeyEvent: (_, event) {
-        if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter ||
-                event.logicalKey == LogicalKeyboardKey.space)) {
-          _activate(index);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: node.hasFocus
-                ? Border.all(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  )
-                : null,
+  // The package renders the tabs but offers no keyboard focus, so one
+  // transparent slot per control owns focus, keys and semantics. The ring is
+  // shown only while navigating by keyboard, never after a pointer tap.
+  Widget _slot(int index) {
+    final node = focus[index];
+    final ring =
+        node.hasFocus &&
+        FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
+    return Semantics(
+      label: index == 4 ? AppGlassNavigation.toolsLabel : labels[index],
+      button: true,
+      focusable: true,
+      focused: node.hasFocus,
+      selected: index == 4 ? null : widget.selected == index,
+      onTap: () => _activate(index),
+      child: IgnorePointer(
+        child: Focus(
+          focusNode: node,
+          includeSemantics: false,
+          onFocusChange: (_) => setState(() {}),
+          onKeyEvent: (_, event) {
+            if (event is KeyDownEvent &&
+                (event.logicalKey == LogicalKeyboardKey.enter ||
+                    event.logicalKey == LogicalKeyboardKey.space)) {
+              _activate(index);
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: ring
+                    ? Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      )
+                    : null,
+              ),
+              child: const SizedBox.expand(),
+            ),
           ),
-          child: const SizedBox.expand(),
         ),
-      ),
-    );
-    target = index == 2
-        ? GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            onTap: () => _activate(index),
-            child: target,
-          )
-        : IgnorePointer(child: target);
-    return Expanded(
-      child: Semantics(
-        label: labels[index],
-        button: true,
-        focusable: true,
-        focused: node.hasFocus,
-        selected: index == 2 ? null : widget.selected == index,
-        onTap: () => _activate(index),
-        child: target,
       ),
     );
   }
@@ -152,8 +135,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
     if (cancelled) return;
     pending = index;
     pendingWhileDown = pointer != null;
-    // Tools never steals the selected route, even while the finger crosses it.
-    setState(() => visual = index == 2 ? null : index);
+    setState(() => visual = index);
     if (pointer == null) _scheduleCommit();
   }
 
@@ -167,24 +149,24 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
       if (!mounted || pointer != null) return;
       final index = pending;
       final stalePress = moved && pendingWhileDown;
-      final wasMoved = moved;
       final wasCancelled = cancelled;
       pending = null;
       moved = cancelled = pendingWhileDown = false;
       setState(() => visual = null);
       if (wasCancelled || index == null || stalePress) return;
-      if (index == 2) {
-        if (!wasMoved) widget.onTools();
-      } else if (index != widget.selected) {
-        widget.onSelect(index);
-      }
+      if (index != widget.selected) widget.onSelect(index);
     });
   }
 
   Widget _label(int i, bool selected, double width) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(selected ? activeIcons[i] : icons[i], size: 24),
+      Icon(
+        selected
+            ? AppGlassNavigation.activeIcons[i]
+            : AppGlassNavigation.icons[i],
+        size: 24,
+      ),
       const SizedBox(height: 2),
       ConstrainedBox(
         constraints: BoxConstraints(maxWidth: width),
@@ -212,117 +194,258 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         final height = AppGlassNavigation.heightFor(
           MediaQuery.textScalerOf(context),
         );
-        final labelWidth = (constraints.maxWidth / 5 - 8).clamp(
+        final labelWidth = ((constraints.maxWidth - height - 12) / 4 - 8).clamp(
           24.0,
           double.infinity,
         );
+        final Widget bar;
         if (!policy.usesLiquid || widget.nativeContent) {
           pointer = pending = visual = null;
           moved = cancelled = pendingWhileDown = false;
-          return AppGlassSurface(
-            nativeContent: widget.nativeContent,
-            radius: height / 2,
-            child: SizedBox(
-              height: height,
-              child: Row(
-                children: [
-                  for (var i = 0; i < labels.length; i++)
-                    Expanded(
-                      child: Semantics(
-                        selected: i != 2 && widget.selected == i,
-                        child: TextButton(
-                          focusNode: _focus(i),
-                          onPressed: () =>
-                              i == 2 ? widget.onTools() : widget.onSelect(i),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            foregroundColor: widget.selected == i
-                                ? colors.primary
-                                : AppGlassSurface.foregroundColor(
-                                    colors.brightness,
-                                  ),
-                            minimumSize: Size(48, height),
+          bar = Row(
+            children: [
+              Expanded(
+                child: AppGlassSurface(
+                  nativeContent: widget.nativeContent,
+                  radius: height / 2,
+                  child: SizedBox(
+                    height: height,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < labels.length; i++)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: TextButton(
+                                onPressed: () => widget.onSelect(i),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  shape: const StadiumBorder(),
+                                  backgroundColor: widget.selected == i
+                                      ? AppTheme.dianaPink
+                                      : null,
+                                  foregroundColor: widget.selected == i
+                                      ? AppTheme.ink
+                                      : AppGlassSurface.foregroundColor(
+                                          colors.brightness,
+                                        ),
+                                  minimumSize: Size(48, height - 8),
+                                ),
+                                child: _label(
+                                  i,
+                                  widget.selected == i,
+                                  labelWidth,
+                                ),
+                              ),
+                            ),
                           ),
-                          child: _label(i, widget.selected == i, labelWidth),
-                        ),
-                      ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
+              const SizedBox(width: 12),
+              AppGlassSurface(
+                nativeContent: widget.nativeContent,
+                radius: height / 2,
+                child: SizedBox.square(
+                  dimension: height,
+                  child: IconButton(
+                    onPressed: widget.onTools,
+                    icon: const Icon(AppIcons.tools),
+                  ),
+                ),
+              ),
+            ],
+          );
+        } else {
+          bar = Listener(
+            onPointerDown: (event) {
+              if (pointer != null) {
+                cancelled = true;
+                pending = null;
+                return;
+              }
+              pointer = event.pointer;
+              down = event.position;
+              moved = cancelled = false;
+            },
+            onPointerMove: (event) {
+              if (event.pointer == pointer &&
+                  (event.position - down).distance > kTouchSlop) {
+                moved = true;
+              }
+            },
+            onPointerUp: (event) {
+              if (event.pointer != pointer) return;
+              pointer = null;
+              _scheduleCommit();
+            },
+            onPointerCancel: (event) {
+              if (event.pointer != pointer) return;
+              pointer = null;
+              cancelled = true;
+              pending = null;
+              _scheduleCommit();
+            },
+            child: GlassTabBar.bottom(
+              tabs: [
+                for (var i = 0; i < labels.length; i++)
+                  GlassTab(
+                    semanticLabel: labels[i],
+                    icon: _label(i, false, labelWidth),
+                    activeIcon: _label(i, true, labelWidth),
+                  ),
+              ],
+              selectedIndex: visual ?? widget.selected,
+              onTabSelected: _select,
+              extraButton: GlassTabBarExtraButton(
+                icon: const Icon(AppIcons.tools),
+                label: AppGlassNavigation.toolsLabel,
+                onTap: widget.onTools,
+                size: height,
+                iconColor: colors.onSurface,
+              ),
+              spacing: 12,
+              horizontalPadding: 0,
+              verticalPadding: 0,
+              barHeight: height,
+              barBorderRadius: height / 2,
+              settings: AppGlassStyle.settings(colors.brightness, shadow: true),
+              quality: AppGlassStyle.quality,
+              selectedIconColor: colors.primary,
+              unselectedIconColor: colors.onSurfaceVariant,
+              indicatorColor: AppTheme.dianaPink.withValues(alpha: .38),
+              maskingQuality: MaskingQuality.high,
             ),
           );
         }
         return Stack(
           children: [
-            ExcludeFocus(
-              child: ExcludeSemantics(
-                child: Listener(
-                  onPointerDown: (event) {
-                    if (pointer != null) {
-                      cancelled = true;
-                      pending = null;
-                      return;
-                    }
-                    pointer = event.pointer;
-                    down = event.position;
-                    moved = cancelled = false;
-                  },
-                  onPointerMove: (event) {
-                    if (event.pointer == pointer &&
-                        (event.position - down).distance > kTouchSlop) {
-                      moved = true;
-                    }
-                  },
-                  onPointerUp: (event) {
-                    if (event.pointer != pointer) return;
-                    pointer = null;
-                    _scheduleCommit();
-                  },
-                  onPointerCancel: (event) {
-                    if (event.pointer != pointer) return;
-                    pointer = null;
-                    cancelled = true;
-                    pending = null;
-                    _scheduleCommit();
-                  },
-                  child: GlassTabBar.bottom(
-                    tabs: [
-                      for (var i = 0; i < labels.length; i++)
-                        GlassTab(
-                          semanticLabel: labels[i],
-                          icon: _label(i, false, labelWidth),
-                          activeIcon: _label(i, i != 2, labelWidth),
-                        ),
-                    ],
-                    selectedIndex: visual ?? widget.selected,
-                    onTabSelected: _select,
-                    horizontalPadding: 0,
-                    verticalPadding: 0,
-                    barHeight: height,
-                    barBorderRadius: height / 2,
-                    settings: AppGlassStyle.settings(
-                      colors.brightness,
-                      shadow: true,
-                    ),
-                    quality: AppGlassStyle.quality,
-                    selectedIconColor: colors.primary,
-                    unselectedIconColor: colors.onSurfaceVariant,
-                    indicatorColor: Colors.transparent,
-                    maskingQuality: MaskingQuality.high,
-                  ),
-                ),
-              ),
-            ),
+            ExcludeFocus(child: ExcludeSemantics(child: bar)),
             Positioned.fill(
               child: Row(
                 children: [
-                  for (var i = 0; i < labels.length; i++) _accessibleSlot(i),
+                  for (var i = 0; i < labels.length; i++)
+                    Expanded(child: _slot(i)),
+                  const SizedBox(width: 12),
+                  SizedBox(width: height, child: _slot(4)),
                 ],
               ),
             ),
           ],
         );
       },
+    ),
+  );
+}
+
+/// The desktop navigation: a floating glass rail beside the content, the
+/// vertical counterpart of the phone bar. Tools sits apart below the routes.
+class AppSidebar extends StatelessWidget {
+  const AppSidebar({
+    super.key,
+    required this.selected,
+    required this.onSelect,
+    required this.onTools,
+  });
+  final int selected;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onTools;
+
+  static const width = 76.0;
+
+  Widget _item(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool active,
+    required VoidCallback onPressed,
+  }) {
+    final foreground = AppGlassSurface.foregroundColor(
+      Theme.of(context).brightness,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Semantics(
+        selected: active,
+        child: TextButton(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            minimumSize: const Size(64, 58),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: active ? AppTheme.dianaPink : null,
+            foregroundColor: active ? AppTheme.ink : foreground,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 24),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AppGlassSurface(
+    radius: 30,
+    child: SizedBox(
+      width: width,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 14, 6, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/brand/asasfans_mark.png',
+              width: 32,
+              height: 32,
+            ),
+            const SizedBox(height: 12),
+            for (var i = 0; i < AppGlassNavigation.labels.length; i++)
+              _item(
+                context,
+                icon: selected == i
+                    ? AppGlassNavigation.activeIcons[i]
+                    : AppGlassNavigation.icons[i],
+                label: AppGlassNavigation.labels[i],
+                active: selected == i,
+                onPressed: () => onSelect(i),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: SizedBox(
+                width: 32,
+                child: Divider(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+            _item(
+              context,
+              icon: AppIcons.tools,
+              label: AppGlassNavigation.toolsLabel,
+              active: false,
+              onPressed: onTools,
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }

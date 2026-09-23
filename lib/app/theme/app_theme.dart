@@ -26,8 +26,12 @@ abstract final class AppTheme {
               ? AppTokens.selectedDark
               : AppTokens.selectedLight,
           onPrimaryContainer: dark ? dianaPink : deepRose,
-          secondaryContainer: control,
-          onSecondaryContainer: dark ? AppTokens.textDark : AppTokens.textLight,
+          // Diana pink is the selection and fill colour; ink keeps its text
+          // readable. Small accent text stays on [primary] (deep rose in light).
+          secondary: dianaPink,
+          onSecondary: ink,
+          secondaryContainer: dianaPink,
+          onSecondaryContainer: ink,
           surface: page,
           surfaceDim: dark ? const Color(0xFF101012) : const Color(0xFFEAE9ED),
           surfaceBright: dark ? const Color(0xFF353339) : Colors.white,
@@ -103,8 +107,8 @@ abstract final class AppTheme {
       listTileTheme: ListTileThemeData(
         iconColor: colors.onSurfaceVariant,
         textColor: colors.onSurface,
-        selectedColor: colors.primary,
-        selectedTileColor: colors.primaryContainer,
+        selectedColor: ink,
+        selectedTileColor: dianaPink,
         minTileHeight: 56,
         minLeadingWidth: 24,
         horizontalTitleGap: 12,
@@ -128,9 +132,42 @@ abstract final class AppTheme {
       ),
       chipTheme: base.chipTheme.copyWith(
         backgroundColor: control,
-        selectedColor: colors.primaryContainer,
+        selectedColor: dianaPink,
+        checkmarkColor: ink,
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: dianaPink,
+          foregroundColor: ink,
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? Colors.white : null,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) &&
+                  !states.contains(WidgetState.disabled)
+              ? dianaPink
+              : null,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? Colors.transparent : null,
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: dianaPink,
+        linearTrackColor: dianaPink.withValues(alpha: .22),
+        circularTrackColor: Colors.transparent,
+      ),
+      badgeTheme: const BadgeThemeData(
+        backgroundColor: dianaPink,
+        textColor: ink,
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: content,

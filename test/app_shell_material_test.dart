@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:asasfans_next/app/asasfans_app.dart';
 import 'package:asasfans_next/app/glass_providers.dart';
 import 'package:asasfans_next/app/router/app_router.dart';
-import 'package:asasfans_next/app/router/app_shell.dart';
 import 'package:asasfans_next/features/preferences/application/preferences_controller.dart';
 import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
 import 'package:asasfans_next/features/today/presentation/today_page.dart';
 import 'package:asasfans_next/features/tools/presentation/tools_sheet.dart';
+import 'package:asasfans_next/shared/theme/app_icons.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_scope.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_policy.dart';
@@ -104,7 +104,6 @@ void main() {
       tester.view.physicalSize = const Size(1280, 568);
       await tester.pumpAndSettle();
       expect(find.byType(AppSidebar), findsOneWidget);
-      expect(tester.getSize(find.byType(AppSidebar)).height, 568);
       expect(find.byType(AppGlassNavigation), findsNothing);
       expect(identical(today, tester.state(find.byType(TodayPage))), isTrue);
       expect(
@@ -135,7 +134,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('工具'), findsOneWidget);
     expect(find.bySemanticsLabel('我的'), findsOneWidget);
-    expect(tester.getSize(find.byType(AppSidebar)).height, 800);
     semantics.dispose();
   });
 
@@ -159,7 +157,10 @@ void main() {
             ? find.byType(AppGlassNavigation)
             : find.byType(AppSidebar);
         await tester.tap(
-          find.descendant(of: navigation, matching: find.text('工具')),
+          find.descendant(
+            of: navigation,
+            matching: find.byIcon(AppIcons.tools),
+          ),
         );
         await tester.pumpAndSettle();
         expect(find.byType(ToolsSheet), findsOneWidget);

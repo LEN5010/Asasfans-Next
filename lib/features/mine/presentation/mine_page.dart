@@ -103,9 +103,6 @@ class _MinePageState extends State<MinePage> {
                       ])
                         ListTile(
                           selected: _section == entry.$1,
-                          selectedTileColor: Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               AppTokens.cardRadius,

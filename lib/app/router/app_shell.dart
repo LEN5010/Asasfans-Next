@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
-import '../theme/app_tokens.dart';
 import '../../shared/widgets/glass/app_glass_navigation.dart';
 
 class AppShell extends StatefulWidget {
@@ -20,14 +19,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  final toolsFocus = FocusNode(debugLabel: 'shell-tools');
   bool toolsOpen = false;
-
-  @override
-  void dispose() {
-    toolsFocus.dispose();
-    super.dispose();
-  }
 
   Future<void> _tools() async {
     if (toolsOpen) return;
@@ -36,16 +28,10 @@ class _AppShellState extends State<AppShell> {
       await showToolsSheet(context);
     } finally {
       toolsOpen = false;
-      if (mounted) toolsFocus.requestFocus();
     }
   }
 
-  void _select(int index) {
-    if (index == 2) {
-      _tools();
-      return;
-    }
-    final branch = index > 2 ? index - 1 : index;
+  void _select(int branch) {
     // A navigation tap never resets the branch's saved query/scroll/route.
     if (branch != widget.navigationShell.currentIndex) {
       widget.navigationShell.goBranch(branch);
@@ -56,9 +42,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final wide = constraints.maxWidth >= 840;
-      final selected = widget.navigationShell.currentIndex < 2
-          ? widget.navigationShell.currentIndex
-          : widget.navigationShell.currentIndex + 1;
+      final selected = widget.navigationShell.currentIndex;
       final mq = MediaQuery.of(context);
       final showBottom = !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
       final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
@@ -71,13 +55,20 @@ class _AppShellState extends State<AppShell> {
           children: [
             // Keep the body at the same element position through breakpoints.
             SizedBox(
-              width: wide ? (constraints.maxWidth >= 1200 ? 184 : 80) : 0,
+              width: wide ? AppSidebar.width + 24 : 0,
               child: wide
-                  ? AppSidebar(
-                      expanded: constraints.maxWidth >= 1200,
-                      selected: selected,
-                      toolsFocus: toolsFocus,
-                      onSelect: _select,
+                  ? SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        mq.padding.top + 10,
+                        12,
+                        12,
+                      ),
+                      child: AppSidebar(
+                        selected: selected,
+                        onSelect: _select,
+                        onTools: _tools,
+                      ),
                     )
                   : null,
             ),
@@ -138,12 +129,11 @@ class _AppShellState extends State<AppShell> {
                           bottom: mq.padding.bottom + 12,
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 560),
+                              constraints: const BoxConstraints(maxWidth: 520),
                               child: AppGlassNavigation(
                                 selected: selected,
                                 onSelect: _select,
                                 onTools: _tools,
-                                toolsFocus: toolsFocus,
                               ),
                             ),
                           ),
@@ -158,116 +148,4 @@ class _AppShellState extends State<AppShell> {
       );
     },
   );
-}
-
-/// A neutral desktop sidebar, not a stretched phone glass capsule.
-class AppSidebar extends StatelessWidget {
-  const AppSidebar({
-    super.key,
-    required this.expanded,
-    required this.selected,
-    required this.onSelect,
-    required this.toolsFocus,
-  });
-  final bool expanded;
-  final int selected;
-  final ValueChanged<int> onSelect;
-  final FocusNode toolsFocus;
-  static const labels = AppGlassNavigation.labels;
-  static const icons = AppGlassNavigation.icons;
-  static const active = AppGlassNavigation.activeIcons;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Material(
-      color: colors.surfaceContainerLow,
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/brand/asasfans_mark.png',
-                      width: 36,
-                      height: 36,
-                    ),
-                    if (expanded) ...[
-                      const SizedBox(width: 8),
-                      const Flexible(
-                        child: Text(
-                          'Asasfans',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              for (var i = 0; i < labels.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Semantics(
-                    selected: i == 2 ? null : selected == i,
-                    child: TextButton(
-                      focusNode: i == 2 ? toolsFocus : null,
-                      onPressed: () => onSelect(i),
-                      style: TextButton.styleFrom(
-                        backgroundColor: selected == i
-                            ? colors.primaryContainer
-                            : Colors.transparent,
-                        foregroundColor: selected == i
-                            ? colors.primary
-                            : colors.onSurfaceVariant,
-                        minimumSize: const Size.fromHeight(56),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppTokens.cardRadius,
-                          ),
-                        ),
-                      ),
-                      child: expanded
-                          ? Row(
-                              children: [
-                                Icon(
-                                  selected == i ? active[i] : icons[i],
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(child: Text(labels[i])),
-                              ],
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  selected == i ? active[i] : icons[i],
-                                  size: 24,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  labels[i],
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

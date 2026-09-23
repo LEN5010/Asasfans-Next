@@ -215,10 +215,10 @@ class _ChannelStripState extends State<_ChannelStrip> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: const StadiumBorder(),
                   backgroundColor: widget.current == value
-                      ? colors.primaryContainer
+                      ? colors.secondaryContainer
                       : null,
                   foregroundColor: widget.current == value
-                      ? colors.primary
+                      ? colors.onSecondaryContainer
                       : colors.onSurface,
                   textStyle: TextStyle(
                     fontSize: 14,

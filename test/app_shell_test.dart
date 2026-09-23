@@ -1,5 +1,5 @@
 import 'package:asasfans_next/app/asasfans_app.dart';
-import 'package:asasfans_next/app/router/app_shell.dart';
+import 'package:asasfans_next/shared/theme/app_icons.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +23,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(AppGlassNavigation), findsOneWidget);
-      await tester.tap(find.text('工具').last);
+      await tester.tap(find.byIcon(AppIcons.tools));
       await tester.pumpAndSettle();
       expect(find.text('录音棚'), findsOneWidget);
       await tester.tap(find.byTooltip('关闭'));

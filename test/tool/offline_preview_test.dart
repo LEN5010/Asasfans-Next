@@ -1,5 +1,5 @@
 import 'package:asasfans_next/app/asasfans_app.dart';
-import 'package:asasfans_next/app/router/app_shell.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
 import 'package:asasfans_next/features/account/application/account_providers.dart';

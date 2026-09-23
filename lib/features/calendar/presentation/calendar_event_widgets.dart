@@ -76,7 +76,7 @@ class CalendarEventTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: event.isCancelled
                       ? theme.colorScheme.outlineVariant
-                      : theme.colorScheme.primary.withValues(alpha: .5),
+                      : theme.colorScheme.secondary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -271,7 +271,7 @@ class _DetailLine extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        Icon(icon, size: 20, color: Theme.of(context).colorScheme.secondary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../domain/community_tool.dart';
@@ -131,7 +132,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                                       mainAxisSpacing: 10,
                                       crossAxisSpacing: 10,
                                       mainAxisExtent:
-                                          64 +
+                                          62 +
                                           (scaler.scale(14) * 1.35)
                                                   .ceilToDouble() *
                                               2,
@@ -169,55 +170,43 @@ class _ToolTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Material(
-      color: colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(14),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned(
-                right: 0,
-                top: 0,
-                child: ExcludeSemantics(
+    // Every tool opens in the browser; the tooltip names where it goes.
+    return Tooltip(
+      message: Uri.parse(tool.url).host,
+      child: Material(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Icon(
-                    Icons.open_in_new,
-                    size: 12,
-                    color: colors.onSurfaceVariant,
+                    _toolIcon(tool.id),
+                    size: 22,
+                    color: colors.onPrimaryContainer,
                   ),
                 ),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: colors.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      _toolIcon(tool.id),
-                      size: 22,
-                      color: colors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    tool.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, height: 1.35),
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  tool.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14, height: 1.35),
+                ),
+              ],
+            ),
           ),
         ),
       ),

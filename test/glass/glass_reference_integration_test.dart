@@ -7,7 +7,6 @@ import 'package:asasfans_next/shared/widgets/glass/glass_runtime.dart';
 import 'dart:ui' show SemanticsAction;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
@@ -95,8 +94,6 @@ void main() {
       );
       addTearDown(runtime.dispose);
       await runtime.prepare();
-      final toolsFocus = FocusNode();
-      addTearDown(toolsFocus.dispose);
       final selections = <int>[];
       var opens = 0;
       await tester.pumpWidget(
@@ -115,7 +112,6 @@ void main() {
                   selected: 0,
                   onSelect: selections.add,
                   onTools: () => opens++,
-                  toolsFocus: toolsFocus,
                 ),
               ),
             ),
@@ -145,12 +141,12 @@ void main() {
       listener.onPointerDown!(
         const PointerDownEvent(pointer: 2, position: Offset(20, 20)),
       );
-      bar().onTabSelected(4);
+      bar().onTabSelected(3);
       listener.onPointerCancel!(const PointerCancelEvent(pointer: 2));
       await tester.pumpAndSettle();
       expect(selections, [1]);
 
-      // Dragging over Tools must neither select it nor open the panel.
+      // A drag lands on the library's final selection after release.
       listener.onPointerDown!(
         const PointerDownEvent(pointer: 3, position: Offset(20, 20)),
       );
@@ -160,29 +156,20 @@ void main() {
       listener.onPointerUp!(const PointerUpEvent(pointer: 3));
       bar().onTabSelected(2);
       await tester.pumpAndSettle();
-      expect(opens, 0);
-      expect(bar().selectedIndex, 0);
+      expect(selections, [1, 2]);
 
-      // A later keyboard/accessibility activation is not poisoned by the drag.
-      bar().onTabSelected(2);
+      // Tools is a separate action, never a tab the indicator can reach.
+      expect(bar().tabs, hasLength(4));
+      bar().extraButton!.onTap();
       await tester.pumpAndSettle();
       expect(opens, 1);
-      expect(bar().selectedIndex, 0);
-      toolsFocus.requestFocus();
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      expect(opens, 2);
       final semantics = tester.ensureSemantics();
       await tester.pumpAndSettle();
       final toolNode = tester.getSemantics(find.bySemanticsLabel('工具'));
       toolNode.owner!.performAction(toolNode.id, SemanticsAction.tap);
       await tester.pumpAndSettle();
-      expect(opens, 3);
-      await tester.tapAt(tester.getCenter(find.byType(AppGlassNavigation)));
-      await tester.pumpAndSettle();
-      await tester.tapAt(tester.getCenter(find.byType(AppGlassNavigation)));
-      await tester.pumpAndSettle();
-      expect(opens, 5);
+      expect(opens, 2);
+      expect(selections, [1, 2]);
       semantics.dispose();
       expect(tester.takeException(), isNull);
     },
@@ -201,8 +188,6 @@ void main() {
         );
         addTearDown(runtime.dispose);
         await runtime.prepare();
-        final focus = FocusNode();
-        addTearDown(focus.dispose);
         await tester.pumpWidget(
           MaterialApp(
             builder: (context, child) => MediaQuery(
@@ -224,7 +209,6 @@ void main() {
                     selected: 0,
                     onSelect: (_) {},
                     onTools: () {},
-                    toolsFocus: focus,
                   ),
                 ),
               ),

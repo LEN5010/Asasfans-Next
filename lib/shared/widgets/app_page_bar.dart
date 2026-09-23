@@ -12,7 +12,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget title;
   final List<Widget>? actions;
 
-  static const rowHeight = 56.0;
+  static const rowHeight = 58.0;
   static const controlHeight = 44.0;
 
   @override
@@ -28,6 +28,9 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
+        // Nearly solid behind the controls, then a short fade: text scrolling
+        // up never reads through a title, and the glass never samples the
+        // empty region above the window's top edge.
         Positioned(
           left: 0,
           right: 0,
@@ -39,10 +42,14 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: [0, (top / (top + rowHeight + 24)).clamp(0, .6), 1],
+                  stops: [
+                    0,
+                    (top + rowHeight * .7) / (top + rowHeight + 24),
+                    1,
+                  ],
                   colors: [
-                    page.withValues(alpha: .86),
-                    page.withValues(alpha: .72),
+                    page.withValues(alpha: .97),
+                    page.withValues(alpha: .9),
                     page.withValues(alpha: 0),
                   ],
                 ),
@@ -51,7 +58,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
         Padding(
-          padding: EdgeInsets.fromLTRB(12, top + 6, 12, 6),
+          padding: EdgeInsets.fromLTRB(12, top + 10, 12, 4),
           child: IconButtonTheme(
             data: IconButtonThemeData(
               style: IconButton.styleFrom(
