@@ -4,18 +4,22 @@ import '../../rules/application/rules_providers.dart';
 import '../../rules/application/visible_random.dart';
 import '../../rules/presentation/rule_common.dart';
 import '../../subscriptions/presentation/subscription_feed_view.dart';
+import '../../subscriptions/application/subscription_providers.dart';
+import '../../library/presentation/library_pages.dart' show SubscriptionsPage;
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
+
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/glass/app_glass_surface.dart';
+
+import '../../../shared/widgets/app_page_bar.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
-import '../../../shared/widgets/feature_pending.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
-import '../../../shared/widgets/retry_button.dart';
 import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/domain/return_context.dart';
 import '../application/content_providers.dart';
@@ -40,55 +44,51 @@ class ContentPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ContentChannel.fromSlug(channel) ?? ContentChannel.fanart;
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) => Padding(
-                key: const ValueKey('content-toolbar'),
-                padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-                child: Row(
-                  children: [
-                    Expanded(child: _ChannelStrip(current: current)),
-                    const SizedBox(width: 6),
-                    AppGlassSurface(
-                      child: _headerActions(
-                        ref,
-                        current,
-                        constraints.maxWidth >= 1040,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: switch (current) {
-                ContentChannel.subscriptions => const SubscriptionFeedView(),
-                _ when current.isBackedByFanartApi => _FanartFeed(
-                  channel: current,
-                ),
-                _ when current.isBackedByDynamicsApi => const DynamicFeedView(),
-                _ when current.isBackedByCommunityApi => CommunityFeedView(
-                  key: ValueKey(current),
-                  channel: current.communityChannel!,
-                ),
-                _ => const FeaturePending(
-                  icon: Icons.auto_awesome_mosaic_outlined,
-                ),
-              },
-            ),
-          ],
+    return LayoutBuilder(
+      builder: (context, constraints) => Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppPageBar(
+          title: _ChannelStrip(current: current),
+          actions: [_headerActions(ref, current, constraints.maxWidth >= 1040)],
         ),
+        body: switch (current) {
+          ContentChannel.subscriptions => const SubscriptionFeedView(),
+          ContentChannel.fanart => _FanartFeed(channel: current),
+          ContentChannel.dynamics => const DynamicFeedView(),
+          _ => CommunityFeedView(
+            key: ValueKey(current),
+            channel: current.communityChannel!,
+          ),
+        },
       ),
     );
   }
 
   Widget _headerActions(WidgetRef ref, ContentChannel channel, bool wide) {
-    if (channel == ContentChannel.subscriptions) return const SizedBox.shrink();
+    if (channel == ContentChannel.subscriptions) {
+      final controller = ref.watch(subscriptionFeedControllerProvider);
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Builder(
+            builder: (context) => IconButton(
+              tooltip: '管理订阅',
+              onPressed: () => Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const SubscriptionsPage(),
+                ),
+              ),
+              icon: const Icon(Icons.people_outline),
+            ),
+          ),
+          IconButton(
+            tooltip: '刷新订阅更新',
+            onPressed: controller.loading ? null : controller.refresh,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      );
+    }
     if (channel.isBackedByFanartApi) {
       final controller = ref.watch(fanartFeedControllerProvider(channel));
       return ListenableBuilder(
@@ -109,6 +109,11 @@ class ContentPage extends ConsumerWidget {
               onChanged: controller.applyQuery,
             ),
             _RandomFanartAction(channel: channel),
+            SavedChannelBar(
+              feed: ChannelFeed.fanart,
+              currentSpec: () => ChannelSpec.ofFanart(controller.state.query),
+              onOpen: (spec) => controller.applyQuery(spec.toFanart()),
+            ),
             if (wide)
               IconButton(
                 tooltip: '刷新',
@@ -134,6 +139,11 @@ class ContentPage extends ConsumerWidget {
                 controller.state.query.copyWith(keyword: keyword),
               ),
             ),
+            SavedChannelBar(
+              feed: ChannelFeed.dynamic,
+              currentSpec: () => ChannelSpec.ofDynamic(controller.state.query),
+              onOpen: (spec) => controller.applyQuery(spec.toDynamic()),
+            ),
             IconButton(
               tooltip: '刷新',
               onPressed: controller.state.isBusy ? null : controller.refresh,
@@ -157,6 +167,7 @@ class ContentPage extends ConsumerWidget {
   }
 }
 
+/// Channel tabs inside the page bar's title pill.
 class _ChannelStrip extends StatefulWidget {
   const _ChannelStrip({required this.current});
   final ContentChannel current;
@@ -185,25 +196,44 @@ class _ChannelStripState extends State<_ChannelStrip> {
     }
   });
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    key: const PageStorageKey('content-channel-strip'),
-    scrollDirection: Axis.horizontal,
-    child: Row(
-      children: [
-        for (final value in ContentChannel.values)
-          Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: ChoiceChip(
-              showCheckmark: false,
-              key: widget.current == value ? _selected : ValueKey(value),
-              label: Text(value.label),
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return SingleChildScrollView(
+      key: const PageStorageKey('content-channel-strip'),
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final value in ContentChannel.values)
+            Semantics(
               selected: widget.current == value,
-              onSelected: (_) => context.go('/content/${value.slug}'),
+              child: TextButton(
+                key: widget.current == value ? _selected : ValueKey(value),
+                onPressed: () => context.go('/content/${value.slug}'),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, 34),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: const StadiumBorder(),
+                  backgroundColor: widget.current == value
+                      ? colors.primaryContainer
+                      : null,
+                  foregroundColor: widget.current == value
+                      ? colors.primary
+                      : colors.onSurface,
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    fontWeight: widget.current == value
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                  ),
+                ),
+                child: Text(value.label),
+              ),
             ),
-          ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 /// Draws one random post and opens it directly.
@@ -261,14 +291,12 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
           failure.kind == ApiFailureKind.cancelled) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(failure.message)));
     } catch (error) {
       if (mounted && feed.generation == generation) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(ruleError(error))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(ruleError(error))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -376,109 +404,80 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        final state = _controller.state;
-        return Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: FanartFilterBar(
-                    query: state.query,
-                    onChanged: _applyQuery,
-                  ),
-                ),
-                SavedChannelBar(
-                  feed: ChannelFeed.fanart,
-                  currentSpec: () =>
-                      ChannelSpec.ofFanart(_controller.state.query),
-                  onOpen: (spec) => _applyQuery(spec.toFanart()),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
-            Expanded(
-              child: RuleFilterScope(
-                items: state.items,
-                subjectOf: RuleSubjects.fanart,
-                builder: (visible) => Column(
-                  children: [
-                    RuleStatusBar(visibility: visible),
-                    Expanded(
-                      child: AutoFillViewport(
-                        controller: _scrollController,
-                        resetKey: (_controller.generation, visible.epoch),
-                        scrollResetKey: state.query,
-                        canLoadMore: state.status == FeedStatus.ready,
-                        onLoadMore: () => _controller.loadMore(automatic: true),
-                        child: _buildBody(state.copyWith(items: visible.items)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildBody(FanartFeedState state) {
-    if (state.items.isEmpty &&
-        (state.status == FeedStatus.failed ||
-            state.status == FeedStatus.idle ||
-            state.status == FeedStatus.loadingFirstPage ||
-            state.status == FeedStatus.endOfList)) {
-      return switch (state.status) {
-        FeedStatus.failed => _FeedError(
-          failure: state.failure,
-          onRetry: _controller.refresh,
-        ),
-        FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        _ => RefreshIndicator(
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: _controller,
+    builder: (context, _) {
+      final state = _controller.state;
+      final filters = FanartFilterBar(
+        query: state.query,
+        onChanged: _applyQuery,
+      );
+      return RuleFilterScope(
+        items: state.items,
+        subjectOf: RuleSubjects.fanart,
+        unavailableBuilder: (status) => FeedScrollView(
+          controller: _scrollController,
           onRefresh: _controller.refresh,
-          child: const CustomScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverFillRemaining(hasScrollBody: false, child: _FeedEmpty()),
+          header: [filters],
+          placeholder: status,
+        ),
+        builder: (visible) => AutoFillViewport(
+          controller: _scrollController,
+          resetKey: (_controller.generation, visible.epoch),
+          scrollResetKey: state.query,
+          canLoadMore: state.status == FeedStatus.ready,
+          onLoadMore: () => _controller.loadMore(automatic: true),
+          child: _FanartGrid(
+            state: state.copyWith(items: visible.items),
+            header: [
+              filters,
+              RuleStatusBar(visibility: visible),
             ],
+            controller: _scrollController,
+            onRetryAppend: _controller.loadMore,
+            onRefresh: _controller.refresh,
           ),
         ),
-      };
-    }
-    return RefreshIndicator(
-      onRefresh: _controller.refresh,
-      child: _FanartGrid(
-        state: state,
-        controller: _scrollController,
-        onRetryAppend: _controller.loadMore,
-        onRefresh: _controller.refresh,
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
 class _FanartGrid extends StatelessWidget {
   const _FanartGrid({
     required this.state,
+    required this.header,
     required this.controller,
     required this.onRetryAppend,
     required this.onRefresh,
   });
 
   final FanartFeedState state;
+  final List<Widget> header;
   final ScrollController controller;
   final VoidCallback onRetryAppend;
-  final VoidCallback onRefresh;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
+    final placeholder = state.items.isNotEmpty
+        ? null
+        : switch (state.status) {
+            FeedStatus.failed => FeedMessage(
+              icon: Icons.cloud_off_outlined,
+              text: state.failure?.message ?? '内容加载失败',
+              failure: state.failure,
+              onRetry: onRefresh,
+            ),
+            FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            FeedStatus.endOfList => const FeedMessage(
+              icon: Icons.search_off_outlined,
+              text: '没有符合条件的内容',
+            ),
+            _ => null,
+          };
     return LayoutBuilder(
       builder: (context, constraints) {
         final scaler = MediaQuery.textScalerOf(context);
@@ -490,13 +489,15 @@ class _FanartGrid extends StatelessWidget {
           constraints.maxWidth,
           columns,
         );
-        return CustomScrollView(
-          key: const PageStorageKey('fanart-feed'),
+        return FeedScrollView(
+          storageKey: const PageStorageKey('fanart-feed'),
           controller: controller,
-          physics: const AlwaysScrollableScrollPhysics(),
+          onRefresh: onRefresh,
+          header: header,
+          placeholder: placeholder,
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               sliver: SliverGrid.builder(
                 gridDelegate: MediaGridDelegate(
                   spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
@@ -536,63 +537,9 @@ class _FanartGrid extends StatelessWidget {
                 onRefresh: onRefresh,
               ),
             ),
-            SliverToBoxAdapter(
-              child: SizedBox(height: MediaQuery.paddingOf(context).bottom),
-            ),
           ],
         );
       },
     );
   }
-}
-
-class _FeedEmpty extends StatelessWidget {
-  const _FeedEmpty();
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.search_off_outlined,
-            size: 48,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          const Text('没有符合条件的内容'),
-        ],
-      ),
-    ),
-  );
-}
-
-class _FeedError extends StatelessWidget {
-  const _FeedError({required this.failure, required this.onRetry});
-
-  final ApiFailure? failure;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.cloud_off_outlined,
-            size: 48,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text(failure?.message ?? '内容加载失败'),
-          const SizedBox(height: 16),
-          RetryButton(failure: failure, onRetry: onRetry, filled: true),
-        ],
-      ),
-    ),
-  );
 }

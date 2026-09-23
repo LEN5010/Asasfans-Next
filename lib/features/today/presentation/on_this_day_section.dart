@@ -1,6 +1,7 @@
 import '../../creator/presentation/creator_link.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 import '../../rules/application/feed_visibility.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +9,7 @@ import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../library/presentation/library_common.dart';
 import '../../../core/network/api_failure.dart';
+import '../../../shared/widgets/media_card_surface.dart';
 import '../../content/application/content_providers.dart';
 import '../../content/domain/dynamic_repository.dart';
 
@@ -25,18 +27,14 @@ class OnThisDaySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(
-              Icons.auto_stories_outlined,
-              size: 20,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Text('历史上的今天', style: theme.textTheme.titleMedium),
-          ],
+        SizedBox(
+          height: 40,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('历史上的今天', style: theme.textTheme.titleMedium),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         posts.when(
           loading: () => const SizedBox(
             height: 64,
@@ -67,9 +65,9 @@ class OnThisDaySection extends ConsumerWidget {
                   SizedBox(
                     height:
                         188 *
-                        MediaQuery.textScalerOf(
-                          context,
-                        ).scale(1).clamp(1.0, 1.6),
+                        MediaQuery.textScalerOf(context)
+                            .scale(1)
+                            .clamp(1.0, 1.6),
                     child: _posts(context, visible.items),
                   ),
               ],
@@ -113,74 +111,65 @@ class _PostCard extends ConsumerWidget {
     final image = post.images.firstOrNull;
     return SizedBox(
       width: 220,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        color: theme.colorScheme.surfaceContainerLow,
-        child: InkWell(
-          onTap: post.sourceUrl == null
-              ? null
-              : () => openContentSource(
-                  context,
-                  ref,
-                  ContentSnapshots.dynamic(post),
-                  url: post.sourceUrl,
-                ),
-          onLongPress: () => showContentActions(
-            context,
-            ContentSnapshots.dynamic(post),
-            ruleSubject: RuleSubjects.dynamic(post),
-          ),
-          onSecondaryTap: () => showContentActions(
-            context,
-            ContentSnapshots.dynamic(post),
-            ruleSubject: RuleSubjects.dynamic(post),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (image != null)
-                SizedBox(
-                  height: 96,
-                  width: double.infinity,
-                  child: Image.network(
-                    image.toString(),
-                    fit: BoxFit.cover,
-                    cacheWidth: 440,
-                    errorBuilder: (context, error, stack) => ColoredBox(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                    ),
-                  ),
-                ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CreatorLink(
-                        mid: post.member.bilibiliUid,
-                        child: Text(
-                          _header(post),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Expanded(
-                        child: Text(
-                          post.text.trim().isEmpty ? '（无正文）' : post.text.trim(),
-                          maxLines: image == null ? 4 : 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ),
-                    ],
+      child: MediaCardSurface(
+        onTap: post.sourceUrl == null
+            ? null
+            : () => openContentSource(
+                context,
+                ref,
+                ContentSnapshots.dynamic(post),
+                url: post.sourceUrl,
+              ),
+        onMore: () => showContentActions(
+          context,
+          ContentSnapshots.dynamic(post),
+          ruleSubject: RuleSubjects.dynamic(post),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (image != null)
+              SizedBox(
+                height: 96,
+                width: double.infinity,
+                child: Image.network(
+                  image.toString(),
+                  fit: BoxFit.cover,
+                  cacheWidth: 440,
+                  errorBuilder: (context, error, stack) => ColoredBox(
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
-            ],
-          ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CreatorLink(
+                      mid: post.member.bilibiliUid,
+                      child: Text(
+                        _header(post),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: Text(
+                        post.text.trim().isEmpty ? '（无正文）' : post.text.trim(),
+                        maxLines: image == null ? 4 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

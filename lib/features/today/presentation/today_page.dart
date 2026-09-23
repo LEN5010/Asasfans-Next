@@ -1,6 +1,7 @@
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/domain/content_rules.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -10,6 +11,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../core/time/shanghai_date_provider.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
@@ -91,9 +94,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
   Widget build(BuildContext context) {
     final preferences = ref.watch(preferencesControllerProvider);
     if (preferences.loading && !preferences.ready) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('今日')),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        appBar: AppPageBar(title: Text('今日')),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
     final settings = preferences.values;
@@ -132,8 +135,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
       card: (video) => VideoCard(video: video),
     );
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('今日'),
+      extendBodyBehindAppBar: true,
+      appBar: AppPageBar(
+        title: Text('今日 · ${CalendarAgenda.date(day)}'),
         actions: [
           const UpdatesBellButton(),
           IconButton(
@@ -154,14 +158,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
           constraints: const BoxConstraints(maxWidth: 1360),
           child: RefreshIndicator(
             onRefresh: () => _refresh(true),
+            edgeOffset: MediaQuery.paddingOf(context).top,
             child: ListView(
               key: const PageStorageKey('today-scroll'),
-              padding: EdgeInsets.fromLTRB(
-                16,
-                8,
-                16,
-                28 + MediaQuery.paddingOf(context).bottom,
-              ),
+              padding: pageInsets(context, top: 4),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 LayoutBuilder(
@@ -184,38 +184,15 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                       children: [
                         if (schedule != null) ...[
                           schedule,
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                         ],
                         const UpdatesSection(),
                       ],
                     );
                   },
                 ),
-                const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _Shortcut(
-                        '二创档案',
-                        Icons.palette_outlined,
-                        () => context.go('/content/fanart'),
-                      ),
-                      _Shortcut(
-                        '历史动态',
-                        Icons.history,
-                        () => context.go('/content/dynamics'),
-                      ),
-                      _Shortcut(
-                        '直播日历',
-                        Icons.calendar_month_outlined,
-                        _calendar,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                if (showFanart || showClips)
+                if (showFanart || showClips) ...[
+                  const SizedBox(height: 24),
                   LayoutBuilder(
                     builder: (context, constraints) =>
                         constraints.maxWidth >= 960 && showFanart && showClips
@@ -236,8 +213,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                             ],
                           ),
                   ),
+                ],
                 if (settings.shows(HomeSection.history)) ...[
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   const OnThisDaySection(),
                 ],
               ],
@@ -247,22 +225,6 @@ class _TodayPageState extends ConsumerState<TodayPage> {
       ),
     );
   }
-}
-
-class _Shortcut extends StatelessWidget {
-  const _Shortcut(this.title, this.icon, this.onTap);
-  final String title;
-  final IconData icon;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(right: 8),
-    child: TextButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18),
-      label: Text(title),
-    ),
-  );
 }
 
 class _ScheduleSection extends ConsumerWidget {
@@ -275,12 +237,8 @@ class _ScheduleSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader(
-          title: '${CalendarAgenda.date(day)} · 今日安排',
-          onAll: onCalendar,
-          action: '日历',
-        ),
-        const SizedBox(height: 10),
+        _SectionHeader(title: '今日安排', onAll: onCalendar, action: '日历'),
+        const SizedBox(height: 6),
         schedule.when(
           loading: () => const _SectionLoading(),
           error: (error, _) => _SectionError(
@@ -374,7 +332,7 @@ class _ContentShelf<T> extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       _SectionHeader(title: title, onAll: onAll),
-      const SizedBox(height: 10),
+      const SizedBox(height: 6),
       items.when(
         loading: () => const _SectionLoading(),
         error: (error, _) => _SectionError(error: error, onRetry: onRetry),
@@ -448,17 +406,16 @@ class _EmptySection extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     alignment: Alignment.centerLeft,
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
     ),
     child: Text(
       text,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+      style: Theme.of(context).textTheme.bodyMedium
+          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
     ),
   );
 }

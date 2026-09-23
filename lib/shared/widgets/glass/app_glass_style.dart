@@ -19,11 +19,9 @@ abstract final class AppGlassStyle {
 
   static LiquidGlassSettings settings(
     Brightness brightness, {
-    double refractiveIndex = 1.2,
     bool shadow = false,
   }) => LiquidGlassSettings(
     glassColor: tint(brightness),
-    refractiveIndex: refractiveIndex,
     shadow: shadow ? shadows(brightness) : const [],
   );
 

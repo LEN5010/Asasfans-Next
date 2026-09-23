@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'glass/app_glass_surface.dart';
 
 /// A root-overlay panel: bottom sheet on compact windows, centered on desktop.
 /// Its builder receives bounded, keyboard-aware space for a scrolling body.
@@ -52,7 +51,8 @@ Future<T?> showAppPanel<T>({
   );
 }
 
-/// Fixed control header; the panel body owns scrolling and stays opaque.
+/// Fixed title row; the panel body below it owns scrolling. The panel is a
+/// solid surface, so the header is plain rather than a glass layer on nothing.
 class AppPanelHeader extends StatelessWidget {
   const AppPanelHeader({
     super.key,
@@ -69,10 +69,14 @@ class AppPanelHeader extends StatelessWidget {
   final bool canClose;
 
   @override
-  Widget build(BuildContext context) => AppGlassSurface(
-    radius: 22,
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      border: Border(
+        bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+    ),
     child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+      padding: const EdgeInsets.fromLTRB(20, 4, 8, 4),
       child: Row(
         children: [
           Expanded(

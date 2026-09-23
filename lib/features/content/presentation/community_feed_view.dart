@@ -1,11 +1,11 @@
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
-import '../../../shared/widgets/retry_button.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../handoff/domain/return_context.dart';
 import '../../handoff/presentation/watch_on_bilibili.dart';
@@ -57,61 +57,55 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      return Column(
-        children: [
-          _OrderRow(query: state.query, onChanged: _applyQuery),
-          const SizedBox(height: 8),
-          Expanded(
-            child: RuleFilterScope(
-              items: state.videos,
-              subjectOf: RuleSubjects.video,
-              builder: (visible) => Column(
-                children: [
-                  RuleStatusBar(visibility: visible),
-                  Expanded(
-                    child: AutoFillViewport(
-                      controller: _scrollController,
-                      resetKey: (_controller.generation, visible.epoch),
-                      scrollResetKey: state.query,
-                      canLoadMore: state.status == FeedStatus.ready,
-                      onLoadMore: () => _controller.loadMore(automatic: true),
-                      child: _buildBody(state.copyWith(videos: visible.items)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+      final order = _OrderRow(query: state.query, onChanged: _applyQuery);
+      return RuleFilterScope(
+        items: state.videos,
+        subjectOf: RuleSubjects.video,
+        unavailableBuilder: (status) => FeedScrollView(
+          controller: _scrollController,
+          onRefresh: _controller.refresh,
+          header: [order],
+          placeholder: status,
+        ),
+        builder: (visible) => AutoFillViewport(
+          controller: _scrollController,
+          resetKey: (_controller.generation, visible.epoch),
+          scrollResetKey: state.query,
+          canLoadMore: state.status == FeedStatus.ready,
+          onLoadMore: () => _controller.loadMore(automatic: true),
+          child: _buildBody(state.copyWith(videos: visible.items), [
+            order,
+            RuleStatusBar(visibility: visible),
+          ]),
+        ),
       );
     },
   );
 
-  Widget _buildBody(CommunityFeedState state) {
-    if (state.videos.isEmpty &&
-        (state.status == FeedStatus.failed ||
-            state.status == FeedStatus.idle ||
-            state.status == FeedStatus.loadingFirstPage ||
-            state.status == FeedStatus.endOfList)) {
-      return switch (state.status) {
-        FeedStatus.failed => _Error(
-          failure: state.failure,
-          onRetry: _controller.refresh,
-        ),
-        FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        _ => Center(
-          child: Text(
-            '没有符合条件的${widget.channel == CommunityChannel.clips
-                ? '切片'
-                : widget.channel == CommunityChannel.replays
-                ? '录播'
-                : '视频'}',
-          ),
-        ),
-      };
-    }
+  Widget _buildBody(CommunityFeedState state, List<Widget> header) {
+    final noun = switch (widget.channel) {
+      CommunityChannel.clips => '切片',
+      CommunityChannel.replays => '录播',
+      _ => '视频',
+    };
+    final placeholder = state.videos.isNotEmpty
+        ? null
+        : switch (state.status) {
+            FeedStatus.failed => FeedMessage(
+              icon: Icons.cloud_off_outlined,
+              text: state.failure?.message ?? '内容加载失败',
+              failure: state.failure,
+              onRetry: _controller.refresh,
+            ),
+            FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            FeedStatus.endOfList => FeedMessage(
+              icon: Icons.search_off_outlined,
+              text: '没有符合条件的$noun',
+            ),
+            _ => null,
+          };
     return LayoutBuilder(
       builder: (context, constraints) {
         final scaler = MediaQuery.textScalerOf(context);
@@ -123,60 +117,56 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
           constraints.maxWidth,
           columns,
         );
-        return RefreshIndicator(
+        return FeedScrollView(
+          storageKey: PageStorageKey('community-${widget.channel.name}'),
+          controller: _scrollController,
           onRefresh: _controller.refresh,
-          child: CustomScrollView(
-            key: PageStorageKey('community-${widget.channel.name}'),
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                sliver: SliverGrid.builder(
-                  gridDelegate: MediaGridDelegate(
-                    spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
-                    crossAxisCount: columns,
-                    itemExtents: [
-                      for (final video in state.videos)
-                        VideoCard.extentFor(video, width, scaler),
-                    ],
-                  ),
-                  itemCount: state.videos.length,
-                  itemBuilder: (_, index) => VideoCard(
-                    video: state.videos[index],
-                    origin: WatchOrigin(
-                      target: ReturnTarget.contentChannel,
-                      // These enum names are the route slugs, and the
-                      // restorer resolves whatever it is given through
-                      // ContentChannel, so a rename lands on the channel
-                      // list rather than a broken route.
-                      channel: widget.channel.name,
-                      // Read at tap time, so the anchor is where the list
-                      // actually is rather than where it was when this card
-                      // was first built.
-                      anchorOf: () => ReturnAnchor(
-                        identity: state.videos[index].identity,
-                        offset: _scrollController.hasClients
-                            ? _scrollController.offset
-                            : null,
-                      ),
+          header: header,
+          placeholder: placeholder,
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              sliver: SliverGrid.builder(
+                gridDelegate: MediaGridDelegate(
+                  spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
+                  crossAxisCount: columns,
+                  itemExtents: [
+                    for (final video in state.videos)
+                      VideoCard.extentFor(video, width, scaler),
+                  ],
+                ),
+                itemCount: state.videos.length,
+                itemBuilder: (_, index) => VideoCard(
+                  video: state.videos[index],
+                  origin: WatchOrigin(
+                    target: ReturnTarget.contentChannel,
+                    // These enum names are the route slugs, and the restorer
+                    // resolves whatever it is given through ContentChannel,
+                    // so a rename lands on the channel list rather than a
+                    // broken route.
+                    channel: widget.channel.name,
+                    // Read at tap time, so the anchor is where the list
+                    // actually is rather than where it was when this card
+                    // was first built.
+                    anchorOf: () => ReturnAnchor(
+                      identity: state.videos[index].identity,
+                      offset: _scrollController.hasClients
+                          ? _scrollController.offset
+                          : null,
                     ),
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: FeedStatusFooter(
-                  status: state.status,
-                  failure: state.failure,
-                  onRetry: _controller.loadMore,
-                  onRefresh: _controller.refresh,
-                ),
+            ),
+            SliverToBoxAdapter(
+              child: FeedStatusFooter(
+                status: state.status,
+                failure: state.failure,
+                onRetry: _controller.loadMore,
+                onRefresh: _controller.refresh,
               ),
-              SliverToBoxAdapter(
-                child: SizedBox(height: MediaQuery.paddingOf(context).bottom),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -194,7 +184,7 @@ class _OrderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 16),
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
     child: Row(
       children: [
         for (final order in CommunityVideoOrder.values) ...[
@@ -223,30 +213,6 @@ class _OrderRow extends StatelessWidget {
             ),
           ),
         ],
-      ],
-    ),
-  );
-}
-
-class _Error extends StatelessWidget {
-  const _Error({required this.failure, required this.onRetry});
-  final ApiFailure? failure;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.cloud_off_outlined,
-          size: 48,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        const SizedBox(height: 16),
-        Text(failure?.message ?? '内容加载失败'),
-        const SizedBox(height: 16),
-        RetryButton(failure: failure, onRetry: onRetry, filled: true),
       ],
     ),
   );

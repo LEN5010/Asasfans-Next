@@ -1,8 +1,10 @@
 import '../../../shared/theme/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/feature_pending.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_page_bar.dart';
 import '../../preferences/presentation/preferences_controls.dart';
 import '../../account/presentation/account_page.dart';
 
@@ -80,7 +82,8 @@ class _MinePageState extends State<MinePage> {
       ),
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('我的')),
+      extendBodyBehindAppBar: true,
+      appBar: const AppPageBar(title: Text('我的')),
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= 900) {
@@ -91,7 +94,7 @@ class _MinePageState extends State<MinePage> {
                   width: 192,
                   child: ListView(
                     key: const ValueKey('mine-sections'),
-                    padding: const EdgeInsets.all(16),
+                    padding: pageInsets(context, horizontal: 12),
                     children: [
                       for (final entry in const [
                         (0, '个人资料', Icons.person_outline),
@@ -100,11 +103,13 @@ class _MinePageState extends State<MinePage> {
                       ])
                         ListTile(
                           selected: _section == entry.$1,
-                          selectedTileColor: Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer,
+                          selectedTileColor: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.cardRadius,
+                            ),
                           ),
                           leading: Icon(entry.$3),
                           title: Text(entry.$2),
@@ -120,7 +125,7 @@ class _MinePageState extends State<MinePage> {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 760),
                       child: ListView(
-                        padding: const EdgeInsets.all(24),
+                        padding: pageInsets(context, horizontal: 24),
                         children: [groups[_section]],
                       ),
                     ),
@@ -130,12 +135,7 @@ class _MinePageState extends State<MinePage> {
             );
           }
           return ListView(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              16 + MediaQuery.paddingOf(context).bottom,
-            ),
+            padding: pageInsets(context),
             children: [
               for (final group in groups)
                 Padding(
@@ -162,9 +162,8 @@ class _SettingsGroup extends StatelessWidget {
         padding: const EdgeInsets.only(left: 8, bottom: 10),
         child: Text(
           title,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ),
       Card(
@@ -180,20 +179,5 @@ class _SettingsGroup extends StatelessWidget {
         ),
       ),
     ],
-  );
-}
-
-class PersonalSectionPage extends StatelessWidget {
-  const PersonalSectionPage({
-    required this.title,
-    required this.icon,
-    super.key,
-  });
-  final String title;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
-    body: FeaturePending(icon: icon),
   );
 }

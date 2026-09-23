@@ -90,19 +90,28 @@ class _AutoFillViewportState extends State<AutoFillViewport> {
           _scheduleCheck();
           return false;
         },
-        child: Column(
+        // The resume action floats above the bottom navigation instead of
+        // taking a row under it, where the shell's bar would cover it.
+        child: Stack(
           children: [
-            Expanded(child: widget.child),
+            Positioned.fill(child: widget.child),
             if (_paused && widget.canLoadMore)
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _remaining = _pageBudget;
-                    _paused = false;
-                  });
-                  _scheduleCheck();
-                },
-                child: const Text('继续加载'),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: MediaQuery.paddingOf(context).bottom + 12,
+                child: Center(
+                  child: FilledButton.tonal(
+                    onPressed: () {
+                      setState(() {
+                        _remaining = _pageBudget;
+                        _paused = false;
+                      });
+                      _scheduleCheck();
+                    },
+                    child: const Text('继续加载'),
+                  ),
+                ),
               ),
           ],
         ),

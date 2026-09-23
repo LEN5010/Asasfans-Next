@@ -17,6 +17,7 @@ class ContentSearchControl extends StatelessWidget {
   Widget build(BuildContext context) => expanded
       ? SizedBox(
           width: 240,
+          height: 36,
           child: _SearchInput(
             key: ValueKey(value),
             value: value,
@@ -65,10 +66,21 @@ class _SearchInputState extends State<_SearchInput> {
     controller: _controller,
     textInputAction: TextInputAction.search,
     maxLength: 200,
+    // Fits the page bar's action capsule.
     decoration: InputDecoration(
       hintText: widget.hint,
       counterText: '',
       isDense: true,
+      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      border: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+      ),
+      prefixIconConstraints: const BoxConstraints.tightFor(width: 36),
       prefixIcon: const Icon(Icons.search, size: 20),
       suffixIcon: _controller.text.isEmpty
           ? null

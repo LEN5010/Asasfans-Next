@@ -14,15 +14,11 @@ class AppGlassSurface extends StatefulWidget {
     required this.child,
     this.radius = 24,
     this.nativeContent = false,
-    this.refractiveIndex = 1.2,
   });
 
   final Widget child;
   final double radius;
   final bool nativeContent;
-
-  /// Used by the offline optical comparison; production uses package defaults.
-  final double refractiveIndex;
 
   static Color surfaceColor(Brightness brightness) =>
       brightness == Brightness.dark ? const Color(0xFF222225) : Colors.white;
@@ -67,24 +63,23 @@ class _AppGlassSurfaceState extends State<AppGlassSurface> {
           child: AdaptiveGlass(
             quality: AppGlassStyle.quality,
             shape: LiquidRoundedSuperellipse(borderRadius: widget.radius),
-            settings: AppGlassStyle.settings(
-              brightness,
-              refractiveIndex: widget.refractiveIndex,
-            ),
+            settings: AppGlassStyle.settings(brightness),
             clipExpansion: const EdgeInsets.all(16),
             child: content,
           ),
         );
       }
+      // Clear mode is an ordinary solid control that still reads as floating.
       return DecoratedBox(
         decoration: BoxDecoration(
           color: AppGlassSurface.surfaceColor(brightness),
           borderRadius: BorderRadius.circular(widget.radius),
           border: Border.all(
             color: brightness == Brightness.dark
-                ? const Color(0xFF68656F)
-                : const Color(0xFFABA7B2),
+                ? const Color(0xFF4A4750)
+                : const Color(0xFFDCD9E0),
           ),
+          boxShadow: AppGlassStyle.shadows(brightness),
         ),
         child: content,
       );

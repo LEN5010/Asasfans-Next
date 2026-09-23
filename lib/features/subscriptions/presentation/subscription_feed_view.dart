@@ -1,9 +1,12 @@
 import '../../../shared/widgets/app_panel.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../content/presentation/video_card.dart';
@@ -51,201 +54,172 @@ class _SubscriptionFeedViewState extends ConsumerState<SubscriptionFeedView> {
                   )
                   .toList()
             : visible.items;
-        return Column(
-          children: [
+        final header = [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ChoiceChip(
+                  label: const Text('全部'),
+                  selected: !_unread,
+                  onSelected: (_) => setState(() => _unread = false),
+                ),
+                ChoiceChip(
+                  label: const Text('未读'),
+                  selected: _unread,
+                  onSelected: (_) => setState(() => _unread = true),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.done_all, size: 18),
+                  label: const Text('标记当前已读'),
+                  onPressed:
+                      !controller.readsReady ||
+                          controller.savingReads ||
+                          items.isEmpty
+                      ? null
+                      : () async {
+                          final ids = List<String>.unmodifiable(
+                            items.map((v) => v.identity.value),
+                          );
+                          if (await confirmLibraryAction(
+                                context,
+                                '标记这 ${ids.length} 条更新为已读？',
+                              ) &&
+                              context.mounted) {
+                            await libraryAction(
+                              context,
+                              () => controller.mark(ids, read: true),
+                            );
+                          }
+                        },
+                ),
+              ],
+            ),
+          ),
+          RuleStatusBar(visibility: visible),
+          if (controller.issues.isNotEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: TextButton.icon(
+                  icon: const Icon(Icons.error_outline, size: 18),
+                  label: Text('${controller.issues.length} 位 UP 加载失败'),
+                  onPressed: () => _showIssues(controller),
+                ),
+              ),
+            ),
+          if (controller.readFailure != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Wrap(
-                spacing: 8,
-                runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  ChoiceChip(
-                    label: const Text('全部'),
-                    selected: !_unread,
-                    onSelected: (_) => setState(() => _unread = false),
-                  ),
-                  ChoiceChip(
-                    label: const Text('未读'),
-                    selected: _unread,
-                    onSelected: (_) => setState(() => _unread = true),
-                  ),
-                  IconButton(
-                    tooltip: '刷新订阅更新',
-                    onPressed: controller.loading ? null : controller.refresh,
-                    icon: const Icon(Icons.refresh),
-                  ),
-                  IconButton(
-                    tooltip: '管理订阅',
-                    onPressed: () =>
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const SubscriptionsPage(),
-                          ),
-                        ),
-                    icon: const Icon(Icons.people_outline),
-                  ),
-                  TextButton.icon(
-                    icon: const Icon(Icons.done_all, size: 18),
-                    label: const Text('标记当前已读'),
-                    onPressed:
-                        !controller.readsReady ||
-                            controller.savingReads ||
-                            items.isEmpty
-                        ? null
-                        : () async {
-                            final ids = List<String>.unmodifiable(
-                              items.map((v) => v.identity.value),
-                            );
-                            if (await confirmLibraryAction(
-                                  context,
-                                  '标记这 ${ids.length} 条更新为已读？',
-                                ) &&
-                                context.mounted) {
-                              await libraryAction(
-                                context,
-                                () => controller.mark(ids, read: true),
-                              );
-                            }
-                          },
+                  const Text('已读状态读取失败'),
+                  TextButton(
+                    onPressed: controller.reloadReads,
+                    child: const Text('重试'),
                   ),
                 ],
               ),
             ),
-            RuleStatusBar(visibility: visible),
-            if (controller.issues.isNotEmpty)
-              TextButton.icon(
-                icon: const Icon(Icons.error_outline, size: 18),
-                label: Text('${controller.issues.length} 位 UP 加载失败'),
-                onPressed: () => _showIssues(controller),
-              ),
-            if (controller.readFailure != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    const Text('已读状态读取失败'),
-                    TextButton(
-                      onPressed: controller.reloadReads,
-                      child: const Text('重试'),
-                    ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: AutoFillViewport(
+        ];
+        return AutoFillViewport(
+          controller: _scroll,
+          resetKey: (controller.generation, visible.epoch, _unread),
+          scrollResetKey: (_unread, controller.generation),
+          canLoadMore:
+              controller.canLoadMore && (!_unread || controller.readsReady),
+          onLoadMore: () => controller.loadMore(automatic: true),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final scaler = MediaQuery.textScalerOf(context);
+              final columns = MediaGridDelegate.columnsFor(
+                constraints.maxWidth,
+                textScale: scaler.scale(1),
+              );
+              final width = MediaGridDelegate.cellWidth(
+                constraints.maxWidth,
+                columns,
+              );
+              final receiptHeight = math.max(40.0, scaler.scale(14) * 1.5 + 16);
+              return FeedScrollView(
                 controller: _scroll,
-                resetKey: (controller.generation, visible.epoch, _unread),
-                scrollResetKey: (_unread, controller.generation),
-                canLoadMore:
-                    controller.canLoadMore &&
-                    (!_unread || controller.readsReady),
-                onLoadMore: () => controller.loadMore(automatic: true),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final scaler = MediaQuery.textScalerOf(context);
-                    final columns = MediaGridDelegate.columnsFor(
-                      constraints.maxWidth,
-                      textScale: scaler.scale(1),
-                    );
-                    final width = MediaGridDelegate.cellWidth(
-                      constraints.maxWidth,
-                      columns,
-                    );
-                    final receiptHeight = math.max(
-                      40.0,
-                      scaler.scale(14) * 1.5 + 16,
-                    );
-                    return RefreshIndicator(
-                      onRefresh: controller.refresh,
-                      child: CustomScrollView(
-                        controller: _scroll,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                            sliver: SliverGrid.builder(
-                              gridDelegate: MediaGridDelegate(
-                                spacing: MediaGridDelegate.spacingFor(
-                                  constraints.maxWidth,
-                                ),
-                                crossAxisCount: columns,
-                                itemExtents: [
-                                  for (final item in items)
-                                    VideoCard.extentFor(item, width, scaler) +
-                                        receiptHeight,
-                                ],
-                              ),
-                              itemCount: items.length,
-                              itemBuilder: (_, index) {
-                                final item = items[index];
-                                final read =
-                                    controller.readStates[item
-                                        .identity
-                                        .value] ==
-                                    true;
-                                return Column(
-                                  children: [
-                                    Expanded(
-                                      child: VideoCard(
-                                        video: item,
-                                        origin: const WatchOrigin(
-                                          target: ReturnTarget.contentChannel,
-                                          channel: 'subscriptions',
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: receiptHeight,
-                                      child: Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton.icon(
-                                          icon: Icon(
-                                            read
-                                                ? Icons.check_circle_outline
-                                                : Icons.radio_button_unchecked,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            controller.readsReady
-                                                ? (read ? '已读' : '标为已读')
-                                                : '状态未知',
-                                          ),
-                                          onPressed:
-                                              controller.savingReads ||
-                                                  !controller.readsReady
-                                              ? null
-                                              : () => libraryAction(
-                                                  context,
-                                                  () => controller.mark([
-                                                    item.identity.value,
-                                                  ], read: !read),
-                                                ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                          SliverToBoxAdapter(
-                            child: _footer(controller, items.isEmpty),
-                          ),
-                          SliverToBoxAdapter(
-                            child: SizedBox(
-                              height: MediaQuery.paddingOf(context).bottom,
-                            ),
-                          ),
+                onRefresh: controller.refresh,
+                header: header,
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    sliver: SliverGrid.builder(
+                      gridDelegate: MediaGridDelegate(
+                        spacing: MediaGridDelegate.spacingFor(
+                          constraints.maxWidth,
+                        ),
+                        crossAxisCount: columns,
+                        itemExtents: [
+                          for (final item in items)
+                            VideoCard.extentFor(item, width, scaler) +
+                                receiptHeight,
                         ],
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
+                      itemCount: items.length,
+                      itemBuilder: (_, index) {
+                        final item = items[index];
+                        final read =
+                            controller.readStates[item.identity.value] == true;
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: VideoCard(
+                                video: item,
+                                origin: const WatchOrigin(
+                                  target: ReturnTarget.contentChannel,
+                                  channel: 'subscriptions',
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: receiptHeight,
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  icon: Icon(
+                                    read
+                                        ? Icons.check_circle_outline
+                                        : Icons.radio_button_unchecked,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    controller.readsReady
+                                        ? (read ? '已读' : '标为已读')
+                                        : '状态未知',
+                                  ),
+                                  onPressed:
+                                      controller.savingReads ||
+                                          !controller.readsReady
+                                      ? null
+                                      : () => libraryAction(
+                                          context,
+                                          () => controller.mark([
+                                            item.identity.value,
+                                          ], read: !read),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: _footer(controller, items.isEmpty)),
+                ],
+              );
+            },
+          ),
         );
       },
     );
@@ -298,12 +272,9 @@ class _SubscriptionFeedViewState extends ConsumerState<SubscriptionFeedView> {
     } else {
       child = const SizedBox(height: 4);
     }
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Center(child: child),
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Center(child: child),
     );
   }
 

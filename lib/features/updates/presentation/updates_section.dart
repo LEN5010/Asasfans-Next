@@ -32,7 +32,7 @@ class UpdatesSection extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         const UpdateStatusBanner(),
         recent.when(
           loading: () => const Padding(
@@ -60,8 +60,8 @@ class UpdatesSection extends ConsumerWidget {
           data: (events) => events.isEmpty
               ? Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: 14,
+                    vertical: 10,
                   ),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(

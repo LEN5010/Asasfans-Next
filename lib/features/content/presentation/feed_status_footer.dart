@@ -18,44 +18,40 @@ class FeedStatusFooter extends StatelessWidget {
   final VoidCallback onRefresh;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    top: false,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: switch (status) {
-        FeedStatus.appending || FeedStatus.loadingFirstPage => const Center(
-          child: SizedBox.square(
-            dimension: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(16),
+    child: switch (status) {
+      FeedStatus.appending || FeedStatus.loadingFirstPage => const Center(
+        child: SizedBox.square(
+          dimension: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      FeedStatus.failed ||
+      FeedStatus.appendFailed ||
+      FeedStatus.stalled => Column(
+        children: [
+          Text(
+            '${status == FeedStatus.failed ? '刷新失败，' : ''}${failure?.message ?? '加载失败'}',
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.center,
           ),
-        ),
-        FeedStatus.failed ||
-        FeedStatus.appendFailed ||
-        FeedStatus.stalled => Column(
-          children: [
-            Text(
-              '${status == FeedStatus.failed ? '刷新失败，' : ''}${failure?.message ?? '加载失败'}',
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            RetryButton(
-              failure: failure,
-              onRetry: status == FeedStatus.appendFailed ? onRetry : onRefresh,
-              label: status == FeedStatus.stalled ? '刷新' : '重试',
-            ),
-          ],
-        ),
-        FeedStatus.endOfList => Center(
-          child: Text(
-            '没有更多了',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+          const SizedBox(height: 8),
+          RetryButton(
+            failure: failure,
+            onRetry: status == FeedStatus.appendFailed ? onRetry : onRefresh,
+            label: status == FeedStatus.stalled ? '刷新' : '重试',
           ),
+        ],
+      ),
+      FeedStatus.endOfList => Center(
+        child: Text(
+          '没有更多了',
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.outline),
         ),
-        _ => const SizedBox(height: 4),
-      },
-    ),
+      ),
+      _ => const SizedBox(height: 4),
+    },
   );
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/horizontal_choices.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_failure.dart';
@@ -68,9 +71,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       await ref.read(refreshCalendarProvider)(month);
     } on ApiFailure catch (failure) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(failure.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       }
     } finally {
       if (mounted) setState(() => _refreshing = false);
@@ -148,7 +150,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       onRetry: () => _refresh(month),
     );
     return Scaffold(
-      appBar: AppBar(
+      extendBodyBehindAppBar: true,
+      appBar: AppPageBar(
         title: const Text('日历'),
         actions: [
           IconButton(
@@ -173,7 +176,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                   width: (constraints.maxWidth * .32).clamp(300, 340),
                   child: ListView(
                     key: const ValueKey('calendar-sidebar'),
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                    padding: pageInsets(context, horizontal: 12, top: 0),
                     children: [
                       monthHeader(),
                       _MonthGrid(
@@ -195,9 +198,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           }
           return ListView(
             key: const ValueKey('calendar-compact'),
-            padding: EdgeInsets.only(
-              bottom: 24 + MediaQuery.paddingOf(context).bottom,
-            ),
+            padding: pageInsets(context, horizontal: 0, top: 0),
             children: [
               monthHeader(collapsible: true),
               if (_monthExpanded)
@@ -497,9 +498,8 @@ class _DayCell extends StatelessWidget {
                 child: Text(
                   '${day.day}',
                   maxLines: 1,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.4),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(fontSize: 14, height: 1.4),
                 ),
               ),
               const SizedBox(height: 3),
@@ -638,7 +638,9 @@ class _Agenda extends StatelessWidget {
       ),
     ];
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: scrollable
+          ? pageInsets(context, top: 12)
+          : const EdgeInsets.fromLTRB(16, 12, 16, 0),
       shrinkWrap: !scrollable,
       primary: false,
       physics: scrollable ? null : const NeverScrollableScrollPhysics(),

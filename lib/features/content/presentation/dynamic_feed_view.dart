@@ -1,21 +1,20 @@
 import '../../creator/presentation/creator_link.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../library/presentation/library_common.dart';
-import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
-import '../../../shared/widgets/retry_button.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
+import '../../../shared/widgets/media_card_surface.dart';
 import '../application/content_providers.dart';
 import '../application/dynamic_feed_controller.dart';
 import '../application/fanart_feed_controller.dart' show FeedStatus;
 import '../domain/dynamic_repository.dart';
-import '../domain/saved_channel.dart';
-import 'saved_channel_bar.dart';
 import 'feed_status_footer.dart';
 
 /// Historical dynamics list with keyword search and auto-append.
@@ -56,88 +55,79 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _TypeFilter(query: state.query, onChanged: _applyQuery),
-              ),
-              SavedChannelBar(
-                feed: ChannelFeed.dynamic,
-                currentSpec: () =>
-                    ChannelSpec.ofDynamic(_controller.state.query),
-                onOpen: (spec) => _applyQuery(spec.toDynamic()),
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          Expanded(
-            child: RuleFilterScope(
-              items: state.items,
-              subjectOf: RuleSubjects.dynamic,
-              builder: (visible) => Column(
-                children: [
-                  RuleStatusBar(visibility: visible),
-                  Expanded(
-                    child: AutoFillViewport(
-                      controller: _scrollController,
-                      resetKey: (_controller.generation, visible.epoch),
-                      scrollResetKey: state.query,
-                      canLoadMore: state.status == FeedStatus.ready,
-                      onLoadMore: () => _controller.loadMore(automatic: true),
-                      child: _buildBody(state.copyWith(items: visible.items)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+      final filters = _TypeFilter(query: state.query, onChanged: _applyQuery);
+      return RuleFilterScope(
+        items: state.items,
+        subjectOf: RuleSubjects.dynamic,
+        unavailableBuilder: (status) => FeedScrollView(
+          controller: _scrollController,
+          onRefresh: _controller.refresh,
+          header: [filters],
+          placeholder: status,
+        ),
+        builder: (visible) => AutoFillViewport(
+          controller: _scrollController,
+          resetKey: (_controller.generation, visible.epoch),
+          scrollResetKey: state.query,
+          canLoadMore: state.status == FeedStatus.ready,
+          onLoadMore: () => _controller.loadMore(automatic: true),
+          child: _buildBody(state.copyWith(items: visible.items), [
+            filters,
+            RuleStatusBar(visibility: visible),
+          ]),
+        ),
       );
     },
   );
 
-  Widget _buildBody(DynamicFeedState state) {
-    if (state.items.isEmpty &&
-        (state.status == FeedStatus.failed ||
-            state.status == FeedStatus.idle ||
-            state.status == FeedStatus.loadingFirstPage ||
-            state.status == FeedStatus.endOfList)) {
-      return switch (state.status) {
-        FeedStatus.failed => _Error(
-          failure: state.failure,
-          onRetry: _controller.refresh,
-        ),
-        FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        _ => const Center(child: Text('没有符合条件的动态')),
-      };
-    }
-    return RefreshIndicator(
+  Widget _buildBody(DynamicFeedState state, List<Widget> header) {
+    final placeholder = state.items.isNotEmpty
+        ? null
+        : switch (state.status) {
+            FeedStatus.failed => FeedMessage(
+              icon: Icons.cloud_off_outlined,
+              text: state.failure?.message ?? '内容加载失败',
+              failure: state.failure,
+              onRetry: _controller.refresh,
+            ),
+            FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            FeedStatus.endOfList => const FeedMessage(
+              icon: Icons.search_off_outlined,
+              text: '没有符合条件的动态',
+            ),
+            _ => null,
+          };
+    return FeedScrollView(
+      storageKey: const PageStorageKey('historical-dynamics-feed'),
+      controller: _scrollController,
       onRefresh: _controller.refresh,
-      child: ListView.separated(
-        key: const PageStorageKey('historical-dynamics-feed'),
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          16,
-          0,
-          16,
-          24 + MediaQuery.paddingOf(context).bottom,
+      header: header,
+      placeholder: placeholder,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          // Text-led posts read best at a bounded measure on wide windows.
+          sliver: SliverConstrainedCrossAxis(
+            maxExtent: 760,
+            sliver: SliverList.separated(
+              itemCount: state.items.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, index) =>
+                  _DynamicCard(post: state.items[index]),
+            ),
+          ),
         ),
-        itemCount: state.items.length + 1,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) => index == state.items.length
-            ? FeedStatusFooter(
-                status: state.status,
-                failure: state.failure,
-                onRetry: _controller.loadMore,
-                onRefresh: _controller.refresh,
-              )
-            : _DynamicCard(post: state.items[index]),
-      ),
+        SliverToBoxAdapter(
+          child: FeedStatusFooter(
+            status: state.status,
+            failure: state.failure,
+            onRetry: _controller.loadMore,
+            onRefresh: _controller.refresh,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -198,7 +188,7 @@ class _TypeFilter extends ConsumerWidget {
     );
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Row(
         children: [
           if (query.keyword.isNotEmpty) ...[
@@ -287,132 +277,126 @@ class _DynamicCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final forwarded = post.forwardedFrom;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: theme.colorScheme.surfaceContainerLow,
-      child: InkWell(
-        onTap: post.sourceUrl == null
-            ? null
-            : () => openContentSource(
-                context,
-                ref,
-                ContentSnapshots.dynamic(post),
-                url: post.sourceUrl,
-              ),
-        onLongPress: () => showContentActions(
-          context,
-          ContentSnapshots.dynamic(post),
-          ruleSubject: RuleSubjects.dynamic(post),
-        ),
-        onSecondaryTap: () => showContentActions(
-          context,
-          ContentSnapshots.dynamic(post),
-          ruleSubject: RuleSubjects.dynamic(post),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: CreatorLink(
-                      mid: post.member.bilibiliUid,
-                      child: Text(
-                        post.member.name,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: '更多操作',
-                    icon: const Icon(Icons.more_horiz),
-                    onPressed: () => showContentActions(
-                      context,
-                      ContentSnapshots.dynamic(post),
-                      ruleSubject: RuleSubjects.dynamic(post),
-                    ),
-                  ),
-                  if (post.publishedAt != null)
-                    Text(
-                      _shanghaiDate(post.publishedAt!),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
-              if (post.text.trim().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  post.text.trim(),
-                  maxLines: 6,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ],
-              // A repost shows its origin rather than passing the original
-              // content off as the forwarding member's own.
-              if (forwarded != null) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+    void actions() => showContentActions(
+      context,
+      ContentSnapshots.dynamic(post),
+      ruleSubject: RuleSubjects.dynamic(post),
+    );
+    return MediaCardSurface(
+      onTap: post.sourceUrl == null
+          ? null
+          : () => openContentSource(
+              context,
+              ref,
+              ContentSnapshots.dynamic(post),
+              url: post.sourceUrl,
+            ),
+      onMore: actions,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 8, 8, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        forwarded.authorName.isEmpty
-                            ? '原动态'
-                            : '@${forwarded.authorName}',
-                        style: theme.textTheme.labelSmall,
-                      ),
-                      if (forwarded.text.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          forwarded.text.trim(),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
+                      CreatorLink(
+                        mid: post.member.bilibiliUid,
+                        child: Text(
+                          post.member.name,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                      ],
+                      ),
+                      if (post.publishedAt != null)
+                        Text(
+                          _shanghaiDate(post.publishedAt!),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                     ],
                   ),
                 ),
+                IconButton(
+                  tooltip: '更多操作',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.more_horiz),
+                  onPressed: actions,
+                ),
               ],
-              if (post.images.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 110,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: post.images.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) => ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        post.images[index].toString(),
+            ),
+            if (post.text.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                post.text.trim(),
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+            // A repost shows its origin rather than passing the original
+            // content off as the forwarding member's own.
+            if (forwarded != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      forwarded.authorName.isEmpty
+                          ? '原动态'
+                          : '@${forwarded.authorName}',
+                      style: theme.textTheme.labelSmall,
+                    ),
+                    if (forwarded.text.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        forwarded.text.trim(),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            if (post.images.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 110,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: post.images.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) => ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      post.images[index].toString(),
+                      width: 110,
+                      height: 110,
+                      fit: BoxFit.cover,
+                      cacheWidth: 320,
+                      errorBuilder: (context, error, stack) => Container(
                         width: 110,
-                        height: 110,
-                        fit: BoxFit.cover,
-                        cacheWidth: 320,
-                        errorBuilder: (context, error, stack) => Container(
-                          width: 110,
-                          color: theme.colorScheme.surfaceContainerHighest,
-                        ),
+                        color: theme.colorScheme.surfaceContainerHighest,
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -425,28 +409,4 @@ class _DynamicCard extends ConsumerWidget {
     return '${local.year}-${local.month.toString().padLeft(2, '0')}-'
         '${local.day.toString().padLeft(2, '0')}';
   }
-}
-
-class _Error extends StatelessWidget {
-  const _Error({required this.failure, required this.onRetry});
-  final ApiFailure? failure;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.cloud_off_outlined,
-          size: 48,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        const SizedBox(height: 16),
-        Text(failure?.message ?? '内容加载失败'),
-        const SizedBox(height: 16),
-        RetryButton(failure: failure, onRetry: onRetry, filled: true),
-      ],
-    ),
-  );
 }
