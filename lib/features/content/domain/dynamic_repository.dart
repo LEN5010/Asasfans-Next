@@ -30,6 +30,7 @@ class DynamicPost {
     required this.text,
     required this.images,
     this.publishedAt,
+    this.media = const [],
     this.sourceUrl,
     this.likeCount = 0,
     this.commentCount = 0,
@@ -42,6 +43,7 @@ class DynamicPost {
   final DynamicType type;
   final String text;
   final List<Uri> images;
+  final List<DynamicMedia> media;
 
   /// Server timestamps are UTC; the display layer decides the zone.
   final DateTime? publishedAt;
@@ -60,13 +62,57 @@ class ForwardedPost {
     required this.authorName,
     required this.text,
     required this.images,
+    this.dynamicId = '',
+    this.authorMid = '',
+    this.type = DynamicType.other,
+    this.publishedAt,
+    this.media = const [],
     this.sourceUrl,
   });
 
+  final String dynamicId;
+  final String authorMid;
+  final DynamicType type;
+  final DateTime? publishedAt;
+  final List<DynamicMedia> media;
   final String authorName;
   final String text;
   final List<Uri> images;
   final Uri? sourceUrl;
+}
+
+enum DynamicMediaKind { image, video, cover, emoji, reserve, other }
+
+/// Display metadata from the archive DTO. A media URL is an image/cover,
+/// not a playable stream or a reservation action endpoint.
+class DynamicMedia {
+  const DynamicMedia({
+    required this.kind,
+    this.url,
+    this.ref = '',
+    this.title = '',
+    this.label = '',
+    this.description = '',
+    this.badge = '',
+    this.actionText = '',
+    this.durationText = '',
+    this.width,
+    this.height,
+  });
+  final DynamicMediaKind kind;
+  final Uri? url;
+  final String ref;
+  final String title;
+  final String label;
+  final String description;
+  final String badge;
+  final String actionText;
+  final String durationText;
+  final int? width;
+  final int? height;
+
+  double? get aspectRatio =>
+      width != null && height != null ? width! / height! : null;
 }
 
 enum OnThisDaySort { hot, likes, comments }

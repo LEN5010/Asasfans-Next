@@ -1,16 +1,16 @@
-import '../../creator/presentation/creator_link.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../library/application/content_snapshots.dart';
-import '../../library/presentation/content_actions.dart';
-import '../../library/presentation/library_common.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
-import '../../../shared/widgets/media_card_surface.dart';
+import '../../../shared/widgets/app_panel.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../../shared/widgets/sliver_content_masonry.dart';
+import 'content_images.dart';
+import 'dynamic_card.dart';
 import '../application/content_providers.dart';
 import '../application/dynamic_feed_controller.dart';
 import '../application/fanart_feed_controller.dart' show FeedStatus;
@@ -55,7 +55,10 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      final filters = _TypeFilter(query: state.query, onChanged: _applyQuery);
+      final filters = _DynamicFilterBar(
+        query: state.query,
+        onChanged: _applyQuery,
+      );
       return RuleFilterScope(
         items: state.items,
         subjectOf: RuleSubjects.dynamic,
@@ -108,14 +111,11 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          // Text-led posts read best at a bounded measure on wide windows.
-          sliver: SliverConstrainedCrossAxis(
-            maxExtent: 760,
-            sliver: SliverList.separated(
-              itemCount: state.items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) =>
-                  _DynamicCard(post: state.items[index]),
+          sliver: SliverContentMasonry(
+            itemCount: state.items.length,
+            itemBuilder: (context, index) => DynamicCard(
+              key: ValueKey(state.items[index].identity),
+              post: state.items[index],
             ),
           ),
         ),
@@ -132,281 +132,352 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
   }
 }
 
-class _TypeFilter extends ConsumerWidget {
-  const _TypeFilter({required this.query, required this.onChanged});
-
+class _DynamicFilterBar extends ConsumerStatefulWidget {
+  const _DynamicFilterBar({required this.query, required this.onChanged});
   final DynamicQuery query;
   final ValueChanged<DynamicQuery> onChanged;
+  @override
+  ConsumerState<_DynamicFilterBar> createState() => _DynamicFilterBarState();
+}
 
-  static const _labels = {
-    DynamicType.image: '图文',
-    DynamicType.video: '视频',
-    DynamicType.forward: '转发',
-    DynamicType.article: '专栏',
-    DynamicType.text: '文字',
-  };
+class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
+  bool _expanded = false;
 
-  static String _day(DateTime value) {
-    final local = value.toLocal();
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
+  @override
+  Widget build(BuildContext context) {
+    final query = widget.query;
+    final members =
+        ref.watch(dynamicMembersProvider).valueOrNull ??
+        const <DynamicMember>[];
+    final member = members
+        .where((member) => member.id == query.memberId)
+        .firstOrNull;
+    final summary = [
+      if (query.keyword.isNotEmpty) '“${query.keyword}”',
+      if (query.memberId != null) member?.name ?? '指定成员',
+      if (query.type != null) dynamicTypeLabel(query.type!),
+      if (query.from != null || query.to != null) '已选日期',
+      _sortLabel(query.sort),
+    ].join(' · ');
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 760;
+        void apply(DynamicQuery next) {
+          setState(() => _expanded = false);
+          widget.onChanged(next);
+        }
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  AppGlassButton(
+                    selected: _expanded || query != const DynamicQuery(),
+                    onPressed: () async {
+                      if (wide) {
+                        setState(() => _expanded = !_expanded);
+                        return;
+                      }
+                      final next = await showAppPanel<DynamicQuery>(
+                        context: context,
+                        builder: (context) => _DynamicFilterPanel(
+                          query: query,
+                          onApply: (next) => Navigator.pop(context, next),
+                          onClose: () => Navigator.pop(context),
+                        ),
+                      );
+                      if (next != null && mounted) apply(next);
+                    },
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.tune),
+                        SizedBox(width: 8),
+                        Text('筛选与排序'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      summary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  if (query != const DynamicQuery())
+                    AppGlassButton.icon(
+                      tooltip: '清除筛选',
+                      onPressed: () => apply(const DynamicQuery()),
+                      icon: const Icon(Icons.close),
+                    ),
+                ],
+              ),
+              if (wide && _expanded)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Card(
+                    child: _DynamicFilterPanel(
+                      key: ValueKey(query),
+                      query: query,
+                      embedded: true,
+                      onApply: apply,
+                      onClose: () => setState(() => _expanded = false),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
+}
 
-  /// The server rejects an inverted or empty range, so pick both ends at once
-  /// and send them only as a complete, ordered pair.
-  Future<void> _pickRange(BuildContext context) async {
+String _sortLabel(DynamicSort sort) => switch (sort) {
+  DynamicSort.newest => '最新发布',
+  DynamicSort.oldest => '最早发布',
+  DynamicSort.likes => '点赞最多',
+  DynamicSort.comments => '评论最多',
+};
+
+class _DynamicFilterPanel extends ConsumerStatefulWidget {
+  const _DynamicFilterPanel({
+    super.key,
+    required this.query,
+    required this.onApply,
+    required this.onClose,
+    this.embedded = false,
+  });
+  final DynamicQuery query;
+  final ValueChanged<DynamicQuery> onApply;
+  final VoidCallback onClose;
+  final bool embedded;
+  @override
+  ConsumerState<_DynamicFilterPanel> createState() =>
+      _DynamicFilterPanelState();
+}
+
+class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
+  late DynamicQuery _draft = widget.query;
+  static const _primaryIds = [
+    'uid:672328094',
+    'uid:672353429',
+    'uid:672342685',
+    'uid:3537115310721181',
+    'uid:3537115310721781',
+    'uid:703007996',
+  ];
+
+  Future<void> _pickRange() async {
     final now = DateTime.now();
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime(now.year + 1),
-      initialDateRange: query.from != null && query.to != null
+      initialDateRange: _draft.from != null && _draft.to != null
           ? DateTimeRange(
-              start: query.from!.toLocal(),
-              end: query.to!.toLocal(),
+              start: _draft.from!,
+              end: _draft.to!.subtract(const Duration(milliseconds: 1)),
             )
           : null,
     );
-    if (picked == null) return;
-    // Cover the whole end day: a date picker returns midnight, which would
-    // otherwise drop everything posted on the final day.
-    final to = DateTime(
-      picked.end.year,
-      picked.end.month,
-      picked.end.day,
-      23,
-      59,
-      59,
+    if (picked == null || !mounted) return;
+    // The server's `to` is exclusive and serialized as a date. Preserve the
+    // selected last day, including when the user chooses just one day.
+    setState(
+      () => _draft = _draft.copyWith(
+        from: picked.start,
+        to: DateTime(picked.end.year, picked.end.month, picked.end.day + 1),
+      ),
     );
-    onChanged(query.copyWith(from: picked.start, to: to));
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final members = ref.watch(dynamicMembersProvider);
-    final selected = members.valueOrNull?.where(
-      (member) => member.id == query.memberId,
+    final roster = members.valueOrNull ?? const <DynamicMember>[];
+    final primary = [
+      for (final id in _primaryIds)
+        ...roster.where((member) => member.id == id),
+    ];
+    final other = roster.where((member) => !_primaryIds.contains(member.id));
+    Widget heading(String text) => Padding(
+      padding: const EdgeInsets.only(top: 18, bottom: 10),
+      child: Text(text, style: theme.textTheme.titleSmall),
     );
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+    Widget memberButton(DynamicMember member) => AppGlassButton(
+      tooltip: member.name,
+      selected: _draft.memberId == member.id,
+      onPressed: () =>
+          setState(() => _draft = _draft.copyWith(memberId: member.id)),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (query.keyword.isNotEmpty) ...[
-            InputChip(
-              label: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 180),
-                child: Text(query.keyword, overflow: TextOverflow.ellipsis),
-              ),
-              onDeleted: () => onChanged(query.copyWith(keyword: '')),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (query.memberId != null) ...[
-            InputChip(
-              avatar: const Icon(Icons.person_outline, size: 18),
-              label: Text(selected?.firstOrNull?.name ?? '指定成员'),
-              onDeleted: () => onChanged(query.copyWith(clearMember: true)),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (query.from != null && query.to != null) ...[
-            InputChip(
-              avatar: const Icon(Icons.date_range_outlined, size: 18),
-              label: Text('${_day(query.from!)} ~ ${_day(query.to!)}'),
-              onDeleted: () => onChanged(query.copyWith(clearRange: true)),
-            ),
-            const SizedBox(width: 8),
-          ],
-          ChoiceChip(
-            label: const Text('全部'),
-            selected: query.type == null,
-            onSelected: (_) => onChanged(query.copyWith(clearType: true)),
-          ),
-          for (final entry in _labels.entries) ...[
-            const SizedBox(width: 8),
-            ChoiceChip(
-              label: Text(entry.value),
-              selected: query.type == entry.key,
-              onSelected: (selected) => onChanged(
-                selected
-                    ? query.copyWith(type: entry.key)
-                    : query.copyWith(clearType: true),
-              ),
-            ),
-          ],
+          ContentAvatar(name: member.name, image: member.avatarUrl, size: 28),
           const SizedBox(width: 8),
-          ActionChip(
-            avatar: const Icon(Icons.date_range_outlined, size: 18),
-            label: const Text('时间范围'),
-            onPressed: () => _pickRange(context),
-          ),
-          // A member filter needs a server-issued id, so offer it only once the
-          // member list has actually loaded.
-          if (members.valueOrNull case final roster?
-              when roster.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            PopupMenuButton<String?>(
-              tooltip: '按成员筛选',
-              onSelected: (value) => onChanged(
-                value == null
-                    ? query.copyWith(clearMember: true)
-                    : query.copyWith(memberId: value),
-              ),
-              itemBuilder: (_) => [
-                const PopupMenuItem(value: null, child: Text('全部成员')),
-                for (final member in roster)
-                  PopupMenuItem(value: member.id, child: Text(member.name)),
-              ],
-              child: const Chip(
-                avatar: Icon(Icons.person_outline, size: 18),
-                label: Text('成员'),
-              ),
-            ),
-          ],
+          Text(member.name),
         ],
       ),
     );
-  }
-}
-
-class _DynamicCard extends ConsumerWidget {
-  const _DynamicCard({required this.post});
-  final DynamicPost post;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final forwarded = post.forwardedFrom;
-    void actions() => showContentActions(
-      context,
-      ContentSnapshots.dynamic(post),
-      ruleSubject: RuleSubjects.dynamic(post),
-    );
-    return MediaCardSurface(
-      onTap: post.sourceUrl == null
-          ? null
-          : () => openContentSource(
-              context,
-              ref,
-              ContentSnapshots.dynamic(post),
-              url: post.sourceUrl,
-            ),
-      onMore: actions,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 8, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final fields = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          heading('成员'),
+          if (members.isLoading) const LinearProgressIndicator(),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              AppGlassButton(
+                selected: _draft.memberId == null,
+                onPressed: () =>
+                    setState(() => _draft = _draft.copyWith(clearMember: true)),
+                child: const Text('全部成员'),
+              ),
+              for (final member in primary) memberButton(member),
+            ],
+          ),
+          if (members.hasError)
             Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CreatorLink(
-                        mid: post.member.bilibiliUid,
-                        child: Text(
-                          post.member.name,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      if (post.publishedAt != null)
-                        Text(
-                          _shanghaiDate(post.publishedAt!),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  tooltip: '更多操作',
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.more_horiz),
-                  onPressed: actions,
+                const Expanded(child: Text('成员暂时加载失败')),
+                AppGlassButton(
+                  onPressed: () => ref.invalidate(dynamicMembersProvider),
+                  child: const Text('重试'),
                 ),
               ],
             ),
-            if (post.text.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                post.text.trim(),
-                maxLines: 6,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ],
-            // A repost shows its origin rather than passing the original
-            // content off as the forwarding member's own.
-            if (forwarded != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      forwarded.authorName.isEmpty
-                          ? '原动态'
-                          : '@${forwarded.authorName}',
-                      style: theme.textTheme.labelSmall,
-                    ),
-                    if (forwarded.text.trim().isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        forwarded.text.trim(),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
-                      ),
+          if (other.isNotEmpty)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('更多成员'),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final member in other) memberButton(member),
                     ],
+                  ),
+                ),
+              ],
+            ),
+          heading('动态类型'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              AppGlassButton(
+                selected: _draft.type == null,
+                onPressed: () =>
+                    setState(() => _draft = _draft.copyWith(clearType: true)),
+                child: const Text('全部'),
+              ),
+              for (final type in DynamicType.values)
+                AppGlassButton(
+                  selected: _draft.type == type,
+                  onPressed: () =>
+                      setState(() => _draft = _draft.copyWith(type: type)),
+                  child: Text(dynamicTypeLabel(type)),
+                ),
+            ],
+          ),
+          heading('发布日期'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              AppGlassButton(
+                onPressed: _pickRange,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.date_range_outlined),
+                    SizedBox(width: 8),
+                    Text('选择日期'),
                   ],
                 ),
               ),
-            ],
-            if (post.images.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 110,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: post.images.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) => ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      post.images[index].toString(),
-                      width: 110,
-                      height: 110,
-                      fit: BoxFit.cover,
-                      cacheWidth: 320,
-                      errorBuilder: (context, error, stack) => Container(
-                        width: 110,
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
-                    ),
+              if (_draft.from != null && _draft.to != null)
+                Text(
+                  '${_day(_draft.from!)} — ${_day(_draft.to!.subtract(const Duration(milliseconds: 1)))}',
+                ),
+              if (_draft.from != null || _draft.to != null)
+                AppGlassButton.icon(
+                  tooltip: '清除日期',
+                  icon: const Icon(Icons.close),
+                  onPressed: () => setState(
+                    () => _draft = _draft.copyWith(clearRange: true),
                   ),
                 ),
-              ),
             ],
+          ),
+          heading('排序'),
+          AppGlassSegments<DynamicSort>(
+            values: DynamicSort.values,
+            labelOf: _sortLabel,
+            selected: _draft.sort,
+            onChanged: (sort) =>
+                setState(() => _draft = _draft.copyWith(sort: sort)),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+    return Column(
+      mainAxisSize: widget.embedded ? MainAxisSize.min : MainAxisSize.max,
+      children: [
+        AppPanelHeader(
+          title: '筛选动态',
+          onClose: widget.onClose,
+          actions: [
+            AppGlassButton(
+              onPressed: () => setState(() => _draft = const DynamicQuery()),
+              child: const Text('重置'),
+            ),
           ],
         ),
-      ),
+        if (widget.embedded)
+          fields
+        else
+          Expanded(child: SingleChildScrollView(child: fields)),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Row(
+              children: [
+                AppGlassButton(
+                  onPressed: widget.onClose,
+                  child: const Text('取消'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppGlassButton(
+                    selected: true,
+                    onPressed: () => widget.onApply(_draft),
+                    child: const Text('应用筛选'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  /// Source timestamps are UTC; the list labels them on the Shanghai calendar
-  /// the archive is organised by.
-  static String _shanghaiDate(DateTime utc) {
-    final local = utc.add(const Duration(hours: 8));
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-'
-        '${local.day.toString().padLeft(2, '0')}';
-  }
+  static String _day(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 }

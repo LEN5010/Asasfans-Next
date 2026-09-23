@@ -196,7 +196,17 @@ class DynamicFanartRepository implements FanartRepository {
     if (raw is! String || raw.trim().isEmpty) return null;
     final parsed = Uri.tryParse(raw);
     if (parsed == null) return null;
-    final uri = baseUrl.resolveUri(parsed);
+    var uri = baseUrl.resolveUri(parsed);
+    // Historical archive avatars can still use HTTP Bilibili image URLs.
+    // Upgrade only the known public CDN path; requests never use cleartext.
+    if (uri.scheme == 'http' &&
+        uri.path.startsWith('/bfs/') &&
+        RegExp(
+          r'(^|\.)(hdslb\.com|biliimg\.com)$',
+          caseSensitive: false,
+        ).hasMatch(uri.host)) {
+      uri = uri.replace(scheme: 'https');
+    }
     return uri.scheme == 'https' && uri.host.isNotEmpty && uri.userInfo.isEmpty
         ? uri
         : null;

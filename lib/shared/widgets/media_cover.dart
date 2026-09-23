@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 
+/// Presentation-only CDN transform. Never mutate the URI kept by the model.
+Uri displayImageUri(Uri uri, {int width = 640}) {
+  final bili = RegExp(
+    r'(^|\.)(hdslb\.com|biliimg\.com)$',
+    caseSensitive: false,
+  );
+  if (!bili.hasMatch(uri.host) || !uri.path.startsWith('/bfs/')) return uri;
+  final path = uri.path.replaceFirst(RegExp(r'@[^/]*$'), '');
+  final format = path.toLowerCase().endsWith('.gif') ? 'gif' : 'webp';
+  return uri.replace(path: '$path@${width}w.$format');
+}
+
 abstract final class MediaCardMetrics {
   static double line(TextScaler scaler, double size, double height) =>
       (scaler.scale(size) * height).ceilToDouble();
@@ -28,7 +40,7 @@ class MediaCover extends StatelessWidget {
       children: [
         if (image != null)
           Image.network(
-            image.toString(),
+            displayImageUri(image!, width: 800).toString(),
             fit: BoxFit.cover,
             cacheWidth: 800,
             errorBuilder: (_, _, _) => _fallback(context),

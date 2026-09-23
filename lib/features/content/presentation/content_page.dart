@@ -18,7 +18,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
-import '../../../shared/widgets/media_grid_delegate.dart';
+import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/domain/return_context.dart';
 import '../application/content_providers.dart';
@@ -516,74 +516,56 @@ class _FanartGrid extends ConsumerWidget {
             ),
             _ => null,
           };
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final scaler = MediaQuery.textScalerOf(context);
-        final columns = MediaGridDelegate.columnsFor(
-          constraints.maxWidth,
-          textScale: scaler.scale(1),
-        );
-        final width = MediaGridDelegate.cellWidth(
-          constraints.maxWidth,
-          columns,
-        );
-        return FeedScrollView(
-          storageKey: const PageStorageKey('fanart-feed'),
-          controller: controller,
-          onRefresh: onRefresh,
-          header: header,
-          placeholder: placeholder,
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              sliver: SliverGrid.builder(
-                gridDelegate: MediaGridDelegate(
-                  spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
-                  crossAxisCount: columns,
-                  itemExtents: [
-                    for (final item in state.items)
-                      FanartCard.extentFor(item, width, scaler),
-                  ],
+    return FeedScrollView(
+      storageKey: const PageStorageKey('fanart-feed'),
+      controller: controller,
+      onRefresh: onRefresh,
+      header: header,
+      placeholder: placeholder,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          sliver: SliverContentMasonry(
+            minColumnWidth: 300,
+            itemCount: state.items.length,
+            itemBuilder: (context, index) {
+              final item = state.items[index];
+              return FanartCard(
+                key: ValueKey(item.identity),
+                expanded: true,
+                item: item,
+                onLongPress: () => showContentActions(
+                  context,
+                  ContentSnapshots.fanart(item),
+                  ruleSubject: RuleSubjects.fanart(item),
                 ),
-                itemCount: state.items.length,
-                itemBuilder: (context, index) {
-                  final item = state.items[index];
-                  return FanartCard(
-                    item: item,
-                    onLongPress: () => showContentActions(
-                      context,
-                      ContentSnapshots.fanart(item),
-                      ruleSubject: RuleSubjects.fanart(item),
-                    ),
-                    // A root route or an external open keeps the branch's
-                    // scroll position and loaded pages.
-                    onTap: () => openFanart(
-                      context,
-                      ref,
-                      item,
-                      returnTo: ReturnTarget.contentChannel,
-                      channel: ContentChannel.fanart.slug,
-                      query: ChannelSpec.ofFanart(state.query).values,
-                      anchor: ReturnAnchor(
-                        identity: item.identity,
-                        offset: controller.offset,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: FeedStatusFooter(
-                status: state.status,
-                failure: state.failure,
-                onRetry: onRetryAppend,
-                onRefresh: onRefresh,
-              ),
-            ),
-          ],
-        );
-      },
+                // A root route or an external open keeps the branch's
+                // scroll position and loaded pages.
+                onTap: () => openFanart(
+                  context,
+                  ref,
+                  item,
+                  returnTo: ReturnTarget.contentChannel,
+                  channel: ContentChannel.fanart.slug,
+                  query: ChannelSpec.ofFanart(state.query).values,
+                  anchor: ReturnAnchor(
+                    identity: item.identity,
+                    offset: controller.offset,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: FeedStatusFooter(
+            status: state.status,
+            failure: state.failure,
+            onRetry: onRetryAppend,
+            onRefresh: onRefresh,
+          ),
+        ),
+      ],
     );
   }
 }

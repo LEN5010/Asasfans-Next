@@ -135,8 +135,9 @@ class DynamicPostRepository implements DynamicRepository {
       type: _type(raw['type']),
       text: _string(raw['contentText']),
       images: _images(raw['images'], baseUrl),
+      media: _media(raw['media'], baseUrl),
       publishedAt: _timestamp(raw['publishedAt']),
-      sourceUrl: _httpsUri(raw['url'], baseUrl),
+      sourceUrl: _dynamicUrl(raw['url'], raw['dynamicId'], baseUrl),
       likeCount: _count(raw['likeCount']),
       commentCount: _count(raw['commentCount']),
       forwardCount: _count(raw['forwardCount']),
@@ -160,10 +161,21 @@ class DynamicPostRepository implements DynamicRepository {
   static ForwardedPost? _forwarded(Object? raw, Uri baseUrl) {
     if (raw is! Map) return null;
     return ForwardedPost(
+      dynamicId: _string(raw['dynamicId']),
+      authorMid: _string(raw['authorMid']),
+      type: _type(raw['type']),
+      // orig.publishedAt is a Unix timestamp in seconds, unlike the post ISO.
+      publishedAt: raw['publishedAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (raw['publishedAt'] as int) * 1000,
+              isUtc: true,
+            )
+          : null,
       authorName: _string(raw['authorName']),
       text: _string(raw['text']),
       images: _images(raw['images'], baseUrl),
-      sourceUrl: _httpsUri(raw['url'], baseUrl),
+      media: _media(raw['media'], baseUrl),
+      sourceUrl: _dynamicUrl(raw['url'], raw['dynamicId'], baseUrl),
     );
   }
 
@@ -172,6 +184,31 @@ class DynamicPostRepository implements DynamicRepository {
     (value) => value.name == raw,
     orElse: () => DynamicType.other,
   );
+
+  static List<DynamicMedia> _media(Object? raw, Uri baseUrl) => raw is! List
+      ? const []
+      : List.unmodifiable([
+          for (final entry in raw.whereType<Map>())
+            DynamicMedia(
+              kind:
+                  DynamicMediaKind.values
+                      .where((value) => value.name == entry['kind'])
+                      .firstOrNull ??
+                  DynamicMediaKind.other,
+              url: _httpsUri(entry['url'], baseUrl),
+              ref: _string(entry['ref']),
+              title: _string(entry['title']),
+              label: _string(entry['label']),
+              description: _string(entry['description']),
+              badge: _string(entry['badge']),
+              actionText: _string(entry['actionText']),
+              durationText: _string(entry['durationText']),
+              width: _dimension(entry['width']),
+              height: _dimension(entry['height']),
+            ),
+        ]);
+
+  static int? _dimension(Object? raw) => raw is int && raw > 0 ? raw : null;
 
   static List<Uri> _images(Object? raw, Uri baseUrl) => List.unmodifiable(
     raw is List
@@ -188,11 +225,27 @@ class DynamicPostRepository implements DynamicRepository {
     return DateTime.tryParse(raw)?.toUtc();
   }
 
+  static Uri? _dynamicUrl(Object? raw, Object? id, Uri baseUrl) =>
+      _httpsUri(raw, baseUrl) ??
+      (id is String && RegExp(r'^\d{1,20}$').hasMatch(id)
+          ? Uri.https('t.bilibili.com', '/$id')
+          : null);
+
   static Uri? _httpsUri(Object? raw, Uri baseUrl) {
     if (raw is! String || raw.trim().isEmpty) return null;
     final parsed = Uri.tryParse(raw);
     if (parsed == null) return null;
-    final uri = baseUrl.resolveUri(parsed);
+    var uri = baseUrl.resolveUri(parsed);
+    // Historical archive avatars can still use HTTP Bilibili image URLs.
+    // Upgrade only the known public CDN path; requests never use cleartext.
+    if (uri.scheme == 'http' &&
+        uri.path.startsWith('/bfs/') &&
+        RegExp(
+          r'(^|\.)(hdslb\.com|biliimg\.com)$',
+          caseSensitive: false,
+        ).hasMatch(uri.host)) {
+      uri = uri.replace(scheme: 'https');
+    }
     return uri.scheme == 'https' && uri.host.isNotEmpty && uri.userInfo.isEmpty
         ? uri
         : null;

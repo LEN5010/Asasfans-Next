@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/media_cover.dart';
 import '../../../shared/widgets/media_card_surface.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
+import '../../creator/presentation/creator_link.dart';
+import 'content_images.dart';
+import 'dynamic_rich_text.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../rules/application/feed_visibility.dart';
@@ -12,11 +16,13 @@ class FanartCard extends StatelessWidget {
     required this.item,
     this.onTap,
     this.onLongPress,
+    this.expanded = false,
     super.key,
   });
   final FanartItem item;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final bool expanded;
 
   static bool isText(FanartItem item) =>
       item.contentType == FanartContentType.text ||
@@ -48,6 +54,8 @@ class FanartCard extends StatelessWidget {
         ruleSubject: RuleSubjects.fanart(item),
       );
     }
+
+    if (expanded) return _expandedCard(context, more);
 
     return MediaCardSurface(
       onTap: onTap,
@@ -124,6 +132,129 @@ class FanartCard extends StatelessWidget {
             right: 2,
             bottom: 2,
             child: MediaMoreButton(onPressed: more),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _expandedCard(BuildContext context, VoidCallback more) {
+    final theme = Theme.of(context);
+    final video = item.contentType == FanartContentType.video;
+    return MediaCardSurface(
+      onMore: more,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (video)
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                MediaCover(
+                  image: item.images.firstOrNull,
+                  aspectRatio: 16 / 9,
+                  video: true,
+                  badge: '视频',
+                ),
+                AppGlassButton.icon(
+                  onPressed: onTap,
+                  tooltip: '去 B 站看',
+                  icon: const Icon(Icons.play_arrow),
+                ),
+              ],
+            ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    ContentAvatar(
+                      name: item.authorName,
+                      image: item.authorAvatarUrl,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: CreatorLink(
+                        mid: item.authorUid,
+                        child: Text(
+                          item.authorName.isEmpty ? '未知作者' : item.authorName,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                      ),
+                    ),
+                    MediaMoreButton(onPressed: more),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final label in {
+                      item.category.wire,
+                      for (final tag in item.characterTags) tag.wire,
+                    })
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: .5,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            label,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                if (!video && item.images.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: ContentImageGallery(images: item.images),
+                  ),
+                if (item.text.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: DynamicRichText(text: item.text.trim(), maxLines: 8),
+                  ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (item.viewCount != null)
+                      Text(
+                        '${item.viewCount} 播放',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    if (item.favoriteCount != null)
+                      Text(
+                        '${item.favoriteCount} 收藏',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    AppGlassButton(
+                      onPressed: onTap,
+                      child: Text(video ? '去 B 站看 ↗' : '查看作品'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
