@@ -44,11 +44,13 @@ class CalendarEventTile extends StatelessWidget {
     required this.event,
     this.day,
     this.showDate = false,
+    this.compact = false,
     super.key,
   });
   final CalendarEvent event;
   final DateTime? day;
   final bool showDate;
+  final bool compact;
 
   static final _tag = RegExp(r'【([^】]*)】');
   static final _colon = RegExp('[:：]');
@@ -83,11 +85,46 @@ class CalendarEventTile extends StatelessWidget {
         : Color.lerp(calendarEventColor(event), Colors.black, .15)!;
     const foreground = Colors.white;
     final strike = event.isCancelled ? TextDecoration.lineThrough : null;
+    final badges = [
+      for (final badge in [
+        label,
+        if (event.isCancelled) '已取消',
+        if (event.status == EventStatus.tentative) '待定',
+      ])
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .2),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            child: Text(
+              badge,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        ),
+      if (live && !event.isCancelled)
+        const Icon(Icons.sensors, size: 16, color: foreground),
+    ];
+    final heading = Text(
+      headline,
+      maxLines: compact ? 2 : 1,
+      style: TextStyle(
+        fontSize: compact ? 15 : 16,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+      ),
+    );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 56 * scale.clamp(1.0, 1.7),
+          width: 56 * scale,
           child: Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Column(
@@ -122,76 +159,55 @@ class CalendarEventTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              for (final badge in [
-                                label,
-                                if (event.isCancelled) '已取消',
-                                if (event.status == EventStatus.tentative) '待定',
-                              ])
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: .2),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 1,
-                                      ),
-                                      child: Text(
-                                        badge,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          decoration: TextDecoration.none,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              const Spacer(),
-                              if (live && !event.isCancelled)
-                                const Icon(
-                                  Icons.sensors,
-                                  size: 18,
-                                  color: foreground,
-                                ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: compact ? 56 : 0),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          compact ? 12 : 14,
+                          10,
+                          12,
+                          10,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (compact)
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [heading, ...badges],
+                              )
+                            else ...[
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: badges,
+                              ),
+                              const SizedBox(height: 6),
+                              heading,
                             ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            headline,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          // Always one line, so every card has the same height.
-                          Text(
-                            subtitle.isEmpty ? ' ' : subtitle,
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.4,
-                              color: foreground.withValues(alpha: .88),
-                            ),
-                          ),
-                        ],
+                            if (subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                subtitle,
+                                style: TextStyle(
+                                  fontSize: compact ? 12 : 14,
+                                  height: 1.4,
+                                  color: foreground.withValues(alpha: .88),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                     // Who appears: one segment per member, or the fill's own
                     // colour when nobody is named.
                     SizedBox(
-                      height: 5,
+                      height: compact ? 3 : 5,
                       child: Row(
                         children: [
                           if (cast.isEmpty || event.isCancelled)

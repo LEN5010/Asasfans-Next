@@ -13,6 +13,7 @@ import '../../../core/network/api_failure.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
+import '../../../shared/widgets/glass/app_glass_controls.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
@@ -26,7 +27,7 @@ import '../../preferences/application/preferences_controller.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
-import '../../updates/presentation/updates_section.dart';
+import '../../updates/presentation/updates_bell_button.dart';
 import '../application/today_providers.dart';
 import 'on_this_day_section.dart';
 
@@ -132,7 +133,7 @@ class _TodayPageState extends ConsumerState<TodayPage> {
         title: Text('今日 · ${CalendarAgenda.date(day)}'),
         actions: [
           const UpdatesBellButton(),
-          IconButton(
+          AppGlassButton.icon(
             tooltip: '刷新今日',
             onPressed: _refreshing ? null : () => _refresh(true),
             icon: _refreshing
@@ -158,60 +159,18 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                 padding: pageInsets(context, top: 4),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final schedule = settings.shows(HomeSection.calendar)
-                          ? _ScheduleSection(day: day, onCalendar: _calendar)
-                          : null;
-                      if (constraints.maxWidth >= 900 && schedule != null) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: schedule),
-                            const SizedBox(width: 24),
-                            const Expanded(child: UpdatesSection()),
-                          ],
-                        );
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (schedule != null) ...[
-                            schedule,
-                            const SizedBox(height: 16),
-                          ],
-                          const UpdatesSection(),
-                        ],
-                      );
-                    },
-                  ),
-                  if (showFanart || showClips) ...[
-                    const SizedBox(height: 24),
-                    LayoutBuilder(
-                      builder: (context, constraints) =>
-                          constraints.maxWidth >= 960 && showFanart && showClips
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(child: fanartShelf),
-                                const SizedBox(width: 24),
-                                Expanded(child: clipsShelf),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                if (showFanart) fanartShelf,
-                                if (showFanart && showClips)
-                                  const SizedBox(height: 24),
-                                if (showClips) clipsShelf,
-                              ],
-                            ),
+                  for (final (index, module) in <Widget>[
+                    if (settings.shows(HomeSection.calendar))
+                      _ScheduleSection(day: day, onCalendar: _calendar),
+                    if (settings.shows(HomeSection.history))
+                      const OnThisDaySection(),
+                    if (showClips) clipsShelf,
+                    if (showFanart) fanartShelf,
+                  ].indexed)
+                    Padding(
+                      padding: EdgeInsets.only(top: index == 0 ? 0 : 24),
+                      child: module,
                     ),
-                  ],
-                  if (settings.shows(HomeSection.history)) ...[
-                    const SizedBox(height: 24),
-                    const OnThisDaySection(),
-                  ],
                 ],
               ),
             ),
@@ -285,12 +244,13 @@ class _ScheduleSection extends ConsumerWidget {
                         event: event,
                         day: next ? null : day,
                         showDate: next,
+                        compact: true,
                       ),
                     ),
                   if (entries.length > 2)
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(
+                      child: AppGlassButton(
                         onPressed: onCalendar,
                         child: Text('还有 ${entries.length - 2} 项安排'),
                       ),
@@ -349,7 +309,7 @@ class _ContentShelf<T> extends StatelessWidget {
       ? const _EmptySection('暂时没有内容')
       : LayoutBuilder(
           builder: (context, constraints) {
-            final width = math.min(220.0, constraints.maxWidth * .72);
+            final width = math.min(280.0, constraints.maxWidth * .76);
             final scaler = MediaQuery.textScalerOf(context);
             final height = values
                 .map((value) => extent(value, width, scaler))
@@ -391,7 +351,7 @@ class _SectionHeader extends StatelessWidget {
       Expanded(
         child: Text(title, style: Theme.of(context).textTheme.titleMedium),
       ),
-      TextButton(onPressed: onAll, child: Text(action)),
+      AppGlassButton(onPressed: onAll, child: Text(action)),
     ],
   );
 }

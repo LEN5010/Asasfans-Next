@@ -53,9 +53,11 @@ class ContentImageGallery extends StatelessWidget {
     super.key,
     required this.images,
     this.aspectRatios = const {},
+    this.preview = false,
   });
   final List<Uri> images;
   final Map<Uri, double> aspectRatios;
+  final bool preview;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,7 @@ class ContentImageGallery extends StatelessWidget {
       final photo = Image.network(
         displayImageUri(uri).toString(),
         width: double.infinity,
-        fit: square ? BoxFit.contain : BoxFit.fitWidth,
+        fit: square || preview ? BoxFit.contain : BoxFit.fitWidth,
         errorBuilder: (_, _, _) => const SizedBox(
           height: 100,
           child: Center(child: Icon(Icons.broken_image_outlined)),
@@ -89,8 +91,15 @@ class ContentImageGallery extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                if (square || ratio != null)
-                  AspectRatio(aspectRatio: square ? 1 : ratio!, child: photo)
+                if (square || ratio != null || preview)
+                  AspectRatio(
+                    aspectRatio: square
+                        ? 1
+                        : preview
+                        ? 16 / 9
+                        : ratio!,
+                    child: photo,
+                  )
                 else
                   photo,
                 if (index == 8 && images.length > 9)
@@ -115,6 +124,33 @@ class ContentImageGallery extends StatelessWidget {
       );
     }
 
+    if (preview)
+      return Stack(
+        children: [
+          image(0),
+          if (images.length > 1)
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    '${images.length} 张图片',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
     if (images.length == 1) return image(0);
     final count = images.length.clamp(0, 9);
     final columns = count == 2 || count == 4 ? 2 : 3;

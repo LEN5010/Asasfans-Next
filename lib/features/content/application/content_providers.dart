@@ -37,13 +37,21 @@ final dynamicRepositoryProvider = Provider<DynamicRepository>(
 /// Cache by the full Shanghai date. Midnight and resume update the key without
 /// refetching on every widget rebuild; a late yesterday response is discarded
 /// by Riverpod's provider generation when the dependency changes.
+final onThisDaySortProvider = StateProvider<OnThisDaySort>(
+  (ref) => OnThisDaySort.hot,
+);
+
 final onThisDayProvider = FutureProvider.autoDispose<List<DynamicPost>>((ref) {
   final day = ref.watch(shanghaiDateProvider);
   final monthDay =
       '${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
   return ref
       .watch(dynamicRepositoryProvider)
-      .onThisDay(monthDay: monthDay, limit: 12);
+      .onThisDay(
+        monthDay: monthDay,
+        sort: ref.watch(onThisDaySortProvider),
+        limit: 12,
+      );
 });
 
 /// Member ids for the search filter. The server wants `uid:<digits>`, which
