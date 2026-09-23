@@ -89,7 +89,9 @@ class _RefractionComparisonState extends State<RefractionComparison> {
                               child: Stack(
                                 children: [
                                   const Positioned.fill(
-                                    child: CustomPaint(painter: _Grid()),
+                                    child: CustomPaint(
+                                      painter: RefractionGridPainter(),
+                                    ),
                                   ),
                                   Positioned(
                                     left: 20,
@@ -121,11 +123,16 @@ class _RefractionComparisonState extends State<RefractionComparison> {
   );
 }
 
-class _Grid extends CustomPainter {
-  const _Grid();
+class RefractionGridPainter extends CustomPainter {
+  const RefractionGridPainter();
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawColor(const Color(0xFFE799B0), BlendMode.src);
+    // CustomPaint does not clip the canvas to size. drawColor would cover the
+    // other comparison tile and dialog controls, invalidating the A/B scene.
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = const Color(0xFFE799B0),
+    );
     final paint = Paint()
       ..color = const Color(0xFF222225)
       ..strokeWidth = 2;
@@ -138,5 +145,5 @@ class _Grid extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_Grid oldDelegate) => false;
+  bool shouldRepaint(RefractionGridPainter oldDelegate) => false;
 }
