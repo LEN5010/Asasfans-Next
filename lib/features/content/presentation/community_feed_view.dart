@@ -134,6 +134,7 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 sliver: SliverGrid.builder(
                   gridDelegate: MediaGridDelegate(
+                    spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
                     crossAxisCount: columns,
                     itemExtents: [
                       for (final video in state.videos)

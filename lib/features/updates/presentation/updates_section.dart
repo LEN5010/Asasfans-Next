@@ -59,11 +59,14 @@ class UpdatesSection extends ConsumerWidget {
           ),
           data: (events) => events.isEmpty
               ? Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     '暂时没有新的更新',

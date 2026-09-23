@@ -9,6 +9,7 @@ import '../../../core/domain/content_identity.dart';
 import '../../library/presentation/library_common.dart';
 import '../../../core/time/calendar_time.dart';
 import '../../../shared/widgets/media_cover.dart';
+import '../../../shared/widgets/media_card_surface.dart';
 import '../../../core/domain/video_summary.dart';
 import '../../creator/presentation/creator_link.dart';
 import '../../handoff/presentation/watch_on_bilibili.dart';
@@ -40,110 +41,106 @@ class VideoCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scaler = MediaQuery.textScalerOf(context);
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      color: theme.colorScheme.surfaceContainerLow,
-      child: InkWell(
-        onTap: () => video.identity.source == ContentSource.bilibiliVideo
-            ? openVideoDetail(context, video.identity.value)
-            : openContentSource(context, ref, ContentSnapshots.video(video)),
-        onLongPress: () => showContentActions(
-          context,
-          ContentSnapshots.video(video),
-          ruleSubject: RuleSubjects.video(video),
-        ),
-        onSecondaryTap: () => showContentActions(
-          context,
-          ContentSnapshots.video(video),
-          ruleSubject: RuleSubjects.video(video),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Stack(
-              children: [
-                MediaCover(
-                  image: video.coverUrl,
-                  aspectRatio: 16 / 9,
-                  video: true,
-                  badge: video.duration == null
-                      ? null
-                      : _duration(video.duration!),
+    void more() => showContentActions(
+      context,
+      ContentSnapshots.video(video),
+      ruleSubject: RuleSubjects.video(video),
+    );
+    return MediaCardSurface(
+      onTap: () => video.identity.source == ContentSource.bilibiliVideo
+          ? openVideoDetail(context, video.identity.value)
+          : openContentSource(context, ref, ContentSnapshots.video(video)),
+      onMore: more,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Stack(
+            children: [
+              MediaCover(
+                image: video.coverUrl,
+                aspectRatio: 16 / 9,
+                video: true,
+                badgeLeading: true,
+                badge: video.duration == null
+                    ? null
+                    : _duration(video.duration!),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                child: MediaMoreButton(onPressed: more),
+              ),
+              // Only a Bilibili video can be handed to Bilibili; anything
+              // else on this card has no external player to go to.
+              if (video.identity.source == ContentSource.bilibiliVideo)
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: WatchOverlayButton(video: video, origin: origin),
                 ),
-                // Only a Bilibili video can be handed to Bilibili; anything
-                // else on this card has no external player to go to.
-                if (video.identity.source == ContentSource.bilibiliVideo)
-                  Positioned(
-                    right: 8,
-                    bottom: 8,
-                    child: WatchOverlayButton(video: video, origin: origin),
-                  ),
-              ],
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: SizedBox(
+              height: MediaCardMetrics.line(scaler, 14, 1.4) * 2,
+              child: Text(
+                video.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  height: 1.4,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-              child: SizedBox(
-                height: MediaCardMetrics.line(scaler, 14, 1.4) * 2,
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+              height: MediaCardMetrics.line(scaler, 12, 1.35),
+              child: CreatorLink(
+                mid: video.creatorId,
                 child: Text(
-                  video.title,
-                  maxLines: 2,
+                  video.creatorName.isEmpty ? '未知作者' : video.creatorName,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    height: 1.4,
-                    fontWeight: FontWeight.w500,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontSize: 12,
+                    height: 1.35,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
             ),
+          ),
+          if (_hasMeta(video)) ...[
             const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: SizedBox(
-                height: MediaCardMetrics.line(scaler, 12, 1.35),
-                child: CreatorLink(
-                  mid: video.creatorId,
-                  child: Text(
-                    video.creatorName.isEmpty ? '未知作者' : video.creatorName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontSize: 12,
-                      height: 1.35,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                height: MediaCardMetrics.line(scaler, 11, 1.35),
+                child: Text(
+                  [
+                    if (video.viewCount != null)
+                      '${_count(video.viewCount!)} 播放',
+                    if (video.publishedAt != null) _date(video.publishedAt!),
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 11,
+                    height: 1.35,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
             ),
-            if (_hasMeta(video)) ...[
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  height: MediaCardMetrics.line(scaler, 11, 1.35),
-                  child: Text(
-                    [
-                      if (video.viewCount != null)
-                        '${_count(video.viewCount!)} 播放',
-                      if (video.publishedAt != null) _date(video.publishedAt!),
-                    ].join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontSize: 11,
-                      height: 1.35,
-                      color: theme.colorScheme.outline,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
           ],
-        ),
+          const SizedBox(height: 10),
+        ],
       ),
     );
   }

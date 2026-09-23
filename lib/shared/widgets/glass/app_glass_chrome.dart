@@ -18,7 +18,10 @@ class AppGlassChrome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (nativeContent ||
+    // A control already inside sampled content must not vote on its own pixels.
+    if (context.findAncestorWidgetOfExactType<GlassContentAwareContent>() !=
+            null ||
+        nativeContent ||
         !AppGlassScope.of(context).usesLiquid ||
         GlassContentAwareScope.maybeOf(context) == null) {
       return builder(context);

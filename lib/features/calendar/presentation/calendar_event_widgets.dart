@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,13 +14,10 @@ Future<void> showCalendarEvent(
   BuildContext context,
   CalendarEvent event, {
   Uri? source,
-}) => showModalBottomSheet<void>(
+}) => showAppPanel<void>(
   context: context,
-  useRootNavigator: true,
-  useSafeArea: true,
-  isScrollControlled: true,
-  showDragHandle: true,
-  constraints: const BoxConstraints(maxWidth: 680),
+
+  maxWidth: 680,
   builder: (_) => CalendarEventDetail(event: event, source: source),
 );
 
@@ -49,7 +46,7 @@ class CalendarEventTile extends StatelessWidget {
       child: InkWell(
         onTap: () => showCalendarEvent(context, event),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -72,7 +69,17 @@ class CalendarEventTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              Container(
+                width: 3,
+                height: 36,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: event.isCancelled
+                      ? theme.colorScheme.outlineVariant
+                      : theme.colorScheme.primary.withValues(alpha: .5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +101,7 @@ class CalendarEventTile extends StatelessWidget {
                         style: theme.textTheme.labelSmall,
                       ),
                     if (members.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         members.join(' · '),
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -154,34 +161,21 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
     final theme = Theme.of(context);
     final members = EventClassifier.members(event);
     return SizedBox(
-      height: math.min(640, MediaQuery.sizeOf(context).height * .84),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 8, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    event.title.isEmpty ? '日程详情' : event.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleLarge,
-                  ),
-                ),
-                IconButton(
-                  tooltip: '关闭日程',
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ),
+          const AppPanelHeader(title: '日程详情', closeLabel: '关闭日程'),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, bottom: 12),
+                  child: SelectableText(
+                    event.title.isEmpty ? '未命名安排' : event.title,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
                 CalendarFollowButton(event: event, source: widget.source),
                 _DetailLine(
                   icon: Icons.schedule,

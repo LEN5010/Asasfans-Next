@@ -25,15 +25,18 @@ class MediaGridDelegate extends SliverGridDelegate {
       >= 760 => 3,
       _ => 2,
     };
-    final minimum = 160 * textScale.clamp(1.0, 1.5);
+    final minimum = (width >= 760 ? 220 : 160) * textScale.clamp(1.0, 1.5);
+    final gap = spacingFor(width);
     return math.max(
       1,
-      math.min(preferred, ((width - 32 + 12) / (minimum + 12)).floor()),
+      math.min(preferred, ((width - 32 + gap) / (minimum + gap)).floor()),
     );
   }
 
+  static double spacingFor(double width) => width >= 760 ? 16 : 12;
+
   static double cellWidth(double width, int columns) =>
-      math.max(0, width - 32 - (columns - 1) * 12) / columns;
+      math.max(0, width - 32 - (columns - 1) * spacingFor(width)) / columns;
 
   @override
   SliverGridLayout getLayout(SliverConstraints constraints) {

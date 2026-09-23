@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/horizontal_choices.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_failure.dart';
@@ -169,7 +170,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  width: (constraints.maxWidth * .34).clamp(320, 380),
+                  width: (constraints.maxWidth * .32).clamp(300, 340),
                   child: ListView(
                     key: const ValueKey('calendar-sidebar'),
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
@@ -295,6 +296,7 @@ class _CalendarFilters extends StatelessWidget {
     final types = [
       for (final value in CalendarFilter.values)
         ChoiceChip(
+          showCheckmark: false,
           label: Text(value.label),
           selected: value == filter,
           onSelected: (_) => onFilter(value),
@@ -310,18 +312,7 @@ class _CalendarFilters extends StatelessWidget {
     ];
     Widget row(List<Widget> children) => wide
         ? Wrap(spacing: 6, runSpacing: 6, children: children)
-        : SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final child in children)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: child,
-                  ),
-              ],
-            ),
-          );
+        : HorizontalChoices(children: children);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
@@ -564,21 +555,17 @@ class _Agenda extends StatelessWidget {
     final from = week ? CalendarAgenda.weekStart(day) : day;
     final until = from.add(Duration(days: week ? 7 : 1));
     final children = <Widget>[
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          ChoiceChip(
-            label: const Text('当天'),
-            selected: !week,
-            onSelected: (_) => onWeek(false),
-          ),
-          ChoiceChip(
-            label: const Text('周议程'),
-            selected: week,
-            onSelected: (_) => onWeek(true),
-          ),
-        ],
+      Align(
+        alignment: Alignment.centerLeft,
+        child: SegmentedButton<bool>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(value: false, label: Text('当天')),
+            ButtonSegment(value: true, label: Text('周议程')),
+          ],
+          selected: {week},
+          onSelectionChanged: (values) => onWeek(values.single),
+        ),
       ),
       const SizedBox(height: 12),
       Text(

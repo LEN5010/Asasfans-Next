@@ -105,7 +105,9 @@ abstract final class AppTheme {
         textColor: colors.onSurface,
         selectedColor: colors.primary,
         selectedTileColor: colors.primaryContainer,
-        shape: cardShape,
+        minTileHeight: 56,
+        minLeadingWidth: 24,
+        horizontalTitleGap: 12,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: content,

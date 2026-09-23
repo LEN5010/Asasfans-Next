@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -83,12 +84,10 @@ class RuleStatusBar<T> extends StatelessWidget {
             TextButton.icon(
               icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
               label: Text('已屏蔽 ${visibility.hidden.length}'),
-              onPressed: () => showModalBottomSheet<void>(
+              onPressed: () => showAppPanel<void>(
                 context: context,
-                useRootNavigator: true,
-                useSafeArea: true,
-                showDragHandle: true,
-                constraints: const BoxConstraints(maxWidth: 640),
+
+                maxWidth: 640,
                 builder: (_) => _HiddenItems(visibility: visibility),
               ),
             ),
@@ -109,19 +108,7 @@ class _HiddenItems<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
-        child: Row(
-          children: [
-            const Expanded(child: Text('屏蔽记录')),
-            IconButton(
-              tooltip: '关闭',
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close),
-            ),
-          ],
-        ),
-      ),
+      const AppPanelHeader(title: '屏蔽记录'),
       Expanded(
         child: ListView.builder(
           itemCount: visibility.hidden.length,

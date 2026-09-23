@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
 
@@ -78,13 +78,10 @@ class FanartFilterButton extends StatelessWidget {
         child: const Icon(Icons.tune),
       ),
       onPressed: () async {
-        final result = await showModalBottomSheet<FanartQuery>(
+        final result = await showAppPanel<FanartQuery>(
           context: context,
-          useRootNavigator: true,
-          useSafeArea: true,
-          isScrollControlled: true,
-          showDragHandle: true,
-          constraints: const BoxConstraints(maxWidth: 560),
+
+          maxWidth: 600,
           builder: (_) => _FilterPanel(query: query),
         );
         if (result != null && context.mounted && result != query) {
@@ -108,31 +105,18 @@ class _FilterPanelState extends State<_FilterPanel> {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: math.min(680, MediaQuery.sizeOf(context).height * .84),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '筛选',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              TextButton(
-                onPressed: () => _change(FanartFilterRules.reset(_draft)),
-                child: const Text('重置'),
-              ),
-              IconButton(
-                tooltip: '关闭筛选',
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
+        AppPanelHeader(
+          title: '筛选',
+          closeLabel: '关闭筛选',
+          actions: [
+            TextButton(
+              onPressed: () => _change(FanartFilterRules.reset(_draft)),
+              child: const Text('重置'),
+            ),
+          ],
         ),
         Expanded(
           child: ListView(

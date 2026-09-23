@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/content_rules.dart';
@@ -9,13 +10,10 @@ Future<RuleChange?> requestContentRule(
   BuildContext context,
   RulesRepository repository,
   RuleSubject subject,
-) => showModalBottomSheet<RuleChange>(
+) => showAppPanel<RuleChange>(
   context: context,
-  useRootNavigator: true,
-  useSafeArea: true,
-  showDragHandle: true,
-  isScrollControlled: true,
-  constraints: const BoxConstraints(maxWidth: 600),
+
+  maxWidth: 600,
   builder: (_) => _BlockingActions(repository: repository, subject: subject),
 );
 
@@ -71,15 +69,7 @@ class _BlockingActionsState extends State<_BlockingActions> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  subject.displayTitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+              AppPanelHeader(title: subject.displayTitle, canClose: !_busy),
               if (_busy) const LinearProgressIndicator(),
               if (_error != null)
                 Padding(

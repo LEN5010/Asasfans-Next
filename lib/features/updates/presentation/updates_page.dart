@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,7 +29,7 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
     final state = ref.watch(updateListProvider(_filter));
     final pager = ref.read(updateListProvider(_filter).notifier);
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('更新'),
         actions: [
           IconButton(
@@ -63,6 +64,7 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
                 child: SegmentedButton<UpdateFilter>(
+                  showSelectedIcon: false,
                   segments: const [
                     ButtonSegment(
                       value: UpdateFilter.inbox,

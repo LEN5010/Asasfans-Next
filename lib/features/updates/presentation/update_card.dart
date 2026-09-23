@@ -38,59 +38,96 @@ class UpdateCard extends ConsumerWidget {
     final controller = ref.watch(updateControllerProvider);
     final coordinator = ref.watch(handoffCoordinatorProvider);
     final unread = !event.read;
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      leading: _Badge(event: event, unread: unread),
-      title: Text(
-        event.title,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: unread ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Text(
-          '${event.subtitle} · ${_when(context, event.occurredAt)}',
-          maxLines: 1,
+    return LayoutBuilder(
+      builder: (context, constraints) => ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        leading: _Badge(event: event, unread: unread),
+        title: Text(
+          event.title,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: unread ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
-      ),
-      onTap: () => _open(context, ref),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (event.kind == UpdateKind.subscriptionVideo)
-            IconButton(
-              tooltip: '去 B 站看',
-              // One handoff at a time, matching every other video entry.
-              onPressed: coordinator.busy ? null : () => _open(context, ref),
-              icon: const Icon(Icons.play_arrow),
-            ),
-          IconButton(
-            tooltip: unread ? '标记已读' : '标记未读',
-            onPressed: () => controller.markRead([event.id], read: unread),
-            icon: Icon(
-              unread
-                  ? Icons.mark_email_read_outlined
-                  : Icons.mark_email_unread_outlined,
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            '${event.subtitle} · ${_when(context, event.occurredAt)}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          IconButton(
-            tooltip: event.archived ? '移回收件箱' : '归档',
-            onPressed: () =>
-                controller.archive([event.id], archived: !event.archived),
-            icon: Icon(
-              event.archived
-                  ? Icons.unarchive_outlined
-                  : Icons.archive_outlined,
-            ),
-          ),
-        ],
+        ),
+        onTap: () => _open(context, ref),
+        trailing: constraints.maxWidth < 560
+            ? PopupMenuButton<String>(
+                tooltip: '更新操作',
+                icon: const Icon(Icons.more_horiz),
+                onSelected: (action) {
+                  switch (action) {
+                    case 'open':
+                      _open(context, ref);
+                    case 'read':
+                      controller.markRead([event.id], read: unread);
+                    case 'archive':
+                      controller.archive([event.id], archived: !event.archived);
+                  }
+                },
+                itemBuilder: (_) => [
+                  if (event.kind == UpdateKind.subscriptionVideo)
+                    PopupMenuItem(
+                      value: 'open',
+                      enabled: !coordinator.busy,
+                      child: const Text('去 B 站看'),
+                    ),
+                  PopupMenuItem(
+                    value: 'read',
+                    child: Text(unread ? '标记已读' : '标记未读'),
+                  ),
+                  PopupMenuItem(
+                    value: 'archive',
+                    child: Text(event.archived ? '移回收件箱' : '归档'),
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (event.kind == UpdateKind.subscriptionVideo)
+                    IconButton(
+                      tooltip: '去 B 站看',
+                      // One handoff at a time, matching every other video entry.
+                      onPressed: coordinator.busy
+                          ? null
+                          : () => _open(context, ref),
+                      icon: const Icon(Icons.play_arrow),
+                    ),
+                  IconButton(
+                    tooltip: unread ? '标记已读' : '标记未读',
+                    onPressed: () =>
+                        controller.markRead([event.id], read: unread),
+                    icon: Icon(
+                      unread
+                          ? Icons.mark_email_read_outlined
+                          : Icons.mark_email_unread_outlined,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: event.archived ? '移回收件箱' : '归档',
+                    onPressed: () => controller.archive([
+                      event.id,
+                    ], archived: !event.archived),
+                    icon: Icon(
+                      event.archived
+                          ? Icons.unarchive_outlined
+                          : Icons.archive_outlined,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

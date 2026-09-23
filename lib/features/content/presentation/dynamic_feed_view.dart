@@ -58,14 +58,20 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
       final state = _controller.state;
       return Column(
         children: [
-          _TypeFilter(query: state.query, onChanged: _applyQuery),
-          const SizedBox(height: 8),
-          SavedChannelBar(
-            feed: ChannelFeed.dynamic,
-            currentSpec: () => ChannelSpec.ofDynamic(_controller.state.query),
-            onOpen: (spec) => _applyQuery(spec.toDynamic()),
+          Row(
+            children: [
+              Expanded(
+                child: _TypeFilter(query: state.query, onChanged: _applyQuery),
+              ),
+              SavedChannelBar(
+                feed: ChannelFeed.dynamic,
+                currentSpec: () =>
+                    ChannelSpec.ofDynamic(_controller.state.query),
+                onOpen: (spec) => _applyQuery(spec.toDynamic()),
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
-          const SizedBox(height: 8),
           Expanded(
             child: RuleFilterScope(
               items: state.items,
@@ -321,11 +327,20 @@ class _DynamicCard extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  IconButton(
+                    tooltip: '更多操作',
+                    icon: const Icon(Icons.more_horiz),
+                    onPressed: () => showContentActions(
+                      context,
+                      ContentSnapshots.dynamic(post),
+                      ruleSubject: RuleSubjects.dynamic(post),
+                    ),
+                  ),
                   if (post.publishedAt != null)
                     Text(
                       _shanghaiDate(post.publishedAt!),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.outline,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                 ],

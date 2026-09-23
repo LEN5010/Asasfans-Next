@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import '../../creator/presentation/creator_link.dart';
 import '../../subscriptions/presentation/subscription_feed_view.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class CollectionsPage extends ConsumerWidget {
     final folders = ref.watch(libraryFoldersProvider);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('收藏夹'),
         actions: [
           IconButton(
@@ -102,14 +103,14 @@ class CollectionPage extends ConsumerWidget {
     final folder = folderState.valueOrNull;
     if (folderState.hasValue && !folderState.isLoading && folder == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('收藏夹')),
+        appBar: AppPageBar(title: const Text('收藏夹')),
         body: const Center(child: Text('收藏夹不存在')),
       );
     }
     final name = folder?.name ?? '收藏夹';
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(name)),
+      appBar: AppPageBar(title: Text(name)),
       body: LibraryBody(
         child: LibraryRecordList(
           state: records,
@@ -142,7 +143,7 @@ class _WatchLaterPageState extends ConsumerState<WatchLaterPage> {
     final records = ref.watch(provider);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('稍后看')),
+      appBar: AppPageBar(title: const Text('稍后看')),
       body: LibraryBody(
         child: Column(
           children: [
@@ -204,7 +205,7 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
     final repository = ref.read(libraryRepositoryProvider);
     final records = ref.watch(provider);
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('历史记录'),
         actions: [
           IconButton(
@@ -376,7 +377,7 @@ class SubscriptionsPage extends ConsumerWidget {
     final subscriptions = ref.watch(localSubscriptionsProvider);
     final repository = ref.read(libraryRepositoryProvider);
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('本地订阅'),
         actions: [
           IconButton(
@@ -385,7 +386,7 @@ class SubscriptionsPage extends ConsumerWidget {
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute<void>(
                 builder: (_) => Scaffold(
-                  appBar: AppBar(title: const Text('订阅更新')),
+                  appBar: AppPageBar(title: const Text('订阅更新')),
                   body: const SubscriptionFeedView(),
                 ),
               ),

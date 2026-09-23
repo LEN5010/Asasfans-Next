@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import '../../rules/application/feed_visibility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +31,7 @@ class FanartDetailPage extends ConsumerWidget {
     return HistoryRecorder(
       item: ContentSnapshots.fanart(item),
       child: Scaffold(
-        appBar: AppBar(
+        appBar: AppPageBar(
           title: Text(item.authorName.isEmpty ? '二创详情' : item.authorName),
           actions: [
             ContentActionsButton(

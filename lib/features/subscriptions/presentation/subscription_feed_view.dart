@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_panel.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -166,6 +167,9 @@ class _SubscriptionFeedViewState extends ConsumerState<SubscriptionFeedView> {
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                             sliver: SliverGrid.builder(
                               gridDelegate: MediaGridDelegate(
+                                spacing: MediaGridDelegate.spacingFor(
+                                  constraints.maxWidth,
+                                ),
                                 crossAxisCount: columns,
                                 itemExtents: [
                                   for (final item in items)
@@ -305,27 +309,13 @@ class _SubscriptionFeedViewState extends ConsumerState<SubscriptionFeedView> {
 
   Future<void> _showIssues(SubscriptionFeedController controller) async {
     final issues = controller.issues;
-    final retry = await showModalBottomSheet<bool>(
+    final retry = await showAppPanel<bool>(
       context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      constraints: const BoxConstraints(maxWidth: 720),
+
+      maxWidth: 680,
       builder: (context) => Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
-            child: Row(
-              children: [
-                const Expanded(child: Text('加载失败')),
-                IconButton(
-                  tooltip: '关闭',
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ),
+          const AppPanelHeader(title: '加载失败'),
           Expanded(
             child: ListView.builder(
               itemCount: issues.length,

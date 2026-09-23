@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'glass/app_glass_surface.dart';
 
 /// A root-overlay panel: bottom sheet on compact windows, centered on desktop.
 /// Its builder receives bounded, keyboard-aware space for a scrolling body.
 Future<T?> showAppPanel<T>({
   required BuildContext context,
   required WidgetBuilder builder,
-  double maxWidth = 720,
-  double heightFactor = .82,
+  double maxWidth = 680,
+  double heightFactor = .80,
 }) {
   final wide = MediaQuery.sizeOf(context).width >= 840;
   Widget content(BuildContext context) {
@@ -48,5 +49,50 @@ Future<T?> showAppPanel<T>({
     showDragHandle: true,
     constraints: BoxConstraints(maxWidth: maxWidth),
     builder: content,
+  );
+}
+
+/// Fixed control header; the panel body owns scrolling and stays opaque.
+class AppPanelHeader extends StatelessWidget {
+  const AppPanelHeader({
+    super.key,
+    required this.title,
+    this.closeLabel = '关闭',
+    this.actions = const [],
+    this.onClose,
+    this.canClose = true,
+  });
+  final String title;
+  final String closeLabel;
+  final List<Widget> actions;
+  final VoidCallback? onClose;
+  final bool canClose;
+
+  @override
+  Widget build(BuildContext context) => AppGlassSurface(
+    radius: 22,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          ...actions,
+          IconButton(
+            tooltip: closeLabel,
+            onPressed: canClose
+                ? (onClose ?? () => Navigator.pop(context))
+                : null,
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
+    ),
   );
 }

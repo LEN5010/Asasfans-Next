@@ -1,9 +1,9 @@
+import '../../../shared/widgets/app_panel.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/application/rules_providers.dart';
 import '../../rules/domain/content_rules.dart';
 import '../../rules/presentation/blocking_actions.dart';
 import '../../rules/presentation/rule_common.dart';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,13 +17,10 @@ Future<void> showContentActions(
   BuildContext context,
   ContentSnapshot item, {
   RuleSubject? ruleSubject,
-}) => showModalBottomSheet<void>(
+}) => showAppPanel<void>(
   context: context,
-  useRootNavigator: true,
-  useSafeArea: true,
-  isScrollControlled: true,
-  showDragHandle: true,
-  constraints: const BoxConstraints(maxWidth: 600),
+
+  maxWidth: 600,
   builder: (_) => ContentActionsSheet(item: item, ruleSubject: ruleSubject),
 );
 
@@ -78,30 +75,10 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
     final repository = ref.read(libraryRepositoryProvider);
     final disabled = _busy || itemState.isLoading || folders.loading;
     return SizedBox(
-      height: math.min(580, MediaQuery.sizeOf(context).height * .8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.item.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  tooltip: '关闭',
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ),
+          AppPanelHeader(title: widget.item.title),
           if (_busy) const LinearProgressIndicator(minHeight: 2),
           if (_error != null)
             Padding(

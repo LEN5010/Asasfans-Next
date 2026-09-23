@@ -16,31 +16,51 @@ class _MinePageState extends State<MinePage> {
   int _section = 0;
   @override
   Widget build(BuildContext context) {
+    List<Widget> links(List<(String, String, IconData)> entries) => [
+      for (final entry in entries)
+        ListTile(
+          leading: Icon(entry.$3, size: 22),
+          title: Text(entry.$1),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          minLeadingWidth: 24,
+          horizontalTitleGap: 12,
+          trailing: const Icon(Icons.chevron_right, size: 20),
+          onTap: () => context.go('/mine/${entry.$2}'),
+        ),
+    ];
     final groups = [
-      _SettingsGroup(
-        title: '个人资料',
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AccountSummaryTile(),
-          for (final entry in const [
-            // Named for what it actually is: updates the app collected while
-            // running, not notifications the system delivered.
-            ('应用内更新', 'updates', Icons.notifications_none),
-            ('收藏', 'saved', AppIcons.saved),
-            ('稍后看', 'later', Icons.watch_later_outlined),
-            ('继续观看', 'continue', Icons.play_circle_outline),
-            ('时间书签', 'bookmarks', AppIcons.bookmark),
-            ('历史记录', 'history', Icons.history),
-            ('订阅管理', 'subscriptions', Icons.person_add_alt),
-            ('关注日程', 'calendar-follows', Icons.event_available_outlined),
-            ('内容规则', 'rules', Icons.filter_alt_outlined),
-            ('备份与恢复', 'backup', Icons.backup_outlined),
-          ])
-            ListTile(
-              leading: Icon(entry.$3),
-              title: Text(entry.$1),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/mine/${entry.$2}'),
-            ),
+          const _SettingsGroup(title: '账号', children: [AccountSummaryTile()]),
+          const SizedBox(height: 20),
+          _SettingsGroup(
+            title: '我的内容',
+            children: links(const [
+              ('收藏', 'saved', AppIcons.saved),
+              ('稍后看', 'later', Icons.watch_later_outlined),
+              ('继续观看', 'continue', Icons.play_circle_outline),
+              ('时间书签', 'bookmarks', AppIcons.bookmark),
+              ('历史记录', 'history', Icons.history),
+            ]),
+          ),
+          const SizedBox(height: 20),
+          _SettingsGroup(
+            title: '订阅与日程',
+            children: links(const [
+              ('应用内更新', 'updates', Icons.notifications_none),
+              ('订阅管理', 'subscriptions', Icons.person_add_alt),
+              ('关注日程', 'calendar-follows', Icons.event_available_outlined),
+            ]),
+          ),
+          const SizedBox(height: 20),
+          _SettingsGroup(
+            title: '资料管理',
+            children: links(const [
+              ('内容规则', 'rules', Icons.filter_alt_outlined),
+              ('备份与恢复', 'backup', Icons.backup_outlined),
+            ]),
+          ),
         ],
       ),
       const _SettingsGroup(title: '偏好', children: [PreferencesControls()]),
@@ -68,7 +88,7 @@ class _MinePageState extends State<MinePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  width: 220,
+                  width: 192,
                   child: ListView(
                     key: const ValueKey('mine-sections'),
                     padding: const EdgeInsets.all(16),
@@ -143,7 +163,7 @@ class _SettingsGroup extends StatelessWidget {
         child: Text(
           title,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),

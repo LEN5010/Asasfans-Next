@@ -7,6 +7,7 @@ import '../../subscriptions/presentation/subscription_feed_view.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/glass/app_glass_surface.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -43,6 +44,7 @@ class ContentPage extends ConsumerWidget {
       body: SafeArea(
         bottom: false,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             LayoutBuilder(
               builder: (context, constraints) => Padding(
@@ -52,7 +54,13 @@ class ContentPage extends ConsumerWidget {
                   children: [
                     Expanded(child: _ChannelStrip(current: current)),
                     const SizedBox(width: 6),
-                    _headerActions(ref, current, constraints.maxWidth >= 1040),
+                    AppGlassSurface(
+                      child: _headerActions(
+                        ref,
+                        current,
+                        constraints.maxWidth >= 1040,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -186,6 +194,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
           Padding(
             padding: const EdgeInsets.only(right: 6),
             child: ChoiceChip(
+              showCheckmark: false,
               key: widget.current == value ? _selected : ValueKey(value),
               label: Text(value.label),
               selected: widget.current == value,
@@ -374,14 +383,23 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
         final state = _controller.state;
         return Column(
           children: [
-            FanartFilterBar(query: state.query, onChanged: _applyQuery),
-            const SizedBox(height: 8),
-            SavedChannelBar(
-              feed: ChannelFeed.fanart,
-              currentSpec: () => ChannelSpec.ofFanart(_controller.state.query),
-              onOpen: (spec) => _applyQuery(spec.toFanart()),
+            Row(
+              children: [
+                Expanded(
+                  child: FanartFilterBar(
+                    query: state.query,
+                    onChanged: _applyQuery,
+                  ),
+                ),
+                SavedChannelBar(
+                  feed: ChannelFeed.fanart,
+                  currentSpec: () =>
+                      ChannelSpec.ofFanart(_controller.state.query),
+                  onOpen: (spec) => _applyQuery(spec.toFanart()),
+                ),
+                const SizedBox(width: 8),
+              ],
             ),
-            const SizedBox(height: 8),
             Expanded(
               child: RuleFilterScope(
                 items: state.items,
@@ -481,6 +499,7 @@ class _FanartGrid extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               sliver: SliverGrid.builder(
                 gridDelegate: MediaGridDelegate(
+                  spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
                   crossAxisCount: columns,
                   itemExtents: [
                     for (final item in state.items)

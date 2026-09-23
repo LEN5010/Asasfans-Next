@@ -5,7 +5,7 @@ abstract final class MediaCardMetrics {
   static double line(TextScaler scaler, double size, double height) =>
       (scaler.scale(size) * height).ceilToDouble();
   static double caption(TextScaler scaler) =>
-      26 + line(scaler, 14, 1.4) * 2 + line(scaler, 12, 1.35);
+      22 + line(scaler, 14, 1.4) * 2 + line(scaler, 12, 1.35);
 }
 
 class MediaCover extends StatelessWidget {
@@ -14,12 +14,14 @@ class MediaCover extends StatelessWidget {
     required this.aspectRatio,
     this.badge,
     this.video = false,
+    this.badgeLeading = false,
     super.key,
   });
   final Uri? image;
   final double aspectRatio;
   final String? badge;
   final bool video;
+  final bool badgeLeading;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -51,22 +53,31 @@ class MediaCover extends StatelessWidget {
           _fallback(context),
         if (badge != null)
           Positioned(
-            right: 8,
+            left: badgeLeading ? 8 : null,
+            right: badgeLeading ? 64 : 8,
             bottom: 8,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: .66),
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                child: Text(
-                  badge!,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    height: 1.3,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              widthFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: .66),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    badge!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      height: 1.3,
+                    ),
                   ),
                 ),
               ),

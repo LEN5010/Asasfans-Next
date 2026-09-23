@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_failure.dart';
@@ -167,7 +168,7 @@ class CommentTile extends StatelessWidget {
     void openReplies() => Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('评论回复')),
+          appBar: AppPageBar(title: const Text('评论回复')),
           body: SafeArea(
             top: false,
             child: Align(

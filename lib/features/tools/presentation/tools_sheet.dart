@@ -51,24 +51,8 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 8, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '工具',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
+        const AppPanelHeader(title: '工具'),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: TextField(
@@ -104,11 +88,13 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
               : LayoutBuilder(
                   builder: (context, constraints) {
                     final scaler = MediaQuery.textScalerOf(context);
-                    final minimum = 128 * scaler.scale(1).clamp(1.0, 1.4);
+                    final minimum =
+                        (constraints.maxWidth >= 560 ? 128 : 92) *
+                        scaler.scale(1).clamp(1.0, 1.65);
                     final columns =
                         ((constraints.maxWidth - 40 + 12) / (minimum + 12))
                             .floor()
-                            .clamp(1, 5);
+                            .clamp(1, constraints.maxWidth >= 560 ? 4 : 3);
                     return CustomScrollView(
                       slivers: [
                         for (final category in ToolCategory.values) ...[
@@ -144,7 +130,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                                       mainAxisSpacing: 10,
                                       crossAxisSpacing: 10,
                                       mainAxisExtent:
-                                          80 +
+                                          64 +
                                           (scaler.scale(14) * 1.35)
                                                   .ceilToDouble() *
                                               2,
@@ -184,35 +170,51 @@ class _ToolTile extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Material(
       color: colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.all(10),
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  _toolIcon(tool.id),
-                  size: 23,
-                  color: colors.onPrimaryContainer,
+              Positioned(
+                right: 0,
+                top: 0,
+                child: ExcludeSemantics(
+                  child: Icon(
+                    Icons.open_in_new,
+                    size: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                tool.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, height: 1.35),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      _toolIcon(tool.id),
+                      size: 22,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    tool.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, height: 1.35),
+                  ),
+                ],
               ),
             ],
           ),

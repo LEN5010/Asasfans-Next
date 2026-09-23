@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -48,7 +49,7 @@ class _RulesPageState extends ConsumerState<RulesPage> {
         <ContentRule>[];
     final disabled = _busy || !policy.ready;
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('内容规则'),
         actions: [
           IconButton(

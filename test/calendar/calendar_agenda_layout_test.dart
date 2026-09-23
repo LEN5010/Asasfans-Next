@@ -171,7 +171,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('十月安排'), findsNothing);
-    await tester.tap(find.widgetWithText(ChoiceChip, '周议程'));
+    await tester.tap(find.text('周议程'));
     await tester.pumpAndSettle();
     expect(find.text('九月安排'), findsOneWidget);
     expect(find.text('十月安排'), findsOneWidget);

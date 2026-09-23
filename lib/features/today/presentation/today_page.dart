@@ -23,7 +23,6 @@ import '../../preferences/application/preferences_controller.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
-import '../../tools/presentation/tools_sheet.dart';
 import '../../updates/application/update_providers.dart';
 import '../../updates/presentation/updates_section.dart';
 import '../application/today_providers.dart';
@@ -165,11 +164,33 @@ class _TodayPageState extends ConsumerState<TodayPage> {
               ),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                if (settings.shows(HomeSection.calendar)) ...[
-                  _ScheduleSection(day: day, onCalendar: _calendar),
-                  const SizedBox(height: 12),
-                ],
-                const UpdatesSection(),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final schedule = settings.shows(HomeSection.calendar)
+                        ? _ScheduleSection(day: day, onCalendar: _calendar)
+                        : null;
+                    if (constraints.maxWidth >= 900 && schedule != null) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: schedule),
+                          const SizedBox(width: 24),
+                          const Expanded(child: UpdatesSection()),
+                        ],
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (schedule != null) ...[
+                          schedule,
+                          const SizedBox(height: 12),
+                        ],
+                        const UpdatesSection(),
+                      ],
+                    );
+                  },
+                ),
                 const SizedBox(height: 16),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -189,11 +210,6 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                         '直播日历',
                         Icons.calendar_month_outlined,
                         _calendar,
-                      ),
-                      _Shortcut(
-                        '社区工具',
-                        Icons.widgets_outlined,
-                        () => showToolsSheet(context),
                       ),
                     ],
                   ),
@@ -432,11 +448,11 @@ class _EmptySection extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(24),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     alignment: Alignment.centerLeft,
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
     ),
     child: Text(
       text,

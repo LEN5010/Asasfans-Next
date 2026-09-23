@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -94,7 +95,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_merging,
     child: Scaffold(
-      appBar: AppBar(title: const Text('备份与恢复')),
+      appBar: AppPageBar(title: const Text('备份与恢复')),
       body: LibraryBody(
         child: ListView(
           padding: const EdgeInsets.all(20),

@@ -26,7 +26,12 @@ class AppGlassScope extends StatefulWidget {
   final SystemTransparency? transparencyOverride;
 
   static GlassPolicy of(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_GlassPolicyScope>()!.policy;
+      context.dependOnInheritedWidgetOfExactType<_GlassPolicyScope>()?.policy ??
+      const GlassPolicy(
+        fallback: GlassFallback.userChoice,
+        reduceMotion: false,
+        active: true,
+      );
 
   @override
   State<AppGlassScope> createState() => _AppGlassScopeState();

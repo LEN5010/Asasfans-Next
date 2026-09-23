@@ -18,6 +18,17 @@ SliverConstraints _constraints({bool reverse = false}) => SliverConstraints(
 );
 
 void main() {
+  test('wide spacing and card geometry use the same available width', () {
+    final columns = MediaGridDelegate.columnsFor(1100);
+    final gap = MediaGridDelegate.spacingFor(1100);
+    expect(gap, 16);
+    expect(
+      MediaGridDelegate.cellWidth(1100, columns) * columns +
+          gap * (columns - 1),
+      closeTo(1068, .001),
+    );
+    expect(MediaGridDelegate.spacingFor(390), 12);
+  });
   test(
     'row maximums protect tall artwork while short text cards keep their own height',
     () {

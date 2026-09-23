@@ -20,7 +20,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('个人资料'), findsOneWidget);
+      expect(find.text('账号'), findsOneWidget);
+      expect(find.text('我的内容'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('偏好'), 180);
       expect(find.text('偏好'), findsOneWidget);
       expect(find.text('订阅管理'), findsOneWidget);
       expect(find.text('主题'), findsOneWidget);

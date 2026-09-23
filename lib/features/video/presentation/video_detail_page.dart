@@ -1,3 +1,5 @@
+import '../../../shared/widgets/app_panel.dart';
+import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/domain/bilibili_id.dart';
@@ -36,7 +38,7 @@ class VideoDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (!validBvid(bvid)) {
       return Scaffold(
-        appBar: AppBar(title: const Text('视频详情')),
+        appBar: AppPageBar(title: const Text('视频详情')),
         body: const Center(child: Text('视频编号无效')),
       );
     }
@@ -55,7 +57,7 @@ class VideoDetailPage extends ConsumerWidget {
           )
         : ContentSnapshots.video(detail.video);
     final scaffold = Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('视频详情'),
         actions: [
           if (detail != null)
@@ -292,32 +294,33 @@ class _VideoPanel extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               onPressed: () async {
-                final selected = await showModalBottomSheet<String>(
+                final selected = await showAppPanel<String>(
                   context: context,
-                  useRootNavigator: true,
-                  useSafeArea: true,
-                  isScrollControlled: true,
-                  showDragHandle: true,
-                  constraints: const BoxConstraints(maxWidth: 650),
-                  builder: (context) => SizedBox(
-                    height: MediaQuery.sizeOf(context).height * .7,
-                    child: ListView.builder(
-                      itemCount: detail.parts.length,
-                      itemBuilder: (context, index) {
-                        final entry = detail.parts[index];
-                        return ListTile(
-                          selected: entry.cid == part.cid,
-                          title: Text('P${entry.number} · ${entry.title}'),
-                          subtitle: entry.duration == null
-                              ? null
-                              : Text(_duration(entry.duration!)),
-                          trailing: entry.cid == part.cid
-                              ? const Icon(Icons.check)
-                              : null,
-                          onTap: () => Navigator.pop(context, entry.cid),
-                        );
-                      },
-                    ),
+
+                  maxWidth: 650,
+                  builder: (context) => Column(
+                    children: [
+                      const AppPanelHeader(title: '选择分 P'),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: detail.parts.length,
+                          itemBuilder: (context, index) {
+                            final entry = detail.parts[index];
+                            return ListTile(
+                              selected: entry.cid == part.cid,
+                              title: Text('P${entry.number} · ${entry.title}'),
+                              subtitle: entry.duration == null
+                                  ? null
+                                  : Text(_duration(entry.duration!)),
+                              trailing: entry.cid == part.cid
+                                  ? const Icon(Icons.check)
+                                  : null,
+                              onTap: () => Navigator.pop(context, entry.cid),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 );
                 if (context.mounted && selected != null) {

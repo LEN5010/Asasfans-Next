@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import '../../creator/presentation/creator_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +19,7 @@ class SavedContentPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => HistoryRecorder(
     item: item,
     child: Scaffold(
-      appBar: AppBar(
+      appBar: AppPageBar(
         title: const Text('内容详情'),
         actions: [
           ContentActionsButton(item: item),

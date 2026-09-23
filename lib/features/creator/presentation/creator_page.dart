@@ -1,3 +1,4 @@
+import '../../../shared/widgets/app_page_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,7 +39,7 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
   Widget build(BuildContext context) {
     if (!validBilibiliMid(widget.mid)) {
       return Scaffold(
-        appBar: AppBar(title: const Text('UP 主页')),
+        appBar: AppPageBar(title: const Text('UP 主页')),
         body: const Center(child: Text('UID 无效')),
       );
     }
@@ -47,7 +48,7 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
     return CreatorRouteScope(
       mid: widget.mid,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: AppPageBar(
           title: Text(
             controller.profile?.name ?? 'UP 主页',
             maxLines: 1,
@@ -173,6 +174,9 @@ class _CreatorPageState extends ConsumerState<CreatorPage> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   sliver: SliverGrid.builder(
                     gridDelegate: MediaGridDelegate(
+                      spacing: MediaGridDelegate.spacingFor(
+                        constraints.maxWidth,
+                      ),
                       crossAxisCount: columns,
                       itemExtents: [
                         for (final item in items)

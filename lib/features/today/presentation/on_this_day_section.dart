@@ -39,7 +39,7 @@ class OnThisDaySection extends ConsumerWidget {
         const SizedBox(height: 12),
         posts.when(
           loading: () => const SizedBox(
-            height: 188,
+            height: 64,
             child: Center(child: CircularProgressIndicator()),
           ),
           error: (error, stack) => _SectionError(
@@ -52,12 +52,26 @@ class OnThisDaySection extends ConsumerWidget {
             builder: (visible) => Column(
               children: [
                 RuleStatusBar(visibility: visible),
-                SizedBox(
-                  height:
-                      188 *
-                      MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
-                  child: _posts(context, visible.items),
-                ),
+                if (visible.items.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '往年今天还没有记录',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height:
+                        188 *
+                        MediaQuery.textScalerOf(
+                          context,
+                        ).scale(1).clamp(1.0, 1.6),
+                    child: _posts(context, visible.items),
+                  ),
               ],
             ),
           ),
@@ -73,7 +87,7 @@ class OnThisDaySection extends ConsumerWidget {
             child: Text(
               '往年今天还没有记录',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.outline,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           )
@@ -125,18 +139,30 @@ class _PostCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (image != null)
-                SizedBox(
-                  height: 96,
-                  width: double.infinity,
-                  child: Image.network(
-                    image.toString(),
-                    fit: BoxFit.cover,
-                    cacheWidth: 440,
-                    errorBuilder: (context, error, stack) => ColoredBox(
-                      color: theme.colorScheme.surfaceContainerHighest,
+                if (visible.items.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '往年今天还没有记录',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height: 96,
+                    width: double.infinity,
+                    child: Image.network(
+                      image.toString(),
+                      fit: BoxFit.cover,
+                      cacheWidth: 440,
+                      errorBuilder: (context, error, stack) => ColoredBox(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                      ),
                     ),
                   ),
-                ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
