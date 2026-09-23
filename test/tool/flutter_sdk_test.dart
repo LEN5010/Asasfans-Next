@@ -108,5 +108,12 @@ void main() {
       RegExp("flutter-version: '$version'").allMatches(workflow),
       hasLength(2),
     );
+    final developmentWorkflow = File(
+      '.github/workflows/flutter-development-validation.yml',
+    ).readAsStringSync();
+    expect(developmentWorkflow, contains("flutter-version: '$version'"));
+    expect(developmentWorkflow, isNot(contains('secrets.')));
+    expect(developmentWorkflow, isNot(contains('--release')));
+    expect(developmentWorkflow, contains('build ios --debug --no-codesign'));
   });
 }

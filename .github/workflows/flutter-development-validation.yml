@@ -1,0 +1,85 @@
+name: Flutter Development Validation
+
+on:
+  push:
+    branches: ['dev/flutter-rebuild']
+    paths:
+      - '.github/workflows/flutter-development-validation.yml'
+      - '.flutter-version'
+      - 'pubspec.*'
+      - 'lib/**'
+      - 'tool/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'macos/**'
+      - 'windows/**'
+  workflow_dispatch:
+
+# Deliberately separate from the existing signed packaging workflow. No signing
+# secrets, license acceptance, deployment, publishing, or release commands.
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-development-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  development-build:
+    name: ${{ matrix.platform }} debug
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: android
+            os: ubuntu-latest
+            command: flutter build apk --debug --no-pub
+            artifact: build/app/outputs/flutter-apk/app-debug.apk
+          - platform: ios
+            os: macos-latest
+            command: flutter build ios --debug --no-codesign --no-pub
+            artifact: build/ios/iphoneos/*.app
+          - platform: macos
+            os: macos-latest
+            command: flutter build macos --debug --no-pub
+            artifact: build/macos/Build/Products/Debug/*.app
+          - platform: windows
+            os: windows-2022
+            command: flutter build windows --debug --no-pub
+            artifact: build/windows/x64/runner/Debug/**
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      # GitHub-hosted Android images already provide their SDK and license
+      # state. Missing license/platform prerequisites fail rather than accepting
+      # new terms via an installer action or piping "yes" to sdkmanager.
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+      - name: Verify SDK (Unix)
+        if: runner.os != 'Windows'
+        run: ASASFANS_FLUTTER_SDK="$FLUTTER_ROOT" tool/flutterw --verify-sdk
+      - name: Verify SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:ASASFANS_FLUTTER_SDK = $env:FLUTTER_ROOT
+          ./tool/flutterw.ps1 --verify-sdk
+      - run: flutter pub get --enforce-lockfile
+      - name: Build development application
+        run: ${{ matrix.command }}
+      # Build evidence only: not signed installers and never a GitHub Release.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: asasfans-development-${{ matrix.platform }}-${{ github.sha }}
+          path: ${{ matrix.artifact }}
+          retention-days: 3
+          if-no-files-found: error
