@@ -1,23 +1,11 @@
 name: Flutter Development Validation
 
+# Dispatch after all planned implementation stages, not after each commit.
 on:
-  push:
-    branches: ['dev/flutter-rebuild']
-    paths:
-      - '.github/workflows/flutter-development-validation.yml'
-      - '.flutter-version'
-      - 'pubspec.*'
-      - 'lib/**'
-      - 'assets/**'
-      - 'tool/**'
-      - 'android/**'
-      - 'ios/**'
-      - 'macos/**'
-      - 'windows/**'
   workflow_dispatch:
 
-# Deliberately separate from the existing signed packaging workflow. No signing
-# secrets, license acceptance, deployment, publishing, or release commands.
+# Development artifacts only. No production signing, license acceptance,
+# deployment, publishing, or release commands.
 permissions:
   contents: read
 

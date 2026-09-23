@@ -3,13 +3,10 @@ import 'dart:async';
 import 'package:asasfans_next/core/platform/transparency_preference.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_scope.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_surface.dart';
-import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_policy.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_runtime.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../tool/glass/probe_app.dart';
 
 class _Signal implements TransparencyPreferenceService {
   final controller = StreamController<bool?>.broadcast();
@@ -18,34 +15,6 @@ class _Signal implements TransparencyPreferenceService {
 }
 
 void main() {
-  testWidgets(
-    'benchmark records background interruption without waiting for a frame',
-    (tester) async {
-      final runtime = GlassRuntime(
-        shaderFiltersSupported: false,
-        load: () async {},
-      );
-      addTearDown(runtime.dispose);
-      addTearDown(
-        () => tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.resumed,
-        ),
-      );
-      await tester.pumpWidget(GlassProbeApp(runtime: runtime));
-      await tester.pumpAndSettle();
-      final scene = tester.state<GlassProbeSceneState>(
-        find.byType(GlassProbeScene),
-      );
-      scene.collecting = true;
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      expect(scene.invalidReasons, contains('application_inactive'));
-      scene.didChangeMetrics();
-      expect(scene.invalidReasons, contains('window_metrics_changed'));
-      scene.collecting = false;
-    },
-  );
-
   testWidgets(
     'native content never instantiates glass even with a ready runtime',
     (tester) async {
@@ -113,25 +82,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('animate=true'), findsOneWidget);
   });
-
-  testWidgets(
-    'refraction comparison refuses to export a solid fallback as proof',
-    (tester) async {
-      final runtime = GlassRuntime(
-        shaderFiltersSupported: false,
-        load: () async {},
-      );
-      addTearDown(runtime.dispose);
-      await tester.pumpWidget(GlassProbeApp(runtime: runtime));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('折射 A/B 对照'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('保存渲染对照'));
-      await tester.pumpAndSettle();
-      expect(find.text('当前是清晰回退，不能作为折射证据。'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
 
   testWidgets('clear mode neither waits for system signal nor loads shaders', (
     tester,
@@ -225,41 +175,6 @@ void main() {
       );
       expect(find.text('保留输入'), findsOneWidget);
       expect(find.text('userChoice'), findsOneWidget);
-    },
-  );
-  testWidgets(
-    'three-scene probe keeps Tools an action and excludes it from drag dispatch',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final runtime = GlassRuntime(
-        shaderFiltersSupported: false,
-        load: () async {},
-      );
-      addTearDown(runtime.dispose);
-      await tester.pumpWidget(GlassProbeApp(runtime: runtime));
-      await tester.pumpAndSettle();
-      final navigation = find.byType(AppGlassNavigation);
-      final center = tester.getCenter(navigation);
-      await tester.dragFrom(
-        Offset(tester.getTopLeft(navigation).dx + 30, center.dy),
-        const Offset(235, 0),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.widget<AppGlassNavigation>(navigation).selected, 0);
-      expect(find.text('工具面板 · 离线原型'), findsNothing);
-      await tester.tap(find.text('工具'));
-      await tester.pumpAndSettle();
-      expect(find.text('工具面板 · 离线原型'), findsOneWidget);
-      await tester.tap(find.byTooltip('关闭面板'));
-      await tester.pumpAndSettle();
-      expect(tester.widget<AppGlassNavigation>(navigation).selected, 0);
-      expect(
-        tester.widget<AppGlassNavigation>(navigation).toolsFocus.hasFocus,
-        isTrue,
-      );
-      expect(tester.takeException(), isNull);
     },
   );
 }

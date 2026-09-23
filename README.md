@@ -19,18 +19,20 @@
 | --- | --- | --- |
 | 内容与首页 | 二创档案、历史动态、最新视频/切片/录播；搜索、筛选、随机、自动续页、图文与大图查看 | 部分筛选、真实来源与布局验收 |
 | 日历与工具 | 原生日/周/月视图、成员筛选、事件详情、持久缓存、日程关注；分组工具外跳 | 重复规则展开、系统提醒和系统日历集成 |
-| 个人资料 | 收藏夹、稍后看、浏览/外跳记录、本地订阅、内容规则、分页、JSON 备份与事务合并恢复、播放进度与时间书签存储 | 进度/书签的界面接入、大数据与恢复验收 |
+| 个人资料 | 收藏夹、稍后看、浏览/外跳记录、本地订阅、内容规则、分页、JSON 备份与事务合并恢复、播放进度与时间书签存储 | 无真实播放位置上报；大数据与恢复验收 |
 | UP 与订阅 | 原生 UP 资料/投稿；多 UP 分页合并、失败隔离、持久已读状态 | 真实分页与风控验收；无后台轮询或离线投稿缓存 |
 | Bilibili 账号 | 安全存储、扫码、官方网页登录、会话取消、退出失败重试 | 原生桥接/四端验收、自动 Cookie 刷新；平台限制见下文 |
-| 视频与评论 | 原生详情、分 P、只读评论/楼中楼/图片；取流与媒体网络基础 | **播放仍外跳 B 站，尚无内置播放器**；评论富文本、播放与生命周期验收 |
+| 视频与评论 | 原生详情、分 P、只读评论/楼中楼/图片；取流与媒体网络基础 | **播放采用外跳 B 站，不建设内置播放器**；评论富文本与账号生命周期验收 |
 
-2026-09-23 的 SDK 升级检查通过格式校验、零问题静态分析、754 项离线测试和 macOS Debug 构建。iOS 构建受本机缺少 iOS 26.0 平台组件阻断；Android 构建受 NDK 28.2 下载包错误阻断；Windows 尚未在新 SDK 下构建。没有执行本轮真机或业务 API 验收，UI 改造尚未开始。
+当前已接入中性明暗主题、材质偏好、自适应导航、共享卡片/弹层和四端原 A 图标；还需对照 LoveIwara 收敛真实页面。SDK 升级已完成，[上一轮四端开发构建](https://github.com/LEN5010/Asasfans-Next/actions/runs/35874899297)成功，界面和设备效果由用户验收，不用历史测试数量代替。
+
+开发方式：**UI/组件阶段全部完成后，集中做必要检查与编译，再交付人类验收。** 不逐页运行、自建实验或追求测试数量；禁止防御性编程和过度测试编写，如无必要勿增实体。
 
 网页登录源码面向 Android/iOS/macOS，Windows 当前仅扫码。Android API 28+ 使用独立浏览器目录；API 24–27 开发包可网页登录，**生产包的旧浏览器存储隔离尚未解决，当前禁用该路径**。不会以提高最低 Android 版本代替解决此问题。
 
 ## 数据与产品边界
 
-- 手机导航：今日 / 内容 / 工具（居中抽屉）/ 日历 / 我的；宽屏使用侧栏。订阅管理位于“我的”。[LoveIwara](https://github.com/FoxSensei001/LoveIwara) 仅为布局参考，不复制其代码、素材或配色。
+- 手机导航：今日 / 内容 / 工具（居中抽屉）/ 日历 / 我的；宽屏使用侧栏。订阅管理位于“我的”。[LoveIwara](https://github.com/FoxSensei001/LoveIwara) 作为布局与组件接法参考；已有 MIT 适配见 `third_party/README.md`，不搬业务、品牌素材或整套架构。
 - 本地订阅不修改 B 站关注；收藏不等于下载；浏览、外部打开、更新已读均不等于实际观看。评论只读。
 - 个人资料使用独立 SQLite，新库 schema v9；备份导出 v6、兼容受支持的旧格式，以事务合并而非清空替换。手机导出交给系统分享，桌面使用保存对话框。
 - 账号凭据使用系统安全存储，不进入普通数据库、备份、二创 API、日历或工具站请求；媒体请求独立处理鉴权，签名播放地址不持久化。
@@ -41,13 +43,13 @@
 固定 Flutter **3.47.3** / Dart **3.13.3**。官方下载地址、SHA-256 和完整 revision 见 `tool/flutter-sdk.json`；`.flutter-version` 与 CI 同步固定版本，依赖锁定在 `pubspec.lock`。启动脚本校验已安装的 Flutter，也可通过 `ASASFANS_FLUTTER_SDK` 显式指定目录，不自动替换错误版本。安装与校验步骤见 [工具链说明](tool/README.md)。
 
 ```sh
-tool/flutterw --verify-sdk
+# 仅全部开发完成后按需执行，不是逐次编辑的检查清单：
 tool/flutterw pub get --enforce-lockfile
 tool/flutterw analyze --no-pub
-# 以下由开发者按需执行，不代表当前已运行通过：
-tool/flutterw test --no-pub
-tool/flutterw run -d macos
+tool/flutterw build macos --profile --no-pub
 ```
+
+其他平台用手动开发构建 CI，不在本机重复构建。现有测试只在真实行为变更/已知缺陷需要时选用，全量回归需要明确选择。
 
 Windows 使用 `tool/flutterw.ps1`。格式化使用 `tool/flutterw --dart format`，避免 PATH 中的 Dart 与项目 Flutter 不一致。Apple 最低系统为 iOS 15 / macOS 12；Android API 24 保留。新 SDK/UI 的四端运行与性能验收单独记录，旧版本的测试或 CI 成功不构成新版本验证。
 
@@ -66,9 +68,14 @@ Android：Java 编译目标 17、SDK 36、AGP 8.13.1 / Gradle 8.14.3 / Kotlin 2.
 
 ## CI 与发布
 
-`Flutter Checks` 配置 SDK 精确校验、格式检查、静态分析和离线测试；手动开启 `build_platforms` 会构建 Android 正式签名 APK、macOS ad-hoc DMG、未签名 Windows 安装包和未签名 iOS 包，**不是四端 debug 烟测**。本轮没有推送或执行新 SDK 的远端 CI。没有自动发布 Release 的工作流。
+两个 workflow 都只接受手动触发，push/PR 不自动运行：
 
-Android 开发包为 `asasfans.next.flutterdev`；未来生产包保持 `asasfans.next` 与原签名。release 构建目前由签名验收门槛阻断，不使用 debug key 兜底。Apple bundle ID `dev.asasfans.next`、Apple 分发和 Windows 安装身份尚待确认；Apple/Windows 品牌图标也待完善。
+- `Flutter Checks`：固定 SDK、格式和静态分析；`run_tests` 默认关闭，只有明确要求时运行现有全量测试。
+- `Flutter Development Validation`：Android Debug、iOS Debug 无签名、macOS/Windows Profile；只产生开发包，不接受许可证、不使用生产签名、不发布。
+
+旧的手动生产签名打包任务已从 Flutter 检查配置中移除；签名配置与历史 Git 记录保留。完成全部开发阶段再集中调用，不把 CI 当每次修改的闸门。
+
+Android 开发包为 `asasfans.next.flutterdev`；未来生产包保持 `asasfans.next` 与原签名。release 构建目前由签名验收门槛阻断，不使用 debug key 兜底。Apple bundle ID `dev.asasfans.next`、Apple 分发和 Windows 安装身份尚待确认；四端品牌图标已有原路径资产，实际桌面/启动器效果待用户验收。
 
 解除 Android 发布门槛前必须实际完成这几项，缺一项就继续阻断：在受控环境接入原 release key（不提交进版本库）；用它构建的包能覆盖安装已有的 `asasfans.next`，且升级后旧版个人数据不被当成损坏库重置；开发包与生产包可以并存，开发包不顶替原包；产物能追溯到具体提交与测试结果。删除门禁或改用 debug key 都不算完成。
 
