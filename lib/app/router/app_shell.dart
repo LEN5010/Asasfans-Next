@@ -47,7 +47,7 @@ class _AppShellState extends State<AppShell> {
       final mq = MediaQuery.of(context);
       final showBottom = !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
       final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
-      final obstruction = showBottom ? barHeight + 24 : 0.0;
+      final obstruction = showBottom ? barHeight + 20 : 0.0;
       return AppBackdrop(
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -99,7 +99,7 @@ class _AppShellState extends State<AppShell> {
                               left: 0,
                               right: 0,
                               bottom: 0,
-                              height: mq.padding.bottom + barHeight + 44,
+                              height: mq.padding.bottom + barHeight + 40,
                               child: IgnorePointer(
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
@@ -125,7 +125,7 @@ class _AppShellState extends State<AppShell> {
                         Positioned(
                           left: 12,
                           right: 12,
-                          bottom: mq.padding.bottom + 12,
+                          bottom: mq.padding.bottom + 8,
                           child: Center(
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 520),

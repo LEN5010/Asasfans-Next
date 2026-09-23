@@ -2,12 +2,140 @@ import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/app_motion.dart';
 
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
 
-/// Only selected conditions occupy the feed; all facets live in the draft panel.
+/// Members and categories stay in the open as two one-line chip strips; every
+/// tap applies at once. The remaining facets stay in the draft panel.
+class FanartQuickFilters extends StatelessWidget {
+  const FanartQuickFilters({
+    required this.query,
+    required this.onChanged,
+    super.key,
+  });
+  final FanartQuery query;
+  final ValueChanged<FanartQuery> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _strip([
+          _QuickChip(
+            label: '全部成员',
+            selected: query.characters.isEmpty,
+            onTap: () => onChanged(query.copyWith(characters: const {})),
+          ),
+          for (final character in FanartCharacter.values)
+            _QuickChip(
+              label: character.wire,
+              selected: query.characters.contains(character),
+              onTap: () => onChanged(
+                query.copyWith(
+                  characters: query.characters.contains(character)
+                      ? query.characters.difference({character})
+                      : {...query.characters, character},
+                ),
+              ),
+            ),
+        ]),
+        _strip([
+          for (final category in [
+            FanartCategory.all,
+            ...FanartCategory.values.where((v) => v != FanartCategory.all),
+          ])
+            _QuickChip(
+              label: category == FanartCategory.all ? '全部分类' : category.wire,
+              selected: query.category == category,
+              onTap: () => onChanged(query.copyWith(category: category)),
+            ),
+        ]),
+      ],
+    ),
+  );
+
+  // The inset lives inside the scroll view so chips scroll to the screen edge.
+  Widget _strip(List<Widget> chips) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Row(spacing: 6, children: chips),
+  );
+}
+
+/// A 30px pill; the transparent band around it widens the touch area without
+/// making the strip taller to the eye.
+class _QuickChip extends StatelessWidget {
+  const _QuickChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final duration = appMotion(context, AppTokens.controlMotion);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: AnimatedContainer(
+            duration: duration,
+            curve: Curves.easeOutCubic,
+            constraints: const BoxConstraints(minHeight: 30),
+            decoration: ShapeDecoration(
+              shape: const StadiumBorder(),
+              color: selected
+                  ? colors.primaryContainer
+                  : colors.surfaceContainerHigh,
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                customBorder: const StadiumBorder(),
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  child: AnimatedDefaultTextStyle(
+                    duration: duration,
+                    curve: Curves.easeOutCubic,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.3,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      color: selected
+                          ? colors.onPrimaryContainer
+                          : colors.onSurfaceVariant,
+                    ),
+                    child: Text(label),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Keyword and panel-only facets; members and categories show in their chips.
 class FanartFilterBar extends StatelessWidget {
   const FanartFilterBar({
     required this.query,
@@ -18,7 +146,10 @@ class FanartFilterBar extends StatelessWidget {
   final ValueChanged<FanartQuery> onChanged;
   @override
   Widget build(BuildContext context) {
-    final count = FanartFilterRules.count(query);
+    final count =
+        FanartFilterRules.count(query) -
+        query.characters.length -
+        (query.category == FanartCategory.all ? 0 : 1);
     if (count == 0 && query.keyword.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -28,7 +159,6 @@ class FanartFilterBar extends StatelessWidget {
             child: Text(
               [
                 if (query.keyword.isNotEmpty) '“${query.keyword}”',
-                ...query.characters.map((value) => value.wire),
                 if (count > 0) '$count 项筛选',
               ].join(' · '),
               maxLines: 2,

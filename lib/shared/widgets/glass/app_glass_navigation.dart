@@ -30,7 +30,10 @@ class AppGlassNavigation extends StatefulWidget {
   final VoidCallback onTools;
   final bool nativeContent;
 
-  static double heightFor(TextScaler scaler) => 52 + scaler.scale(16);
+  /// 56 at 1x: a 48 tab (22 icon + 11 label) inside the 4 px indicator
+  /// inset. Only the label line grows with the text scale.
+  static double heightFor(TextScaler scaler) => 40 + scaler.scale(16);
+  static const iconSize = 22.0;
 
   /// Shared with the desktop sidebar.
   static const labels = ['今日', '内容', '日历', '我的'];
@@ -164,9 +167,9 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         selected
             ? AppGlassNavigation.activeIcons[i]
             : AppGlassNavigation.icons[i],
-        size: 24,
+        size: AppGlassNavigation.iconSize,
       ),
-      const SizedBox(height: 2),
+      const SizedBox(height: 1.5),
       ConstrainedBox(
         constraints: BoxConstraints(maxWidth: width),
         child: Text(
@@ -174,7 +177,8 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
+            height: 1.1,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -250,7 +254,10 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
                   dimension: height,
                   child: IconButton(
                     onPressed: widget.onTools,
-                    icon: const Icon(AppIcons.tools),
+                    icon: const Icon(
+                      AppIcons.tools,
+                      size: AppGlassNavigation.iconSize,
+                    ),
                   ),
                 ),
               ),
@@ -298,7 +305,10 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
               selectedIndex: visual ?? widget.selected,
               onTabSelected: _select,
               extraButton: GlassTabBarExtraButton(
-                icon: const Icon(AppIcons.tools),
+                icon: const Icon(
+                  AppIcons.tools,
+                  size: AppGlassNavigation.iconSize,
+                ),
                 label: AppGlassNavigation.toolsLabel,
                 onTap: widget.onTools,
                 size: height,

@@ -389,7 +389,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Align(
               alignment: Alignment.centerLeft,
               child: ConstrainedBox(
@@ -418,6 +418,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
               ),
             ),
           ),
+          FanartQuickFilters(query: state.query, onChanged: _applyQuery),
           FanartFilterBar(query: state.query, onChanged: _applyQuery),
         ],
       );

@@ -6,6 +6,7 @@ import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/time/calendar_time.dart';
 import '../domain/calendar_agenda.dart';
@@ -96,14 +97,15 @@ class CalendarEventTile extends StatelessWidget {
         DecoratedBox(
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: .2),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(5),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             child: Text(
               badge,
               style: const TextStyle(
                 fontSize: 11,
+                height: 1.3,
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.none,
               ),
@@ -111,14 +113,14 @@ class CalendarEventTile extends StatelessWidget {
           ),
         ),
       if (live && !event.isCancelled)
-        const Icon(Icons.sensors, size: 16, color: foreground),
+        const Icon(Icons.sensors, size: 14, color: foreground),
     ];
     final heading = Text(
       headline,
       maxLines: compact ? 2 : 1,
-      style: TextStyle(
-        fontSize: compact ? 15 : 16,
-        fontWeight: FontWeight.w700,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
         height: 1.3,
       ),
     );
@@ -126,7 +128,7 @@ class CalendarEventTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 56 * scale,
+          width: 50 * scale,
           child: Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Column(
@@ -140,6 +142,8 @@ class CalendarEventTile extends StatelessWidget {
                 Text(
                   event.allDay ? '全天' : CalendarAgenda.time(event.start),
                   style: theme.textTheme.labelLarge?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: theme.colorScheme.primary,
                   ),
                 ),
@@ -150,7 +154,7 @@ class CalendarEventTile extends StatelessWidget {
         Expanded(
           child: Material(
             color: fill,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => showCalendarEvent(context, event),
@@ -162,44 +166,33 @@ class CalendarEventTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: compact ? 44 : 0),
+                      constraints: BoxConstraints(minHeight: compact ? 44 : 50),
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          compact ? 12 : 14,
-                          compact ? 8 : 10,
-                          12,
-                          compact ? 8 : 10,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: compact ? 8 : 10,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (compact)
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 4,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [heading, ...badges],
-                              )
-                            else ...[
-                              Wrap(
-                                spacing: 6,
-                                runSpacing: 4,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: badges,
-                              ),
-                              const SizedBox(height: 6),
-                              heading,
-                            ],
+                            // Tags trail the title and wrap below it only when
+                            // the title leaves no room.
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [heading, ...badges],
+                            ),
                             if (subtitle.isNotEmpty) ...[
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 2),
                               Text(
                                 subtitle,
                                 maxLines: compact ? 1 : null,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: compact ? 12 : 14,
-                                  height: 1.4,
+                                  fontSize: compact ? 12 : 13,
+                                  height: 1.35,
                                   color: foreground.withValues(alpha: .88),
                                 ),
                               ),
@@ -211,7 +204,7 @@ class CalendarEventTile extends StatelessWidget {
                     // Who appears: one segment per member, or the fill's own
                     // colour when nobody is named.
                     SizedBox(
-                      height: compact ? 3 : 5,
+                      height: 3,
                       child: Row(
                         children: [
                           if (cast.isEmpty || event.isCancelled)

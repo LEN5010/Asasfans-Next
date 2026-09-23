@@ -99,7 +99,7 @@ void main() {
         greaterThan(tester.getTopLeft(find.byType(FanartCard).first).dx),
       );
       expect(find.byType(FanartFilterButton), findsOneWidget);
-      expect(find.text('嘉然'), findsNothing);
+      expect(find.text('嘉然'), findsOneWidget);
       await tester.tap(find.byTooltip('更多内容操作'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('保存频道'));

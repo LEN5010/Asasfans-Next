@@ -222,7 +222,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                   events: events,
                   onSelect: _select,
                 ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               filters(wide: false),
               agenda(scrollable: false),
             ],
@@ -248,7 +248,7 @@ class _MonthHeader extends StatelessWidget {
   final bool collapsible;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 8),
     child: Row(
       children: [
         AppButton.icon(
@@ -262,7 +262,9 @@ class _MonthHeader extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
         AppButton.icon(
@@ -303,7 +305,7 @@ class _CalendarFilters extends StatelessWidget {
     final types = [
       for (final value in CalendarFilter.values)
         AppChoice(
-          label: Text(value.label),
+          label: Text(value.label, style: _chipText),
           selected: value == filter,
           onSelected: (_) => onFilter(value),
         ),
@@ -313,35 +315,40 @@ class _CalendarFilters extends StatelessWidget {
         AppChoice(
           avatar: CircleAvatar(
             backgroundColor: AppTheme.memberColors[name],
-            radius: 6,
+            radius: 5,
           ),
-          label: Text(name),
+          label: Text(name, style: _chipText),
           selected: members.contains(name),
           onSelected: (_) => onMember(name),
         ),
     ];
     Widget row(List<Widget> children) => wide
-        ? Wrap(spacing: 6, runSpacing: 6, children: children)
+        ? Wrap(spacing: 6, runSpacing: 4, children: children)
         : HorizontalChoices(children: children);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           row(types),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           if (wide) ...[
-            Text('成员', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
+            Text('成员', style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(height: 4),
           ],
           row(roles),
           if (filter != CalendarFilter.all || members.isNotEmpty)
-            AppButton(onPressed: onReset, child: const Text('重置筛选')),
+            AppButton(
+              onPressed: onReset,
+              child: const Text('重置筛选', style: _chipText),
+            ),
         ],
       ),
     );
   }
 }
+
+const _chipText = TextStyle(fontSize: 13);
 
 class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
@@ -368,7 +375,7 @@ class _MonthGrid extends StatelessWidget {
       child: Column(
         children: [
           const _Weekdays(),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           SizedBox(
             height: cells / 7 * height,
             child: GridView.builder(
@@ -419,7 +426,7 @@ class _WeekStrip extends StatelessWidget {
       child: Column(
         children: [
           const _Weekdays(),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           SizedBox(
             height: _cellHeight(context),
             child: Row(
@@ -447,7 +454,7 @@ class _WeekStrip extends StatelessWidget {
 }
 
 double _cellHeight(BuildContext context) =>
-    (MediaQuery.textScalerOf(context).scale(14) * 1.4 + 16).clamp(
+    (MediaQuery.textScalerOf(context).scale(13) * 1.35 + 14).clamp(
       44,
       double.infinity,
     );
@@ -492,7 +499,7 @@ class _DayCell extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          margin: const EdgeInsets.all(2),
+          margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
           decoration: BoxDecoration(
             color: isSelected ? colors.secondaryContainer : null,
             border: isToday
@@ -510,12 +517,12 @@ class _DayCell extends StatelessWidget {
                   maxLines: 1,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.4),
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.35),
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               SizedBox(
-                height: 6,
+                height: 5,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -523,8 +530,8 @@ class _DayCell extends StatelessWidget {
                     // day's pink fill would swallow a pink dot, so it rings.
                     for (final event in events.take(3))
                       Container(
-                        width: 6,
-                        height: 6,
+                        width: 5,
+                        height: 5,
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
@@ -577,6 +584,14 @@ class _Agenda extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: SegmentedButton<bool>(
           showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(
+            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            textStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           segments: const [
             ButtonSegment(value: false, label: Text('当天')),
             ButtonSegment(value: true, label: Text('周议程')),
@@ -585,14 +600,16 @@ class _Agenda extends StatelessWidget {
           onSelectionChanged: (values) => onWeek(values.single),
         ),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       Text(
         week
             ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
             : CalendarAgenda.date(day),
-        style: Theme.of(context).textTheme.titleMedium,
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       snapshot.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(32),
@@ -638,15 +655,17 @@ class _Agenda extends StatelessWidget {
               )) ...[
                 if (week)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 8),
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 6),
                     child: Text(
                       CalendarAgenda.date(entry.key),
-                      style: Theme.of(context).textTheme.labelLarge,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(fontSize: 13),
                     ),
                   ),
                 for (final event in entry.value)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: CalendarEventTile(event: event, day: entry.key),
                   ),
               ],
@@ -657,8 +676,8 @@ class _Agenda extends StatelessWidget {
     ];
     return ListView(
       padding: scrollable
-          ? pageInsets(context, top: 12)
-          : const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          ? pageInsets(context, top: 8)
+          : const EdgeInsets.fromLTRB(16, 8, 16, 0),
       shrinkWrap: !scrollable,
       primary: false,
       physics: scrollable ? null : const NeverScrollableScrollPhysics(),

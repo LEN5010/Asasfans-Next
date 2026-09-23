@@ -149,10 +149,16 @@ class DynamicPostRepository implements DynamicRepository {
     if (raw is! Map) {
       return const DynamicMember(id: '', name: '未知成员');
     }
+    final id = _string(raw['id']);
     final name = _string(raw['name']);
     return DynamicMember(
-      id: _string(raw['id']),
-      name: name.isEmpty ? '未知成员' : name,
+      id: id,
+      // The source masks this account's name; the app shows her own name.
+      name: id == 'uid:3546730823944886'
+          ? '来芙Laffey'
+          : name.isEmpty
+          ? '未知成员'
+          : name,
       bilibiliUid: _string(raw['bilibiliUid']),
       avatarUrl: _httpsUri(raw['avatarUrl'], baseUrl),
     );

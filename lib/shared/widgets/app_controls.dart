@@ -71,8 +71,8 @@ class AppButton extends StatelessWidget {
         fixedSize: filled && iconOnly ? Size.square(target) : null,
         visualDensity: filled ? VisualDensity.standard : null,
         padding: EdgeInsets.symmetric(
-          horizontal: iconOnly ? 8 : 12,
-          vertical: 6,
+          horizontal: iconOnly ? 6 : 10,
+          vertical: 4,
         ),
         foregroundColor: selected
             ? colors.onPrimaryContainer
@@ -84,7 +84,7 @@ class AppButton extends StatelessWidget {
             : Colors.transparent,
         disabledForegroundColor: colors.onSurface.withValues(alpha: .38),
         textStyle: const TextStyle(
-          fontSize: 14,
+          fontSize: 13.5,
           height: 1.3,
           fontWeight: FontWeight.w500,
         ),

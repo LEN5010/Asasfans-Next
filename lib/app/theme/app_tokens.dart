@@ -16,12 +16,13 @@ abstract final class AppTokens {
   static const dividerDark = Color(0xFF38383D);
   static const selectedLight = Color(0xFFF9DCE6);
   static const selectedDark = Color(0xFF4A2A37);
-  static const controlHeight = 44.0;
+  // Compact controls in LoveIwara's proportions: 40 on touch widths, 34 on
+  // wide desktop windows; wide rows keep their larger hit area by width.
+  static const controlHeight = 40.0;
   static double controlTarget(BuildContext context) =>
       switch (Theme.of(context).platform) {
-        TargetPlatform.android => 48,
-        TargetPlatform.iOS => 44,
-        _ => MediaQuery.sizeOf(context).width < 600 ? 44 : 36,
+        TargetPlatform.android || TargetPlatform.iOS => 40,
+        _ => MediaQuery.sizeOf(context).width < 600 ? 40 : 34,
       };
   static const controlMotion = Duration(milliseconds: 220);
   static const pressMotion = Duration(milliseconds: 140);

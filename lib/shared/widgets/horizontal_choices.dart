@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
 import 'app_controls.dart';
+import 'app_motion.dart';
 
 /// A bounded choice strip with a discoverable, keyboard-accessible next action.
 class HorizontalChoices extends StatefulWidget {
@@ -50,7 +52,7 @@ class _HorizontalChoicesState extends State<HorizontalChoices> {
           } else {
             _scroll.animateTo(
               target,
-              duration: const Duration(milliseconds: 180),
+              duration: appMotion(context, AppTokens.controlMotion),
               curve: Curves.easeOut,
             );
           }

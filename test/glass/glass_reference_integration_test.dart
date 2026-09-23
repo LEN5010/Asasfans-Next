@@ -216,7 +216,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(tester.getSize(find.byType(AppGlassNavigation)).height, 84);
+        expect(tester.getSize(find.byType(AppGlassNavigation)).height, 72);
         final labels = find.text('今日');
         expect(labels, findsWidgets);
         for (final element in labels.evaluate()) {
