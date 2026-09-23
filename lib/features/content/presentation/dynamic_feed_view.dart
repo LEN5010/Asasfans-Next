@@ -1,3 +1,6 @@
+import 'content_search_control.dart';
+import 'saved_channel_bar.dart';
+import '../domain/saved_channel.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
@@ -173,9 +176,21 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
+                spacing: 8,
                 children: [
-                  AppButton(
+                  Expanded(
+                    child: ContentSearchControl(
+                      value: query.keyword,
+                      hint: '搜索历史动态',
+                      expanded: true,
+                      onSubmitted: (keyword) =>
+                          apply(query.copyWith(keyword: keyword)),
+                    ),
+                  ),
+                  AppButton.icon(
+                    tooltip: '筛选与排序',
                     selected: _expanded || query != const DynamicQuery(),
+                    icon: const Icon(Icons.tune),
                     onPressed: () async {
                       if (wide) {
                         setState(() => _expanded = !_expanded);
@@ -191,32 +206,50 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
                       );
                       if (next != null && mounted) apply(next);
                     },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.tune),
-                        SizedBox(width: 8),
-                        Text('筛选与排序'),
-                      ],
+                  ),
+                  MenuAnchor(
+                    menuChildren: [
+                      SavedChannelBar(
+                        menuItem: true,
+                        feed: ChannelFeed.dynamic,
+                        currentSpec: () => ChannelSpec.ofDynamic(query),
+                        onOpen: (spec) => apply(spec.toDynamic()),
+                      ),
+                      MenuItemButton(
+                        onPressed:
+                            ref.read(dynamicFeedControllerProvider).state.isBusy
+                            ? null
+                            : ref.read(dynamicFeedControllerProvider).refresh,
+                        leadingIcon: const Icon(Icons.refresh),
+                        child: const Text('刷新'),
+                      ),
+                    ],
+                    builder: (context, menu, _) => AppButton.icon(
+                      tooltip: '更多内容操作',
+                      onPressed: () => menu.isOpen ? menu.close() : menu.open(),
+                      icon: const Icon(Icons.more_horiz),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      summary,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
+                ],
+              ),
+              if (query != const DynamicQuery())
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        summary,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
-                  ),
-                  if (query != const DynamicQuery())
                     AppButton.icon(
                       tooltip: '清除筛选',
                       onPressed: () => apply(const DynamicQuery()),
                       icon: const Icon(Icons.close),
                     ),
-                ],
-              ),
+                  ],
+                ),
               if (wide && _expanded)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),

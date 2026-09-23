@@ -73,7 +73,7 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
 class MediaMoreButton extends StatelessWidget {
   const MediaMoreButton({super.key, required this.onPressed});
   final VoidCallback onPressed;
-  static const reserve = 44.0;
+  static const reserve = 48.0;
   @override
   Widget build(BuildContext context) => AppButton.icon(
     tooltip: '更多操作',

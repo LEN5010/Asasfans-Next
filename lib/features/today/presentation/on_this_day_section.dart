@@ -13,12 +13,36 @@ import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
 /// A bounded set of large, naturally sized cards. Horizontal scrolling has no
-/// timer or auto-play; the row's real content determines its height.
-class OnThisDaySection extends ConsumerWidget {
+/// timer or auto-play; equal preview slots leave full reading to the panel.
+class OnThisDaySection extends ConsumerStatefulWidget {
   const OnThisDaySection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OnThisDaySection> createState() => _OnThisDaySectionState();
+}
+
+class _OnThisDaySectionState extends ConsumerState<OnThisDaySection> {
+  final _scroll = ScrollController();
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _move(int direction) {
+    if (!_scroll.hasClients) return;
+    _scroll.animateTo(
+      (_scroll.offset + direction * _scroll.position.viewportDimension * .88)
+          .clamp(0, _scroll.position.maxScrollExtent),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final posts = ref.watch(onThisDayProvider);
     final sort = ref.watch(onThisDaySortProvider);
     return Column(
@@ -30,19 +54,40 @@ class OnThisDaySection extends ConsumerWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text('历史上的今天', style: Theme.of(context).textTheme.titleMedium),
-            SizedBox(
-              width: 200,
-              child: AppSegments<OnThisDaySort>(
-                values: OnThisDaySort.values,
-                selected: sort,
-                labelOf: (value) => switch (value) {
+            MenuAnchor(
+              menuChildren: [
+                for (final value in OnThisDaySort.values)
+                  MenuItemButton(
+                    onPressed: () =>
+                        ref.read(onThisDaySortProvider.notifier).state = value,
+                    leadingIcon: value == sort ? const Icon(Icons.check) : null,
+                    child: Text(switch (value) {
+                      OnThisDaySort.hot => '综合热度',
+                      OnThisDaySort.likes => '点赞',
+                      OnThisDaySort.comments => '评论',
+                    }),
+                  ),
+              ],
+              builder: (context, menu, _) => AppButton.withIcon(
+                tooltip: '历史排序',
+                icon: const Icon(Icons.expand_more),
+                label: Text(switch (sort) {
                   OnThisDaySort.hot => '综合',
                   OnThisDaySort.likes => '点赞',
                   OnThisDaySort.comments => '评论',
-                },
-                onChanged: (value) =>
-                    ref.read(onThisDaySortProvider.notifier).state = value,
+                }),
+                onPressed: () => menu.isOpen ? menu.close() : menu.open(),
               ),
+            ),
+            AppButton.icon(
+              tooltip: '上一张历史',
+              onPressed: () => _move(-1),
+              icon: const Icon(Icons.chevron_left),
+            ),
+            AppButton.icon(
+              tooltip: '下一张历史',
+              onPressed: () => _move(1),
+              icon: const Icon(Icons.chevron_right),
             ),
           ],
         ),
@@ -84,24 +129,26 @@ class OnThisDaySection extends ConsumerWidget {
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final width = math.min(420.0, constraints.maxWidth * .88);
-                      return SingleChildScrollView(
-                        key: const PageStorageKey('on-this-day-cards'),
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 16,
-                          children: [
-                            for (final post in visible.items)
-                              SizedBox(
-                                width: width,
-                                child: DynamicCard(
-                                  key: ValueKey(post.identity),
-                                  post: post,
-                                  historyPreview: true,
-                                  returnTo: ReturnTarget.today,
-                                ),
-                              ),
-                          ],
+                      return SizedBox(
+                        height: DynamicCard.historyExtentFor(
+                          width,
+                          MediaQuery.textScalerOf(context),
+                        ),
+                        child: ListView.separated(
+                          key: const PageStorageKey('on-this-day-cards'),
+                          controller: _scroll,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: visible.items.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 16),
+                          itemBuilder: (_, index) => SizedBox(
+                            width: width,
+                            child: DynamicCard(
+                              key: ValueKey(visible.items[index].identity),
+                              post: visible.items[index],
+                              historyPreview: true,
+                              returnTo: ReturnTarget.today,
+                            ),
+                          ),
                         ),
                       );
                     },

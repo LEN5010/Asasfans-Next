@@ -162,7 +162,7 @@ class CalendarEventTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: compact ? 56 : 0),
+                      constraints: BoxConstraints(minHeight: compact ? 64 : 0),
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
                           compact ? 12 : 14,
@@ -195,6 +195,8 @@ class CalendarEventTile extends StatelessWidget {
                               const SizedBox(height: 3),
                               Text(
                                 subtitle,
+                                maxLines: compact ? 1 : null,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: compact ? 12 : 14,
                                   height: 1.4,

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,7 +33,7 @@ String dynamicTime(DateTime value) {
   return '${date.year}-${pad(date.month)}-${pad(date.day)} ${pad(date.hour)}:${pad(date.minute)}';
 }
 
-class DynamicCard extends ConsumerStatefulWidget {
+class DynamicCard extends ConsumerWidget {
   const DynamicCard({
     super.key,
     required this.post,
@@ -42,18 +44,24 @@ class DynamicCard extends ConsumerStatefulWidget {
   final ReturnTarget returnTo;
   final bool historyPreview;
 
-  @override
-  ConsumerState<DynamicCard> createState() => _DynamicCardState();
-}
+  static double historyExtentFor(double width, TextScaler scaler) =>
+      24 +
+      math.max(
+        48,
+        MediaCardMetrics.line(scaler, 15, 1.4) +
+            MediaCardMetrics.line(scaler, 12, 1.35) +
+            4,
+      ) +
+      12 +
+      math.max(64, MediaCardMetrics.line(scaler, 14, 1.45) * 2) +
+      12 +
+      (width - 24) / (16 / 9) +
+      12 +
+      math.max(48, MediaCardMetrics.line(scaler, 12, 1.35) * 2);
 
-class _DynamicCardState extends ConsumerState<DynamicCard> {
-  bool _expanded = false;
-  DynamicPost get post => widget.post;
-  ReturnTarget get returnTo => widget.returnTo;
-
   @override
-  Widget build(BuildContext context) {
-    final preview = widget.historyPreview && !_expanded;
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (historyPreview) return _history(context, ref);
     final theme = Theme.of(context);
     final snapshot = ContentSnapshots.dynamic(post);
     void open(Uri uri) => openContentSource(
@@ -79,48 +87,10 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                ContentAvatar(
-                  name: post.member.name,
-                  image: post.member.avatarUrl,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CreatorLink(
-                        mid: post.member.bilibiliUid,
-                        child: Text(
-                          post.member.name,
-                          style: theme.textTheme.titleMedium,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        [
-                          if (widget.historyPreview)
-                            post.publishedAt == null
-                                ? '往年的今天'
-                                : '${post.publishedAt!.toUtc().add(const Duration(hours: 8)).year} 年的今天'
-                          else if (post.publishedAt != null)
-                            dynamicTime(post.publishedAt!),
-                          dynamicTypeLabel(post.type),
-                        ].join(' · '),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-                MediaMoreButton(onPressed: actions),
-              ],
-            ),
+            _author(context, actions),
             const SizedBox(height: 14),
             DynamicBody(
               text: post.text,
-              maxLines: preview ? 4 : null,
-              preview: preview,
               images: post.images,
               media: post.media,
               sourceUrl: post.sourceUrl,
@@ -158,8 +128,6 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
                       const SizedBox(height: 10),
                       DynamicBody(
                         text: original.text,
-                        maxLines: preview ? 2 : null,
-                        preview: preview,
                         images: original.images,
                         media: original.media,
                         sourceUrl: original.sourceUrl,
@@ -181,17 +149,6 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
                 ),
               ),
             ],
-            if (widget.historyPreview)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppButton(
-                    onPressed: () => setState(() => _expanded = !_expanded),
-                    child: Text(_expanded ? '收起正文' : '展开全文'),
-                  ),
-                ),
-              ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 14,
@@ -221,9 +178,191 @@ class _DynamicCardState extends ConsumerState<DynamicCard> {
       ),
     );
   }
+
+  Widget _author(BuildContext context, VoidCallback actions) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        ContentAvatar(
+          name: post.member.name,
+          image: post.member.avatarUrl,
+          size: 34,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CreatorLink(
+                mid: post.member.bilibiliUid,
+                child: Text(
+                  post.member.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                [
+                  if (historyPreview)
+                    post.publishedAt == null
+                        ? '往年的今天'
+                        : '${post.publishedAt!.toUtc().add(const Duration(hours: 8)).year} 年的今天'
+                  else if (post.publishedAt != null)
+                    dynamicTime(post.publishedAt!),
+                  dynamicTypeLabel(post.type),
+                ].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        MediaMoreButton(onPressed: actions),
+      ],
+    );
+  }
+
+  Widget _history(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    final original = post.forwardedFrom;
+    final visual = post.media
+        .where((m) => m.kind != DynamicMediaKind.emoji && m.url != null)
+        .firstOrNull;
+    final originalVisual = original?.media
+        .where((m) => m.kind != DynamicMediaKind.emoji && m.url != null)
+        .firstOrNull;
+    final cover =
+        visual?.url ??
+        post.images.firstOrNull ??
+        originalVisual?.url ??
+        original?.images.firstOrNull;
+    final text = post.text.isNotEmpty
+        ? post.text
+        : original == null
+        ? ''
+        : '转发自 @${original.authorName}\n${original.text}';
+    void showFull() => showAppPanel<void>(
+      context: context,
+      builder: (context) => Column(
+        children: [
+          const AppPanelHeader(title: '历史上的今天'),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: DynamicCard(post: post, returnTo: returnTo),
+            ),
+          ),
+        ],
+      ),
+    );
+    return MediaCardSurface(
+      onTap: showFull,
+      onMore: () => showContentActions(
+        context,
+        ContentSnapshots.dynamic(post),
+        ruleSubject: RuleSubjects.dynamic(post),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: math.max(
+                48,
+                MediaCardMetrics.line(scaler, 15, 1.4) +
+                    MediaCardMetrics.line(scaler, 12, 1.35) +
+                    4,
+              ),
+              child: _author(
+                context,
+                () => showContentActions(
+                  context,
+                  ContentSnapshots.dynamic(post),
+                  ruleSubject: RuleSubjects.dynamic(post),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: cover == null
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: ClipRect(
+                        child: DynamicRichText(
+                          text: text.isEmpty
+                              ? '查看这一天的${dynamicTypeLabel(post.type)}记录'
+                              : text,
+                          media: [...post.media, ...?original?.media],
+                          maxLines: 8,
+                        ),
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          height: math.max(
+                            64,
+                            MediaCardMetrics.line(scaler, 14, 1.45) * 2,
+                          ),
+                          child: ClipRect(
+                            child: DynamicRichText(
+                              text: text.isEmpty
+                                  ? visual?.title ?? originalVisual?.title ?? ''
+                                  : text,
+                              media: [...post.media, ...?original?.media],
+                              maxLines: 2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: MediaCover(
+                              image: cover,
+                              aspectRatio: 16 / 9,
+                              fit: BoxFit.contain,
+                              badge: visual?.durationText.isNotEmpty == true
+                                  ? visual!.durationText
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: math.max(48, MediaCardMetrics.line(scaler, 12, 1.35) * 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '赞 ${post.likeCount} · 评论 ${post.commentCount}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                  AppButton(onPressed: showFull, child: const Text('查看全文')),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// Shared by the full dynamic feed and the home history cards. Covers are not
+/// Full dynamics in the feed or history reading panel. Covers are not
 /// added to the photo set, and emoji never becomes a gallery thumbnail.
 class DynamicBody extends StatelessWidget {
   const DynamicBody({
@@ -235,7 +374,6 @@ class DynamicBody extends StatelessWidget {
     this.sourceUrl,
     this.publishedAt,
     this.maxLines,
-    this.preview = false,
   });
   final String text;
   final List<Uri> images;
@@ -244,7 +382,6 @@ class DynamicBody extends StatelessWidget {
   final Uri? sourceUrl;
   final DateTime? publishedAt;
   final int? maxLines;
-  final bool preview;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +416,6 @@ class DynamicBody extends StatelessWidget {
             padding: EdgeInsets.only(top: text.isEmpty ? 0 : 12),
             child: ContentImageGallery(
               images: photos,
-              preview: preview,
               aspectRatios: {
                 for (final item in media)
                   if (item.url != null && item.aspectRatio != null)
@@ -287,12 +423,11 @@ class DynamicBody extends StatelessWidget {
               },
             ),
           ),
-        for (final item in (preview ? cards.take(1) : cards))
+        for (final item in cards)
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: _MediaCard(
               media: item,
-              preview: preview,
               sourceUrl: sourceUrl,
               publishedAt: publishedAt,
               onOpen: onOpen,
@@ -345,9 +480,7 @@ class _MediaCard extends StatelessWidget {
     required this.sourceUrl,
     required this.publishedAt,
     required this.onOpen,
-    this.preview = false,
   });
-  final bool preview;
   final DynamicMedia media;
   final Uri? sourceUrl;
   final DateTime? publishedAt;
@@ -392,9 +525,7 @@ class _MediaCard extends StatelessWidget {
                   children: [
                     MediaCover(
                       image: media.url,
-                      aspectRatio: preview
-                          ? 16 / 9
-                          : media.aspectRatio ?? 16 / 9,
+                      aspectRatio: media.aspectRatio ?? 16 / 9,
                       badge: media.durationText.isEmpty
                           ? null
                           : media.durationText,
@@ -403,7 +534,20 @@ class _MediaCard extends StatelessWidget {
                     if (media.kind == DynamicMediaKind.video && target != null)
                       AppButton.icon(
                         onPressed: () => onOpen(target),
-                        icon: const Icon(Icons.play_arrow),
+                        icon: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color(0x99000000),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.play_arrow,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
                         tooltip: '去 B 站看',
                       ),
                   ],
@@ -428,8 +572,6 @@ class _MediaCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   title.isEmpty ? '查看相关内容' : title,
-                  maxLines: preview ? 2 : null,
-                  overflow: preview ? TextOverflow.ellipsis : TextOverflow.clip,
                   style: theme.textTheme.titleMedium,
                 ),
                 if (media.description.isNotEmpty || media.badge.isNotEmpty)
@@ -440,10 +582,6 @@ class _MediaCard extends StatelessWidget {
                         media.description,
                         media.badge,
                       ].where((value) => value.isNotEmpty).join(' · '),
-                      maxLines: preview ? 2 : null,
-                      overflow: preview
-                          ? TextOverflow.ellipsis
-                          : TextOverflow.clip,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),

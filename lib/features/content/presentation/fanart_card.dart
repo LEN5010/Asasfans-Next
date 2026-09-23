@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/media_cover.dart';
@@ -28,14 +29,11 @@ class FanartCard extends StatelessWidget {
       item.contentType == FanartContentType.text ||
       (item.images.isEmpty && item.contentType != FanartContentType.video);
   static double extentFor(FanartItem item, double width, TextScaler scaler) =>
-      isText(item)
-      ? 28 +
-            MediaCardMetrics.line(scaler, 14, 1.45) * 5 +
-            MediaCardMetrics.line(scaler, 12, 1.35)
-      : width / (item.contentType == FanartContentType.video ? 16 / 9 : 4 / 3) +
-            captionExtent(scaler);
+      width / (16 / 9) + captionExtent(scaler);
   static double captionExtent(TextScaler scaler) =>
-      MediaCardMetrics.caption(scaler);
+      20 +
+      MediaCardMetrics.line(scaler, 14, 1.4) * 2 +
+      math.max(48, MediaCardMetrics.line(scaler, 12, 1.35) * 2 + 2);
 
   @override
   Widget build(BuildContext context) {
@@ -57,81 +55,107 @@ class FanartCard extends StatelessWidget {
 
     if (expanded) return _expandedCard(context, more);
 
+    final video = item.contentType == FanartContentType.video;
     return MediaCardSurface(
       onTap: onTap,
       onMore: more,
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!textOnly)
-                MediaCover(
-                  image: item.images.firstOrNull,
-                  aspectRatio: item.contentType == FanartContentType.video
-                      ? 16 / 9
-                      : 4 / 3,
-                  video: item.contentType == FanartContentType.video,
-                  badge: item.contentType == FanartContentType.video
-                      ? '视频'
-                      : item.images.length > 1
-                      ? '${item.images.length} 张'
-                      : null,
-                ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(12, textOnly ? 10 : 8, 12, 0),
-                child: SizedBox(
-                  height:
-                      MediaCardMetrics.line(scaler, 14, textOnly ? 1.45 : 1.4) *
-                      (textOnly ? 5 : 2),
-                  child: Text(
-                    text.isEmpty
-                        ? (textOnly
-                              ? '无正文'
-                              : item.contentType == FanartContentType.video
-                              ? '视频作品'
-                              : '图片作品')
-                        : text,
-                    maxLines: textOnly ? 5 : 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      height: textOnly ? 1.45 : 1.4,
-                      fontWeight: textOnly
-                          ? FontWeight.normal
-                          : FontWeight.w500,
-                    ),
+          if (textOnly)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ColoredBox(
+                color: theme.colorScheme.surfaceContainerHigh,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ClipRect(
+                    child: DynamicRichText(text: text, maxLines: 6),
                   ),
                 ),
               ),
-              SizedBox(height: textOnly ? 8 : 4),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  12,
-                  0,
-                  MediaMoreButton.reserve,
-                  10,
-                ),
-                child: SizedBox(
-                  height: MediaCardMetrics.line(scaler, 12, 1.35),
-                  child: Text(
-                    item.authorName.isEmpty ? '未知作者' : item.authorName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontSize: 12,
-                      height: 1.35,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+            )
+          else
+            MediaCover(
+              image: item.images.firstOrNull,
+              aspectRatio: 16 / 9,
+              fit: video ? BoxFit.cover : BoxFit.contain,
+              video: video,
+              badge: video
+                  ? '去 B 站看 ↗'
+                  : item.images.length > 1
+                  ? '${item.images.length} 张'
+                  : null,
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: SizedBox(
+              height: MediaCardMetrics.line(scaler, 14, 1.4) * 2,
+              child: Text(
+                textOnly
+                    ? '文字作品'
+                    : text.isNotEmpty
+                    ? text
+                    : video
+                    ? '视频作品'
+                    : '图片作品',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  height: 1.4,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
+            ),
           ),
-          Positioned(
-            right: 2,
-            bottom: 2,
-            child: MediaMoreButton(onPressed: more),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 4, 8),
+            child: SizedBox(
+              height: math.max(
+                48,
+                MediaCardMetrics.line(scaler, 12, 1.35) * 2 + 2,
+              ),
+              child: Row(
+                children: [
+                  ContentAvatar(
+                    name: item.authorName,
+                    image: item.authorAvatarUrl,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CreatorLink(
+                          mid: item.authorUid,
+                          child: Text(
+                            item.authorName.isEmpty ? '未知作者' : item.authorName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                        if (item.characterTags.isNotEmpty)
+                          Text(
+                            item.characterTags
+                                .map((tag) => tag.wire)
+                                .join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                      ],
+                    ),
+                  ),
+                  MediaMoreButton(onPressed: more),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -148,21 +172,14 @@ class FanartCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (video)
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                MediaCover(
-                  image: item.images.firstOrNull,
-                  aspectRatio: 16 / 9,
-                  video: true,
-                  badge: '视频',
-                ),
-                AppButton.icon(
-                  onPressed: onTap,
-                  tooltip: '去 B 站看',
-                  icon: const Icon(Icons.play_arrow),
-                ),
-              ],
+            InkWell(
+              onTap: onTap,
+              child: MediaCover(
+                image: item.images.firstOrNull,
+                aspectRatio: 16 / 9,
+                video: true,
+                badge: '去 B 站看 ↗',
+              ),
             ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -229,30 +246,32 @@ class FanartCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 14),
                     child: DynamicRichText(text: item.text.trim(), maxLines: 8),
                   ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (item.viewCount != null)
-                      Text(
-                        '${item.viewCount} 播放',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    if (item.favoriteCount != null)
-                      Text(
-                        '${item.favoriteCount} 收藏',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    AppButton(
-                      onPressed: onTap,
-                      child: Text(video ? '去 B 站看 ↗' : '查看作品'),
-                    ),
-                  ],
-                ),
+                if (!video ||
+                    item.viewCount != null ||
+                    item.favoriteCount != null) ...[
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (item.viewCount != null)
+                        Text(
+                          '${item.viewCount} 播放',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      if (item.favoriteCount != null)
+                        Text(
+                          '${item.favoriteCount} 收藏',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      if (!video)
+                        AppButton(onPressed: onTap, child: const Text('查看作品')),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

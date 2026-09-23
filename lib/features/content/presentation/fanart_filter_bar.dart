@@ -7,7 +7,7 @@ import '../../../shared/widgets/app_controls.dart';
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
 
-/// Frequent filters remain one tap away; secondary facets use a draft panel.
+/// Only selected conditions occupy the feed; all facets live in the draft panel.
 class FanartFilterBar extends StatelessWidget {
   const FanartFilterBar({
     required this.query,
@@ -16,50 +16,36 @@ class FanartFilterBar extends StatelessWidget {
   });
   final FanartQuery query;
   final ValueChanged<FanartQuery> onChanged;
-
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-    child: Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (query.keyword.isNotEmpty) ...[
-          AppButton.withIcon(
-            tooltip: '清除搜索',
-            icon: const Icon(Icons.close, size: 18),
-            label: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 180),
-              child: Text(query.keyword, overflow: TextOverflow.ellipsis),
-            ),
-            onPressed: () => onChanged(query.copyWith(keyword: '')),
-          ),
-        ],
-        for (final character in FanartCharacter.values) ...[
-          AppChoice(
-            label: Text(character.wire),
-            selected: query.characters.contains(character),
-            onSelected: (selected) => onChanged(
-              query.copyWith(
-                characters: {
-                  ...query.characters.where(
-                    (value) => selected || value != character,
-                  ),
-                  if (selected) character,
-                },
-              ),
+  Widget build(BuildContext context) {
+    final count = FanartFilterRules.count(query);
+    if (count == 0 && query.keyword.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              [
+                if (query.keyword.isNotEmpty) '“${query.keyword}”',
+                ...query.characters.map((value) => value.wire),
+                if (count > 0) '$count 项筛选',
+              ].join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
-        ],
-        if (FanartFilterRules.count(query) > 0)
-          AppButton(
-            onPressed: () => onChanged(FanartFilterRules.reset(query)),
-            child: const Text('重置筛选'),
+          AppButton.icon(
+            tooltip: '重置筛选',
+            icon: const Icon(Icons.close),
+            onPressed: () =>
+                onChanged(FanartFilterRules.reset(query).copyWith(keyword: '')),
           ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class FanartFilterButton extends StatelessWidget {
@@ -126,6 +112,30 @@ class _FilterPanelState extends State<_FilterPanel> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
+              Text('成员', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final character in FanartCharacter.values)
+                    AppChoice(
+                      label: Text(character.wire),
+                      selected: _draft.characters.contains(character),
+                      onSelected: (selected) => _change(
+                        _draft.copyWith(
+                          characters: {
+                            ..._draft.characters.where(
+                              (value) => selected || value != character,
+                            ),
+                            if (selected) character,
+                          },
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
               _Options(
                 title: '媒体类型',
                 values: const {

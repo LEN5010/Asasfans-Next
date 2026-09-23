@@ -25,12 +25,14 @@ class MediaCover extends StatelessWidget {
     required this.aspectRatio,
     this.badge,
     this.video = false,
+    this.fit = BoxFit.cover,
     super.key,
   });
   final Uri? image;
   final double aspectRatio;
   final String? badge;
   final bool video;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -41,7 +43,7 @@ class MediaCover extends StatelessWidget {
         if (image != null)
           Image.network(
             displayImageUri(image!, width: 800).toString(),
-            fit: BoxFit.cover,
+            fit: fit,
             cacheWidth: 800,
             errorBuilder: (_, _, _) => _fallback(context),
             loadingBuilder: (_, child, progress) => progress == null

@@ -146,11 +146,9 @@ class _ContentPageState extends ConsumerState<ContentPage>
           revealKey: _current,
           titleIsControl: true,
           controlExtent: AppSegments.heightFor(context),
-          actionsBelow: constraints.maxWidth < 760,
+          actionsBelow: constraints.maxWidth < 1040,
           title: _ChannelStrip(current: _current),
-          actions: [
-            ?_headerActions(ref, _current, constraints.maxWidth >= 1040),
-          ],
+          actions: [?_headerActions(ref, _current, constraints.maxWidth)],
         ),
         body: ClipRect(
           child: AnimatedBuilder(
@@ -168,81 +166,33 @@ class _ContentPageState extends ConsumerState<ContentPage>
     );
   }
 
-  Widget? _headerActions(WidgetRef ref, ContentChannel channel, bool wide) {
-    if (channel == ContentChannel.novels) return null;
-    if (channel == ContentChannel.fanart) {
-      final controller = ref.watch(fanartFeedControllerProvider(channel));
-      return ListenableBuilder(
+  Widget? _headerActions(WidgetRef ref, ContentChannel channel, double width) {
+    if (channel != ContentChannel.fanart) return null;
+    final controller = ref.watch(fanartFeedControllerProvider(channel));
+    return SizedBox(
+      width: width >= 1040 ? 400 : width - 24,
+      child: ListenableBuilder(
         listenable: controller,
         builder: (context, _) => Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 6,
+          spacing: 8,
           children: [
-            ContentSearchControl(
-              value: controller.state.query.keyword,
-              hint: '搜索正文或作者',
-              expanded: wide,
-              onSubmitted: (keyword) => controller.applyQuery(
-                controller.state.query.copyWith(keyword: keyword),
+            Expanded(
+              child: ContentSearchControl(
+                value: controller.state.query.keyword,
+                hint: '搜索正文或作者',
+                expanded: true,
+                onSubmitted: (keyword) => controller.applyQuery(
+                  controller.state.query.copyWith(keyword: keyword),
+                ),
               ),
             ),
             FanartFilterButton(
               query: controller.state.query,
               onChanged: controller.applyQuery,
             ),
-            _RandomFanartAction(channel: channel),
-            SavedChannelBar(
-              feed: ChannelFeed.fanart,
-              currentSpec: () => ChannelSpec.ofFanart(controller.state.query),
-              onOpen: (spec) => controller.applyQuery(spec.toFanart()),
-            ),
-            if (wide)
-              AppButton.icon(
-                tooltip: '刷新',
-                onPressed: controller.state.isBusy ? null : controller.refresh,
-                icon: const Icon(Icons.refresh),
-              ),
+            _FanartMoreActions(channel: channel),
           ],
         ),
-      );
-    }
-    if (channel == ContentChannel.dynamics) {
-      final controller = ref.watch(dynamicFeedControllerProvider);
-      return ListenableBuilder(
-        listenable: controller,
-        builder: (_, _) => Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 6,
-          children: [
-            ContentSearchControl(
-              value: controller.state.query.keyword,
-              hint: '搜索历史动态',
-              expanded: wide,
-              onSubmitted: (keyword) => controller.applyQuery(
-                controller.state.query.copyWith(keyword: keyword),
-              ),
-            ),
-            SavedChannelBar(
-              feed: ChannelFeed.dynamic,
-              currentSpec: () => ChannelSpec.ofDynamic(controller.state.query),
-              onOpen: (spec) => controller.applyQuery(spec.toDynamic()),
-            ),
-            AppButton.icon(
-              tooltip: '刷新',
-              onPressed: controller.state.isBusy ? null : controller.refresh,
-              icon: const Icon(Icons.refresh),
-            ),
-          ],
-        ),
-      );
-    }
-    final controller = ref.watch(communityFeedControllerProvider(_kind));
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (_, _) => AppButton.icon(
-        tooltip: '刷新',
-        onPressed: controller.state.isBusy ? null : controller.refresh,
-        icon: const Icon(Icons.refresh),
       ),
     );
   }
@@ -269,16 +219,15 @@ class _ChannelStrip extends StatelessWidget {
 ///
 /// Each draw is an independent request, so the button disables itself while
 /// one is in flight instead of letting repeated taps stack up requests.
-class _RandomFanartAction extends ConsumerStatefulWidget {
-  const _RandomFanartAction({required this.channel});
+class _FanartMoreActions extends ConsumerStatefulWidget {
+  const _FanartMoreActions({required this.channel});
   final ContentChannel channel;
 
   @override
-  ConsumerState<_RandomFanartAction> createState() =>
-      _RandomFanartActionState();
+  ConsumerState<_FanartMoreActions> createState() => _FanartMoreActionsState();
 }
 
-class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
+class _FanartMoreActionsState extends ConsumerState<_FanartMoreActions> {
   bool _loading = false;
   RequestCancellation? _cancellation;
 
@@ -340,16 +289,39 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
   }
 
   @override
-  Widget build(BuildContext context) => AppButton.icon(
-    tooltip: '随机二创',
-    onPressed: _loading ? null : _draw,
-    icon: _loading
-        ? const SizedBox.square(
-            dimension: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : const Icon(Icons.shuffle),
-  );
+  Widget build(BuildContext context) {
+    final feed = ref.read(fanartFeedControllerProvider(widget.channel));
+    return MenuAnchor(
+      menuChildren: [
+        MenuItemButton(
+          onPressed: _loading ? null : _draw,
+          leadingIcon: const Icon(Icons.shuffle),
+          child: const Text('随机二创'),
+        ),
+        SavedChannelBar(
+          menuItem: true,
+          feed: ChannelFeed.fanart,
+          currentSpec: () => ChannelSpec.ofFanart(feed.state.query),
+          onOpen: (spec) => feed.applyQuery(spec.toFanart()),
+        ),
+        MenuItemButton(
+          onPressed: feed.state.isBusy ? null : feed.refresh,
+          leadingIcon: const Icon(Icons.refresh),
+          child: const Text('刷新'),
+        ),
+      ],
+      builder: (context, menu, _) => AppButton.icon(
+        tooltip: '更多内容操作',
+        onPressed: () => menu.isOpen ? menu.close() : menu.open(),
+        icon: _loading
+            ? const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.more_horiz),
+      ),
+    );
+  }
 }
 
 /// Infinite fanart grid. Scroll position is owned by this widget so returning
@@ -517,56 +489,58 @@ class _FanartGrid extends ConsumerWidget {
             ),
             _ => null,
           };
-    return FeedScrollView(
-      storageKey: const PageStorageKey('fanart-feed'),
-      controller: controller,
-      onRefresh: onRefresh,
-      header: header,
-      placeholder: placeholder,
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverContentMasonry(
-            minColumnWidth: 300,
-            itemCount: state.items.length,
-            itemBuilder: (context, index) {
-              final item = state.items[index];
-              return FanartCard(
-                key: ValueKey(item.identity),
-                expanded: true,
-                item: item,
-                onLongPress: () => showContentActions(
-                  context,
-                  ContentSnapshots.fanart(item),
-                  ruleSubject: RuleSubjects.fanart(item),
-                ),
-                // A root route or an external open keeps the branch's
-                // scroll position and loaded pages.
-                onTap: () => openFanart(
-                  context,
-                  ref,
-                  item,
-                  returnTo: ReturnTarget.contentChannel,
-                  channel: ContentChannel.fanart.slug,
-                  query: ChannelSpec.ofFanart(state.query).values,
-                  anchor: ReturnAnchor(
-                    identity: item.identity,
-                    offset: controller.offset,
+    return LayoutBuilder(
+      builder: (context, constraints) => FeedScrollView(
+        storageKey: const PageStorageKey('fanart-feed'),
+        controller: controller,
+        onRefresh: onRefresh,
+        header: header,
+        placeholder: placeholder,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            sliver: SliverContentMasonry(
+              minColumnWidth: 300,
+              itemCount: state.items.length,
+              itemBuilder: (context, index) {
+                final item = state.items[index];
+                return FanartCard(
+                  key: ValueKey(item.identity),
+                  expanded: constraints.maxWidth >= 760,
+                  item: item,
+                  onLongPress: () => showContentActions(
+                    context,
+                    ContentSnapshots.fanart(item),
+                    ruleSubject: RuleSubjects.fanart(item),
                   ),
-                ),
-              );
-            },
+                  // A root route or an external open keeps the branch's
+                  // scroll position and loaded pages.
+                  onTap: () => openFanart(
+                    context,
+                    ref,
+                    item,
+                    returnTo: ReturnTarget.contentChannel,
+                    channel: ContentChannel.fanart.slug,
+                    query: ChannelSpec.ofFanart(state.query).values,
+                    anchor: ReturnAnchor(
+                      identity: item.identity,
+                      offset: controller.offset,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        SliverToBoxAdapter(
-          child: FeedStatusFooter(
-            status: state.status,
-            failure: state.failure,
-            onRetry: onRetryAppend,
-            onRefresh: onRefresh,
+          SliverToBoxAdapter(
+            child: FeedStatusFooter(
+              status: state.status,
+              failure: state.failure,
+              onRetry: onRetryAppend,
+              onRefresh: onRefresh,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

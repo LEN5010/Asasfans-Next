@@ -21,10 +21,9 @@ class SliverContentMasonry extends StatelessWidget {
       final spacing = width >= 760 ? 20.0 : 12.0;
       final minWidth =
           minColumnWidth * MediaQuery.textScalerOf(context).scale(1);
-      final columns = ((width + spacing) / (minWidth + spacing)).floor().clamp(
-        1,
-        4,
-      );
+      final columns = width < 760
+          ? 1
+          : ((width + spacing) / (minWidth + spacing)).floor().clamp(1, 4);
       return SliverMasonryGrid.count(
         crossAxisCount: columns,
         mainAxisSpacing: spacing,

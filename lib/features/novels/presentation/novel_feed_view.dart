@@ -403,7 +403,7 @@ class _NovelCard extends ConsumerWidget {
     return MediaCardSurface(
       onTap: () => openNovel(context, item),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -432,7 +432,7 @@ class _NovelCard extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: 12),
                 child: NovelCharacterTags(characters: item.characters),
               ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             DecoratedBox(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHigh.withValues(
@@ -488,16 +488,14 @@ class _NovelCard extends ConsumerWidget {
                       ),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Text(
               item.title.isEmpty ? '无题' : item.title,
-              maxLines: 3,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleMedium,
             ),
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(

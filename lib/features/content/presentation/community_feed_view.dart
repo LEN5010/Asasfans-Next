@@ -71,6 +71,7 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
         onChannel: widget.onChannel,
         query: state.query,
         onChanged: _applyQuery,
+        onRefresh: state.isBusy ? null : _controller.refresh,
       );
       return RuleFilterScope(
         items: state.videos,
@@ -195,8 +196,10 @@ class _FilterRow extends StatelessWidget {
     required this.onChannel,
     required this.query,
     required this.onChanged,
+    required this.onRefresh,
   });
 
+  final VoidCallback? onRefresh;
   final CommunityChannel channel;
   final ValueChanged<CommunityChannel>? onChannel;
   final CommunityVideoQuery query;
@@ -216,73 +219,65 @@ class _FilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-    child: Wrap(
-      spacing: 12,
-      runSpacing: 10,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+    child: Row(
+      spacing: 8,
       children: [
-        if (onChannel != null)
-          SizedBox(
-            width: 220,
-            child: AppSegments<CommunityChannel>(
-              values: _kinds.keys.toList(),
-              selected: channel,
-              labelOf: (value) => _kinds[value]!,
-              onChanged: onChannel,
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              width: 240,
+              child: AppSegments<CommunityChannel>(
+                values: _kinds.keys.toList(),
+                selected: channel,
+                labelOf: (value) => _kinds[value]!,
+                onChanged: onChannel,
+              ),
             ),
           ),
-        SizedBox(
-          width: 144,
-          child: AppSegments<CommunityVideoOrder>(
-            values: _orders.keys.toList(),
-            selected: query.order,
-            labelOf: (value) => _orders[value]!,
-            onChanged: (order) => onChanged(query.copyWith(order: order)),
+        ),
+        MenuAnchor(
+          menuChildren: [
+            for (final entry in _orders.entries)
+              MenuItemButton(
+                onPressed: () => onChanged(query.copyWith(order: entry.key)),
+                leadingIcon: Icon(
+                  query.order == entry.key ? Icons.check : Icons.sort,
+                ),
+                child: Text(entry.value),
+              ),
+            const Divider(),
+            for (final entry in _windows.entries)
+              MenuItemButton(
+                onPressed: () => onChanged(
+                  entry.key == 0
+                      ? query.copyWith(clearDays: true)
+                      : query.copyWith(withinDays: entry.key),
+                ),
+                leadingIcon: Icon(
+                  (query.withinDays ?? 0) == entry.key
+                      ? Icons.check
+                      : Icons.date_range,
+                ),
+                child: Text(entry.value),
+              ),
+          ],
+          builder: (context, menu, _) => AppButton.icon(
+            tooltip: '筛选与排序',
+            selected:
+                query.order != CommunityVideoOrder.newest ||
+                query.withinDays != null,
+            icon: const Icon(Icons.tune),
+            onPressed: () => menu.isOpen ? menu.close() : menu.open(),
           ),
         ),
-        _MenuChip<int>(
-          tooltip: '时间范围',
-          label: _windows[query.withinDays ?? 0] ?? '全部时间',
-          values: _windows,
-          onSelected: (days) => onChanged(
-            days == 0
-                ? query.copyWith(clearDays: true)
-                : query.copyWith(withinDays: days),
-          ),
+        AppButton.icon(
+          tooltip: '刷新',
+          onPressed: onRefresh,
+          icon: const Icon(Icons.refresh),
         ),
       ],
-    ),
-  );
-}
-
-class _MenuChip<T> extends StatelessWidget {
-  const _MenuChip({
-    required this.tooltip,
-    required this.label,
-    required this.values,
-    required this.onSelected,
-  });
-  final String tooltip;
-  final String label;
-  final Map<T, String> values;
-  final ValueChanged<T> onSelected;
-
-  @override
-  Widget build(BuildContext context) => MenuAnchor(
-    menuChildren: [
-      for (final entry in values.entries)
-        MenuItemButton(
-          onPressed: () => onSelected(entry.key),
-          child: Text(entry.value),
-        ),
-    ],
-    builder: (context, controller, _) => AppButton.withIcon(
-      tooltip: tooltip,
-      icon: const Icon(Icons.expand_more, size: 18),
-      label: Text(label),
-      onPressed: () =>
-          controller.isOpen ? controller.close() : controller.open(),
     ),
   );
 }

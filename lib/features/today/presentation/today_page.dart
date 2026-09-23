@@ -237,16 +237,33 @@ class _ScheduleSection extends ConsumerWidget {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ),
-                  for (final event in entries.take(2))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: CalendarEventTile(
-                        event: event,
-                        day: next ? null : day,
-                        showDate: next,
-                        compact: true,
-                      ),
-                    ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns =
+                          constraints.maxWidth >=
+                              760 * MediaQuery.textScalerOf(context).scale(1)
+                          ? 2
+                          : 1;
+                      return Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
+                        children: [
+                          for (final event in entries.take(2))
+                            SizedBox(
+                              width:
+                                  (constraints.maxWidth - 16 * (columns - 1)) /
+                                  columns,
+                              child: CalendarEventTile(
+                                event: event,
+                                day: next ? null : day,
+                                showDate: next,
+                                compact: true,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
                   if (entries.length > 2)
                     Align(
                       alignment: Alignment.centerRight,
@@ -265,7 +282,7 @@ class _ScheduleSection extends ConsumerWidget {
   }
 }
 
-class _ContentShelf<T> extends StatelessWidget {
+class _ContentShelf<T> extends StatefulWidget {
   const _ContentShelf({
     required this.title,
     required this.items,
@@ -283,17 +300,47 @@ class _ContentShelf<T> extends StatelessWidget {
   final RuleSubject Function(T) subjectOf;
   final Widget Function(T) card;
   @override
+  State<_ContentShelf<T>> createState() => _ContentShelfState<T>();
+}
+
+class _ContentShelfState<T> extends State<_ContentShelf<T>> {
+  final _scroll = ScrollController();
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _move(int direction) {
+    if (!_scroll.hasClients) return;
+    _scroll.animateTo(
+      (_scroll.offset + direction * _scroll.position.viewportDimension * .76)
+          .clamp(0, _scroll.position.maxScrollExtent),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      _SectionHeader(title: title, onAll: onAll),
+      _SectionHeader(
+        title: widget.title,
+        onAll: widget.onAll,
+        onPrevious: () => _move(-1),
+        onNext: () => _move(1),
+      ),
       const SizedBox(height: 6),
-      items.when(
+      widget.items.when(
         loading: () => const _SectionLoading(),
-        error: (error, _) => _SectionError(error: error, onRetry: onRetry),
+        error: (error, _) =>
+            _SectionError(error: error, onRetry: widget.onRetry),
         data: (raw) => RuleFilterScope(
           items: raw,
-          subjectOf: subjectOf,
+          subjectOf: widget.subjectOf,
           builder: (visible) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -312,23 +359,19 @@ class _ContentShelf<T> extends StatelessWidget {
             final width = math.min(280.0, constraints.maxWidth * .76);
             final scaler = MediaQuery.textScalerOf(context);
             final height = values
-                .map((value) => extent(value, width, scaler))
+                .map((value) => widget.extent(value, width, scaler))
                 .reduce(math.max);
             return SizedBox(
               height: height,
               child: ListView.separated(
+                controller: _scroll,
                 scrollDirection: Axis.horizontal,
                 itemCount: values.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 12),
                 itemBuilder: (_, index) => SizedBox(
                   width: width,
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      height: extent(values[index], width, scaler),
-                      child: card(values[index]),
-                    ),
-                  ),
+                  height: height,
+                  child: widget.card(values[index]),
                 ),
               ),
             );
@@ -341,16 +384,31 @@ class _SectionHeader extends StatelessWidget {
     required this.title,
     required this.onAll,
     this.action = '更多',
+    this.onPrevious,
+    this.onNext,
   });
   final String title;
   final VoidCallback onAll;
   final String action;
+  final VoidCallback? onPrevious, onNext;
   @override
   Widget build(BuildContext context) => Row(
     children: [
       Expanded(
         child: Text(title, style: Theme.of(context).textTheme.titleMedium),
       ),
+      if (onPrevious != null)
+        AppButton.icon(
+          tooltip: '上一组$title',
+          onPressed: onPrevious,
+          icon: const Icon(Icons.chevron_left),
+        ),
+      if (onNext != null)
+        AppButton.icon(
+          tooltip: '下一组$title',
+          onPressed: onNext,
+          icon: const Icon(Icons.chevron_right),
+        ),
       AppButton(onPressed: onAll, child: Text(action)),
     ],
   );

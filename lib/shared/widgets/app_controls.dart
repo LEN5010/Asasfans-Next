@@ -253,7 +253,9 @@ class AppSegments<T> extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: colors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(
+                  navigation ? height / 2 : 12,
+                ),
               ),
               child: Stack(
                 fit: StackFit.expand,
@@ -273,7 +275,9 @@ class AppSegments<T> extends StatelessWidget {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             color: colors.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              navigation ? (height - 8) / 2 : 8,
+                            ),
                           ),
                         ),
                       ),

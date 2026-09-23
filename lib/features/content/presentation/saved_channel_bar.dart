@@ -16,10 +16,12 @@ class SavedChannelBar extends ConsumerWidget {
     required this.feed,
     required this.currentSpec,
     required this.onOpen,
+    this.menuItem = false,
     super.key,
   });
 
   final ChannelFeed feed;
+  final bool menuItem;
 
   /// Built on demand rather than passed as a value, so the bar always saves the
   /// filters as they stand at the moment the user confirms.
@@ -38,83 +40,95 @@ class SavedChannelBar extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AppButton.icon(
-    tooltip: '保存频道',
-    icon: const Icon(Icons.bookmarks_outlined),
-    onPressed: () async {
-      final choice = await showDialog<(SavedChannel?, bool)>(
-        context: context,
-        builder: (dialogContext) => Consumer(
-          builder: (context, ref, _) {
-            final channels = ref.watch(savedChannelsProvider(feed));
-            return SimpleDialog(
-              title: Row(
-                children: [
-                  const Expanded(child: Text('保存频道')),
-                  AppButton.icon(
-                    tooltip: '关闭频道',
-                    onPressed: () => Navigator.pop(dialogContext),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.bookmark_add_outlined),
-                  title: const Text('保存当前筛选'),
-                  onTap: () => Navigator.pop(dialogContext, (null, false)),
-                ),
-                if (channels.isLoading) const LinearProgressIndicator(),
-                if (channels.hasError)
-                  ListTile(
-                    title: Text(libraryError(channels.error!)),
-                    trailing: AppButton.icon(
-                      tooltip: '重试频道',
-                      icon: const Icon(Icons.refresh),
-                      onPressed: () =>
-                          ref.invalidate(savedChannelsProvider(feed)),
-                    ),
-                  ),
-                for (final channel
-                    in channels.valueOrNull ?? const <SavedChannel>[])
-                  ListTile(
-                    title: Text(channel.name),
-                    onTap: () => Navigator.pop(dialogContext, (channel, false)),
-                    trailing: AppButton.icon(
-                      tooltip: '删除频道「${channel.name}」',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () =>
-                          Navigator.pop(dialogContext, (channel, true)),
-                    ),
-                  ),
-              ],
-            );
+  Widget build(BuildContext context, WidgetRef ref) => menuItem
+      ? MenuItemButton(
+          closeOnActivate: false,
+          onPressed: () async {
+            await _open(context, ref);
+            if (context.mounted) MenuController.maybeOf(context)?.close();
           },
-        ),
-      );
-      if (choice == null || !context.mounted) return;
-      final channel = choice.$1;
-      if (channel == null) {
-        await _save(context, ref);
-        return;
-      }
-      if (!choice.$2) {
-        onOpen(channel.spec);
-        return;
-      }
-      if (await confirmLibraryAction(
-            context,
-            '删除频道「${channel.name}」？',
-            body: '只删除这个查询条件，不影响内容、收藏或规则。',
-          ) &&
-          context.mounted) {
-        await libraryAction(
-          context,
-          () => ref.read(savedChannelRepositoryProvider).remove(channel.id),
+          leadingIcon: const Icon(Icons.bookmarks_outlined),
+          child: const Text('保存频道'),
+        )
+      : AppButton.icon(
+          tooltip: '保存频道',
+          icon: const Icon(Icons.bookmarks_outlined),
+          onPressed: () => _open(context, ref),
         );
-      }
-    },
-  );
+
+  Future<void> _open(BuildContext context, WidgetRef ref) async {
+    final choice = await showDialog<(SavedChannel?, bool)>(
+      context: context,
+      builder: (dialogContext) => Consumer(
+        builder: (context, ref, _) {
+          final channels = ref.watch(savedChannelsProvider(feed));
+          return SimpleDialog(
+            title: Row(
+              children: [
+                const Expanded(child: Text('保存频道')),
+                AppButton.icon(
+                  tooltip: '关闭频道',
+                  onPressed: () => Navigator.pop(dialogContext),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            children: [
+              ListTile(
+                leading: const Icon(Icons.bookmark_add_outlined),
+                title: const Text('保存当前筛选'),
+                onTap: () => Navigator.pop(dialogContext, (null, false)),
+              ),
+              if (channels.isLoading) const LinearProgressIndicator(),
+              if (channels.hasError)
+                ListTile(
+                  title: Text(libraryError(channels.error!)),
+                  trailing: AppButton.icon(
+                    tooltip: '重试频道',
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () =>
+                        ref.invalidate(savedChannelsProvider(feed)),
+                  ),
+                ),
+              for (final channel
+                  in channels.valueOrNull ?? const <SavedChannel>[])
+                ListTile(
+                  title: Text(channel.name),
+                  onTap: () => Navigator.pop(dialogContext, (channel, false)),
+                  trailing: AppButton.icon(
+                    tooltip: '删除频道「${channel.name}」',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () =>
+                        Navigator.pop(dialogContext, (channel, true)),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    final channel = choice.$1;
+    if (channel == null) {
+      await _save(context, ref);
+      return;
+    }
+    if (!choice.$2) {
+      onOpen(channel.spec);
+      return;
+    }
+    if (await confirmLibraryAction(
+          context,
+          '删除频道「${channel.name}」？',
+          body: '只删除这个查询条件，不影响内容、收藏或规则。',
+        ) &&
+        context.mounted) {
+      await libraryAction(
+        context,
+        () => ref.read(savedChannelRepositoryProvider).remove(channel.id),
+      );
+    }
+  }
 }
 
 class _NameDialog extends StatefulWidget {

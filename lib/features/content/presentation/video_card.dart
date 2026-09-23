@@ -26,8 +26,6 @@ class VideoCard extends ConsumerWidget {
   /// in a channel and on a creator page, so the caller owns this.
   final WatchOrigin origin;
 
-  static bool _hasMeta(VideoSummary video) =>
-      video.viewCount != null || video.publishedAt != null;
   static double extentFor(
     VideoSummary video,
     double width,
@@ -35,7 +33,8 @@ class VideoCard extends ConsumerWidget {
   ) =>
       width / (16 / 9) +
       MediaCardMetrics.caption(scaler) +
-      (_hasMeta(video) ? 4 + MediaCardMetrics.line(scaler, 11, 1.35) : 0);
+      4 +
+      MediaCardMetrics.line(scaler, 11, 1.35);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,7 +105,7 @@ class VideoCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              if (_hasMeta(video)) ...[
+              ...[
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
