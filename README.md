@@ -26,9 +26,9 @@ Asasfans Next 是非官方粉丝项目，与 Bilibili、A-SOUL 及枝江娱乐�
 
 ## 3.0（开发中）
 
-`main` 分支上是 Flutter 版，版本号 `3.0.0-dev.1+201` 只是开发标识，还没有正式发行，暂时也不能完全替代旧版。
+`main` 分支上是 Flutter 版，版本号 `3.0.0-dev.1+201` 还没有正式发行。
 
-原生 Android 版在 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 画上了句号，源码和安装包都留在这个标签和 `old` 分支里，想用稳定版的话可以继续装它。项目从 2022 年一路走到现在的经过、旧版的功能和技术参数，都写在 [HISTORY.md](HISTORY.md) 里。
+原生 Android 版在 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0) 已经停止维护，源码和安装包在该标签和 `old` 分支里，项目历史可以查看 [HISTORY.md](HISTORY.md) 。
 
 ## 功能
 
