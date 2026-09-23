@@ -24,3 +24,11 @@ tool/flutterw test --no-pub
 Windows 使用 `tool/flutterw.ps1` 和相同参数。命令在仓库根目录执行，参数原样传给 Flutter；`--dart` 则传给同一套 SDK 的 Dart。SDK 缺失、Git revision 不符、SDK 源码有改动或缓存版本不符会明确失败，不静默继续。
 
 IDE 的 Flutter SDK 路径也应指向同一目录。本机绝对路径、SDK 二进制、下载包及生成配置不提交。SDK 版本升级必须一起检查清单、pubspec、锁文件与 CI；新版本构建成功不等于真机或生产签名验收通过。
+
+## 离线原生界面检查
+
+```sh
+tool/flutterw run -d macos --target tool/preview/main.dart
+```
+
+这是显式的开发入口，带 `OFFLINE` 标记，不由正式 `lib/main.dart` 引用。使用与测试相同的内存 SQLite、内存凭证和固定日程，内容源为空；不读取应用个人库或 Keychain，不打开登录浏览器或外链，并禁止创建 HTTP 客户端。用于验证真实原生启动、窗口、导航与材质能力，不冒充真实来源/账号/数据验收。不要用生产入口代替它做“离线”检查。
