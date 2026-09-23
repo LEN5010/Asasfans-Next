@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/app_panel.dart';
@@ -159,44 +161,50 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
                     expanded: true,
                     onSubmitted: (keyword) =>
                         widget.onChanged(query.copyWith(keyword: keyword)),
+                    filter: AppButton.icon(
+                      tooltip: '筛选与排序',
+                      icon: const Icon(Icons.tune),
+                      selected: query != const NovelQuery(),
+                      onPressed: () async {
+                        if (wide) {
+                          setState(() => _expanded = !_expanded);
+                          return;
+                        }
+                        final next = await showAppPanel<NovelQuery>(
+                          context: context,
+                          builder: (context) => _NovelFilterPanel(
+                            query: query,
+                            onApply: (query) => Navigator.pop(context, query),
+                            onClose: () => Navigator.pop(context),
+                          ),
+                        );
+                        if (next != null && mounted) widget.onChanged(next);
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                AppButton.icon(
-                  tooltip: '筛选与排序',
-                  icon: const Icon(Icons.tune),
-                  selected: query != const NovelQuery(),
-                  onPressed: () async {
-                    if (wide) {
-                      setState(() => _expanded = !_expanded);
-                      return;
-                    }
-                    final next = await showAppPanel<NovelQuery>(
-                      context: context,
-                      builder: (context) => _NovelFilterPanel(
-                        query: query,
-                        onApply: (query) => Navigator.pop(context, query),
-                        onClose: () => Navigator.pop(context),
-                      ),
-                    );
-                    if (next != null && mounted) widget.onChanged(next);
-                  },
                 ),
               ],
             ),
-            if (wide && _expanded)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Card(
-                  child: _NovelFilterPanel(
-                    key: ValueKey(query),
-                    query: query,
-                    embedded: true,
-                    onApply: widget.onChanged,
-                    onClose: () => setState(() => _expanded = false),
-                  ),
-                ),
-              ),
+            // The inline panel grows open and folds away instead of jumping.
+            AnimatedSize(
+              duration: appMotion(context, AppTokens.controlMotion),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: !(wide && _expanded)
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Card(
+                        child: _NovelFilterPanel(
+                          key: ValueKey(query),
+                          query: query,
+                          embedded: true,
+                          onApply: widget.onChanged,
+                          onClose: () => setState(() => _expanded = false),
+                        ),
+                      ),
+                    ),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [

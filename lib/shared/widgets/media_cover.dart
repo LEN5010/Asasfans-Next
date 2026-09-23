@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
+import 'app_motion.dart';
+
 /// Presentation-only CDN transform. Never mutate the URI kept by the model.
 Uri displayImageUri(Uri uri, {int width = 640}) {
   final bili = RegExp(
@@ -46,12 +49,24 @@ class MediaCover extends StatelessWidget {
             fit: fit,
             cacheWidth: 800,
             errorBuilder: (_, _, _) => _fallback(context),
-            loadingBuilder: (_, child, progress) => progress == null
+            // A network cover cross-fades from the loading tone; a cached
+            // one appears at once.
+            frameBuilder: (_, child, frame, synchronous) => synchronous
                 ? child
-                : ColoredBox(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                : AnimatedSwitcher(
+                    duration: appMotion(context, AppTokens.controlMotion),
+                    layoutBuilder: (current, previous) => Stack(
+                      fit: StackFit.expand,
+                      children: [...previous, ?current],
+                    ),
+                    child: frame == null
+                        ? ColoredBox(
+                            key: const ValueKey(false),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                          )
+                        : KeyedSubtree(key: const ValueKey(true), child: child),
                   ),
           )
         else

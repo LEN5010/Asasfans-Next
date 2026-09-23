@@ -18,6 +18,7 @@ class AppButton extends StatelessWidget {
     this.radius = 10,
     this.tooltip,
     this.leading,
+    this.filled = false,
   }) : iconOnly = false;
 
   const AppButton.icon({
@@ -27,6 +28,7 @@ class AppButton extends StatelessWidget {
     required this.tooltip,
     this.selected = false,
     this.radius = 10,
+    this.filled = false,
   }) : child = icon,
        leading = null,
        iconOnly = true;
@@ -39,6 +41,7 @@ class AppButton extends StatelessWidget {
     this.selected = false,
     this.radius = 10,
     this.tooltip,
+    this.filled = false,
   }) : child = label,
        leading = icon,
        iconOnly = false;
@@ -51,10 +54,15 @@ class AppButton extends StatelessWidget {
   final String? tooltip;
   final bool iconOnly;
 
+  /// Sits beside a search field: the field's fill, height and corners.
+  final bool filled;
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final target = AppTokens.controlTarget(context);
+    final target = filled
+        ? AppSegments.heightFor(context)
+        : AppTokens.controlTarget(context);
     final button = TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
@@ -68,6 +76,8 @@ class AppButton extends StatelessWidget {
             : colors.onSurface,
         backgroundColor: selected
             ? colors.primaryContainer
+            : filled
+            ? Theme.of(context).inputDecorationTheme.fillColor
             : Colors.transparent,
         disabledForegroundColor: colors.onSurface.withValues(alpha: .38),
         textStyle: const TextStyle(
@@ -76,7 +86,9 @@ class AppButton extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radius),
+          borderRadius: BorderRadius.circular(
+            filled ? AppTokens.inputRadius : radius,
+          ),
         ),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         animationDuration: AppGlassScope.of(context).canAnimate

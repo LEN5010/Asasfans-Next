@@ -10,12 +10,16 @@ class ContentSearchControl extends StatelessWidget {
     required this.hint,
     required this.onSubmitted,
     this.expanded = false,
+    this.filter,
     super.key,
   });
   final String value;
   final String hint;
   final ValueChanged<String> onSubmitted;
   final bool expanded;
+
+  /// The feed's filter action, carried at the field's trailing end.
+  final Widget? filter;
 
   @override
   Widget build(BuildContext context) => expanded
@@ -27,6 +31,7 @@ class ContentSearchControl extends StatelessWidget {
             value: value,
             hint: hint,
             onSubmitted: onSubmitted,
+            filter: filter,
           ),
         )
       : AppButton.icon(
@@ -48,11 +53,13 @@ class _SearchInput extends StatefulWidget {
     required this.value,
     required this.hint,
     required this.onSubmitted,
+    this.filter,
     super.key,
   });
   final String value;
   final String hint;
   final ValueChanged<String> onSubmitted;
+  final Widget? filter;
   @override
   State<_SearchInput> createState() => _SearchInputState();
 }
@@ -90,16 +97,25 @@ class _SearchInputState extends State<_SearchInput> {
       ),
       prefixIconConstraints: const BoxConstraints.tightFor(width: 36),
       prefixIcon: const Icon(AppIcons.search, size: 20),
-      suffixIcon: _controller.text.isEmpty
+      suffixIconConstraints: const BoxConstraints(),
+      suffixIcon: _controller.text.isEmpty && widget.filter == null
           ? null
-          : IconButton(
-              tooltip: '清除搜索',
-              icon: const Icon(AppIcons.close, size: 18),
-              onPressed: () {
-                _controller.clear();
-                setState(() {});
-                widget.onSubmitted('');
-              },
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_controller.text.isNotEmpty)
+                  AppButton.icon(
+                    tooltip: '清除搜索',
+                    icon: const Icon(AppIcons.close, size: 18),
+                    onPressed: () {
+                      _controller.clear();
+                      setState(() {});
+                      widget.onSubmitted('');
+                    },
+                  ),
+                ?widget.filter,
+                const SizedBox(width: 2),
+              ],
             ),
     ),
     onChanged: (_) => setState(() {}),

@@ -34,34 +34,41 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
             : colors.outlineVariant.withValues(alpha: .55),
       ),
     );
-    return AnimatedContainer(
-      duration: AppGlassScope.of(context).canAnimate
-          ? AppTokens.pressMotion
-          : Duration.zero,
-      foregroundDecoration: ShapeDecoration(shape: shape),
-      decoration: BoxDecoration(
-        color: pressed
-            ? Color.alphaBlend(
-                colors.primary.withValues(alpha: .035),
-                colors.surfaceContainerLow,
-              )
-            : colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        shape: RoundedRectangleBorder(
+    final motion = AppGlassScope.of(context).canAnimate
+        ? AppTokens.pressMotion
+        : Duration.zero;
+    // A light press-in; layout keeps the card's size, only paint scales.
+    return AnimatedScale(
+      scale: pressed ? .98 : 1,
+      duration: motion,
+      curve: Curves.easeOutCubic,
+      child: AnimatedContainer(
+        duration: motion,
+        foregroundDecoration: ShapeDecoration(shape: shape),
+        decoration: BoxDecoration(
+          color: pressed
+              ? Color.alphaBlend(
+                  colors.primary.withValues(alpha: .035),
+                  colors.surfaceContainerLow,
+                )
+              : colors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: widget.onTap,
-          onLongPress: widget.onMore,
-          onSecondaryTap: widget.onMore,
-          onHighlightChanged: (value) => setState(() => pressed = value),
-          onHover: (value) => setState(() => hover = value),
-          onFocusChange: (value) => setState(() => focused = value),
-          child: widget.child,
+        child: Material(
+          color: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onTap,
+            onLongPress: widget.onMore,
+            onSecondaryTap: widget.onMore,
+            onHighlightChanged: (value) => setState(() => pressed = value),
+            onHover: (value) => setState(() => hover = value),
+            onFocusChange: (value) => setState(() => focused = value),
+            child: widget.child,
+          ),
         ),
       ),
     );

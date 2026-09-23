@@ -22,7 +22,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/today',
     routes: [
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
+        navigatorContainerBuilder: (context, shell, children) =>
+            FadeThroughBranches(
+              currentIndex: shell.currentIndex,
+              children: children,
+            ),
         builder: (context, state, navigationShell) =>
             // Wraps the shell so a return lands before any branch is chosen.
             ReturnRestorer(

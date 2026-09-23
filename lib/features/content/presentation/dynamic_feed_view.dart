@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../../../shared/widgets/app_controls.dart';
@@ -185,27 +187,27 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
                       expanded: true,
                       onSubmitted: (keyword) =>
                           apply(query.copyWith(keyword: keyword)),
+                      filter: AppButton.icon(
+                        tooltip: '筛选与排序',
+                        selected: _expanded || query != const DynamicQuery(),
+                        icon: const Icon(Icons.tune),
+                        onPressed: () async {
+                          if (wide) {
+                            setState(() => _expanded = !_expanded);
+                            return;
+                          }
+                          final next = await showAppPanel<DynamicQuery>(
+                            context: context,
+                            builder: (context) => _DynamicFilterPanel(
+                              query: query,
+                              onApply: (next) => Navigator.pop(context, next),
+                              onClose: () => Navigator.pop(context),
+                            ),
+                          );
+                          if (next != null && mounted) apply(next);
+                        },
+                      ),
                     ),
-                  ),
-                  AppButton.icon(
-                    tooltip: '筛选与排序',
-                    selected: _expanded || query != const DynamicQuery(),
-                    icon: const Icon(Icons.tune),
-                    onPressed: () async {
-                      if (wide) {
-                        setState(() => _expanded = !_expanded);
-                        return;
-                      }
-                      final next = await showAppPanel<DynamicQuery>(
-                        context: context,
-                        builder: (context) => _DynamicFilterPanel(
-                          query: query,
-                          onApply: (next) => Navigator.pop(context, next),
-                          onClose: () => Navigator.pop(context),
-                        ),
-                      );
-                      if (next != null && mounted) apply(next);
-                    },
                   ),
                   MenuAnchor(
                     menuChildren: [
@@ -226,6 +228,7 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
                     ],
                     builder: (context, menu, _) => AppButton.icon(
                       tooltip: '更多内容操作',
+                      filled: true,
                       onPressed: () => menu.isOpen ? menu.close() : menu.open(),
                       icon: const Icon(Icons.more_horiz),
                     ),
@@ -250,19 +253,26 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
                     ),
                   ],
                 ),
-              if (wide && _expanded)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Card(
-                    child: _DynamicFilterPanel(
-                      key: ValueKey(query),
-                      query: query,
-                      embedded: true,
-                      onApply: apply,
-                      onClose: () => setState(() => _expanded = false),
-                    ),
-                  ),
-                ),
+              // The inline panel grows open and folds away instead of jumping.
+              AnimatedSize(
+                duration: appMotion(context, AppTokens.controlMotion),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: !(wide && _expanded)
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Card(
+                          child: _DynamicFilterPanel(
+                            key: ValueKey(query),
+                            query: query,
+                            embedded: true,
+                            onApply: apply,
+                            onClose: () => setState(() => _expanded = false),
+                          ),
+                        ),
+                      ),
+              ),
             ],
           ),
         );

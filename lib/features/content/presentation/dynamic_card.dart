@@ -283,13 +283,12 @@ class DynamicCard extends ConsumerWidget {
                 if (cover != null) ...[
                   const SizedBox(width: 10),
                   SizedBox(
-                    width: 88,
+                    width: 96,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: MediaCover(
                         image: cover,
-                        aspectRatio: 1,
-                        fit: BoxFit.contain,
+                        aspectRatio: 16 / 10,
                         badge: visual?.durationText.isNotEmpty == true
                             ? visual!.durationText
                             : null,
@@ -299,6 +298,9 @@ class DynamicCard extends ConsumerWidget {
                 ],
               ],
             ),
+            // The shelf gives every card the tallest height; stats sit at
+            // the bottom instead of floating under a short summary.
+            const Spacer(),
             const SizedBox(height: 4),
             Row(
               children: [

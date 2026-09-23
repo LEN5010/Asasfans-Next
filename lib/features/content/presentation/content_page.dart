@@ -184,11 +184,11 @@ class _ContentPageState extends ConsumerState<ContentPage>
                 onSubmitted: (keyword) => controller.applyQuery(
                   controller.state.query.copyWith(keyword: keyword),
                 ),
+                filter: FanartFilterButton(
+                  query: controller.state.query,
+                  onChanged: controller.applyQuery,
+                ),
               ),
-            ),
-            FanartFilterButton(
-              query: controller.state.query,
-              onChanged: controller.applyQuery,
             ),
             _FanartMoreActions(channel: channel),
           ],
@@ -312,6 +312,7 @@ class _FanartMoreActionsState extends ConsumerState<_FanartMoreActions> {
       ],
       builder: (context, menu, _) => AppButton.icon(
         tooltip: '更多内容操作',
+        filled: true,
         onPressed: () => menu.isOpen ? menu.close() : menu.open(),
         icon: _loading
             ? const SizedBox.square(

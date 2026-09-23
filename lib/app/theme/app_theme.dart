@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import 'app_tokens.dart';
@@ -93,6 +94,16 @@ abstract final class AppTheme {
     return base.copyWith(
       textTheme: text,
       scaffoldBackgroundColor: page,
+      // One page motion on every platform; iOS keeps its slide, which
+      // carries the edge swipe back.
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final platform in TargetPlatform.values)
+            platform: platform == TargetPlatform.iOS
+                ? const CupertinoPageTransitionsBuilder()
+                : FadeForwardsPageTransitionsBuilder(backgroundColor: page),
+        },
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: page,
         foregroundColor: colors.onSurface,

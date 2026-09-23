@@ -15,6 +15,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
@@ -162,11 +163,16 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                   final paired =
                       calendar &&
                       history &&
+                      // Measured after the desktop rail, so a mid-size window
+                      // pairs instead of stretching the schedule full width.
                       constraints.maxWidth >=
-                          840 * MediaQuery.textScalerOf(context).scale(1);
+                          680 * MediaQuery.textScalerOf(context).scale(1);
+                  // Horizontal shelves run to the edges and carry the page
+                  // inset themselves, so cards are not cut at the margin.
+                  const edge = EdgeInsets.symmetric(horizontal: 16);
                   return ListView(
                     key: const PageStorageKey('today-scroll'),
-                    padding: pageInsets(context, top: 4),
+                    padding: pageInsets(context, horizontal: 0, top: 4),
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
                       for (final (index, module) in <Widget>[
@@ -174,24 +180,37 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: (constraints.maxWidth * .32).clamp(
-                                  280,
-                                  360,
-                                ),
-                                child: _ScheduleSection(
-                                  day: day,
-                                  onCalendar: _calendar,
+                              Padding(
+                                padding: const EdgeInsets.only(left: 16),
+                                child: SizedBox(
+                                  width: (constraints.maxWidth * .32).clamp(
+                                    280,
+                                    360,
+                                  ),
+                                  child: _ScheduleSection(
+                                    day: day,
+                                    onCalendar: _calendar,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 24),
-                              const Expanded(child: OnThisDaySection()),
+                              const Expanded(
+                                child: OnThisDaySection(
+                                  inset: EdgeInsets.only(right: 16),
+                                ),
+                              ),
                             ],
                           )
                         else ...[
                           if (calendar)
-                            _ScheduleSection(day: day, onCalendar: _calendar),
-                          if (history) const OnThisDaySection(),
+                            Padding(
+                              padding: edge,
+                              child: _ScheduleSection(
+                                day: day,
+                                onCalendar: _calendar,
+                              ),
+                            ),
+                          if (history) const OnThisDaySection(inset: edge),
                         ],
                         if (showClips) clipsShelf,
                         if (showFanart) fanartShelf,
@@ -224,72 +243,75 @@ class _ScheduleSection extends ConsumerWidget {
       children: [
         _SectionHeader(title: '今日安排', onAll: onCalendar, action: '日历'),
         const SizedBox(height: 6),
-        schedule.when(
-          loading: () => const _SectionLoading(),
-          error: (error, _) => _SectionError(
-            error: error,
-            onRetry: () => ref.invalidate(
-              monthEventsProvider(DateTime.utc(day.year, day.month)),
+        AppFadeSwitcher(
+          phase: asyncPhase(schedule),
+          child: schedule.when(
+            loading: () => const _SectionLoading(),
+            error: (error, _) => _SectionError(
+              error: error,
+              onRetry: () => ref.invalidate(
+                monthEventsProvider(DateTime.utc(day.year, day.month)),
+              ),
             ),
-          ),
-          data: (snapshot) {
-            var entries = CalendarAgenda.onDay(snapshot.events, day);
-            var next = false;
-            if (entries.isEmpty) {
-              for (var offset = 1; offset <= 7; offset++) {
-                entries = CalendarAgenda.onDay(
-                  snapshot.events.where((event) => !event.isCancelled),
-                  day.add(Duration(days: offset)),
-                );
-                if (entries.isNotEmpty) {
-                  entries = entries.take(1).toList();
-                  next = true;
-                  break;
+            data: (snapshot) {
+              var entries = CalendarAgenda.onDay(snapshot.events, day);
+              var next = false;
+              if (entries.isEmpty) {
+                for (var offset = 1; offset <= 7; offset++) {
+                  entries = CalendarAgenda.onDay(
+                    snapshot.events.where((event) => !event.isCancelled),
+                    day.add(Duration(days: offset)),
+                  );
+                  if (entries.isNotEmpty) {
+                    entries = entries.take(1).toList();
+                    next = true;
+                    break;
+                  }
                 }
               }
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (snapshot.isStale)
-                  CalendarStaleBanner(fetchedAt: snapshot.fetchedAt),
-                if (snapshot.offlineCacheUnavailable)
-                  const CalendarCacheFailureBanner(),
-                if (snapshot.followSyncUnavailable)
-                  const CalendarFollowSyncBanner(),
-                if (entries.isEmpty)
-                  const _EmptySection('今天没有安排')
-                else ...[
-                  if (next)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        '接下来',
-                        style: Theme.of(context).textTheme.labelLarge,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (snapshot.isStale)
+                    CalendarStaleBanner(fetchedAt: snapshot.fetchedAt),
+                  if (snapshot.offlineCacheUnavailable)
+                    const CalendarCacheFailureBanner(),
+                  if (snapshot.followSyncUnavailable)
+                    const CalendarFollowSyncBanner(),
+                  if (entries.isEmpty)
+                    const _EmptySection('今天没有安排')
+                  else ...[
+                    if (next)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '接下来',
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
                       ),
-                    ),
-                  for (final event in entries.take(2))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: CalendarEventTile(
-                        event: event,
-                        day: next ? null : day,
-                        showDate: next,
-                        compact: true,
+                    for (final event in entries.take(2))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: CalendarEventTile(
+                          event: event,
+                          day: next ? null : day,
+                          showDate: next,
+                          compact: true,
+                        ),
                       ),
-                    ),
-                  if (entries.length > 2)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: AppButton(
-                        onPressed: onCalendar,
-                        child: Text('还有 ${entries.length - 2} 项安排'),
+                    if (entries.length > 2)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: AppButton(
+                          onPressed: onCalendar,
+                          child: Text('还有 ${entries.length - 2} 项安排'),
+                        ),
                       ),
-                    ),
+                  ],
                 ],
-              ],
-            );
-          },
+              );
+            },
+          ),
         ),
       ],
     );
@@ -330,9 +352,7 @@ class _ContentShelfState<T> extends State<_ContentShelf<T>> {
     _scroll.animateTo(
       (_scroll.offset + direction * _scroll.position.viewportDimension * .76)
           .clamp(0, _scroll.position.maxScrollExtent),
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 220),
+      duration: appMotion(context, AppTokens.controlMotion),
       curve: Curves.easeOutCubic,
     );
   }
@@ -341,45 +361,59 @@ class _ContentShelfState<T> extends State<_ContentShelf<T>> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      _SectionHeader(
-        title: widget.title,
-        onAll: widget.onAll,
-        onPrevious: () => _move(-1),
-        onNext: () => _move(1),
+      // The shelf runs to the page edges; only its heading keeps the inset.
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: _SectionHeader(
+          title: widget.title,
+          onAll: widget.onAll,
+          onPrevious: () => _move(-1),
+          onNext: () => _move(1),
+        ),
       ),
       const SizedBox(height: 6),
-      widget.items.when(
-        loading: () => const _SectionLoading(),
-        error: (error, _) =>
-            _SectionError(error: error, onRetry: widget.onRetry),
-        data: (raw) => RuleFilterScope(
-          items: raw,
-          subjectOf: widget.subjectOf,
-          builder: (visible) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              RuleStatusBar(visibility: visible),
-              _cards(visible.items.take(6).toList()),
-            ],
+      AppFadeSwitcher(
+        phase: asyncPhase(widget.items),
+        child: widget.items.when(
+          loading: () => const _SectionLoading(),
+          error: (error, _) =>
+              _SectionError(error: error, onRetry: widget.onRetry),
+          data: (raw) => RuleFilterScope(
+            items: raw,
+            subjectOf: widget.subjectOf,
+            builder: (visible) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: RuleStatusBar(visibility: visible),
+                ),
+                _cards(visible.items.take(6).toList()),
+              ],
+            ),
           ),
         ),
       ),
     ],
   );
   Widget _cards(List<T> values) => values.isEmpty
-      ? const _EmptySection('暂时没有内容')
+      ? const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: _EmptySection('暂时没有内容'),
+        )
       : LayoutBuilder(
           builder: (context, constraints) {
             final scaler = MediaQuery.textScalerOf(context);
             // Match the existing video grid instead of enlarging shelf cards.
             final columns = MediaGridDelegate.columnsFor(
-              constraints.maxWidth + 32,
+              constraints.maxWidth,
               textScale: scaler.scale(1),
             );
             final width = MediaGridDelegate.cellWidth(
-              constraints.maxWidth + 32,
+              constraints.maxWidth,
               columns,
             );
+            final gap = MediaGridDelegate.spacingFor(constraints.maxWidth);
             final height = values
                 .map((value) => widget.extent(value, width, scaler))
                 .reduce(math.max);
@@ -388,8 +422,9 @@ class _ContentShelfState<T> extends State<_ContentShelf<T>> {
               child: ListView.separated(
                 controller: _scroll,
                 scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: values.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                separatorBuilder: (_, _) => SizedBox(width: gap),
                 itemBuilder: (_, index) => SizedBox(
                   width: width,
                   height: height,

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
 import '../../shared/widgets/app_backdrop.dart';
+import '../../shared/widgets/app_motion.dart';
 import '../../shared/widgets/glass/app_glass_navigation.dart';
 
 class AppShell extends StatefulWidget {
@@ -145,5 +146,93 @@ class _AppShellState extends State<AppShell> {
         ),
       );
     },
+  );
+}
+
+/// Main tabs switch with a quick fade-through: the old tab fades out, the
+/// new one fades in from 98% scale. Every branch keeps one stable subtree,
+/// so its routes, scroll positions and queries survive the switch.
+class FadeThroughBranches extends StatefulWidget {
+  const FadeThroughBranches({
+    required this.currentIndex,
+    required this.children,
+    super.key,
+  });
+  final int currentIndex;
+  final List<Widget> children;
+
+  @override
+  State<FadeThroughBranches> createState() => _FadeThroughBranchesState();
+}
+
+class _FadeThroughBranchesState extends State<FadeThroughBranches>
+    with SingleTickerProviderStateMixin {
+  late final _switch = AnimationController(vsync: this, value: 1);
+  late final _incoming = CurvedAnimation(
+    parent: _switch,
+    curve: const Interval(.3, 1, curve: Curves.easeOutCubic),
+  );
+  late final _outgoing = ReverseAnimation(
+    CurvedAnimation(parent: _switch, curve: const Interval(0, .3)),
+  );
+  late final _scale = Tween(begin: .98, end: 1.0).animate(_incoming);
+  int? _previous;
+
+  @override
+  void didUpdateWidget(FadeThroughBranches oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex == widget.currentIndex) return;
+    _previous = oldWidget.currentIndex;
+    _switch.duration = appMotion(context, const Duration(milliseconds: 260));
+    _switch.forward(from: 0).whenCompleteOrCancel(() {
+      // A newer switch restarts the controller; only a finished one clears.
+      if (mounted && _switch.isCompleted) setState(() => _previous = null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _incoming.dispose();
+    _switch.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      for (final (index, child) in widget.children.indexed)
+        _branch(
+          child,
+          current: index == widget.currentIndex,
+          leaving: index == _previous,
+        ),
+    ],
+  );
+
+  // The same wrapper chain in every state; only the animations differ.
+  Widget _branch(
+    Widget child, {
+    required bool current,
+    required bool leaving,
+  }) => Offstage(
+    offstage: !current && !leaving,
+    child: IgnorePointer(
+      ignoring: !current,
+      child: TickerMode(
+        enabled: current,
+        child: FadeTransition(
+          opacity: current
+              ? _incoming
+              : leaving
+              ? _outgoing
+              : kAlwaysCompleteAnimation,
+          child: ScaleTransition(
+            scale: current ? _scale : kAlwaysCompleteAnimation,
+            child: child,
+          ),
+        ),
+      ),
+    ),
   );
 }
