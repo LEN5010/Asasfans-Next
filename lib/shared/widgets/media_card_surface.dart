@@ -38,14 +38,15 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
       duration: AppGlassScope.of(context).canAnimate
           ? AppTokens.pressMotion
           : Duration.zero,
-      decoration: ShapeDecoration(
+      foregroundDecoration: ShapeDecoration(shape: shape),
+      decoration: BoxDecoration(
         color: pressed
             ? Color.alphaBlend(
                 colors.primary.withValues(alpha: .035),
                 colors.surfaceContainerLow,
               )
             : colors.surfaceContainerLow,
-        shape: shape,
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
       ),
       child: Material(
         color: Colors.transparent,

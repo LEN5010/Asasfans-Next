@@ -6,6 +6,7 @@ import 'package:asasfans_next/features/rules/data/sqlite_rules_repository.dart';
 import 'package:asasfans_next/features/rules/domain/content_rules.dart';
 import 'package:asasfans_next/features/rules/presentation/rules_page.dart';
 import 'package:flutter/material.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -58,35 +59,39 @@ void main() {
       home: const RulesPage(),
     ),
   );
-  testWidgets(
-    'manager edits committed rules, fails without optimistic toggles, and supports undo',
-    (tester) async {
-      await repository.save(const RuleDraft(kind: RuleKind.word, value: '测试词'));
-      await tester.pumpWidget(host());
-      await tester.pumpAndSettle();
-      writes.fail = true;
-      await tester.tap(find.byType(Switch).last);
-      await tester.pumpAndSettle();
-      expect((await repository.load()).rules.single.draft.enabled, isTrue);
-      expect(tester.widget<Switch>(find.byType(Switch).last).value, isTrue);
-      expect(find.text('本地资料暂时无法读写，请重试'), findsOneWidget);
-      // Clear it before acting again: the delete queues its own snackbar behind
-      // this one, and settling would run both lifetimes out, taking the undo
-      // action away before it can be tapped.
-      ScaffoldMessenger.of(
-        tester.element(find.byType(Switch).last),
-      ).removeCurrentSnackBar();
-      await tester.pumpAndSettle();
-      writes.fail = false;
-      await tester.tap(find.byTooltip('删除规则'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 750));
-      expect((await repository.load()).rules, isEmpty);
-      await tester.tap(find.text('撤销'));
-      await tester.pumpAndSettle();
-      expect((await repository.load()).rules.single.draft.value, '测试词');
-    },
-  );
+  testWidgets('UI UX: user rules retain commit and undo without builtin copy', (
+    tester,
+  ) async {
+    await repository.save(const RuleDraft(kind: RuleKind.word, value: '测试词'));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Carol'), findsNothing);
+    expect(find.text('视频默认过滤'), findsNothing);
+    writes.fail = true;
+    await tester.tap(find.byType(AppGlassSwitch).last);
+    await tester.pumpAndSettle();
+    expect((await repository.load()).rules.single.draft.enabled, isTrue);
+    expect(
+      tester.widget<AppGlassSwitch>(find.byType(AppGlassSwitch).last).value,
+      isTrue,
+    );
+    expect(find.text('本地资料暂时无法读写，请重试'), findsOneWidget);
+    // Clear it before acting again: the delete queues its own snackbar behind
+    // this one, and settling would run both lifetimes out, taking the undo
+    // action away before it can be tapped.
+    ScaffoldMessenger.of(
+      tester.element(find.byType(AppGlassSwitch).last),
+    ).removeCurrentSnackBar();
+    await tester.pumpAndSettle();
+    writes.fail = false;
+    await tester.tap(find.byTooltip('删除规则'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 750));
+    expect((await repository.load()).rules, isEmpty);
+    await tester.tap(find.text('撤销'));
+    await tester.pumpAndSettle();
+    expect((await repository.load()).rules.single.draft.value, '测试词');
+  });
   testWidgets(
     'editor refuses empty rule then saves normalized input with a real value',
     (tester) async {

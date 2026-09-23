@@ -57,7 +57,9 @@ Widget _app(DynamicRepository repository) => ProviderScope(
 );
 
 void main() {
-  testWidgets('renders posts from earlier years in the module', (tester) async {
+  testWidgets('UI UX: history cards retain original body and Shanghai year', (
+    tester,
+  ) async {
     await tester.pumpWidget(_app(_StubRepository(posts: [_post('1')])));
     await tester.pumpAndSettle();
 

@@ -121,9 +121,9 @@ void main() {
       );
     });
 
-    test('builds only the parameters the server validates', () {
+    test('UI UX: novel default query sends all ratings', () {
       expect(DynamicNovelRepository.buildQuery(const NovelQuery()), {
-        'rating': 'sfw',
+        'rating': 'all',
         'sort': 'newest',
         'limit': 24,
         'offset': 0,

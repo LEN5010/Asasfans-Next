@@ -109,8 +109,9 @@ FeedVisibility<T> projectFeed<T>(
     if (evaluation.tagsUnknown &&
         !evaluation.matches.any(
           (match) => match.ruleId == ContentRuleEvaluator.builtInCarol,
-        ))
+        )) {
       unknown++;
+    }
     if (evaluation.blocked) {
       hidden.add(
         HiddenContent(item: item, subject: subject, evaluation: evaluation),

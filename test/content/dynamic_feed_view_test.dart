@@ -1,4 +1,7 @@
 import '../helpers/library_fixture.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
+import 'package:asasfans_next/features/content/presentation/dynamic_card.dart';
+import 'package:asasfans_next/features/content/presentation/dynamic_rich_text.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
@@ -68,6 +71,42 @@ Widget _app(DynamicRepository repository) => ProviderScope(
 );
 
 void main() {
+  testWidgets(
+    'UI UX: full dynamic body preserves line breaks and exact stickers',
+    (tester) async {
+      const body = '首行\n[心宜和思诺的交响乐谱_吃饭]\n[未知表情]\n四行\n五行\n六行\n七行\n最后一行';
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: offlineLibrary(),
+          child: MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: DynamicCard(post: _post('10', text: body)),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final rich = tester.widget<DynamicRichText>(find.byType(DynamicRichText));
+      expect(rich.text, body);
+      expect(rich.maxLines, isNull);
+      final rendered = tester.widget<Text>(
+        find.descendant(
+          of: find.byType(DynamicRichText),
+          matching: find.byType(Text),
+        ),
+      );
+      expect(
+        (rendered.textSpan as TextSpan).children!.whereType<WidgetSpan>(),
+        hasLength(1),
+      );
+      expect(rendered.textSpan!.toPlainText(), contains('[未知表情]'));
+      expect(rendered.textSpan!.toPlainText(), contains('最后一行'));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('the dynamics channel renders posts instead of a placeholder', (
     tester,
   ) async {
@@ -77,7 +116,7 @@ void main() {
     expect(find.text('即将开放'), findsNothing);
     expect(find.text('动态 p0i0'), findsOneWidget);
     // Timestamps are labelled on the Shanghai calendar the archive uses.
-    expect(find.text('2021-08-16'), findsWidgets);
+    expect(find.textContaining('2021-08-16 04:00'), findsWidgets);
   });
 
   testWidgets('a forward shows its origin rather than claiming it', (
@@ -87,23 +126,34 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('转发语'), findsOneWidget);
-    expect(find.text('@原作者'), findsOneWidget);
+    expect(find.text('转发自 @原作者'), findsOneWidget);
     expect(find.text('被转发的原文'), findsOneWidget);
   });
 
-  testWidgets('filtering by type starts a new query without a cursor', (
-    tester,
-  ) async {
-    final repository = _StubRepository();
-    await tester.pumpWidget(_app(repository));
-    await tester.pumpAndSettle();
-    expect(repository.queries.last.type, isNull);
+  testWidgets(
+    'UI UX: dynamic filters apply drafts and discard cancelled changes',
+    (tester) async {
+      final repository = _StubRepository();
+      await tester.pumpWidget(_app(repository));
+      await tester.pumpAndSettle();
+      expect(repository.queries.last.type, isNull);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, '视频'));
-    await tester.pumpAndSettle();
-
-    expect(repository.queries.last.type, DynamicType.video);
-  });
+      await tester.tap(find.text('筛选与排序'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(AppGlassButton, '视频'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.last.type, isNull);
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.last.type, isNull);
+      await tester.tap(find.text('筛选与排序'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(AppGlassButton, '视频'));
+      await tester.tap(find.text('应用筛选'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.last.type, DynamicType.video);
+    },
+  );
 
   testWidgets('searching applies the keyword on submit', (tester) async {
     final repository = _StubRepository();
@@ -125,7 +175,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('网络连接失败'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, '重试'));
+    await tester.tap(find.widgetWithText(AppGlassButton, '重试'));
     await tester.pumpAndSettle();
 
     expect(find.text('动态 p0i0'), findsOneWidget);

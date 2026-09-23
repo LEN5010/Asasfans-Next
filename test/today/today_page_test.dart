@@ -120,28 +120,27 @@ void _size(WidgetTester tester, Size value) {
 }
 
 void main() {
-  testWidgets(
-    'today renders schedule before real content, with desktop shelves side by side',
-    (tester) async {
-      _size(tester, const Size(1280, 1100));
-      final calendar = _Calendar()..items = [_event('今日歌会', 21)];
-      await tester.pumpWidget(_host(calendar));
-      await tester.pumpAndSettle();
-      expect(find.text('今日歌会'), findsOneWidget);
-      expect(find.text('最新二创正文'), findsOneWidget);
-      expect(find.text('最新切片标题'), findsOneWidget);
-      expect(find.text('Asasfans Next'), findsNothing);
-      final art = tester.getRect(find.byType(FanartCard));
-      final clip = tester.getRect(find.byType(VideoCard));
-      expect(art.top, clip.top);
-      expect(clip.left, greaterThan(art.right));
-      expect(tester.getTopLeft(find.text('今日歌会')).dy, lessThan(art.top));
-      expect(
-        tester.getTopLeft(find.text('历史上的今天')).dy,
-        greaterThan(clip.bottom),
-      );
-    },
-  );
+  testWidgets('UI UX: home order is calendar history clips fanart on desktop', (
+    tester,
+  ) async {
+    _size(tester, const Size(1280, 1100));
+    final calendar = _Calendar()..items = [_event('今日歌会', 21)];
+    await tester.pumpWidget(_host(calendar));
+    await tester.pumpAndSettle();
+    expect(find.text('今日歌会'), findsOneWidget);
+    expect(find.text('最新二创正文'), findsOneWidget);
+    expect(find.text('最新切片标题'), findsOneWidget);
+    expect(find.text('Asasfans Next'), findsNothing);
+    final art = tester.getRect(find.byType(FanartCard));
+    final clip = tester.getRect(find.byType(VideoCard));
+    expect(art.top, greaterThan(clip.bottom));
+    expect(find.text('最近更新'), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('今日歌会')).dy,
+      lessThan(tester.getTopLeft(find.text('历史上的今天')).dy),
+    );
+    expect(tester.getTopLeft(find.text('历史上的今天')).dy, lessThan(clip.top));
+  });
 
   testWidgets(
     'empty today falls forward to the first non-cancelled event within seven days',

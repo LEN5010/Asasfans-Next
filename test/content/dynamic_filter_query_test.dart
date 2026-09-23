@@ -1,5 +1,6 @@
 import 'package:asasfans_next/features/content/domain/dynamic_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:asasfans_next/features/content/data/dynamic_post_repository.dart';
 
 void main() {
   test('a complete ordered range is accepted', () {
@@ -28,15 +29,16 @@ void main() {
     },
   );
 
-  test('a range covering one whole day stays ordered', () {
+  test('UI UX: one selected day has an exclusive end in the wire query', () {
     // The picker returns midnight for both ends; the view extends the end to
-    // the last second so a single-day range is not empty.
+    // the next day because the API serializes an exclusive calendar date.
     final day = DateTime(2026, 3, 5);
     final query = DynamicQuery(
       from: day,
-      to: DateTime(day.year, day.month, day.day, 23, 59, 59),
+      to: DateTime(day.year, day.month, day.day + 1),
     );
     expect(query.isServerAcceptable, isTrue);
+    expect(DynamicPostRepository.buildSearchQuery(query)['to'], '2026-03-06');
   });
 
   test('clearRange drops both ends together', () {

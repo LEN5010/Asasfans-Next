@@ -38,8 +38,9 @@ class DynamicRichText extends StatelessWidget {
     final spans = <InlineSpan>[];
     var offset = 0;
     for (final match in _tokens.allMatches(text)) {
-      if (match.start > offset)
+      if (match.start > offset) {
         spans.add(TextSpan(text: text.substring(offset, match.start)));
+      }
       final label = match.group(0)!;
       final key = stickerKey(label);
       final url = emoji[key];

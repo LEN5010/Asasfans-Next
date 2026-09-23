@@ -51,16 +51,48 @@ void main() {
     expect(posts.single.type, DynamicType.video);
   });
 
-  test('a forward keeps the original author separate', () {
+  test('UI UX: archive media and forwarded identity stay intact', () {
     final posts = DynamicPostRepository.decodeOnThisDay({
       'items': [
         {
           'dynamicId': '2',
           'type': 'forward',
           'contentText': '转发语',
-          'member': {'name': '转发者'},
+          'member': {
+            'name': '转发者',
+            'avatarUrl': 'http://i0.hdslb.com/bfs/face/a.jpg',
+          },
+          'media': [
+            {
+              'kind': 'emoji',
+              'label': '[表情]',
+              'url': 'https://i0.hdslb.com/bfs/emote/a.gif',
+              'width': 32,
+              'height': 32,
+            },
+            {
+              'kind': 'reserve',
+              'title': '晚安电台',
+              'description': '今天 22:00',
+              'badge': '100人预约',
+              'actionText': '预约',
+            },
+          ],
           'orig': {
             'authorName': '原作者',
+            'authorMid': '123',
+            'dynamicId': '9',
+            'publishedAt': 1600000000,
+            'type': 'video',
+            'media': [
+              {
+                'kind': 'video',
+                'ref': 'BV1xx411c7mD',
+                'title': '原视频',
+                'durationText': '00:31',
+                'url': 'https://i0.hdslb.com/bfs/archive/a.jpg',
+              },
+            ],
             'text': '原文',
             'images': ['https://i0.hdslb.com/o.jpg'],
             'url': 'https://t.bilibili.com/9',
@@ -74,6 +106,18 @@ void main() {
     expect(post.forwardedFrom?.authorName, '原作者');
     expect(post.forwardedFrom?.text, '原文');
     expect(post.forwardedFrom?.images, hasLength(1));
+    expect(post.member.avatarUrl?.scheme, 'https');
+    expect(post.media.first.kind, DynamicMediaKind.emoji);
+    expect(post.media.first.label, '[表情]');
+    expect(post.media.first.aspectRatio, 1);
+    expect(post.media.last.actionText, '预约');
+    expect(post.forwardedFrom?.authorMid, '123');
+    expect(post.forwardedFrom?.dynamicId, '9');
+    expect(
+      post.forwardedFrom?.publishedAt?.millisecondsSinceEpoch,
+      1600000000000,
+    );
+    expect(post.forwardedFrom?.media.single.durationText, '00:31');
   });
 
   test('an unknown type degrades instead of dropping the post', () {

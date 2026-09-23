@@ -52,6 +52,33 @@ RuleEvaluation evaluate(RuleSubject subject, List<ContentRule> rules) =>
     ContentRuleEvaluator(RulesSnapshot(rules: rules), now).evaluate(subject);
 void main() {
   test(
+    'UI UX: built-in-only matches stay filtered but leave no display history',
+    () {
+      final defaults = subject(name: 'Carol', tags: null);
+      final user = subject(id: 'BV2', title: '用户屏蔽词');
+      final textArchive = subject(id: '3', name: 'Carol', video: false);
+      final projection = projectFeed(
+        [defaults, user, textArchive],
+        (item) => item,
+        RulesState(
+          now: now,
+          loading: false,
+          snapshot: RulesSnapshot(
+            rules: [
+              rule(RuleKind.word, '用户屏蔽词'),
+              rule(RuleKind.tag, 'not-present'),
+            ],
+          ),
+        ),
+      );
+      expect(projection.items, [textArchive]);
+      expect(projection.hidden, hasLength(2));
+      expect(projection.userHidden.single.subject, same(user));
+      expect(projection.tagsUnknownCount, 0);
+    },
+  );
+
+  test(
     'word fields and exact tags preserve different historical semantics',
     () {
       expect(

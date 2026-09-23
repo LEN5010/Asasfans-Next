@@ -71,6 +71,12 @@ class PreferencesControls extends ConsumerWidget {
           ])
             ListTile(
               title: Text(_section(section)),
+              onTap: state.canEdit
+                  ? () => controller.setHomeSection(
+                      section,
+                      !state.values.shows(section),
+                    )
+                  : null,
               trailing: AppGlassSwitch(
                 key: ValueKey(state.failure),
                 label: _section(section),

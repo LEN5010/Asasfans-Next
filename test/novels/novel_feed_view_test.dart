@@ -2,6 +2,7 @@ import 'package:asasfans_next/features/novels/application/novel_providers.dart';
 import 'package:asasfans_next/features/novels/domain/novel_repository.dart';
 import 'package:asasfans_next/features/novels/presentation/novel_feed_view.dart';
 import 'package:flutter/material.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -99,22 +100,38 @@ void main() {
   }
 
   for (final width in [320.0, 1200.0]) {
-    testWidgets('lists works with filters at width $width', (tester) async {
+    testWidgets('UI UX: novel all-rating directory at width $width', (
+      tester,
+    ) async {
       final repository = await pump(tester, width);
-      expect(repository.queries.single.rating, NovelRatingFilter.sfw);
+      expect(repository.queries.single.rating, NovelRatingFilter.all);
       expect(find.text('作品 1'), findsOneWidget);
       expect(find.text('摘要 1'), findsOneWidget);
       expect(find.text('2.3 万字'), findsNWidgets(2));
-      expect(find.textContaining('应用内不显示正文'), findsOneWidget);
-      expect(find.text('全年龄 1'), findsOneWidget);
-      expect(find.textContaining('共 2 部'), findsOneWidget);
+      expect(find.text('仅提供作品信息与原帖链接'), findsOneWidget);
+      expect(find.textContaining('2 部'), findsOneWidget);
+      expect(find.text('摘要 2'), findsNothing);
+      final first = tester.getTopLeft(find.text('作品 1'));
+      final second = tester.getTopLeft(find.text('作品 2'));
+      expect(width > 760 ? second.dx > first.dx : second.dy > first.dy, isTrue);
       expect(tester.takeException(), isNull);
     });
   }
 
-  testWidgets('a rating chip reloads with the new filter', (tester) async {
+  testWidgets('UI UX: novel rating is committed only on filter apply', (
+    tester,
+  ) async {
     final repository = await pump(tester, 400);
-    await tester.tap(find.text('R18 1'));
+    await tester.tap(find.byTooltip('筛选与排序'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppGlassSegments<NovelRatingFilter>),
+        matching: find.text('R18'),
+      ),
+    );
+    expect(repository.queries.last.rating, NovelRatingFilter.all);
+    await tester.tap(find.text('应用筛选'));
     await tester.pumpAndSettle();
     expect(repository.queries.last.rating, NovelRatingFilter.nsfw);
   });

@@ -10,6 +10,7 @@ import 'package:asasfans_next/features/preferences/presentation/preferences_cont
 import 'package:asasfans_next/features/today/application/today_providers.dart';
 import 'package:asasfans_next/features/today/presentation/today_page.dart';
 import 'package:flutter/material.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -54,7 +55,7 @@ void main() {
   );
 
   testWidgets(
-    'failed preference writes do not flip the switch and can be retried',
+    'UI UX: failed preference writes keep switch state and allow retry',
     (tester) async {
       final repository = MemoryPreferencesRepository();
       await tester.pumpWidget(
@@ -75,7 +76,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<SwitchListTile>(find.widgetWithText(SwitchListTile, '首页切片'))
+            .widget<AppGlassSwitch>(
+              find.byWidgetPredicate(
+                (w) => w is AppGlassSwitch && w.label == '首页切片',
+              ),
+            )
             .value,
         isTrue,
       );
@@ -85,7 +90,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<SwitchListTile>(find.widgetWithText(SwitchListTile, '首页切片'))
+            .widget<AppGlassSwitch>(
+              find.byWidgetPredicate(
+                (w) => w is AppGlassSwitch && w.label == '首页切片',
+              ),
+            )
             .value,
         isFalse,
       );

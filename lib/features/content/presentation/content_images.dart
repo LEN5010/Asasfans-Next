@@ -124,7 +124,7 @@ class ContentImageGallery extends StatelessWidget {
       );
     }
 
-    if (preview)
+    if (preview) {
       return Stack(
         children: [
           image(0),
@@ -151,6 +151,7 @@ class ContentImageGallery extends StatelessWidget {
             ),
         ],
       );
+    }
     if (images.length == 1) return image(0);
     final count = images.length.clamp(0, 9);
     final columns = count == 2 || count == 4 ? 2 : 3;

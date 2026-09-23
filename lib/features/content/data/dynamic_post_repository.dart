@@ -188,7 +188,7 @@ class DynamicPostRepository implements DynamicRepository {
   static List<DynamicMedia> _media(Object? raw, Uri baseUrl) => raw is! List
       ? const []
       : List.unmodifiable([
-          for (final entry in raw.whereType<Map>())
+          for (final entry in raw.whereType<Map<Object?, Object?>>())
             DynamicMedia(
               kind:
                   DynamicMediaKind.values
@@ -225,11 +225,12 @@ class DynamicPostRepository implements DynamicRepository {
     return DateTime.tryParse(raw)?.toUtc();
   }
 
-  static Uri? _dynamicUrl(Object? raw, Object? id, Uri baseUrl) =>
-      _httpsUri(raw, baseUrl) ??
-      (id is String && RegExp(r'^\d{1,20}$').hasMatch(id)
-          ? Uri.https('t.bilibili.com', '/$id')
-          : null);
+  static Uri? _dynamicUrl(Object? raw, Object? id, Uri baseUrl) {
+    if (raw is String && raw.trim().isNotEmpty) return _httpsUri(raw, baseUrl);
+    return id is String && RegExp(r'^\d{1,20}$').hasMatch(id)
+        ? Uri.https('t.bilibili.com', '/$id')
+        : null;
+  }
 
   static Uri? _httpsUri(Object? raw, Uri baseUrl) {
     if (raw is! String || raw.trim().isEmpty) return null;
