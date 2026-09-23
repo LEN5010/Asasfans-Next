@@ -25,6 +25,8 @@ void openFanart(
   FanartItem item, {
   ReturnTarget returnTo = ReturnTarget.today,
   String? channel,
+  Map<String, Object?>? query,
+  ReturnAnchor? anchor,
 }) {
   if (item.contentType == FanartContentType.video && item.sourceUrl != null) {
     openContentSource(
@@ -34,6 +36,8 @@ void openFanart(
       url: item.sourceUrl,
       returnTo: returnTo,
       channel: channel,
+      query: query,
+      anchor: anchor,
     );
     return;
   }

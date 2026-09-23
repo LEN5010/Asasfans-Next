@@ -1,4 +1,6 @@
 import 'package:asasfans_next/core/domain/content_identity.dart';
+import 'package:asasfans_next/app/providers.dart';
+import 'package:asasfans_next/core/platform/external_link_service.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/domain/saved_channel.dart';
@@ -20,7 +22,8 @@ FanartItem _item(String id) => FanartItem(
   authorUid: '1',
   images: const [],
   kind: FanartKind.fanart,
-  contentType: FanartContentType.image,
+  contentType: FanartContentType.video,
+  sourceUrl: Uri.https('t.bilibili.com', '/$id'),
   category: FanartCategory.normal,
   characterTags: const [],
 );
@@ -49,14 +52,25 @@ class _Recording implements FanartRepository {
   }) async => _item('r');
 }
 
+class _Links implements ExternalLinkService {
+  final opened = <Uri>[];
+  @override
+  Future<bool> open(Uri uri) async {
+    opened.add(uri);
+    return true;
+  }
+}
+
 void main() {
   late MemoryLocalDatabase db;
   late SqliteReturnStore store;
   late _Recording repository;
+  late _Links links;
   setUp(() {
     db = MemoryLocalDatabase();
     store = SqliteReturnStore(db);
     repository = _Recording();
+    links = _Links();
   });
   tearDown(() => db.close());
 
@@ -71,8 +85,9 @@ void main() {
           ...offlineLibrary(),
           returnStoreProvider.overrideWithValue(store),
           fanartRepositoryProvider.overrideWithValue(repository),
+          externalLinkServiceProvider.overrideWithValue(links),
         ],
-        child: const MaterialApp(home: ContentPage()),
+        child: const MaterialApp(home: ContentPage(channel: 'fanart')),
       ),
     );
     await tester.pumpAndSettle();
@@ -117,6 +132,24 @@ void main() {
     await pumpChannel(tester);
     expect(repository.queries, isNotEmpty);
     expect(repository.queries.single, const FanartQuery());
+  });
+
+  testWidgets('a video handoff preserves the committed query and anchor', (
+    tester,
+  ) async {
+    final query = ChannelSpec.ofFanart(
+      const FanartQuery(keyword: '生日', contentType: FanartContentType.video),
+    ).values;
+    await seedSession(channel: 'fanart', query: query);
+    await pumpChannel(tester);
+    await tester.tap(find.text('作品 2'));
+    await tester.pumpAndSettle();
+    final saved = (await store.read())!;
+    expect(links.opened, [Uri.https('t.bilibili.com', '/2')]);
+    expect(saved.channel, 'fanart');
+    expect(saved.query, query);
+    expect(saved.anchor!.identity, _item('2').identity);
+    expect(saved.anchor!.offset, 0);
   });
 
   testWidgets('a session for another channel does not change this one', (

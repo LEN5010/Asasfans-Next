@@ -80,6 +80,64 @@ Widget _app(FanartRepository repository) => ProviderScope(
 );
 
 void main() {
+  testWidgets('slow upward scrolling reveals the hidden page bar', (
+    tester,
+  ) async {
+    late BuildContext bodyContext;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          appBar: const AppPageBar(title: Text('内容')),
+          body: Builder(
+            builder: (context) {
+              bodyContext = context;
+              return const SizedBox.expand();
+            },
+          ),
+        ),
+      ),
+    );
+    var pixels = 200.0;
+    void scroll(double delta) {
+      pixels += delta;
+      final metrics = FixedScrollMetrics(
+        minScrollExtent: 0,
+        maxScrollExtent: 1000,
+        pixels: pixels,
+        viewportDimension: 600,
+        axisDirection: AxisDirection.down,
+        devicePixelRatio: 1,
+      );
+      ScrollStartNotification(
+        metrics: metrics,
+        context: bodyContext,
+      ).dispatch(bodyContext);
+      ScrollUpdateNotification(
+        metrics: metrics,
+        context: bodyContext,
+        scrollDelta: delta,
+      ).dispatch(bodyContext);
+      ScrollEndNotification(
+        metrics: metrics,
+        context: bodyContext,
+      ).dispatch(bodyContext);
+    }
+
+    final slide = find.descendant(
+      of: find.byType(AppPageBar),
+      matching: find.byType(AnimatedSlide),
+    );
+    scroll(8);
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedSlide>(slide).offset.dy, lessThan(0));
+    for (var i = 0; i < 4; i++) {
+      scroll(-2);
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedSlide>(slide).offset, Offset.zero);
+  });
+
   for (final width in [320.0, 1200.0]) {
     testWidgets(
       'toolbar and quick filters keep the first content row near the top at width $width',

@@ -114,7 +114,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
     final direction = _previous == null || _current.index >= _previous!.index
         ? 1.0
         : -1.0;
-    final curve = CurvedAnimation(parent: _slide, curve: Curves.easeOutCubic);
+    final curve = _slide.drive(CurveTween(curve: Curves.easeOutCubic));
     final Animation<Offset> position = active
         ? Tween(begin: Offset(direction, 0), end: Offset.zero).animate(curve)
         : leaving
@@ -363,6 +363,7 @@ class _RandomFanartActionState extends ConsumerState<_RandomFanartAction> {
         item,
         returnTo: ReturnTarget.contentChannel,
         channel: ContentChannel.fanart.slug,
+        query: ChannelSpec.ofFanart(query).values,
       );
     } on ApiFailure catch (failure) {
       if (!mounted ||
@@ -449,6 +450,9 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
         ).toFanart(),
       );
     }
+    // Apply the fallback offset against the restored list's layout, not the
+    // loading placeholder's zero scroll extent.
+    await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
     _restoreAnchor(pending.anchor);
   }
@@ -606,6 +610,11 @@ class _FanartGrid extends ConsumerWidget {
                       item,
                       returnTo: ReturnTarget.contentChannel,
                       channel: ContentChannel.fanart.slug,
+                      query: ChannelSpec.ofFanart(state.query).values,
+                      anchor: ReturnAnchor(
+                        identity: item.identity,
+                        offset: controller.offset,
+                      ),
                     ),
                   );
                 },

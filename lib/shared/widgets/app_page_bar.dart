@@ -29,6 +29,7 @@ class _AppPageBarState extends State<AppPageBar> {
   ScrollNotificationObserverState? _observer;
   bool _hidden = false;
   bool _scrolled = false;
+  double _scrollTravel = 0;
 
   @override
   void didChangeDependencies() {
@@ -55,10 +56,17 @@ class _AppPageBarState extends State<AppPageBar> {
     var hidden = _hidden;
     if (!scrolled) {
       hidden = false;
+      _scrollTravel = 0;
     } else if (notification is ScrollUpdateNotification) {
       final delta = notification.scrollDelta ?? 0;
-      if (delta > 6) hidden = true;
-      if (delta < -6) hidden = false;
+      // Accumulate travel in one direction, not speed per frame. Slow
+      // trackpad gestures must be able to reveal the controls too. Keep the
+      // total across wheel events, each of which may start and end a scroll.
+      if (delta != 0) {
+        if (delta.sign != _scrollTravel.sign) _scrollTravel = 0;
+        _scrollTravel += delta;
+        if (_scrollTravel.abs() > 6) hidden = _scrollTravel > 0;
+      }
     }
     if (hidden != _hidden || scrolled != _scrolled) {
       setState(() {
