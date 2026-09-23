@@ -76,7 +76,7 @@ Widget _app(FanartRepository repository) => ProviderScope(
     ...offlineLibrary(),
     fanartRepositoryProvider.overrideWithValue(repository),
   ],
-  child: const MaterialApp(home: ContentPage()),
+  child: const MaterialApp(home: ContentPage(channel: 'fanart')),
 );
 
 void main() {
