@@ -172,10 +172,37 @@ class HandoffCoordinator extends ChangeNotifier {
   /// re-dispatching the original URL would bounce them straight out again.
   Future<ReturnContext?> consume(String sessionId) async {
     try {
-      return await _store.consume(sessionId);
+      final claimed = await _store.consume(sessionId);
+      if (claimed != null) _consumedHere.add(claimed.sessionId);
+      return claimed;
     } catch (_) {
       return null;
     }
+  }
+
+  /// Sessions this process consumed. A consumed row outlives the process,
+  /// and a later launch must not replay an old trip's query and position.
+  final _consumedHere = <String>{};
+
+  /// (session, channel) pairs whose list context was already handed out.
+  final _restoredLists = <(String, String)>{};
+
+  /// The list context a newly built [channel] feed should rebuild, at most
+  /// once per session.
+  ///
+  /// Either the return has not been consumed yet (the feed was built before
+  /// the restorer claimed it) or this process consumed it. A session some
+  /// earlier launch consumed is history, not a return.
+  Future<ReturnContext?> listRestoreFor(String channel) async {
+    final context = await lastReturn();
+    if (context == null ||
+        context.target != ReturnTarget.contentChannel ||
+        context.channel != channel ||
+        (context.consumed && !_consumedHere.contains(context.sessionId)) ||
+        !_restoredLists.add((context.sessionId, channel))) {
+      return null;
+    }
+    return context;
   }
 
   Future<void> end() => _clearQuietly();

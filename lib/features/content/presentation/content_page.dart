@@ -21,6 +21,8 @@ import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/domain/return_context.dart';
+import '../../handoff/presentation/anchor_restore.dart';
+import '../../../core/domain/content_identity.dart';
 import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
 import '../domain/community_video_repository.dart';
@@ -323,13 +325,10 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
   /// The session is read, not consumed: the restorer owns consumption, and
   /// claiming it here would race the navigation that brought us to this channel.
   Future<void> _restoreReturn() async {
-    final pending = await ref.read(handoffCoordinatorProvider).lastReturn();
-    if (!mounted ||
-        pending == null ||
-        pending.target != ReturnTarget.contentChannel ||
-        pending.channel != widget.channel.slug) {
-      return;
-    }
+    final pending = await ref
+        .read(handoffCoordinatorProvider)
+        .listRestoreFor(widget.channel.slug);
+    if (!mounted || pending == null) return;
     final values = pending.query;
     if (values != null) {
       // A cold return arrives with the channel chosen but the filters at their
@@ -341,30 +340,44 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
         ).toFanart(),
       );
     }
-    // Apply the fallback offset against the restored list's layout, not the
-    // loading placeholder's zero scroll extent.
+    final anchor = pending.anchor;
+    if (anchor == null) return;
+    await waitForFirstPage(
+      _controller,
+      () =>
+          _controller.state.status == FeedStatus.idle ||
+          _controller.state.status == FeedStatus.loadingFirstPage,
+    );
+    // Only a bounded restore: a few more pages at most, never page after
+    // page to reach a deep position.
+    for (var page = 0; page < restorePageBudget; page++) {
+      if (!mounted ||
+          _visible.contains(anchor.identity) ||
+          _controller.state.status != FeedStatus.ready ||
+          _controller.state.nextCursor == null) {
+        break;
+      }
+      await _controller.loadMore();
+    }
+    // Restore against the restored list's layout, not the loading
+    // placeholder's zero scroll extent.
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
-    _restoreAnchor(pending.anchor);
+    final result = await restoreAnchor(
+      scope: context,
+      controller: _scrollController,
+      anchor: anchor,
+      order: _visible,
+    );
+    if (result == AnchorRestore.offsetOnly && mounted) {
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('原位置已不在列表中，已回到相近位置')));
+    }
   }
 
-  /// Returns to where the user was, preferring the identity over the raw offset:
-  /// an offset alone points at whatever has since moved into that position.
-  ///
-  /// Only a bounded restore is attempted. If the anchored item is not in what
-  /// has loaded, the stored offset is used and clamped to the current extent —
-  /// the app does not fetch page after page to reach a deep position.
-  void _restoreAnchor(ReturnAnchor? anchor) {
-    if (anchor == null || !_scrollController.hasClients) return;
-    final found = _controller.state.items.any(
-      (item) => item.identity == anchor.identity,
-    );
-    final offset = anchor.offset;
-    if (found || offset == null) return;
-    _scrollController.jumpTo(
-      offset.clamp(0, _scrollController.position.maxScrollExtent),
-    );
-  }
+  /// Identities in display order, as last built (rules may hide or reorder).
+  List<ContentIdentity> _visible = const [];
 
   @override
   void dispose() {
@@ -438,6 +451,8 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
           canLoadMore: state.status == FeedStatus.ready,
           onLoadMore: () => _controller.loadMore(automatic: true),
           child: _FanartGrid(
+            onBuilt: (items) =>
+                _visible = [for (final item in items) item.identity],
             state: state.copyWith(items: visible.items),
             header: [
               filters,
@@ -455,6 +470,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
 
 class _FanartGrid extends ConsumerWidget {
   const _FanartGrid({
+    required this.onBuilt,
     required this.state,
     required this.header,
     required this.controller,
@@ -462,6 +478,7 @@ class _FanartGrid extends ConsumerWidget {
     required this.onRefresh,
   });
 
+  final ValueChanged<List<FanartItem>> onBuilt;
   final FanartFeedState state;
   final List<Widget> header;
   final ScrollController controller;
@@ -470,6 +487,7 @@ class _FanartGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    onBuilt(state.items);
     final placeholder = state.items.isNotEmpty
         ? null
         : switch (state.status) {

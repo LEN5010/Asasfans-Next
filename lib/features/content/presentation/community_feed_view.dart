@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
@@ -9,7 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
+import '../../../core/domain/content_identity.dart';
+import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/domain/return_context.dart';
+import '../../handoff/presentation/anchor_restore.dart';
 import '../../handoff/presentation/watch_on_bilibili.dart';
 import 'video_card.dart';
 import '../application/community_feed_controller.dart';
@@ -46,8 +51,67 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _controller.loadInitial();
+      if (!mounted) return;
+      _controller.loadInitial();
+      unawaited(_restoreReturn());
     });
+  }
+
+  /// Identities in display order, as last built.
+  List<ContentIdentity> _visible = const [];
+
+  /// What a return rebuilds: the order and window the user had committed,
+  /// then the card they left from. The kind itself is the route.
+  static Map<String, Object?> returnQuery(CommunityVideoQuery query) => {
+    'order': query.order.name,
+    if (query.withinDays != null) 'withinDays': query.withinDays,
+  };
+
+  Future<void> _restoreReturn() async {
+    final pending = await ref
+        .read(handoffCoordinatorProvider)
+        .listRestoreFor(widget.channel.name);
+    if (!mounted || pending == null) return;
+    if (pending.query case final values?) {
+      final order = CommunityVideoOrder.values
+          .where((value) => value.name == values['order'])
+          .firstOrNull;
+      final days = values['withinDays'];
+      await _controller.applyQuery(
+        _controller.state.query.copyWith(
+          order: order,
+          withinDays: days is int && days > 0 ? days : null,
+          clearDays: days is! int || days <= 0,
+        ),
+      );
+    }
+    final anchor = pending.anchor;
+    if (anchor == null || !mounted) return;
+    await waitForFirstPage(
+      _controller,
+      () =>
+          _controller.state.status == FeedStatus.idle ||
+          _controller.state.status == FeedStatus.loadingFirstPage,
+    );
+    for (var page = 0; page < restorePageBudget; page++) {
+      if (!mounted ||
+          _visible.contains(anchor.identity) ||
+          _controller.state.status != FeedStatus.ready) {
+        break;
+      }
+      await _controller.loadMore();
+    }
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final result = await restoreAnchor(
+      scope: context,
+      controller: _scrollController,
+      anchor: anchor,
+      order: _visible,
+    );
+    if (result == AnchorRestore.offsetOnly && mounted) {
+      showAnchorFallbackNotice(context);
+    }
   }
 
   @override
@@ -98,6 +162,7 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
   );
 
   Widget _buildBody(CommunityFeedState state, List<Widget> header) {
+    _visible = [for (final video in state.videos) video.identity];
     final noun = switch (widget.channel) {
       CommunityChannel.clips => '切片',
       CommunityChannel.replays => '录播',
@@ -152,9 +217,11 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
                 ),
                 itemCount: state.videos.length,
                 itemBuilder: (_, index) => VideoCard(
+                  key: ValueKey(state.videos[index].identity),
                   video: state.videos[index],
                   origin: WatchOrigin(
                     target: ReturnTarget.contentChannel,
+                    query: returnQuery(state.query),
                     // These enum names are the route slugs, and the restorer
                     // resolves whatever it is given through ContentChannel,
                     // so a rename lands on the channel list rather than a

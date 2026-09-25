@@ -38,10 +38,18 @@ class DynamicCard extends ConsumerWidget {
     required this.post,
     this.returnTo = ReturnTarget.contentChannel,
     this.historyPreview = false,
+    this.returnQuery,
+    this.anchorOf,
   });
   final DynamicPost post;
   final ReturnTarget returnTo;
   final bool historyPreview;
+
+  /// The feed's committed query, so a cold return rebuilds the same list.
+  final Map<String, Object?>? returnQuery;
+
+  /// Resolved at tap time, where the list actually is.
+  final ReturnAnchor Function()? anchorOf;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,6 +63,8 @@ class DynamicCard extends ConsumerWidget {
       url: uri,
       returnTo: returnTo,
       channel: returnTo == ReturnTarget.contentChannel ? 'dynamics' : null,
+      query: returnQuery,
+      anchor: anchorOf?.call(),
     );
     void actions() => showContentActions(
       context,

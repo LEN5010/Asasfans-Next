@@ -31,7 +31,11 @@ FanartItem _item(String id) => FanartItem(
 /// Records the queries it is asked for, so a restore can be observed rather
 /// than inferred from what ends up on screen.
 class _Recording implements FanartRepository {
+  _Recording({this.pageSize = 6, this.pages = 1});
+  final int pageSize;
+  final int pages;
   final queries = <FanartQuery>[];
+  final cursors = <String?>[];
   @override
   Future<FanartPage> page({
     FanartQuery query = const FanartQuery(),
@@ -39,9 +43,14 @@ class _Recording implements FanartRepository {
     RequestCancellation? cancellation,
   }) async {
     queries.add(query);
+    cursors.add(cursor);
+    final page = cursor == null ? 0 : int.parse(cursor);
     return FanartPage(
-      items: [for (var i = 0; i < 6; i++) _item('$i')],
+      items: [
+        for (var i = 0; i < pageSize; i++) _item('${page * pageSize + i}'),
+      ],
       snapshotId: 's',
+      nextCursor: page + 1 < pages ? '${page + 1}' : null,
     );
   }
 
@@ -97,6 +106,7 @@ void main() {
     required String channel,
     Map<String, Object?>? query,
     ReturnAnchor? anchor,
+    bool consumed = false,
   }) => store.save(
     ReturnContext(
       sessionId: 'session-1',
@@ -105,8 +115,19 @@ void main() {
       createdAt: DateTime.utc(2026, 9, 22),
       query: query,
       anchor: anchor,
+      consumed: consumed,
     ),
   );
+
+  /// Visible means the card's painted rect overlaps the part of the viewport
+  /// not covered by the floating page bar — not merely that it was built.
+  bool onScreen(WidgetTester tester, String text) {
+    final finder = find.text(text);
+    if (finder.evaluate().isEmpty) return false;
+    final rect = tester.getRect(finder.first);
+    final view = Offset.zero & tester.view.physicalSize;
+    return rect.overlaps(view.deflate(1)) && rect.top > 60;
+  }
 
   testWidgets('a cold return re-applies the committed query', (tester) async {
     await seedSession(
@@ -205,5 +226,65 @@ void main() {
     // the user out again, so nothing was handed to the link service.
     expect(tester.takeException(), isNull);
     expect(find.byType(ContentPage), findsOneWidget);
+  });
+
+  testWidgets(
+    'a cold return scrolls a loaded but off-screen anchor into view',
+    (tester) async {
+      repository = _Recording(pageSize: 48);
+      await seedSession(
+        channel: 'fanart',
+        // The offset is from another layout: the identity must win over it.
+        anchor: ReturnAnchor(identity: _item('40').identity, offset: 0),
+      );
+      await pumpChannel(tester);
+      expect(onScreen(tester, '作品 40'), isTrue);
+      expect(onScreen(tester, '作品 0'), isFalse);
+    },
+  );
+
+  testWidgets('an anchor on a later page loads a bounded number of pages', (
+    tester,
+  ) async {
+    repository = _Recording(pageSize: 12, pages: 3);
+    await seedSession(
+      channel: 'fanart',
+      anchor: ReturnAnchor(identity: _item('30').identity),
+    );
+    await pumpChannel(tester);
+    expect(onScreen(tester, '作品 30'), isTrue);
+  });
+
+  testWidgets('a missing anchor falls back to the offset and says so', (
+    tester,
+  ) async {
+    repository = _Recording(pageSize: 48);
+    await seedSession(
+      channel: 'fanart',
+      anchor: ReturnAnchor(identity: _item('gone').identity, offset: 800),
+    );
+    await pumpChannel(tester);
+    final scrollable = tester.state<ScrollableState>(
+      find
+          .descendant(
+            of: find.byKey(const PageStorageKey('fanart-feed')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(scrollable.position.pixels, 800);
+    expect(find.textContaining('原位置'), findsOneWidget);
+  });
+
+  testWidgets('a session an earlier launch already used is not replayed', (
+    tester,
+  ) async {
+    await seedSession(
+      channel: 'fanart',
+      consumed: true,
+      query: ChannelSpec.ofFanart(const FanartQuery(keyword: '旧的')).values,
+    );
+    await pumpChannel(tester);
+    expect(repository.queries.single, const FanartQuery());
   });
 }

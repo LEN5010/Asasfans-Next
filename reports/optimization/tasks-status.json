@@ -87,8 +87,10 @@
    "stage": "P2",
    "title": "先修返回锚点与频道查询恢复",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "failing tests first (4 fanart cases failed on 98e52c2 code), then identity-first restore for fanart/videos/dynamics; stale-session replay fixed; run-02/T10-return-guarantees.md; full suite 682 pass"
+   ]
   },
   {
    "id": "T11",

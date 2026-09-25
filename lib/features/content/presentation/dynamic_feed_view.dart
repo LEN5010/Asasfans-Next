@@ -1,3 +1,9 @@
+import 'dart:async';
+
+import '../../../core/domain/content_identity.dart';
+import '../../handoff/application/handoff_providers.dart';
+import '../../handoff/domain/return_context.dart';
+import '../../handoff/presentation/anchor_restore.dart';
 import 'content_search_control.dart';
 import 'saved_channel_bar.dart';
 import '../domain/saved_channel.dart';
@@ -40,8 +46,55 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _controller.loadInitial();
+      if (!mounted) return;
+      _controller.loadInitial();
+      unawaited(_restoreReturn());
     });
+  }
+
+  /// Identities in display order, as last built.
+  List<ContentIdentity> _visible = const [];
+
+  Future<void> _restoreReturn() async {
+    final pending = await ref
+        .read(handoffCoordinatorProvider)
+        .listRestoreFor(ContentChannel.dynamics.slug);
+    if (!mounted || pending == null) return;
+    if (pending.query case final values?) {
+      await _controller.applyQuery(
+        ChannelSpec(
+          version: ChannelSpec.currentVersion,
+          values: values,
+        ).toDynamic(),
+      );
+    }
+    final anchor = pending.anchor;
+    if (anchor == null || !mounted) return;
+    await waitForFirstPage(
+      _controller,
+      () =>
+          _controller.state.status == FeedStatus.idle ||
+          _controller.state.status == FeedStatus.loadingFirstPage,
+    );
+    for (var page = 0; page < restorePageBudget; page++) {
+      if (!mounted ||
+          _visible.contains(anchor.identity) ||
+          _controller.state.status != FeedStatus.ready) {
+        break;
+      }
+      await _controller.loadMore();
+    }
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final result = await restoreAnchor(
+      scope: context,
+      controller: _scrollController,
+      anchor: anchor,
+      order: _visible,
+    );
+    if (result == AnchorRestore.offsetOnly && mounted) {
+      showAnchorFallbackNotice(context);
+    }
   }
 
   @override
@@ -89,6 +142,8 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
   );
 
   Widget _buildBody(DynamicFeedState state, List<Widget> header) {
+    _visible = [for (final post in state.items) post.identity];
+    final returnQuery = ChannelSpec.ofDynamic(state.query).values;
     final placeholder = state.items.isNotEmpty
         ? null
         : switch (state.status) {
@@ -121,6 +176,13 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
             itemBuilder: (context, index) => DynamicCard(
               key: ValueKey(state.items[index].identity),
               post: state.items[index],
+              returnQuery: returnQuery,
+              anchorOf: () => ReturnAnchor(
+                identity: state.items[index].identity,
+                offset: _scrollController.hasClients
+                    ? _scrollController.offset
+                    : null,
+              ),
             ),
           ),
         ),
