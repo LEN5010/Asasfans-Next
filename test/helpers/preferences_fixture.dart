@@ -21,6 +21,13 @@ class MemoryPreferencesRepository implements PreferencesRepository {
   }
 
   @override
+  Future<AppPreferences> setGlass(GlassChoice value) async {
+    if (failure != null) throw failure!;
+    writes++;
+    return values = values.withGlass(value);
+  }
+
+  @override
   Future<AppPreferences> setAppearance(AppAppearance value) async {
     if (failure != null) throw failure!;
     writes++;

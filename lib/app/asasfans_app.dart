@@ -36,6 +36,9 @@ class AsasfansApp extends ConsumerWidget {
                   preferences.values.material == AppMaterial.liquid
               ? GlassMaterialMode.liquid
               : GlassMaterialMode.clear,
+          detail: preferences.values.glass == GlassChoice.visual
+              ? GlassDetail.full
+              : GlassDetail.platform,
           child: child!,
         );
       },

@@ -18,6 +18,26 @@ class SqlitePreferencesRepository implements PreferencesRepository {
   Future<AppPreferences> setMaterial(AppMaterial material) =>
       _set('ui.material', material.name);
   @override
+  Future<AppPreferences> setGlass(GlassChoice glass) async {
+    const upsert =
+        'INSERT INTO preferences(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value';
+    final results = await _database.batch([
+      SqlStatement(upsert, [
+        'ui.material',
+        (glass == GlassChoice.smooth ? AppMaterial.clear : AppMaterial.liquid)
+            .name,
+      ]),
+      glass == GlassChoice.visual
+          ? const SqlStatement(upsert, ['ui.glassTier', 'visual'])
+          : const SqlStatement(
+              "DELETE FROM preferences WHERE key = 'ui.glassTier'",
+            ),
+      _read,
+    ], write: true);
+    return _decode(results.last);
+  }
+
+  @override
   Future<AppPreferences> setAppearance(AppAppearance appearance) =>
       _set('appearance', appearance.name);
   @override
@@ -53,6 +73,10 @@ class SqlitePreferencesRepository implements PreferencesRepository {
     if (material != null && matchedMaterial == null) {
       throw const StorageFailure(StorageFailureKind.invalidData);
     }
+    final tier = values['ui.glassTier'];
+    if (tier != null && tier != 'visual') {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
     final hidden = <HomeSection>{};
     for (final section in HomeSection.values) {
       final visible = values['home.${section.name}.visible'];
@@ -64,6 +88,7 @@ class SqlitePreferencesRepository implements PreferencesRepository {
     return AppPreferences(
       appearance: matched ?? AppAppearance.system,
       material: matchedMaterial ?? AppMaterial.liquid,
+      visualGlass: tier == 'visual',
       hiddenHomeSections: Set.unmodifiable(hidden),
     );
   }

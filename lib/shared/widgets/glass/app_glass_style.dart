@@ -1,17 +1,20 @@
 // Reference integration: LoveIwara (MIT), see third_party/LoveIwara-LICENSE.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+import 'app_glass_scope.dart';
+import 'glass_policy.dart';
 
 /// Chrome uses the package's optical defaults with a fixed legible tint.
 /// A high-opacity readability veil hides the very backdrop being refracted.
 abstract final class AppGlassStyle {
-  // Standard is the reference's desktop startup compromise, not evidence of
-  // premium backdrop refraction. Unsupported renderers still use clear mode.
-  static GlassQuality get quality => switch (defaultTargetPlatform) {
-    TargetPlatform.windows || TargetPlatform.linux => GlassQuality.standard,
-    _ => GlassQuality.premium,
-  };
+  /// The package quality for the scope's effective tier. Solid never
+  /// reaches a glass widget; it maps to standard only as a safe default.
+  static GlassQuality qualityOf(BuildContext context) =>
+      switch (AppGlassScope.of(context).glassTier) {
+        GlassTier.premium => GlassQuality.premium,
+        GlassTier.standard || GlassTier.solid => GlassQuality.standard,
+      };
 
   // Light chrome carries more white than the reference so its fixed dark
   // text stays legible over any content; controls no longer flip with it.

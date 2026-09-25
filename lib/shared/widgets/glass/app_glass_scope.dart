@@ -15,12 +15,14 @@ class AppGlassScope extends StatefulWidget {
     required this.runtime,
     required this.mode,
     required this.child,
+    this.detail = GlassDetail.platform,
     this.transparency = const NativeTransparencyPreference(),
     this.transparencyOverride,
   });
 
   final GlassRuntime runtime;
   final GlassMaterialMode mode;
+  final GlassDetail detail;
   final Widget child;
   final TransparencyPreferenceService transparency;
   final SystemTransparency? transparencyOverride;
@@ -133,6 +135,8 @@ class _AppGlassScopeState extends State<AppGlassScope>
     mode: widget.mode,
     runtime: widget.runtime.state,
     transparency: widget.transparencyOverride ?? _transparency,
+    detail: widget.detail,
+    platform: Theme.of(context).platform,
     highContrast: MediaQuery.highContrastOf(context),
     reduceMotion: MediaQuery.disableAnimationsOf(context),
     active: _active,
@@ -145,6 +149,7 @@ class _GlassPolicyScope extends InheritedWidget {
   @override
   bool updateShouldNotify(_GlassPolicyScope oldWidget) =>
       policy.fallback != oldWidget.policy.fallback ||
+      policy.glassTier != oldWidget.policy.glassTier ||
       policy.reduceMotion != oldWidget.policy.reduceMotion ||
       policy.active != oldWidget.policy.active;
 }

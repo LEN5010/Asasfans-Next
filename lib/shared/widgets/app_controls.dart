@@ -260,7 +260,7 @@ class AppSegments<T> extends StatelessWidget {
             selectedTextStyle: selectedStyle,
             unselectedTextStyle: normalStyle,
             useOwnLayer: true,
-            quality: AppGlassStyle.quality,
+            quality: AppGlassStyle.qualityOf(context),
             settings: AppGlassStyle.settings(Theme.of(context).brightness),
           )
         : SizedBox(

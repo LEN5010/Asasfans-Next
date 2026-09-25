@@ -59,7 +59,7 @@ class _AppGlassSurfaceState extends State<AppGlassSurface> {
             boxShadow: AppGlassStyle.shadows(brightness),
           ),
           child: AdaptiveGlass(
-            quality: AppGlassStyle.quality,
+            quality: AppGlassStyle.qualityOf(context),
             shape: LiquidRoundedSuperellipse(borderRadius: widget.radius),
             settings: AppGlassStyle.settings(brightness),
             clipExpansion: const EdgeInsets.all(16),

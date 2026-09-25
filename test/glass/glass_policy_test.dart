@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -82,5 +83,63 @@ void main() {
   });
   test('clear request dominates ready shaders', () {
     expect(resolve(mode: GlassMaterialMode.clear).usesLiquid, isFalse);
+  });
+
+  group('effective tier', () {
+    GlassPolicy on(
+      TargetPlatform platform, {
+      GlassDetail detail = GlassDetail.platform,
+      GlassMaterialMode mode = GlassMaterialMode.liquid,
+      bool highContrast = false,
+      GlassRuntimeState runtime = GlassRuntimeState.ready,
+    }) => GlassPolicy.resolve(
+      mode: mode,
+      runtime: runtime,
+      transparency: SystemTransparency.allowed,
+      detail: detail,
+      platform: platform,
+      highContrast: highContrast,
+    );
+
+    test('Android is no longer premium by default', () {
+      expect(on(TargetPlatform.android).tier, GlassTier.standard);
+      expect(on(TargetPlatform.windows).tier, GlassTier.standard);
+      expect(on(TargetPlatform.linux).tier, GlassTier.standard);
+      expect(on(TargetPlatform.iOS).tier, GlassTier.premium);
+      expect(on(TargetPlatform.macOS).tier, GlassTier.premium);
+    });
+
+    test('visual priority is premium on every platform', () {
+      for (final platform in TargetPlatform.values) {
+        expect(on(platform, detail: GlassDetail.full).tier, GlassTier.premium);
+      }
+    });
+
+    test('every fallback is solid, whatever was asked for', () {
+      expect(
+        on(TargetPlatform.android, mode: GlassMaterialMode.clear).tier,
+        GlassTier.solid,
+      );
+      expect(
+        on(
+          TargetPlatform.iOS,
+          detail: GlassDetail.full,
+          highContrast: true,
+        ).tier,
+        GlassTier.solid,
+      );
+      expect(
+        on(
+          TargetPlatform.android,
+          detail: GlassDetail.full,
+          runtime: GlassRuntimeState.failed,
+        ).tier,
+        GlassTier.solid,
+      );
+      expect(
+        on(TargetPlatform.android, runtime: GlassRuntimeState.unsupported).tier,
+        GlassTier.solid,
+      );
+    });
   });
 }

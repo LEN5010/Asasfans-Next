@@ -63,8 +63,11 @@
    "stage": "P2",
    "title": "统一玻璃有效档与自适应实验",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Code done: GlassChoice smooth/auto/visual (ui.material stays liquid/clear for older builds + ui.glassTier), effective GlassTier (solid/standard/premium) in GlassPolicy, Android/Windows/Linux auto=standard, Apple auto=premium, visual=premium, every fallback=solid; settings show effective tier + reason; tests: glass_policy_test tiers, material_preferences_test round-trip/legacy/invalid, app_shell_material_test tier switching keeps TodayPage state; full suite 689 pass",
+    "Not done: package adaptiveQuality evaluated but NOT enabled — experimental, needs device frames, and toggling wrap(adaptiveQuality) inserts a parent above the whole app (remounts router state); needs a stable always-present scope. Solid/standard/premium profile comparison needs a device."
+   ]
   },
   {
    "id": "T08",

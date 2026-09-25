@@ -320,7 +320,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
               barHeight: height,
               barBorderRadius: height / 2,
               settings: AppGlassStyle.settings(colors.brightness, shadow: true),
-              quality: AppGlassStyle.quality,
+              quality: AppGlassStyle.qualityOf(context),
               selectedIconColor: colors.primary,
               unselectedIconColor: colors.onSurfaceVariant,
               indicatorColor: AppTheme.dianaPink.withValues(alpha: .38),

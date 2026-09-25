@@ -5,6 +5,7 @@ import 'package:asasfans_next/app/glass_providers.dart';
 import 'package:asasfans_next/app/router/app_router.dart';
 import 'package:asasfans_next/features/preferences/application/preferences_controller.dart';
 import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
+import 'package:asasfans_next/features/mine/presentation/mine_page.dart';
 import 'package:asasfans_next/features/today/presentation/today_page.dart';
 import 'package:asasfans_next/features/tools/presentation/tools_sheet.dart';
 import 'package:asasfans_next/shared/theme/app_icons.dart';
@@ -13,6 +14,7 @@ import 'package:asasfans_next/shared/widgets/glass/app_glass_scope.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_policy.dart';
 import 'package:asasfans_next/shared/widgets/glass/glass_runtime.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -116,6 +118,82 @@ void main() {
       expect(identical(today, tester.state(find.byType(TodayPage))), isTrue);
       expect(tester.takeException(), isNull);
     },
+  );
+
+  testWidgets(
+    'glass choices change the effective tier without rebuilding pages',
+    (tester) async {
+      // The system transparency signal: explicitly not reduced.
+      const state = MethodChannel('asasfans.next/reduce_transparency_state');
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        state,
+        (_) async => null,
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          state,
+          null,
+        ),
+      );
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final runtime = GlassRuntime(
+        shaderFiltersSupported: true,
+        load: () async {},
+      );
+      addTearDown(runtime.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...offlineTodayOverrides(),
+            glassRuntimeProvider.overrideWithValue(runtime),
+          ],
+          child: const AsasfansApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      GlassPolicy policy() =>
+          AppGlassScope.of(tester.element(find.byType(TodayPage)));
+      // Android's automatic choice is the standard tier, not premium.
+      expect(policy().tier, GlassTier.standard);
+      final today = tester.state(find.byType(TodayPage));
+      final prefs = ProviderScope.containerOf(
+        tester.element(find.byType(AsasfansApp)),
+        listen: false,
+      ).read(preferencesControllerProvider.notifier);
+      await prefs.setGlass(GlassChoice.visual);
+      await tester.pumpAndSettle();
+      expect(policy().tier, GlassTier.premium);
+      await prefs.setGlass(GlassChoice.smooth);
+      await tester.pumpAndSettle();
+      expect(policy().tier, GlassTier.solid);
+      expect(policy().fallback, GlassFallback.userChoice);
+      expect(identical(today, tester.state(find.byType(TodayPage))), isTrue);
+
+      // The settings page says what is in effect and why.
+      await tester.tap(find.text('我的').last);
+      await tester.pumpAndSettle();
+      final mine = find
+          .descendant(
+            of: find.byType(MinePage),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.textContaining('当前：'),
+        200,
+        scrollable: mine,
+      );
+      expect(find.text('当前：实底界面（流畅优先，不采样背景）'), findsOneWidget);
+      await tester.ensureVisible(find.text('视觉优先'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('视觉优先'));
+      await tester.pumpAndSettle();
+      expect(find.text('当前：精细玻璃'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
   );
 
   testWidgets('desktop sidebar remains in the accessible route tree', (

@@ -164,4 +164,70 @@ void main() {
       },
     );
   }
+
+  test('glass choice round-trips and stays readable by older builds', () async {
+    final db = MemoryLocalDatabase();
+    addTearDown(db.close);
+    final prefs = SqlitePreferencesRepository(db);
+    // A database written before the choice existed reads as before.
+    expect((await prefs.load()).glass, GlassChoice.auto);
+    String? stored(String key) =>
+        db.database.select('SELECT value FROM preferences WHERE key=?', [
+              key,
+            ]).firstOrNull?['value']
+            as String?;
+
+    expect(
+      (await prefs.setGlass(GlassChoice.visual)).glass,
+      GlassChoice.visual,
+    );
+    // ui.material keeps only the values an older build understands.
+    expect(stored('ui.material'), 'liquid');
+    expect(stored('ui.glassTier'), 'visual');
+    expect(
+      (await SqlitePreferencesRepository(db).load()).glass,
+      GlassChoice.visual,
+    );
+
+    expect(
+      (await prefs.setGlass(GlassChoice.smooth)).glass,
+      GlassChoice.smooth,
+    );
+    expect(stored('ui.material'), 'clear');
+    expect(stored('ui.glassTier'), isNull);
+
+    expect((await prefs.setGlass(GlassChoice.auto)).glass, GlassChoice.auto);
+    expect(stored('ui.material'), 'liquid');
+    expect(stored('ui.glassTier'), isNull);
+  });
+
+  test('legacy material values map onto the new choices', () {
+    expect(
+      const AppPreferences(material: AppMaterial.clear).glass,
+      GlassChoice.smooth,
+    );
+    expect(const AppPreferences().glass, GlassChoice.auto);
+    final visual = const AppPreferences().withGlass(GlassChoice.visual);
+    // Other copies keep the choice.
+    expect(visual.withAppearance(AppAppearance.dark).glass, GlassChoice.visual);
+    expect(
+      visual.withSection(HomeSection.clips, false).glass,
+      GlassChoice.visual,
+    );
+  });
+
+  test('an unknown glass tier is refused, not guessed', () async {
+    final db = MemoryLocalDatabase();
+    addTearDown(db.close);
+    await db.batch(const [
+      SqlStatement('INSERT INTO preferences VALUES (?, ?)', [
+        'ui.glassTier',
+        'ultra',
+      ]),
+    ], write: true);
+    await expectLater(
+      SqlitePreferencesRepository(db).load(),
+      throwsA(isA<StorageFailure>()),
+    );
+  });
 }
