@@ -132,8 +132,11 @@
    "stage": "P2",
    "title": "可见性刷新与首屏订阅收敛",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "ResumeWhenVisible mixin: resume refresh only while the branch TickerMode is enabled; a resume while hidden runs once when shown; Today keeps its 5-min TTL, Calendar keeps repository TTL/ETag/304/single-flight; AsasfansApp selects (ready, appearance, glass) instead of the whole preferences state; test/shared/resume_when_visible_test.dart; full suite 696 pass",
+    "Not measured: hidden-page request counts on device (VALIDATION S7)."
+   ]
   },
   {
    "id": "T15",

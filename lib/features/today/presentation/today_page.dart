@@ -16,6 +16,7 @@ import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_motion.dart';
+import '../../../shared/widgets/resume_when_visible.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
@@ -39,29 +40,21 @@ class TodayPage extends ConsumerStatefulWidget {
   ConsumerState<TodayPage> createState() => _TodayPageState();
 }
 
-class _TodayPageState extends ConsumerState<TodayPage> {
+class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
   bool _refreshing = false;
   late DateTime _lastRefresh;
-  late final AppLifecycleListener _lifecycle;
   @override
   void initState() {
     super.initState();
     _lastRefresh = ref.read(currentTimeProvider)();
-    _lifecycle = AppLifecycleListener(
-      onResume: () {
-        if (mounted &&
-            ref.read(currentTimeProvider)().difference(_lastRefresh) >=
-                const Duration(minutes: 5)) {
-          unawaited(_refresh(false));
-        }
-      },
-    );
   }
 
   @override
-  void dispose() {
-    _lifecycle.dispose();
-    super.dispose();
+  void onVisibleResume() {
+    if (ref.read(currentTimeProvider)().difference(_lastRefresh) >=
+        const Duration(minutes: 5)) {
+      unawaited(_refresh(false));
+    }
   }
 
   Future<void> _refresh(bool forceCalendar) async {

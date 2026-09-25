@@ -15,14 +15,20 @@ class AsasfansApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final preferences = ref.watch(preferencesControllerProvider);
+    // Only what the root draws: saving flags and home-module toggles must
+    // not rebuild MaterialApp.
+    final (ready, appearance, glass) = ref.watch(
+      preferencesControllerProvider.select(
+        (state) => (state.ready, state.values.appearance, state.values.glass),
+      ),
+    );
     final runtime = ref.watch(glassRuntimeProvider);
     return MaterialApp.router(
       title: 'Asasfans Next',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: switch (preferences.values.appearance) {
+      themeMode: switch (appearance) {
         AppAppearance.system => ThemeMode.system,
         AppAppearance.light => ThemeMode.light,
         AppAppearance.dark => ThemeMode.dark,
@@ -31,12 +37,10 @@ class AsasfansApp extends ConsumerWidget {
         return AppGlassScope(
           runtime: runtime,
           // No default-liquid flash while a saved clear preference is loading.
-          mode:
-              preferences.ready &&
-                  preferences.values.material == AppMaterial.liquid
+          mode: ready && glass != GlassChoice.smooth
               ? GlassMaterialMode.liquid
               : GlassMaterialMode.clear,
-          detail: preferences.values.glass == GlassChoice.visual
+          detail: glass == GlassChoice.visual
               ? GlassDetail.full
               : GlassDetail.platform,
           child: child!,

@@ -8,6 +8,8 @@ import '../../../shared/widgets/horizontal_choices.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/widgets/resume_when_visible.dart';
+
 import '../../../core/network/api_failure.dart';
 import '../../../core/time/calendar_time.dart';
 import '../../../core/time/shanghai_date_provider.dart';
@@ -26,29 +28,18 @@ class CalendarPage extends ConsumerStatefulWidget {
   ConsumerState<CalendarPage> createState() => _CalendarPageState();
 }
 
-class _CalendarPageState extends ConsumerState<CalendarPage> {
+class _CalendarPageState extends ConsumerState<CalendarPage>
+    with ResumeWhenVisible {
   CalendarFilter _filter = CalendarFilter.all;
   Set<String> _members = {};
   bool _week = false;
   bool _monthExpanded = false;
   bool _refreshing = false;
-  late final AppLifecycleListener _lifecycle;
 
+  // The repository's TTL, ETag/304 and single-flight decide whether this
+  // touches the network; a hidden calendar need not ask at all.
   @override
-  void initState() {
-    super.initState();
-    _lifecycle = AppLifecycleListener(
-      onResume: () {
-        if (mounted) ref.invalidate(monthEventsProvider);
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _lifecycle.dispose();
-    super.dispose();
-  }
+  void onVisibleResume() => ref.invalidate(monthEventsProvider);
 
   void _select(DateTime day) {
     ref.read(selectedCalendarDayProvider.notifier).state = day;
