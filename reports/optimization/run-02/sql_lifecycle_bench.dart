@@ -44,17 +44,39 @@ Future<void> main() async {
     'cpus: ${Platform.numberOfProcessors}',
     'dart: ${Platform.version.split(' ').first}',
     '',
-    describe('batch(read) via IsolateLocalDatabase', await sample(n, () => db.batch([_read]))),
-    describe('batch(write+read) via IsolateLocalDatabase', await sample(n, () => db.batch([_write, _read], write: true))),
+    describe(
+      'batch(read) via IsolateLocalDatabase',
+      await sample(n, () => db.batch([_read])),
+    ),
+    describe(
+      'batch(write+read) via IsolateLocalDatabase',
+      await sample(n, () => db.batch([_write, _read], write: true)),
+    ),
     describe('Isolate.run(no-op)', await sample(n, () => Isolate.run(() => 0))),
-    describe('open+initialize+read+dispose (same isolate)', await sample(n, () async => SqliteExecutor.openBatch(path, [_read]))),
+    describe(
+      'open+initialize+read+dispose (same isolate)',
+      await sample(n, () async => SqliteExecutor.openBatch(path, [_read])),
+    ),
   ];
   final open = sqlite3.open(path);
   SqliteExecutor.initialize(open);
-  lines.add(describe('read on an already-open connection', await sample(n, () async => SqliteExecutor.execute(open, [_read]))));
-  lines.add(describe('write+read on an already-open connection', await sample(n, () async => SqliteExecutor.execute(open, [_write, _read], write: true))));
+  lines.add(
+    describe(
+      'read on an already-open connection',
+      await sample(n, () async => SqliteExecutor.execute(open, [_read])),
+    ),
+  );
+  lines.add(
+    describe(
+      'write+read on an already-open connection',
+      await sample(
+        n,
+        () async => SqliteExecutor.execute(open, [_write, _read], write: true),
+      ),
+    ),
+  );
   open.dispose();
   await db.close();
   await dir.delete(recursive: true);
-  print(lines.join('\n'));
+  stdout.writeln(lines.join('\n'));
 }

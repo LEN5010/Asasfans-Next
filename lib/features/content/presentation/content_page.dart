@@ -9,6 +9,8 @@ import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/feed_offset_memory.dart';
+
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
 
@@ -50,15 +52,23 @@ class ContentPage extends ConsumerStatefulWidget {
   ConsumerState<ContentPage> createState() => _ContentPageState();
 }
 
-/// Channels are one page: switching slides the feed inside the page, and a
-/// visited feed stays mounted offstage so its scroll and loaded pages return
-/// with it.
+/// Channels are one page: switching slides the feed inside the page.
+///
+/// Only the current and the most recently left channel stay mounted, so one
+/// can slide out while the other slides in and a quick switch back is free.
+/// Older channels are unmounted: their offstage cards would otherwise keep
+/// every decoded image alive. What the user built up survives elsewhere —
+/// the query and loaded pages in the channel's kept-alive controller, the
+/// scroll offset in PageStorage.
 class _ContentPageState extends ConsumerState<ContentPage>
     with SingleTickerProviderStateMixin {
   late ContentChannel _current = _parse(widget.channel);
   late CommunityChannel _kind = _parseKind(widget.videoKind);
   ContentChannel? _previous;
-  late final _visited = <ContentChannel>{_current};
+
+  /// Mounted channels, least recently shown first.
+  late final _mounted = <ContentChannel>[_current];
+  static const _mountedLimit = 2;
   late final _slide = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 220),
@@ -83,7 +93,12 @@ class _ContentPageState extends ConsumerState<ContentPage>
     setState(() {
       _previous = _current;
       _current = next;
-      _visited.add(next);
+      _mounted
+        ..remove(next)
+        ..add(next);
+      while (_mounted.length > _mountedLimit) {
+        _mounted.removeAt(0);
+      }
     });
     if (MediaQuery.disableAnimationsOf(context)) {
       _slide.value = 1;
@@ -137,7 +152,11 @@ class _ContentPageState extends ConsumerState<ContentPage>
 
   @override
   Widget build(BuildContext context) {
-    final feeds = {for (final channel in _visited) channel: _feed(channel)};
+    // Stable order, so a switch reorders nothing that stays mounted.
+    final feeds = {
+      for (final channel in ContentChannel.values)
+        if (_mounted.contains(channel)) channel: _feed(channel),
+    };
     return Scaffold(
       extendBodyBehindAppBar: true,
       // The shell's backdrop shows through the main pages.
@@ -302,8 +321,12 @@ class _FanartFeed extends ConsumerStatefulWidget {
   ConsumerState<_FanartFeed> createState() => _FanartFeedState();
 }
 
-class _FanartFeedState extends ConsumerState<_FanartFeed> {
-  final _scrollController = ScrollController();
+class _FanartFeedState extends ConsumerState<_FanartFeed>
+    with FeedOffsetMemory {
+  @override
+  String get offsetStorageId => 'feed-offset-fanart-${widget.channel.slug}';
+
+  ScrollController get _scrollController => feedScrollController();
   late FanartFeedController _controller;
 
   @override
@@ -378,12 +401,6 @@ class _FanartFeedState extends ConsumerState<_FanartFeed> {
 
   /// Identities in display order, as last built (rules may hide or reorder).
   List<ContentIdentity> _visible = const [];
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   /// Applying a filter starts a new query generation, so the view returns to
   /// the top rather than keeping an offset that belonged to the old result.

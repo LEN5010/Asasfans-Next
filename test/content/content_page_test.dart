@@ -6,6 +6,11 @@ import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/community_video_repository.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
+import 'package:asasfans_next/features/content/domain/dynamic_repository.dart';
+import 'package:asasfans_next/features/content/presentation/dynamic_feed_view.dart';
+import 'package:asasfans_next/features/novels/presentation/novel_feed_view.dart';
+import 'package:asasfans_next/features/novels/application/novel_providers.dart';
+import 'package:asasfans_next/features/novels/domain/novel_repository.dart';
 import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
 import 'package:asasfans_next/features/content/presentation/content_search_control.dart';
@@ -474,6 +479,63 @@ void main() {
 
     expect(_masonryColumns(tester), greaterThan(2));
   });
+
+  testWidgets(
+    'only two channels stay mounted; a returning channel keeps pages and offset',
+    (tester) async {
+      final repository = _StubRepository();
+      final channel = ValueNotifier('fanart');
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...offlineLibrary(),
+            fanartRepositoryProvider.overrideWithValue(repository),
+            communityVideoRepositoryProvider.overrideWithValue(
+              _EmptyCommunityRepository(),
+            ),
+            dynamicRepositoryProvider.overrideWithValue(_NoDynamics()),
+            novelRepositoryProvider.overrideWithValue(_NoNovels()),
+          ],
+          child: MaterialApp(
+            home: ValueListenableBuilder(
+              valueListenable: channel,
+              builder: (_, slug, _) => ContentPage(channel: slug),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final grid = find
+          .descendant(
+            of: find.byKey(const PageStorageKey('fanart-feed')),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      tester.state<ScrollableState>(grid).position.jumpTo(700);
+      await tester.pumpAndSettle();
+      final offset = tester.state<ScrollableState>(grid).position.pixels;
+      expect(offset, greaterThan(300));
+      final requests = repository.requests;
+      for (final slug in ['dynamics', 'novels', 'videos']) {
+        channel.value = slug;
+        await tester.pumpAndSettle();
+      }
+      // Fanart is two switches old: unmounted, cards and images released.
+      // Offstage still counts as mounted, so look past Offstage.
+      expect(
+        find.byKey(const PageStorageKey('fanart-feed'), skipOffstage: false),
+        findsNothing,
+      );
+      expect(find.byType(DynamicFeedView, skipOffstage: false), findsNothing);
+      expect(find.byType(NovelFeedView, skipOffstage: false), findsOneWidget);
+      channel.value = 'fanart';
+      await tester.pumpAndSettle();
+      // Rebuilt from its controller and PageStorage: no refetch, same place.
+      expect(repository.requests, requests);
+      expect(tester.state<ScrollableState>(grid).position.pixels, offset);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 int _masonryColumns(WidgetTester tester) {
@@ -518,4 +580,42 @@ class _RefreshFailureRepository extends _StubRepository {
     if (requests++ > 0) throw const ApiFailure(ApiFailureKind.offline);
     return FanartPage(items: [_item('kept')], snapshotId: 's');
   }
+}
+
+class _NoDynamics implements DynamicRepository {
+  @override
+  Future<DynamicPage> search({
+    DynamicQuery query = const DynamicQuery(),
+    String? cursor,
+    RequestCancellation? cancellation,
+  }) async => const DynamicPage(items: []);
+
+  @override
+  Future<List<DynamicPost>> onThisDay({
+    String? monthDay,
+    OnThisDaySort sort = OnThisDaySort.hot,
+    int limit = 8,
+  }) async => const [];
+
+  @override
+  Future<List<DynamicMember>> members() async => const [];
+}
+
+class _NoNovels implements NovelRepository {
+  @override
+  Future<NovelPage> search({
+    NovelQuery query = const NovelQuery(),
+    int offset = 0,
+    RequestCancellation? cancellation,
+  }) async => NovelPage(items: const [], total: 0, offset: offset, limit: 20);
+
+  @override
+  Future<NovelDetail> detail(
+    String sourceTid, {
+    RequestCancellation? cancellation,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<NovelFacets> facets() async =>
+      const NovelFacets(total: 0, byRating: {});
 }

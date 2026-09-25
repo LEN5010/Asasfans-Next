@@ -11,6 +11,8 @@ import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/feed_offset_memory.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
@@ -36,8 +38,12 @@ class DynamicFeedView extends ConsumerStatefulWidget {
   ConsumerState<DynamicFeedView> createState() => _DynamicFeedViewState();
 }
 
-class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
-  final _scrollController = ScrollController();
+class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
+    with FeedOffsetMemory {
+  @override
+  String get offsetStorageId => 'feed-offset-dynamics';
+
+  ScrollController get _scrollController => feedScrollController();
   late final DynamicFeedController _controller = ref.read(
     dynamicFeedControllerProvider,
   );
@@ -95,12 +101,6 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView> {
     if (result == AnchorRestore.offsetOnly && mounted) {
       showAnchorFallbackNotice(context);
     }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _applyQuery(DynamicQuery query) {

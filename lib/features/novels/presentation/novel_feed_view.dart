@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../shared/widgets/feed_offset_memory.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/auto_fill_viewport.dart';
@@ -26,8 +28,12 @@ class NovelFeedView extends ConsumerStatefulWidget {
   ConsumerState<NovelFeedView> createState() => _NovelFeedViewState();
 }
 
-class _NovelFeedViewState extends ConsumerState<NovelFeedView> {
-  final _scrollController = ScrollController();
+class _NovelFeedViewState extends ConsumerState<NovelFeedView>
+    with FeedOffsetMemory {
+  @override
+  String get offsetStorageId => 'feed-offset-novels';
+
+  ScrollController get _scrollController => feedScrollController();
   late final NovelFeedController _controller = ref.read(
     novelFeedControllerProvider,
   );
@@ -38,12 +44,6 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _controller.loadInitial();
     });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _applyQuery(NovelQuery query) {

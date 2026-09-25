@@ -5,6 +5,8 @@ import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/feed_offset_memory.dart';
+
 import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,8 +43,12 @@ class CommunityFeedView extends ConsumerStatefulWidget {
   ConsumerState<CommunityFeedView> createState() => _CommunityFeedViewState();
 }
 
-class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
-  final _scrollController = ScrollController();
+class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
+    with FeedOffsetMemory {
+  @override
+  String get offsetStorageId => 'feed-offset-videos-${widget.channel.name}';
+
+  ScrollController get _scrollController => feedScrollController();
   late final CommunityFeedController _controller = ref.read(
     communityFeedControllerProvider(widget.channel),
   );
@@ -112,12 +118,6 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
     if (result == AnchorRestore.offsetOnly && mounted) {
       showAnchorFallbackNotice(context);
     }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _applyQuery(CommunityVideoQuery query) {

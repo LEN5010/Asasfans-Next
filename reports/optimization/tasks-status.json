@@ -106,8 +106,11 @@
    "stage": "P2",
    "title": "频道驻留与重资源释放",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "ContentPage keeps only the current + most recent channel mounted (was: every visited channel offstage forever, pinning decoded images as live); controllers stay keepAlive (query/pages); FeedOffsetMemory saves offset at deactivate and re-applies after layout (lazy masonry clamps early); test: 4-channel switch unmounts two, return has no refetch and exact offset; full suite 697 pass",
+    "No bounded page cache added: metadata growth not measured as a problem (plan: only when measured). PSS/live-image fall-back needs a device (S3)."
+   ]
   },
   {
    "id": "T12",
