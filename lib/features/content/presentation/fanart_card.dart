@@ -68,6 +68,7 @@ class FanartCard extends StatelessWidget {
                   text: text,
                   maxLines: 6,
                   style: theme.textTheme.bodyMedium,
+                  selectable: false,
                 ),
               )
             else
@@ -78,7 +79,11 @@ class FanartCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: ClipRect(
-                      child: DynamicRichText(text: text, maxLines: 6),
+                      child: DynamicRichText(
+                        text: text,
+                        maxLines: 6,
+                        selectable: false,
+                      ),
                     ),
                   ),
                 ),

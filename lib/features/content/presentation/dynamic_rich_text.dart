@@ -11,11 +11,16 @@ class DynamicRichText extends StatelessWidget {
     this.media = const [],
     this.maxLines,
     this.style,
+    this.selectable = true,
   });
   final String text;
   final List<DynamicMedia> media;
   final int? maxLines;
   final TextStyle? style;
+
+  /// A preview inside a tappable card must not select: a selection region
+  /// wins the tap and the card would never open.
+  final bool selectable;
 
   static final _tokens = RegExp(r'\[[^\]\n]{1,80}\]');
   static String stickerKey(String label) =>
@@ -86,13 +91,12 @@ class DynamicRichText extends StatelessWidget {
       offset = match.end;
     }
     if (offset < text.length) spans.add(TextSpan(text: text.substring(offset)));
-    return SelectionArea(
-      child: Text.rich(
-        TextSpan(children: spans),
-        maxLines: maxLines,
-        overflow: maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
-        style: style ?? Theme.of(context).textTheme.bodyLarge,
-      ),
+    final rich = Text.rich(
+      TextSpan(children: spans),
+      maxLines: maxLines,
+      overflow: maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
+      style: style ?? Theme.of(context).textTheme.bodyLarge,
     );
+    return selectable ? SelectionArea(child: rich) : rich;
   }
 }

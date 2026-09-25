@@ -164,8 +164,7 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('搜索'));
-    await tester.pumpAndSettle();
+    // Search is an inline field at the head of the feed.
     await tester.enterText(find.byType(TextField), '生日');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();

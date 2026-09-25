@@ -7,6 +7,7 @@ import 'package:asasfans_next/features/content/application/content_providers.dar
 import 'package:asasfans_next/features/content/domain/dynamic_repository.dart';
 import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
 import 'package:asasfans_next/features/today/presentation/on_this_day_section.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -131,7 +132,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(repository.calls, 1);
 
-    await tester.tap(find.widgetWithText(OutlinedButton, '重试'));
+    await tester.tap(find.widgetWithText(AppButton, '重试'));
     await tester.pumpAndSettle();
 
     expect(repository.calls, 2);

@@ -74,7 +74,10 @@ void main() {
               ),
             ),
             routes: [
-              GoRoute(path: '/content', builder: (_, _) => const ContentPage()),
+              GoRoute(
+                path: '/content',
+                builder: (_, _) => const ContentPage(channel: 'fanart'),
+              ),
             ],
           ),
         ],
@@ -99,10 +102,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FanartImageViewer), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
-      await tester.pageBack();
+      // The pages use the app's own bar, so go back the way Android does.
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(FanartDetailPage), findsOneWidget);
-      await tester.pageBack();
+      // The pages use the app's own bar, so go back the way Android does.
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(find.text('作品 0'), findsOneWidget);

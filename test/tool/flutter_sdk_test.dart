@@ -106,7 +106,7 @@ void main() {
     ).readAsStringSync();
     expect(
       RegExp("flutter-version: '$version'").allMatches(workflow),
-      hasLength(2),
+      hasLength(1),
     );
     final developmentWorkflow = File(
       '.github/workflows/flutter-development-validation.yml',

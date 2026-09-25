@@ -15,6 +15,7 @@ import 'package:asasfans_next/features/library/presentation/calendar_follows.dar
 import 'package:asasfans_next/features/library/presentation/content_actions.dart';
 import 'package:asasfans_next/features/library/presentation/library_pages.dart';
 import 'package:asasfans_next/features/library/presentation/saved_content_page.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -112,7 +113,12 @@ void main() {
             .value,
         isTrue,
       );
-      await tester.tap(find.widgetWithText(SwitchListTile, '稍后看'));
+      await tester.tap(
+        find.descendant(
+          of: find.widgetWithText(ListTile, '稍后看'),
+          matching: find.byType(Switch),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(await repository.later(), hasLength(1));
       await tester.tap(find.text('新建收藏夹'));
@@ -121,11 +127,15 @@ void main() {
       // The save button stays disabled until the field reports a non-empty
       // value, so let that rebuild land before tapping it.
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, '保存'));
+      await tester.tap(find.widgetWithText(AppButton, '保存'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(CheckboxListTile, '精选'), findsOneWidget);
-      await tester.ensureVisible(find.widgetWithText(SwitchListTile, '订阅 作者'));
-      await tester.tap(find.widgetWithText(SwitchListTile, '订阅 作者'));
+      final subscribe = find.descendant(
+        of: find.widgetWithText(ListTile, '订阅 作者'),
+        matching: find.byType(Switch),
+      );
+      await tester.ensureVisible(subscribe);
+      await tester.tap(subscribe);
       await tester.pumpAndSettle();
       expect((await repository.subscriptions()).single.mid, '123');
     },
@@ -211,7 +221,7 @@ void main() {
       await repository.recordHistory(_item, HistoryAction.external);
       await tester.pumpWidget(_host(repository, const LibraryHistoryPage()));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ChoiceChip, '外部打开'));
+      await tester.tap(find.widgetWithText(AppChoice, '外部打开'));
       await tester.pumpAndSettle();
       expect(find.text('保存的作品'), findsOneWidget);
       await tester.tap(find.byTooltip('管理内容'));
@@ -237,14 +247,14 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'invalid');
       expect(
         tester
-            .widget<FilledButton>(find.widgetWithText(FilledButton, '订阅'))
+            .widget<AppButton>(find.widgetWithText(AppButton, '订阅'))
             .onPressed,
         isNull,
       );
       await tester.enterText(find.byType(TextField).first, '123');
       await tester.enterText(find.byType(TextField).last, '测试 UP');
       await tester.pump();
-      await tester.tap(find.widgetWithText(FilledButton, '订阅'));
+      await tester.tap(find.widgetWithText(AppButton, '订阅'));
       await tester.pumpAndSettle();
       expect(links.opened, isEmpty);
       expect((await repository.subscriptions()).single.mid, '123');

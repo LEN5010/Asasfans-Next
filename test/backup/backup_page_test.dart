@@ -5,6 +5,7 @@ import 'package:asasfans_next/features/backup/application/backup_providers.dart'
 import 'package:asasfans_next/features/backup/data/backup_files.dart';
 import 'package:asasfans_next/features/backup/domain/personal_backup.dart';
 import 'package:asasfans_next/features/backup/presentation/backup_page.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -152,8 +153,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.widget<PopScope>(find.byType(PopScope)).canPop, isFalse);
       expect(
-        tester.widget<ListTile>(find.widgetWithText(ListTile, '导入备份')).enabled,
-        isFalse,
+        tester
+            .widget<AppButton>(find.widgetWithText(AppButton, '导入备份'))
+            .onPressed,
+        isNull,
       );
       expect(repo.merges, 1);
       repo.mergeGate!.complete();

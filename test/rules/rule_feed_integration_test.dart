@@ -87,7 +87,7 @@ void main() {
       libraryRepositoryProvider.overrideWithValue(library),
       fanartRepositoryProvider.overrideWithValue(source),
     ],
-    child: const MaterialApp(home: ContentPage()),
+    child: const MaterialApp(home: ContentPage(channel: 'fanart')),
   );
 
   testWidgets(

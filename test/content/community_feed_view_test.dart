@@ -53,7 +53,9 @@ void main() {
             ...offlineLibrary(),
             communityVideoRepositoryProvider.overrideWithValue(source),
           ],
-          child: MaterialApp(home: ContentPage(channel: entry.key)),
+          child: MaterialApp(
+            home: ContentPage(channel: 'videos', videoKind: entry.key),
+          ),
         ),
       );
       await tester.pumpAndSettle();

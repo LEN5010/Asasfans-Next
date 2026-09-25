@@ -1,6 +1,8 @@
 import 'package:asasfans_next/app/asasfans_app.dart';
 import 'package:asasfans_next/shared/theme/app_icons.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
+import 'package:asasfans_next/features/mine/presentation/mine_page.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,17 +68,31 @@ void main() {
       await tester.tap(find.text('我的').last);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
-        find.widgetWithText(ListTile, '内容规则'),
+        find.widgetWithText(AppButton, '内容规则'),
         180,
+        // Other branches keep their scrollables mounted offstage.
+        scrollable: find
+            .descendant(
+              of: find.byType(MinePage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ListTile, '内容规则'));
+      await tester.tap(find.widgetWithText(AppButton, '内容规则'));
       await tester.pumpAndSettle();
-      expect(find.text('视频默认过滤'), findsOneWidget);
+      // Built-in video filtering was silenced in c77045c; the page now opens
+      // on the user's own rules.
+      expect(find.byTooltip('添加规则'), findsOneWidget);
       expect(find.text('没有屏蔽规则'), findsOneWidget);
       expect(
         tester
-            .widget<SwitchListTile>(find.widgetWithText(SwitchListTile, '订阅优先'))
+            .widget<Switch>(
+              find.descendant(
+                of: find.widgetWithText(ListTile, '订阅优先'),
+                matching: find.byType(Switch),
+              ),
+            )
             .value,
         isFalse,
       );

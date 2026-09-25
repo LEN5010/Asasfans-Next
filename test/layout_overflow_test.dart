@@ -101,7 +101,7 @@ Widget _host(Widget home) => ProviderScope(
 void main() {
   final pages = <String, Widget>{
     '今日': const TodayPage(),
-    '内容·二创': const ContentPage(),
+    '内容·二创': const ContentPage(channel: 'fanart'),
     '内容·历史动态': const ContentPage(channel: 'dynamics'),
     '我的': const MinePage(),
     '二创详情': FanartDetailPage(item: _fanart('detail')),

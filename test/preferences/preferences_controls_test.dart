@@ -14,6 +14,7 @@ import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/library_fixture.dart';
 import '../helpers/preferences_fixture.dart';
 import '../helpers/today_fixture.dart';
 
@@ -110,6 +111,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            // Local stores stay in memory; the updates bell reads them too.
+            ...offlineLibrary(),
             preferencesRepositoryProvider.overrideWithValue(repository),
             currentTimeProvider.overrideWithValue(
               () => DateTime.utc(2026, 9, 21, 4),
@@ -144,7 +147,8 @@ void main() {
       expect(find.text('最新二创'), findsNothing);
       expect(find.text('最新切片'), findsNothing);
       expect(find.text('历史上的今天'), findsNothing);
-      expect(find.text('二创档案'), findsOneWidget);
+      // An all-hidden home explains itself instead of rendering blank.
+      expect(find.text('首页模块都已隐藏'), findsOneWidget);
       await tester.tap(find.byTooltip('刷新今日'));
       await tester.pumpAndSettle();
       expect(sourceLoads, 0);

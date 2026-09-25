@@ -14,6 +14,7 @@ import 'package:asasfans_next/features/content/presentation/video_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/today/application/today_providers.dart';
 import 'package:asasfans_next/features/today/presentation/today_page.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -202,7 +203,7 @@ void main() {
       calendar
         ..failure = null
         ..items = [_event('重试后安排', 21)];
-      await tester.tap(find.widgetWithText(OutlinedButton, '重试'));
+      await tester.tap(find.widgetWithText(AppButton, '重试'));
       await tester.pumpAndSettle();
       expect(calendar.forced, [false, false]);
       expect(find.text('重试后安排'), findsOneWidget);
@@ -228,7 +229,7 @@ void main() {
       expect(find.text('最新切片标题'), findsOneWidget);
       expect(find.text('今日歌会'), findsOneWidget);
       expect(find.text('网络连接失败'), findsOneWidget);
-      await tester.tap(find.widgetWithText(OutlinedButton, '重试'));
+      await tester.tap(find.widgetWithText(AppButton, '重试'));
       await tester.pumpAndSettle();
       expect(calls, 2);
       expect(find.text('最新二创正文'), findsOneWidget);
@@ -250,19 +251,19 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final refreshButton = find.ancestor(
+      final refreshButton = find.descendant(
         of: find.byTooltip('刷新今日'),
-        matching: find.byType(IconButton),
+        matching: find.byType(TextButton),
       );
       await tester.tap(refreshButton);
       await tester.pump();
       // byTooltip matches the Tooltip, not the button it wraps.
-      expect(tester.widget<IconButton>(refreshButton).onPressed, isNull);
+      expect(tester.widget<TextButton>(refreshButton).onPressed, isNull);
       expect(calls, 2);
       expect(calendar.forced.where((forced) => forced), hasLength(1));
       pending.complete([_fanart]);
       await tester.pumpAndSettle();
-      expect(tester.widget<IconButton>(refreshButton).onPressed, isNotNull);
+      expect(tester.widget<TextButton>(refreshButton).onPressed, isNotNull);
     },
   );
 

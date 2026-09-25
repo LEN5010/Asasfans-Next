@@ -1,5 +1,6 @@
 import '../helpers/library_fixture.dart';
-import 'package:asasfans_next/shared/widgets/media_grid_delegate.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
@@ -7,6 +8,7 @@ import 'package:asasfans_next/features/content/domain/community_video_repository
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
+import 'package:asasfans_next/features/content/presentation/content_search_control.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/shared/widgets/app_page_bar.dart';
@@ -201,23 +203,26 @@ void main() {
         // of silently pushing content down.
         final toolbar = tester.getRect(find.byType(AppPageBar));
         expect(toolbar.height, lessThan(90));
-        final filters = tester.getRect(find.byType(FanartFilterBar));
+        // The feed's own search row leads it right under the bar, then the
+        // two quick-filter strips (members, categories).
+        final search = tester.getRect(find.byType(ContentSearchControl));
         expect(
-          filters.top - toolbar.bottom,
-          lessThan(8),
+          search.top - toolbar.bottom,
+          lessThan(12),
           reason: 'no band between them',
         );
-        expect(filters.height, lessThan(64));
+        final quick = tester.getRect(find.byType(FanartQuickFilters));
+        expect(quick.top - search.bottom, lessThan(12));
+        expect(quick.height, lessThan(84), reason: 'two compact chip strips');
+        final filters = tester.getRect(find.byType(FanartFilterBar));
         final firstCard = tester.getTopLeft(find.byType(FanartCard).first).dy;
         expect(
           firstCard - filters.bottom,
           lessThan(72),
           reason: 'only grid padding separates the filters from the first row',
         );
-        expect(
-          find.byType(TextField),
-          width >= 1040 ? findsOneWidget : findsNothing,
-        );
+        // Search is an inline field in the feed at every width.
+        expect(find.byType(TextField), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
@@ -274,7 +279,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('作品 kept'), findsOneWidget);
       expect(find.text('刷新失败，网络连接失败'), findsOneWidget);
-      expect(find.widgetWithText(OutlinedButton, '重试'), findsOneWidget);
+      expect(find.widgetWithText(AppButton, '重试'), findsOneWidget);
     },
   );
 
@@ -328,7 +333,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('网络连接失败'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, '重试'));
+    await tester.tap(find.widgetWithText(AppButton, '重试'));
     await tester.pumpAndSettle();
 
     expect(find.text('作品 p0i0'), findsOneWidget);
@@ -366,7 +371,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(repository.queries.last.characters, isEmpty);
 
-    await tester.tap(find.widgetWithText(FilterChip, '嘉然'));
+    await tester.tap(find.text('嘉然'));
     await tester.pumpAndSettle();
 
     expect(repository.queries.last.characters, {FanartCharacter.diana});
@@ -379,8 +384,6 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('搜索'));
-    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '嘉然');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
@@ -410,9 +413,7 @@ void main() {
       final repository = _StubRepository();
       await tester.pumpWidget(_app(repository));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilterChip, '嘉然'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('搜索'));
+      await tester.tap(find.text('嘉然'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '生日');
       await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -457,10 +458,9 @@ void main() {
     await tester.pumpWidget(_app(_StubRepository()));
     await tester.pumpAndSettle();
 
-    final grid = tester.widget<SliverGrid>(find.byType(SliverGrid));
-    final delegate = grid.gridDelegate as MediaGridDelegate;
-    // 320 - 32 padding leaves room for one card above the readable floor.
-    expect(delegate.crossAxisCount, 1);
+    // Fanart is a lazy masonry; 320 - 32 padding leaves room for one
+    // readable column above the 160 floor.
+    expect(_masonryColumns(tester), 1);
   });
 
   testWidgets('wide windows use more columns than a phone', (tester) async {
@@ -472,10 +472,14 @@ void main() {
     await tester.pumpWidget(_app(_StubRepository()));
     await tester.pumpAndSettle();
 
-    final grid = tester.widget<SliverGrid>(find.byType(SliverGrid));
-    final delegate = grid.gridDelegate as MediaGridDelegate;
-    expect(delegate.crossAxisCount, greaterThan(2));
+    expect(_masonryColumns(tester), greaterThan(2));
   });
+}
+
+int _masonryColumns(WidgetTester tester) {
+  final grid = tester.widget<SliverMasonryGrid>(find.byType(SliverMasonryGrid));
+  return (grid.gridDelegate as SliverSimpleGridDelegateWithFixedCrossAxisCount)
+      .crossAxisCount;
 }
 
 /// The clips channel must never reach the live community endpoint in a widget test.

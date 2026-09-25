@@ -214,6 +214,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                         ],
                         if (showClips) clipsShelf,
                         if (showFanart) fanartShelf,
+                        // Every module hidden is a choice, not a failure:
+                        // say so and point at the setting that undoes it.
+                        if (!calendar && !history && !showClips && !showFanart)
+                          const Padding(padding: edge, child: _AllHidden()),
                       ].indexed)
                         Padding(
                           padding: EdgeInsets.only(top: index == 0 ? 0 : 20),
@@ -488,6 +492,23 @@ class _EmptySection extends StatelessWidget {
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
+  );
+}
+
+class _AllHidden extends StatelessWidget {
+  const _AllHidden();
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const _EmptySection('首页模块都已隐藏'),
+      const SizedBox(height: 8),
+      AppButton.withIcon(
+        icon: const Icon(Icons.tune),
+        label: const Text('在“我的 · 偏好”中显示模块'),
+        onPressed: () => context.go('/mine'),
+      ),
+    ],
   );
 }
 

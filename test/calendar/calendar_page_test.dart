@@ -4,6 +4,7 @@ import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_page.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -167,7 +168,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('周边首发'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, '直播'));
+    await tester.tap(find.widgetWithText(AppChoice, '直播'));
     await tester.pumpAndSettle();
 
     expect(find.text('嘉然杂谈'), findsOneWidget);
@@ -218,7 +219,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('网络连接失败'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, '重试'));
+    await tester.tap(find.widgetWithText(AppButton, '重试'));
     await tester.pumpAndSettle();
 
     expect(repository.calls, greaterThan(1));

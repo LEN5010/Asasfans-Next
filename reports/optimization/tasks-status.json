@@ -1,0 +1,297 @@
+{
+ "baseline_commit": "98e52c291f7aa94d8344f43ec6df0a9fd52cff27",
+ "tasks": [
+  {
+   "id": "T01",
+   "stage": "P0",
+   "title": "固定基线与功能保持合同",
+   "conditional": false,
+   "status": "verified",
+   "evidence": [
+    "HEAD 98e52c2 clean; toolchain in LEDGER.md; reports/optimization/FEATURE_MATRIX.md"
+   ]
+  },
+  {
+   "id": "T02",
+   "stage": "P0",
+   "title": "工具链与现有测试预检",
+   "conditional": false,
+   "status": "verified",
+   "evidence": [
+    "verify-sdk exit 0; pub get --enforce-lockfile exit 0; analyze exit 0; baseline test exit 1 (641/33) classified in run-01/baseline-failures.md; after finder repair: analyze 0, format 0, test 0 (674 pass)"
+   ]
+  },
+  {
+   "id": "T03",
+   "stage": "P0",
+   "title": "定义基准场景与最小测量支架",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T04",
+   "stage": "P1",
+   "title": "独立 perf 构建与签名保护",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T05",
+   "stage": "P1",
+   "title": "未改业务的 AOT 基线与分 ABI 构建",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T06",
+   "stage": "P1",
+   "title": "必要依赖与资源成本审计",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T07",
+   "stage": "P2",
+   "title": "统一玻璃有效档与自适应实验",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T08",
+   "stage": "P2",
+   "title": "高频图片请求与解码尺寸统一",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T09",
+   "stage": "P2",
+   "title": "详情大图与超长图资源管理",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T10",
+   "stage": "P2",
+   "title": "先修返回锚点与频道查询恢复",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T11",
+   "stage": "P2",
+   "title": "频道驻留与重资源释放",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T12",
+   "stage": "P2",
+   "title": "视频布局与规则投影减负",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T13",
+   "stage": "P2",
+   "title": "SQL 往返测量与最小批处理",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T14",
+   "stage": "P2",
+   "title": "可见性刷新与首屏订阅收敛",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T15",
+   "stage": "P3",
+   "title": "统一 token、信息密度与触摸目标",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T16",
+   "stage": "P3",
+   "title": "导航外壳与宽屏适配",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T17",
+   "stage": "P3",
+   "title": "共享搜索筛选与异步状态组件",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T18",
+   "stage": "P3",
+   "title": "材料、动效与无障碍收口",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T19",
+   "stage": "P4",
+   "title": "今日：以接下来的事情为中心",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T20",
+   "stage": "P4",
+   "title": "视频：紧凑发现与明确外跳",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T21",
+   "stage": "P4",
+   "title": "二创：作品优先且保留完整查看",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T22",
+   "stage": "P4",
+   "title": "动态：阅读层级与多媒体稳定",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T23",
+   "stage": "P4",
+   "title": "小说：克制阅读模式",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T24",
+   "stage": "P4",
+   "title": "日历：今天议程、周/月与变动",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T25",
+   "stage": "P4",
+   "title": "我的：本地资料、偏好与备份",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T26",
+   "stage": "P4",
+   "title": "工具入口与真实更新能力",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T27",
+   "stage": "P4",
+   "title": "Android 返回按钮与跨应用闭环",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T28",
+   "stage": "P5",
+   "title": "跨平台构建与输入 smoke",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T29",
+   "stage": "P5",
+   "title": "功能回归与构建验收",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T30",
+   "stage": "P5",
+   "title": "视觉回归与实际使用走查",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T31",
+   "stage": "P5",
+   "title": "同设备 B0/B1 性能与体积比较",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T32",
+   "stage": "P5",
+   "title": "独立审查、回退与最终交付",
+   "conditional": false,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T33",
+   "stage": "CONDITIONAL",
+   "title": "只在重复下载被证实后增加有界磁盘缓存",
+   "conditional": true,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T34",
+   "stage": "CONDITIONAL",
+   "title": "SQL 长驻 worker",
+   "conditional": true,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T35",
+   "stage": "CONDITIONAL",
+   "title": "大 ICS 解析的后台执行",
+   "conditional": true,
+   "status": "not_started",
+   "evidence": []
+  },
+  {
+   "id": "T36",
+   "stage": "CONDITIONAL",
+   "title": "经过性能验收后的 Premium 精细交互",
+   "conditional": true,
+   "status": "not_started",
+   "evidence": []
+  }
+ ]
+}

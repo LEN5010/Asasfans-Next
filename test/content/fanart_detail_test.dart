@@ -204,21 +204,31 @@ void main() {
             ...offlineLibrary(),
             fanartRepositoryProvider.overrideWithValue(repository),
           ],
-          child: const MaterialApp(home: ContentPage()),
+          child: const MaterialApp(home: ContentPage(channel: 'fanart')),
         ),
       );
       await tester.pumpAndSettle();
 
-      // The filter bar is also scrollable, so target the grid explicitly.
-      final grid = find.descendant(
-        of: find.byType(CustomScrollView),
-        matching: find.byType(Scrollable),
-      );
+      // The quick-filter strips are also scrollable, so target the feed's own
+      // vertical scrollable explicitly.
+      final grid = find
+          .descendant(
+            of: find.byKey(const PageStorageKey('fanart-feed')),
+            matching: find.byType(Scrollable),
+          )
+          .first;
       // Scroll into the second page so there is a position worth preserving.
       await tester.scrollUntilVisible(
         find.text('作品 p1i0'),
         400,
         scrollable: grid,
+      );
+      // Bring it clear of the feed's floating search row before tapping.
+      await tester.runAsync(
+        () => Scrollable.ensureVisible(
+          tester.element(find.text('作品 p1i0')),
+          alignment: .5,
+        ),
       );
       await tester.pumpAndSettle();
       final requestsBefore = repository.requests;
@@ -228,7 +238,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FanartDetailPage), findsOneWidget);
 
-      await tester.pageBack();
+      // The pages use the app's own bar, so go back the way Android does.
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
       expect(tester.widget<Scrollable>(grid).controller!.offset, offset);
