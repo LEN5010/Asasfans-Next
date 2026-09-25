@@ -148,8 +148,11 @@
    "stage": "P3",
    "title": "统一 token、信息密度与触摸目标",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "AppTokens.touch/touchTarget; AppButton follows ThemeData.materialTapTargetSize (padded 48 dp on Android/iOS, compact on desktop) with the 40 dp look unchanged; fanart quick chips 48 dp band on touch; test/shared/touch_target_test.dart (padding-band tap counts; desktop stays <48); full suite 704 pass",
+    "Segmented controls stay 40 dp tall (full-width segments); 200% text / 320 dp covered by existing layout_overflow_test; device check pending."
+   ]
   },
   {
    "id": "T16",

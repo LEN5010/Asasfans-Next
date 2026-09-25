@@ -217,8 +217,9 @@ void main() {
           reason: 'no band between them',
         );
         final quick = tester.getRect(find.byType(FanartQuickFilters));
-        expect(quick.top - search.bottom, lessThan(12));
-        expect(quick.height, lessThan(84), reason: 'two compact chip strips');
+        expect(quick.top - search.bottom, lessThanOrEqualTo(12));
+        // Two 48 dp touch strips (30 dp pills) plus their gap, nothing more.
+        expect(quick.height, lessThanOrEqualTo(2 * 48 + 6));
         final filters = tester.getRect(find.byType(FanartFilterBar));
         final firstCard = tester.getTopLeft(find.byType(FanartCard).first).dy;
         expect(

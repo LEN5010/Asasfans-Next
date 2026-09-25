@@ -93,7 +93,10 @@ class AppButton extends StatelessWidget {
             filled ? AppTokens.inputRadius : radius,
           ),
         ),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        // The theme's choice: padded (48 dp hit area around the 40 dp look)
+        // on touch platforms, compact on pointer platforms, and compact where
+        // a surrounding control is the touch surface (see ContentSearchControl).
+        tapTargetSize: Theme.of(context).materialTapTargetSize,
         animationDuration: AppGlassScope.of(context).canAnimate
             ? AppTokens.pressMotion
             : Duration.zero,

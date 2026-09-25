@@ -24,6 +24,18 @@ abstract final class AppTokens {
         TargetPlatform.android || TargetPlatform.iOS => 40,
         _ => MediaQuery.sizeOf(context).width < 600 ? 40 : 34,
       };
+
+  /// Whether this platform is operated by fingers. Visual size and hit area
+  /// are separate there: controls may look 40 dp, but are hit at 48 dp.
+  static bool touch(BuildContext context) =>
+      switch (Theme.of(context).platform) {
+        TargetPlatform.android || TargetPlatform.iOS => true,
+        _ => false,
+      };
+
+  /// The minimum hit area for a control (Android guidance: 48 × 48 dp).
+  static double touchTarget(BuildContext context) =>
+      touch(context) ? 48 : controlTarget(context);
   static const controlMotion = Duration(milliseconds: 220);
   static const pressMotion = Duration(milliseconds: 140);
   static const cardRadius = 14.0;

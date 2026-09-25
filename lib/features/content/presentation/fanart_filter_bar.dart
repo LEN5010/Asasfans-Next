@@ -69,7 +69,7 @@ class FanartQuickFilters extends StatelessWidget {
 }
 
 /// A 30px pill; the transparent band around it widens the touch area without
-/// making the strip taller to the eye.
+/// making the strip taller to the eye (48 dp on touch platforms).
 class _QuickChip extends StatelessWidget {
   const _QuickChip({
     required this.label,
@@ -91,7 +91,9 @@ class _QuickChip extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
+          padding: EdgeInsets.symmetric(
+            vertical: (AppTokens.touchTarget(context) - 30) / 2,
+          ),
           child: AnimatedContainer(
             duration: duration,
             curve: Curves.easeOutCubic,
