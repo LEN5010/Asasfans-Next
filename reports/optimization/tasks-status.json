@@ -114,8 +114,10 @@
    "stage": "P2",
    "title": "视频布局与规则投影减负",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "video grid: SliverGridDelegateWithFixedCrossAxisCount with one extent (VideoCard.extentForWidth) instead of an N-item extent list rebuilt + listEquals'd per build; geometry equality test over 5 widths x 3 text scales; RuleFilterScope single-entry identity memo (items list, RulesState object, subjectOf, allowPriority) + test (same inputs no re-eval; new page/rule edit re-project, rule applies immediately); fanart/dynamics keep masonry; full suite 695 pass"
+   ]
   },
   {
    "id": "T13",

@@ -7,9 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/feed_visibility.dart';
 import '../application/rules_providers.dart';
 import '../domain/content_rules.dart';
+import '../application/rules_controller.dart';
 import 'rule_common.dart';
 
-class RuleFilterScope<T> extends ConsumerWidget {
+class RuleFilterScope<T> extends ConsumerStatefulWidget {
   const RuleFilterScope({
     required this.items,
     required this.subjectOf,
@@ -23,8 +24,45 @@ class RuleFilterScope<T> extends ConsumerWidget {
   final Widget Function(FeedVisibility<T>) builder;
   final bool allowPriority;
   final Widget Function(Widget status)? unavailableBuilder;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RuleFilterScope<T>> createState() => _RuleFilterScopeState<T>();
+}
+
+class _RuleFilterScopeState<T> extends ConsumerState<RuleFilterScope<T>> {
+  // One remembered projection. Feed states and rule states are immutable, so
+  // the same list and the same rules object always project the same way;
+  // anything else (new page, rule edit, expiry tick) is a new object.
+  List<T>? _items;
+  RulesState? _policy;
+  bool? _allowPriority;
+  RuleSubject Function(T)? _subjectOf;
+  FeedVisibility<T>? _projection;
+
+  FeedVisibility<T> _project(RulesState policy) {
+    final items = widget.items;
+    if (_projection == null ||
+        !identical(_items, items) ||
+        !identical(_policy, policy) ||
+        !identical(_subjectOf, widget.subjectOf) ||
+        _allowPriority != widget.allowPriority) {
+      _projection = projectFeed(
+        items,
+        widget.subjectOf,
+        policy,
+        allowPriority: widget.allowPriority,
+      );
+      _items = items;
+      _policy = policy;
+      _allowPriority = widget.allowPriority;
+      _subjectOf = widget.subjectOf;
+    }
+    return _projection!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unavailableBuilder = widget.unavailableBuilder;
     final policy = ref.watch(rulesControllerProvider);
     if (policy.loading) {
       const status = Center(
@@ -55,9 +93,7 @@ class RuleFilterScope<T> extends ConsumerWidget {
       );
       return unavailableBuilder?.call(status) ?? status;
     }
-    return builder(
-      projectFeed(items, subjectOf, policy, allowPriority: allowPriority),
-    );
+    return widget.builder(_project(policy));
   }
 }
 

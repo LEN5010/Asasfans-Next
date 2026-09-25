@@ -89,4 +89,53 @@ void main() {
     expect(MediaGridDelegate.columnsFor(390, textScale: 2), 1);
     expect(MediaGridDelegate.columnsFor(1600), 5);
   });
+
+  test(
+    'the fixed-extent video grid lays out exactly like per-item extents',
+    () {
+      for (final width in [320.0, 390.0, 760.0, 1100.0, 1400.0]) {
+        for (final scale in [1.0, 1.3, 2.0]) {
+          final scaler = TextScaler.linear(scale);
+          final columns = MediaGridDelegate.columnsFor(width, textScale: scale);
+          final cell = MediaGridDelegate.cellWidth(width, columns);
+          final gap = MediaGridDelegate.spacingFor(width);
+          // VideoCard.extentForWidth's formula, restated so the test does not
+          // depend on the widget library.
+          final extent =
+              cell / (16 / 9) +
+              22 +
+              (scaler.scale(14) * 1.4).ceilToDouble() * 2 +
+              (scaler.scale(12) * 1.35).ceilToDouble() +
+              4 +
+              (scaler.scale(11) * 1.35).ceilToDouble();
+          final constraints = _constraints().copyWith(
+            crossAxisExtent: width - 32,
+          );
+          final before = MediaGridDelegate(
+            crossAxisCount: columns,
+            spacing: gap,
+            itemExtents: List.filled(41, extent),
+          ).getLayout(constraints);
+          final after = SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: gap,
+            crossAxisSpacing: gap,
+            mainAxisExtent: extent,
+          ).getLayout(constraints);
+          for (var index = 0; index < 41; index++) {
+            final a = before.getGeometryForChildIndex(index);
+            final b = after.getGeometryForChildIndex(index);
+            expect(b.scrollOffset, closeTo(a.scrollOffset, 1e-6));
+            expect(b.crossAxisOffset, closeTo(a.crossAxisOffset, 1e-6));
+            expect(b.mainAxisExtent, closeTo(a.mainAxisExtent, 1e-6));
+            expect(b.crossAxisExtent, closeTo(a.crossAxisExtent, 1e-6));
+          }
+          expect(
+            after.computeMaxScrollOffset(41),
+            closeTo(before.computeMaxScrollOffset(41), 1e-6),
+          );
+        }
+      }
+    },
+  );
 }

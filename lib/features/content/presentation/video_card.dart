@@ -26,11 +26,15 @@ class VideoCard extends ConsumerWidget {
   /// in a channel and on a creator page, so the caller owns this.
   final WatchOrigin origin;
 
+  /// Per-item form for shelves that mix card kinds; a video's height never
+  /// depends on the video itself.
   static double extentFor(
     VideoSummary video,
     double width,
     TextScaler scaler,
-  ) =>
+  ) => extentForWidth(width, scaler);
+
+  static double extentForWidth(double width, TextScaler scaler) =>
       width / (16 / 9) +
       MediaCardMetrics.caption(scaler) +
       4 +

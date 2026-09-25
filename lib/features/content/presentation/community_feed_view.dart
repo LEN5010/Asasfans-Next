@@ -207,13 +207,18 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               sliver: SliverGrid.builder(
-                gridDelegate: MediaGridDelegate(
-                  spacing: MediaGridDelegate.spacingFor(constraints.maxWidth),
+                // Every video card has the same height for a given width and
+                // text scale, so the grid needs one extent rather than a list
+                // rebuilt and compared for every loaded video.
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
-                  itemExtents: [
-                    for (final video in state.videos)
-                      VideoCard.extentFor(video, width, scaler),
-                  ],
+                  mainAxisSpacing: MediaGridDelegate.spacingFor(
+                    constraints.maxWidth,
+                  ),
+                  crossAxisSpacing: MediaGridDelegate.spacingFor(
+                    constraints.maxWidth,
+                  ),
+                  mainAxisExtent: VideoCard.extentForWidth(width, scaler),
                 ),
                 itemCount: state.videos.length,
                 itemBuilder: (_, index) => VideoCard(
