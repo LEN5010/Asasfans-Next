@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/widgets.dart';
 
 /// Keeps a feed's scroll offset across an unmount that its data survives.
@@ -14,6 +15,11 @@ mixin FeedOffsetMemory<T extends StatefulWidget> on State<T> {
 
   PageStorageBucket? _bucket;
   ScrollController? _controller;
+  bool _settling = false;
+
+  /// Stops re-applying the remembered offset, for a caller that is about to
+  /// set the position itself (a return restore).
+  void cancelOffsetSettle() => _settling = false;
 
   /// The controller to hand the feed's scroll view. Create it once, on first
   /// use in build, so the stored offset is already readable.
@@ -21,7 +27,10 @@ mixin FeedOffsetMemory<T extends StatefulWidget> on State<T> {
     if (_controller case final controller?) return controller;
     final saved =
         _bucket?.readState(context, identifier: offsetStorageId) as double?;
-    if (saved != null && saved > 0) _settle(saved, 3);
+    if (saved != null && saved > 0) {
+      _settling = true;
+      _settle(saved, 3);
+    }
     return _controller = ScrollController(
       initialScrollOffset: saved ?? 0,
       keepScrollOffset: false,
@@ -34,11 +43,25 @@ mixin FeedOffsetMemory<T extends StatefulWidget> on State<T> {
   void _settle(double offset, int frames) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = _controller;
-      if (!mounted || controller == null || !controller.hasClients) return;
+      if (!_settling ||
+          !mounted ||
+          controller == null ||
+          !controller.hasClients) {
+        return;
+      }
       final position = controller.position;
-      if ((position.pixels - offset).abs() < .5) return;
+      // The user took over, or the offset is reached: stop.
+      if (position.userScrollDirection != ScrollDirection.idle ||
+          (position.pixels - offset).abs() < .5) {
+        _settling = false;
+        return;
+      }
       controller.jumpTo(offset.clamp(0, position.maxScrollExtent));
-      if (frames > 1) _settle(offset, frames - 1);
+      if (frames > 1) {
+        _settle(offset, frames - 1);
+      } else {
+        _settling = false;
+      }
     });
   }
 

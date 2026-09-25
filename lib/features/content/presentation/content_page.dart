@@ -371,9 +371,17 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
           _controller.state.status == FeedStatus.idle ||
           _controller.state.status == FeedStatus.loadingFirstPage,
     );
+    // _visible is refreshed by the build that follows a change, not by it.
+    await WidgetsBinding.instance.endOfFrame;
     // Only a bounded restore: a few more pages at most, never page after
     // page to reach a deep position.
     for (var page = 0; page < restorePageBudget; page++) {
+      // The viewport may be filling itself; let that page land first.
+      await waitForFirstPage(
+        _controller,
+        () => _controller.state.status == FeedStatus.appending,
+      );
+      await WidgetsBinding.instance.endOfFrame;
       if (!mounted ||
           _visible.contains(anchor.identity) ||
           _controller.state.status != FeedStatus.ready ||
@@ -382,10 +390,13 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
       }
       await _controller.loadMore();
     }
+    await WidgetsBinding.instance.endOfFrame;
     // Restore against the restored list's layout, not the loading
     // placeholder's zero scroll extent.
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
+    // The return decides the position now, not a remembered offset.
+    cancelOffsetSettle();
     final result = await restoreAnchor(
       scope: context,
       controller: _scrollController,

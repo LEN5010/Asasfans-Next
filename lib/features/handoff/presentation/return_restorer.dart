@@ -119,6 +119,8 @@ class _ReturnRestorerState extends ConsumerState<ReturnRestorer>
     final claimed = await coordinator.consume(pending.sessionId);
     // Losing the race means something else already restored this trip.
     if (claimed == null || !mounted) return;
+    // Only a cold start rebuilds the list it lands on.
+    coordinator.grantListRestore(claimed.sessionId);
     _navigate(claimed);
   }
 

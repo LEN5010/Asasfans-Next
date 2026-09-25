@@ -41,4 +41,6 @@ tool/flutterw build apk --profile --target-platform android-arm64 --no-pub -Pasa
 python3 tool/audit_apk.py build/app/outputs/flutter-apk/app-arm64-v8a-release.apk --output build/perf/arm64.json
 ```
 
+Android profile 构建只作为测量用途：不带 `-Pasasfans.perf=true` 会直接失败，避免产出以 debug key 签名的 `asasfans.next`。
+
 `audit_apk.py` 只读统计 APK 内各项的存储字节（不是安装占用），不证明签名或 debuggable；这两项用 `aapt2 dump badging` 与 `apksigner verify --print-certs` 检查。CI 入口是手动触发的 `Flutter Performance Validation` 工作流，只上传构建证据，不发布。

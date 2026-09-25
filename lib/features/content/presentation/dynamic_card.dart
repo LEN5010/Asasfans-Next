@@ -288,6 +288,8 @@ class DynamicCard extends ConsumerWidget {
                     media: [...post.media, ...?original?.media],
                     maxLines: 3,
                     style: theme.textTheme.bodyMedium,
+                    // The preview opens on tap; selection would swallow it.
+                    selectable: false,
                   ),
                 ),
                 if (cover != null) ...[

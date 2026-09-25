@@ -183,10 +183,19 @@ tasks.matching { it.name == "preReleaseBuild" }.configureEach {
     }
 }
 
-// A perf profile build is only ever the isolated identity with a test key.
+// A profile build is only ever the isolated perf identity with a test key.
 tasks.matching { it.name == "preProfileBuild" }.configureEach {
     doFirst {
         if (perfBuild && !perfSigningReady) throw GradleException(perfSigningMissing)
+        // Without the perf identity a profile build is asasfans.next signed
+        // with the debug key: the artifact the release gate exists to stop.
+        if (!perfBuild) {
+            throw GradleException(
+                "Android profile builds are measurement builds. Add " +
+                    "-Pasasfans.perf=true (and a perf signature) so they install as " +
+                    "asasfans.next.perf, never as asasfans.next."
+            )
+        }
     }
 }
 

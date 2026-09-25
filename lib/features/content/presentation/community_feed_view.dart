@@ -99,7 +99,15 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
           _controller.state.status == FeedStatus.idle ||
           _controller.state.status == FeedStatus.loadingFirstPage,
     );
+    // _visible is refreshed by the build that follows a change, not by it.
+    await WidgetsBinding.instance.endOfFrame;
     for (var page = 0; page < restorePageBudget; page++) {
+      // The viewport may be filling itself; let that page land first.
+      await waitForFirstPage(
+        _controller,
+        () => _controller.state.status == FeedStatus.appending,
+      );
+      await WidgetsBinding.instance.endOfFrame;
       if (!mounted ||
           _visible.contains(anchor.identity) ||
           _controller.state.status != FeedStatus.ready) {
@@ -108,7 +116,10 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
       await _controller.loadMore();
     }
     await WidgetsBinding.instance.endOfFrame;
+    await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
+    // The return decides the position now, not a remembered offset.
+    cancelOffsetSettle();
     final result = await restoreAnchor(
       scope: context,
       controller: _scrollController,

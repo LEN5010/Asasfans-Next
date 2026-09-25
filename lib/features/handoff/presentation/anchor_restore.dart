@@ -103,7 +103,8 @@ Future<AnchorRestore> restoreAnchor({
 const restorePageBudget = 3;
 
 /// Completes once [loading] turns false, or after a bound: a restore never
-/// waits on the network indefinitely.
+/// waits on the network indefinitely. Used for the first page and for an
+/// append already in flight.
 Future<void> waitForFirstPage(Listenable feed, bool Function() loading) async {
   if (!loading()) return;
   final done = Completer<void>();

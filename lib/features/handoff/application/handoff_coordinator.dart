@@ -172,17 +172,19 @@ class HandoffCoordinator extends ChangeNotifier {
   /// re-dispatching the original URL would bounce them straight out again.
   Future<ReturnContext?> consume(String sessionId) async {
     try {
-      final claimed = await _store.consume(sessionId);
-      if (claimed != null) _consumedHere.add(claimed.sessionId);
-      return claimed;
+      return await _store.consume(sessionId);
     } catch (_) {
       return null;
     }
   }
 
-  /// Sessions this process consumed. A consumed row outlives the process,
-  /// and a later launch must not replay an old trip's query and position.
-  final _consumedHere = <String>{};
+  /// Sessions a cold start navigated back to in this process. Only those
+  /// rebuild a list once consumed: a warm return (or a later launch) left
+  /// the list alive or is history, and must not replay an old position.
+  final _coldRestores = <String>{};
+
+  /// Called by the restorer when a cold start navigates to [sessionId]'s list.
+  void grantListRestore(String sessionId) => _coldRestores.add(sessionId);
 
   /// (session, channel) pairs whose list context was already handed out.
   final _restoredLists = <(String, String)>{};
@@ -191,14 +193,14 @@ class HandoffCoordinator extends ChangeNotifier {
   /// once per session.
   ///
   /// Either the return has not been consumed yet (the feed was built before
-  /// the restorer claimed it) or this process consumed it. A session some
-  /// earlier launch consumed is history, not a return.
+  /// the restorer claimed it) or this process's cold start navigated to it.
+  /// A warm return, or a session some earlier launch consumed, is not.
   Future<ReturnContext?> listRestoreFor(String channel) async {
     final context = await lastReturn();
     if (context == null ||
         context.target != ReturnTarget.contentChannel ||
         context.channel != channel ||
-        (context.consumed && !_consumedHere.contains(context.sessionId)) ||
+        (context.consumed && !_coldRestores.contains(context.sessionId)) ||
         !_restoredLists.add((context.sessionId, channel))) {
       return null;
     }

@@ -83,19 +83,28 @@ void main() {
   });
   tearDown(() => db.close());
 
-  Future<void> pumpChannel(WidgetTester tester) async {
+  Future<void> pumpChannel(
+    WidgetTester tester, {
+    void Function(ProviderContainer)? beforeSettle,
+  }) async {
     tester.view
       ..physicalSize = const Size(1000, 900)
       ..devicePixelRatio = 1;
     addTearDown(tester.view.reset);
+    final container = ProviderContainer(
+      overrides: [
+        ...offlineLibrary(),
+        returnStoreProvider.overrideWithValue(store),
+        fanartRepositoryProvider.overrideWithValue(repository),
+        externalLinkServiceProvider.overrideWithValue(links),
+      ],
+    );
+    addTearDown(container.dispose);
+    // Before the first frame, as the restorer grants before navigating.
+    beforeSettle?.call(container);
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          ...offlineLibrary(),
-          returnStoreProvider.overrideWithValue(store),
-          fanartRepositoryProvider.overrideWithValue(repository),
-          externalLinkServiceProvider.overrideWithValue(links),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const MaterialApp(home: ContentPage(channel: 'fanart')),
       ),
     );
@@ -286,5 +295,46 @@ void main() {
     );
     await pumpChannel(tester);
     expect(repository.queries.single, const FanartQuery());
+  });
+
+  testWidgets('a warm return is not replayed when the feed is rebuilt', (
+    tester,
+  ) async {
+    await seedSession(
+      channel: 'fanart',
+      query: ChannelSpec.ofFanart(const FanartQuery(keyword: '旧的')).values,
+    );
+    // The warm path consumes quietly: the list was alive, nothing to rebuild.
+    await store.consume('session-1');
+    await pumpChannel(tester);
+    expect(repository.queries.single, const FanartQuery());
+  });
+
+  testWidgets('a cold start rebuilds the list it navigated to', (tester) async {
+    await seedSession(
+      channel: 'fanart',
+      query: ChannelSpec.ofFanart(const FanartQuery(keyword: '生日')).values,
+    );
+    await store.consume('session-1');
+    await pumpChannel(
+      tester,
+      beforeSettle: (container) => container
+          .read(handoffCoordinatorProvider)
+          .grantListRestore('session-1'),
+    );
+    expect(repository.queries.last.keyword, '生日');
+  });
+
+  testWidgets('an anchor already on the first page fetches nothing more', (
+    tester,
+  ) async {
+    repository = _Recording(pageSize: 48, pages: 3);
+    await seedSession(
+      channel: 'fanart',
+      anchor: ReturnAnchor(identity: _item('10').identity),
+    );
+    await pumpChannel(tester);
+    expect(onScreen(tester, '作品 10'), isTrue);
+    expect(repository.cursors, [null]);
   });
 }
