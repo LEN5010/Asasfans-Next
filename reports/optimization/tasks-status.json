@@ -124,8 +124,10 @@
    "stage": "P2",
    "title": "SQL 往返测量与最小批处理",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "host benchmark + batch counts in run-02/T13-sql.md; no merge needed; durability/identity untouched"
+   ]
   },
   {
    "id": "T14",
@@ -295,8 +297,10 @@
    "stage": "CONDITIONAL",
    "title": "SQL 长驻 worker",
    "conditional": true,
-   "status": "not_started",
-   "evidence": []
+   "status": "not_applicable",
+   "evidence": [
+    "Lifecycle dominates per batch (~2 ms host p50 vs 0.02-0.04 ms SQL) but only 4 batches at cold start and <=1 per tab switch, off the UI isolate; worker would reintroduce long-lived native handles. See run-02/T13-sql.md"
+   ]
   },
   {
    "id": "T35",
