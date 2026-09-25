@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter/services.dart';
 
+import '../../../shared/widgets/media_image_policy.dart';
+
 /// Root-navigator artwork route: touch/trackpad zoom, keyboard paging and a
 /// separate fit-width reading mode for very long images.
 class FanartImageViewer extends StatefulWidget {
@@ -228,13 +230,16 @@ class _FanartImageViewerState extends State<FanartImageViewer> {
     ),
   );
 
-  Widget _image(int index, {bool fitWidth = false}) => Image.network(
-    widget.images[index].toString(),
+  // The original, decoded to the viewport width and a total-pixel budget, so
+  // a very long image cannot allocate an unbounded texture.
+  Widget _image(int index, {bool fitWidth = false}) => Image(
+    image: MediaImagePolicy.original(
+      widget.images[index],
+      viewportWidth: _viewport.width,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+    ),
     width: fitWidth ? _viewport.width : null,
     fit: fitWidth ? BoxFit.fitWidth : BoxFit.contain,
-    cacheWidth: (_viewport.width * MediaQuery.devicePixelRatioOf(context))
-        .ceil()
-        .clamp(640, 2560),
     errorBuilder: (_, _, _) => const Padding(
       padding: EdgeInsets.all(24),
       child: Text('图片加载失败', style: TextStyle(color: Colors.white70)),

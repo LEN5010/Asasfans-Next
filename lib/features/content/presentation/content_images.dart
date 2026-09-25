@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/media_cover.dart';
+import '../../../shared/widgets/media_image_policy.dart';
 import 'fanart_image_viewer.dart';
 
 class ContentAvatar extends StatelessWidget {
@@ -35,8 +35,12 @@ class ContentAvatar extends StatelessWidget {
         child: ClipOval(
           child: image == null
               ? fallback
-              : Image.network(
-                  displayImageUri(image!, width: 96).toString(),
+              : Image(
+                  image: MediaImagePolicy.preview(
+                    image!,
+                    logicalWidth: size,
+                    devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                  ),
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => fallback,
                 ),
@@ -64,13 +68,20 @@ class ContentImageGallery extends StatelessWidget {
     if (images.isEmpty) return const SizedBox.shrink();
     Widget image(int index, {bool square = false}) {
       final uri = images[index];
-      final photo = Image.network(
-        displayImageUri(uri).toString(),
-        width: double.infinity,
-        fit: square || preview ? BoxFit.contain : BoxFit.fitWidth,
-        errorBuilder: (_, _, _) => const SizedBox(
-          height: 100,
-          child: Center(child: Icon(Icons.broken_image_outlined)),
+      // Decoded for the width it is drawn at; the viewer opens the original.
+      final photo = LayoutBuilder(
+        builder: (context, constraints) => Image(
+          image: MediaImagePolicy.preview(
+            uri,
+            logicalWidth: constraints.maxWidth,
+            devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+          ),
+          width: double.infinity,
+          fit: square || preview ? BoxFit.contain : BoxFit.fitWidth,
+          errorBuilder: (_, _, _) => const SizedBox(
+            height: 100,
+            child: Center(child: Icon(Icons.broken_image_outlined)),
+          ),
         ),
       );
       final ratio = aspectRatios[uri];

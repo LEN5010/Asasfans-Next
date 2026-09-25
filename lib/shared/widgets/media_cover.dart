@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_tokens.dart';
 import 'app_motion.dart';
+import 'media_image_policy.dart';
 
 /// Presentation-only CDN transform. Never mutate the URI kept by the model.
 Uri displayImageUri(Uri uri, {int width = 640}) {
@@ -44,30 +45,39 @@ class MediaCover extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         if (image != null)
-          Image.network(
-            displayImageUri(image!, width: 800).toString(),
-            fit: fit,
-            cacheWidth: 800,
-            errorBuilder: (_, _, _) => _fallback(context),
-            // A network cover cross-fades from the loading tone; a cached
-            // one appears at once.
-            frameBuilder: (_, child, frame, synchronous) => synchronous
-                ? child
-                : AnimatedSwitcher(
-                    duration: appMotion(context, AppTokens.controlMotion),
-                    layoutBuilder: (current, previous) => Stack(
-                      fit: StackFit.expand,
-                      children: [...previous, ?current],
+          // Decoded for the width this cover is drawn at, not a fixed 800.
+          LayoutBuilder(
+            builder: (context, constraints) => Image(
+              image: MediaImagePolicy.preview(
+                image!,
+                logicalWidth: constraints.maxWidth,
+                devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+              ),
+              fit: fit,
+              errorBuilder: (_, _, _) => _fallback(context),
+              // A network cover cross-fades from the loading tone; a cached
+              // one appears at once.
+              frameBuilder: (_, child, frame, synchronous) => synchronous
+                  ? child
+                  : AnimatedSwitcher(
+                      duration: appMotion(context, AppTokens.controlMotion),
+                      layoutBuilder: (current, previous) => Stack(
+                        fit: StackFit.expand,
+                        children: [...previous, ?current],
+                      ),
+                      child: frame == null
+                          ? ColoredBox(
+                              key: const ValueKey(false),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                            )
+                          : KeyedSubtree(
+                              key: const ValueKey(true),
+                              child: child,
+                            ),
                     ),
-                    child: frame == null
-                        ? ColoredBox(
-                            key: const ValueKey(false),
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                          )
-                        : KeyedSubtree(key: const ValueKey(true), child: child),
-                  ),
+            ),
           )
         else
           _fallback(context),

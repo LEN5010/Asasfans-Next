@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/media_cover.dart';
+import '../../../shared/widgets/media_image_policy.dart';
 import '../domain/dynamic_repository.dart';
 
 /// Only exact archive labels are replaced. Unrecognised tags stay readable text.
@@ -61,8 +61,14 @@ class DynamicRichText extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2),
                 child: url != null
-                    ? Image.network(
-                        displayImageUri(url, width: 96).toString(),
+                    ? Image(
+                        image: MediaImagePolicy.preview(
+                          url,
+                          logicalWidth: 32,
+                          devicePixelRatio: MediaQuery.devicePixelRatioOf(
+                            context,
+                          ),
+                        ),
                         width: 32,
                         height: 32,
                         fit: BoxFit.contain,

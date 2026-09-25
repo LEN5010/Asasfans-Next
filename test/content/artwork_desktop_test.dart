@@ -3,6 +3,7 @@ import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_image_viewer.dart';
+import 'package:asasfans_next/shared/widgets/media_image_policy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -56,8 +57,8 @@ void main() {
   testWidgets(
     'keyboard paging, zoom, long-image reading and Escape work on the root route',
     (tester) async {
-      // The viewer derives cacheWidth from the viewport times the device pixel
-      // ratio, so both must be pinned here. Without this the default ratio of 3
+      // The viewer derives its decode size from the viewport times the device
+      // pixel ratio, so both must be pinned here. Without this the default ratio of 3
       // asked for a 2400-wide decode, missed the seeded 800-wide entry, and the
       // case measured a placeholder instead of the long image.
       tester.view
@@ -74,7 +75,11 @@ void main() {
           uri,
           width: 160,
           height: 1600,
-          cacheWidth: 800,
+          provider: MediaImagePolicy.original(
+            uri,
+            viewportWidth: 800,
+            devicePixelRatio: 1,
+          ),
         );
       }
       await tester.pumpWidget(
@@ -153,7 +158,16 @@ void main() {
     expect(find.text('没有图片'), findsOneWidget);
     expect(tester.takeException(), isNull);
     final uri = Uri.parse('https://fixture.test/replacement');
-    await cacheImageFixture(tester, uri, cacheWidth: 800);
+    await cacheImageFixture(
+      tester,
+      uri,
+      provider: MediaImagePolicy.original(
+        uri,
+        viewportWidth:
+            tester.view.physicalSize.width / tester.view.devicePixelRatio,
+        devicePixelRatio: tester.view.devicePixelRatio,
+      ),
+    );
     await tester.pumpWidget(
       MaterialApp(home: FanartImageViewer(images: [uri], initial: 10)),
     );

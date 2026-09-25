@@ -12,6 +12,10 @@ Future<void> cacheImageFixture(
   int width = 320,
   int height = 200,
   int? cacheWidth,
+
+  /// The exact provider the widget under test builds, when it is not a plain
+  /// cacheWidth resize (MediaImagePolicy adds a pixel budget and fit policy).
+  ImageProvider? provider,
 }) async {
   final recorder = ui.PictureRecorder();
   final canvas = ui.Canvas(recorder);
@@ -26,12 +30,14 @@ Future<void> cacheImageFixture(
   final picture = recorder.endRecording();
   final image = await tester.runAsync(() => picture.toImage(width, height));
   picture.dispose();
-  final provider = ResizeImage.resizeIfNeeded(
-    cacheWidth,
-    null,
-    NetworkImage(uri.toString()),
-  );
-  final key = await provider.obtainKey(const ImageConfiguration());
+  final keyed =
+      provider ??
+      ResizeImage.resizeIfNeeded(
+        cacheWidth,
+        null,
+        NetworkImage(uri.toString()),
+      );
+  final key = await keyed.obtainKey(const ImageConfiguration());
   PaintingBinding.instance.imageCache.putIfAbsent(
     key,
     () => OneFrameImageStreamCompleter(

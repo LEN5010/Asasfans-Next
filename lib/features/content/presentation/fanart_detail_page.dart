@@ -13,6 +13,7 @@ import '../../../core/domain/content_identity.dart';
 import '../../../core/domain/bilibili_id.dart';
 import '../../creator/presentation/creator_link.dart';
 import '../domain/fanart_repository.dart';
+import '../../../shared/widgets/media_image_policy.dart';
 import 'fanart_image_viewer.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
@@ -185,7 +186,11 @@ class _AuthorRow extends ConsumerWidget {
             backgroundColor: theme.colorScheme.primaryContainer,
             foregroundImage: item.authorAvatarUrl == null
                 ? null
-                : NetworkImage(item.authorAvatarUrl.toString()),
+                : MediaImagePolicy.preview(
+                    item.authorAvatarUrl!,
+                    logicalWidth: 40,
+                    devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                  ),
             child: Text(
               item.authorName.isEmpty ? '?' : item.authorName.characters.first,
             ),
@@ -237,32 +242,39 @@ class _DetailImage extends StatelessWidget {
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-        child: Image.network(
-          item.images[index].toString(),
-          fit: BoxFit.fitWidth,
-          width: double.infinity,
-          errorBuilder: (context, error, stack) => Container(
-            height: 160,
-            color: theme.colorScheme.surfaceContainerHighest,
-            alignment: Alignment.center,
-            child: Text(
-              '图片加载失败',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.outline,
+        // A preview sized to the column; tapping opens the original.
+        child: LayoutBuilder(
+          builder: (context, constraints) => Image(
+            image: MediaImagePolicy.preview(
+              item.images[index],
+              logicalWidth: constraints.maxWidth,
+              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+            ),
+            fit: BoxFit.fitWidth,
+            width: double.infinity,
+            errorBuilder: (context, error, stack) => Container(
+              height: 160,
+              color: theme.colorScheme.surfaceContainerHighest,
+              alignment: Alignment.center,
+              child: Text(
+                '图片加载失败',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
               ),
             ),
-          ),
-          loadingBuilder: (context, child, progress) => progress == null
-              ? child
-              : Container(
-                  height: 160,
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  alignment: Alignment.center,
-                  child: const SizedBox.square(
-                    dimension: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+            loadingBuilder: (context, child, progress) => progress == null
+                ? child
+                : Container(
+                    height: 160,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    alignment: Alignment.center,
+                    child: const SizedBox.square(
+                      dimension: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );

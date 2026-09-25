@@ -5,6 +5,7 @@ import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/video_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/shared/widgets/media_cover.dart';
+import 'package:asasfans_next/shared/widgets/media_image_policy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,7 +39,16 @@ void main() {
         tester,
       ) async {
         final uri = Uri.parse('https://fixture.test/cover');
-        await cacheImageFixture(tester, uri, cacheWidth: 800);
+        await cacheImageFixture(
+          tester,
+          uri,
+          // A 240-wide card at the test view's ratio of 3.
+          provider: MediaImagePolicy.preview(
+            uri,
+            logicalWidth: 240,
+            devicePixelRatio: 3,
+          ),
+        );
         final item = _item(
           type,
           images: type == FanartContentType.text ? [] : [uri, uri],
@@ -84,6 +94,19 @@ void main() {
   ) async {
     final uri = Uri.parse('https://fixture.test/video');
     await cacheImageFixture(tester, uri, cacheWidth: 800);
+    // Seeded for whichever width the card lays out at.
+    for (final width in MediaImagePolicy.buckets) {
+      await cacheImageFixture(
+        tester,
+        uri,
+        provider: ResizeImage(
+          NetworkImage(uri.toString()),
+          width: width,
+          height: MediaImagePolicy.maxPixels ~/ width,
+          policy: ResizeImagePolicy.fit,
+        ),
+      );
+    }
     final video = CommunityVideo(
       identity: const ContentIdentity(
         source: ContentSource.bilibiliVideo,

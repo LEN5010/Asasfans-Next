@@ -4,6 +4,8 @@ import '../../creator/presentation/creator_link.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/media_image_policy.dart';
+
 import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -89,8 +91,14 @@ class SavedContentPage extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(
                           AppTokens.cardRadius,
                         ),
-                        child: Image.network(
-                          item.images[index].toString(),
+                        child: Image(
+                          image: MediaImagePolicy.preview(
+                            item.images[index],
+                            logicalWidth: MediaQuery.sizeOf(context).width,
+                            devicePixelRatio: MediaQuery.devicePixelRatioOf(
+                              context,
+                            ),
+                          ),
                           fit: BoxFit.fitWidth,
                           errorBuilder: (_, _, _) => const SizedBox(
                             height: 100,

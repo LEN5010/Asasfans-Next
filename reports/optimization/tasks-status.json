@@ -74,16 +74,22 @@
    "stage": "P2",
    "title": "高频图片请求与解码尺寸统一",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "verified",
+   "evidence": [
+    "MediaImagePolicy: bucketed decode width from layout width x DPR, pixel budget, preview vs original URIs kept apart; applied to MediaCover (was fixed 800), ContentAvatar, gallery, stickers, detail avatar, saved page; test/shared/media_image_policy_test.dart; full suite 693 pass",
+    "Not measured: live image count / decode size / frame timing need a device (VALIDATION S2/S4)."
+   ]
   },
   {
    "id": "T09",
    "stage": "P2",
    "title": "详情大图与超长图资源管理",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Detail page shows a column-sized preview instead of decoding the original; viewer decodes the original to viewport width within 16 MP (fit policy); tiling not attempted (Flutter cannot decode a region without decoding the whole image)",
+    "Pending device: open/exit memory fall-back, extreme long-image readability."
+   ]
   },
   {
    "id": "T10",
