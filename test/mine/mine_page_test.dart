@@ -1,4 +1,5 @@
 import 'package:asasfans_next/features/mine/presentation/mine_page.dart';
+import 'package:asasfans_next/features/tools/presentation/tools_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,12 @@ void main() {
       await tester.scrollUntilVisible(find.text('关于'), 180);
       expect(find.text('应用'), findsOneWidget);
       expect(find.byKey(const ValueKey('mine-sections')), findsNothing);
+      // The tools are reachable by name, not only by the floating button.
+      await tester.ensureVisible(find.text('工具与相关站点'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('工具与相关站点'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ToolsSheet), findsOneWidget);
     },
   );
 

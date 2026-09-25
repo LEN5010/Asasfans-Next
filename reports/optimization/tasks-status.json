@@ -245,8 +245,11 @@
    "stage": "P4",
    "title": "工具入口与真实更新能力",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Mine → 应用 now has a text entry '工具与相关站点' opening the same tools sheet (floating button already had a semantics label); test in mine_page_test",
+    "Not done: grouping sites by purpose; focus return after closing verified only by the panel's own behaviour."
+   ]
   },
   {
    "id": "T27",

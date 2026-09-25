@@ -1,6 +1,8 @@
 import '../../../shared/theme/app_icons.dart';
 
 import 'package:flutter/material.dart';
+
+import '../../tools/presentation/tools_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -84,6 +86,21 @@ class _MinePageState extends ConsumerState<MinePage> {
       _SettingsGroup(
         title: '应用',
         children: [
+          // A text way into the tools, beside the unlabeled floating button.
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: AppButton(
+              onPressed: () => showToolsSheet(context),
+              child: const Row(
+                children: [
+                  Icon(Icons.handyman_outlined, size: 22),
+                  SizedBox(width: 12),
+                  Expanded(child: Text('工具与相关站点')),
+                  Icon(Icons.chevron_right, size: 20),
+                ],
+              ),
+            ),
+          ),
           ...links(const [('作者与致谢', 'credits', Icons.people_outline)]),
           Padding(
             padding: const EdgeInsets.all(8),
