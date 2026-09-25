@@ -34,16 +34,21 @@
    "stage": "P1",
    "title": "独立 perf 构建与签名保护",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "Implemented: -Pasasfans.perf=true => asasfans.next.perf, explicit test signing (perf keystore env or -Pasasfans.perfSigning=debug), production gate unchanged; manual workflow flutter-performance-validation.yml; tool/audit_apk.py smoke-tested on a synthetic APK",
+    "NOT build-verified: Android SDK unavailable (dl.google.com denied by network policy). Needs: run the three perf builds + aapt2/apksigner identity check and a no-key production release (must fail)."
+   ]
   },
   {
    "id": "T05",
    "stage": "P1",
    "title": "未改业务的 AOT 基线与分 ABI 构建",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "B0 needs an Android SDK/device; B0 must be built from the T04 commit (build config only, no business changes) via the manual perf workflow"
+   ]
   },
   {
    "id": "T06",

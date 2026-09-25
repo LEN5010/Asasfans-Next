@@ -1,0 +1,83 @@
+name: Flutter Performance Validation
+
+# Manual only. Builds the isolated asasfans.next.perf package in AOT
+# release/profile mode for size and frame-time measurement. Never uses the
+# production key, never publishes, never creates a GitHub Release.
+on:
+  workflow_dispatch:
+    inputs:
+      perf_signing:
+        description: >-
+          Test signature for the isolated asasfans.next.perf package. The SDK
+          debug key is acceptable only because this identity can never
+          upgrade or replace asasfans.next.
+        type: choice
+        options:
+          - sdk-debug-key
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-performance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  perf-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PERF_ARGS: -Pasasfans.perf=true -Pasasfans.perfSigning=debug
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+      - name: Verify the pinned SDK
+        run: ASASFANS_FLUTTER_SDK="$FLUTTER_ROOT" tool/flutterw --verify-sdk
+      - run: flutter pub get --enforce-lockfile
+      # Single-ABI size analysis first: --analyze-size cannot split ABIs.
+      - name: arm64 release with size analysis
+        run: |
+          flutter build apk --release --target-platform android-arm64 \
+            --analyze-size --code-size-directory=build/perf/size --no-pub $PERF_ARGS
+          mkdir -p build/perf/apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/perf/apk/app-perf-arm64-analyzed.apk
+      - name: Per-ABI release APKs
+        run: |
+          flutter build apk --release --split-per-abi --no-pub $PERF_ARGS
+          cp build/app/outputs/flutter-apk/app-*-release.apk build/perf/apk/
+      - name: arm64 profile APK (frame timing)
+        run: |
+          flutter build apk --profile --target-platform android-arm64 --no-pub $PERF_ARGS
+          cp build/app/outputs/flutter-apk/app-profile.apk build/perf/apk/app-perf-arm64-profile.apk
+      - name: Inventory and identity of every APK
+        run: |
+          build_tools="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          mkdir -p build/perf/report
+          for apk in build/perf/apk/*.apk; do
+            name="$(basename "$apk" .apk)"
+            python3 tool/audit_apk.py "$apk" --output "build/perf/report/$name.json"
+            {
+              echo "== $name"
+              sha256sum "$apk"
+              "$build_tools/aapt2" dump badging "$apk" | grep -E "^package:|application-debuggable|native-code|sdkVersion|targetSdkVersion"
+              "$build_tools/apksigner" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
+            } >> build/perf/report/identity.txt
+          done
+          cat build/perf/report/identity.txt
+          # A perf artifact is never the production identity.
+          ! grep -E "^package: name='asasfans\.next'" build/perf/report/identity.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: asasfans-perf-android-${{ github.sha }}
+          path: build/perf/
+          retention-days: 7
+          if-no-files-found: error

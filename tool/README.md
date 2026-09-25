@@ -25,3 +25,20 @@ ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/flutterw --dart format --langua
 - `preview/`：现有隔离内存数据入口。仅用户明确要求离线演示时使用，不作为开发闸门，不自动运行。
 
 不保留独立玻璃 probe、折射对照和基准工具。正式组件直接服务真实页面；材质效果由用户在最终开发包验收。参考适配许可见 `third_party/README.md`。
+
+## 性能测量包（asasfans.next.perf）
+
+体积与帧耗时只能在 AOT（release/profile）产物上测量，而正式 release 在没有原签名时会（正确地）拒绝构建。性能包是一个独立应用：包名 `asasfans.next.perf`、版本名后缀 `-perf`，可与正式版并存且无法覆盖或读取正式版数据。正式 `asasfans.next` 的签名闸门不变，测试签名永远不会落到正式包名上。
+
+```sh
+# 测试签名二选一：专用 perf keystore（ASASFANS_PERF_KEYSTORE_FILE / _PASSWORD / ASASFANS_PERF_KEY_ALIAS / _PASSWORD），
+# 或显式声明使用 SDK debug key：-Pasasfans.perfSigning=debug。两者都没有时构建失败。
+tool/flutterw build apk --release --target-platform android-arm64 --analyze-size \
+  --code-size-directory=build/perf/size --no-pub -Pasasfans.perf=true -Pasasfans.perfSigning=debug
+tool/flutterw build apk --release --split-per-abi --no-pub -Pasasfans.perf=true -Pasasfans.perfSigning=debug
+tool/flutterw build apk --profile --target-platform android-arm64 --no-pub -Pasasfans.perf=true -Pasasfans.perfSigning=debug
+
+python3 tool/audit_apk.py build/app/outputs/flutter-apk/app-arm64-v8a-release.apk --output build/perf/arm64.json
+```
+
+`audit_apk.py` 只读统计 APK 内各项的存储字节（不是安装占用），不证明签名或 debuggable；这两项用 `aapt2 dump badging` 与 `apksigner verify --print-certs` 检查。CI 入口是手动触发的 `Flutter Performance Validation` 工作流，只上传构建证据，不发布。

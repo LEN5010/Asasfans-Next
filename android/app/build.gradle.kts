@@ -32,6 +32,38 @@ val releaseSigningReady = releaseStoreFile?.exists() == true &&
     releaseKeyAlias != null &&
     releaseKeyPassword != null
 
+// Performance-measurement identity. Release/profile AOT builds are the only
+// valid basis for size and frame-time numbers, but the production gate above
+// (rightly) refuses to build without the original key. A perf build is a
+// separate app: `asasfans.next.perf`, its own test signature, installable
+// beside the real app and unable to touch its data.
+//
+//   flutter build apk --release -Pasasfans.perf=true -Pasasfans.perfSigning=debug
+//
+// Test signing is never implied. It is either a dedicated perf keystore
+// (ASASFANS_PERF_KEYSTORE_* variables), or the SDK debug key when the caller
+// says so explicitly with asasfans.perfSigning=debug. Neither can reach the
+// production identity: without asasfans.perf there is no .perf suffix and no
+// perf signing, and the production gate is unchanged.
+val perfBuild = providers.gradleProperty("asasfans.perf").orNull == "true"
+val perfUsesDebugKey = providers.gradleProperty("asasfans.perfSigning").orNull == "debug"
+val perfStoreFile = System.getenv("ASASFANS_PERF_KEYSTORE_FILE")
+    ?.takeIf { it.isNotBlank() }
+    ?.let { path -> File(path).takeIf { it.isAbsolute } ?: File(repositoryRoot, path) }
+val perfStorePassword = System.getenv("ASASFANS_PERF_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+val perfKeyAlias = System.getenv("ASASFANS_PERF_KEY_ALIAS")?.takeIf { it.isNotBlank() }
+val perfKeyPassword = System.getenv("ASASFANS_PERF_KEY_PASSWORD")?.takeIf { it.isNotBlank() }
+val perfKeystoreReady = perfStoreFile?.exists() == true &&
+    perfStorePassword != null &&
+    perfKeyAlias != null &&
+    perfKeyPassword != null
+val perfSigningReady = perfKeystoreReady || perfUsesDebugKey
+val perfSigningMissing =
+    "Perf builds need a test signature: set the ASASFANS_PERF_KEYSTORE_* " +
+        "variables, or pass -Pasasfans.perfSigning=debug to sign the isolated " +
+        "asasfans.next.perf package with the SDK debug key. The production " +
+        "key is never used for perf builds."
+
 android {
     namespace = "com.example.asasfans"
     compileSdk = 36
@@ -50,9 +82,15 @@ android {
         targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        if (perfBuild) {
+            // defaultConfig belongs to this app module only; plugin libraries
+            // never see it, unlike a suffix set on every build type.
+            applicationIdSuffix = ".perf"
+            versionNameSuffix = "-perf"
+        }
     }
     signingConfigs {
-        if (releaseSigningReady) {
+        if (releaseSigningReady && !perfBuild) {
             create("release") {
                 storeFile = releaseStoreFile
                 storePassword = releaseStorePassword
@@ -60,6 +98,23 @@ android {
                 keyPassword = releaseKeyPassword
             }
         }
+        if (perfBuild && perfKeystoreReady) {
+            create("perf") {
+                storeFile = perfStoreFile
+                storePassword = perfStorePassword
+                keyAlias = perfKeyAlias
+                keyPassword = perfKeyPassword
+            }
+        }
+    }
+
+    // The perf signature: the dedicated keystore, else the explicitly
+    // requested SDK debug key, else none (and the pre-build gate stops).
+    val perfSigning = when {
+        !perfBuild -> null
+        perfKeystoreReady -> signingConfigs.getByName("perf")
+        perfUsesDebugKey -> signingConfigs.getByName("debug")
+        else -> null
     }
 
     buildTypes {
@@ -73,17 +128,24 @@ android {
             // signing: that produces an artifact which compiles but cannot
             // upgrade the installed asasfans.next, and the user finds out by
             // failing to install it.
-            signingConfig = if (releaseSigningReady) {
-                signingConfigs.getByName("release")
-            } else {
-                null
+            signingConfig = when {
+                perfBuild -> perfSigning
+                releaseSigningReady -> signingConfigs.getByName("release")
+                else -> null
             }
+        }
+        // Created by the Flutter plugin as initWith(debug), so it would carry
+        // the debug key under whatever identity is current. In a perf build it
+        // takes the perf signature like release does.
+        if (perfBuild) {
+            getByName("profile") { signingConfig = perfSigning }
         }
     }
 }
 
 // Flutter's own `profile` build type deliberately carries no
-// applicationIdSuffix.
+// applicationIdSuffix of its own (a perf build gets `.perf` from
+// defaultConfig, above).
 //
 // The previous `buildTypes.configureEach` set one on every non-release type.
 // Flutter creates `profile` with initWith(debug) inside every Android project
@@ -106,6 +168,10 @@ android {
 // installable build is not proof of upgrade continuity.
 tasks.matching { it.name == "preReleaseBuild" }.configureEach {
     doFirst {
+        if (perfBuild) {
+            if (!perfSigningReady) throw GradleException(perfSigningMissing)
+            return@doFirst
+        }
         if (!releaseSigningReady) {
             throw GradleException(
                 "Release signing is not configured. Provide keystore.properties " +
@@ -114,6 +180,13 @@ tasks.matching { it.name == "preReleaseBuild" }.configureEach {
                     "installed asasfans.next."
             )
         }
+    }
+}
+
+// A perf profile build is only ever the isolated identity with a test key.
+tasks.matching { it.name == "preProfileBuild" }.configureEach {
+    doFirst {
+        if (perfBuild && !perfSigningReady) throw GradleException(perfSigningMissing)
     }
 }
 
