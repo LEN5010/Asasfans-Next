@@ -26,8 +26,10 @@
    "stage": "P0",
    "title": "定义基准场景与最小测量支架",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Scenarios/metrics adopted from VALIDATION.md; host-side measurements for SQL (run-02/T13-sql.md) and ICS parsing (run-02/ics_parse_host.txt); no device → no frame/PSS data; integration_test scaffold not added"
+   ]
   },
   {
    "id": "T04",
@@ -55,8 +57,10 @@
    "stage": "P1",
    "title": "必要依赖与资源成本审计",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "Needs AOT APK size analysis (Android SDK unavailable). Business assets are ~0.16 MB of the 166.9 MB debug APK per the audit; no dependency removed."
+   ]
   },
   {
    "id": "T07",
@@ -160,7 +164,9 @@
    "title": "导航外壳与宽屏适配",
    "conditional": false,
    "status": "not_started",
-   "evidence": []
+   "evidence": [
+    "Shell unchanged apart from branch visibility (T14); existing app_shell tests pass"
+   ]
   },
   {
    "id": "T17",
@@ -178,8 +184,11 @@
    "stage": "P3",
    "title": "材料、动效与无障碍收口",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Solid tier is a true no-sampling floor (T07); search-field semantics fixed (T15); settings state effective tier and reason",
+    "Pending: real-renderer glass screenshots, busy-background contrast on device"
+   ]
   },
   {
    "id": "T19",
@@ -197,24 +206,30 @@
    "stage": "P4",
    "title": "视频：紧凑发现与明确外跳",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Fixed-extent grid (T12); video order/window/anchor survive returns (T10)"
+   ]
   },
   {
    "id": "T21",
    "stage": "P4",
    "title": "二创：作品优先且保留完整查看",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Text-only card tap fixed (P0); detail shows column-sized preview, viewer opens original (T09); return anchor fixed (T10)"
+   ]
   },
   {
    "id": "T22",
    "stage": "P4",
    "title": "动态：阅读层级与多媒体稳定",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Dynamics carry query+anchor across returns (T10); all-hidden state (T17)"
+   ]
   },
   {
    "id": "T23",
@@ -222,7 +237,9 @@
    "title": "小说：克制阅读模式",
    "conditional": false,
    "status": "not_started",
-   "evidence": []
+   "evidence": [
+    "Reader already lazy (ListView.builder + SelectionArea), 17/1.85 type with a bounded measure; no change made"
+   ]
   },
   {
    "id": "T24",
@@ -230,15 +247,19 @@
    "title": "日历：今天议程、周/月与变动",
    "conditional": false,
    "status": "not_started",
-   "evidence": []
+   "evidence": [
+    "Calendar unchanged apart from visible-only resume refresh (T14)"
+   ]
   },
   {
    "id": "T25",
    "stage": "P4",
    "title": "我的：本地资料、偏好与备份",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Glass choice with effective-tier explanation (T07); tools text entry (T26)"
+   ]
   },
   {
    "id": "T26",
@@ -256,40 +277,50 @@
    "stage": "P4",
    "title": "Android 返回按钮与跨应用闭环",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "Native return overlay needs an Android device; Dart-side return restore improved in T10"
+   ]
   },
   {
    "id": "T28",
    "stage": "P5",
    "title": "跨平台构建与输入 smoke",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "No Android SDK (dl.google.com denied), no iOS/macOS/Windows hosts in this environment"
+   ]
   },
   {
    "id": "T29",
    "stage": "P5",
    "title": "功能回归与构建验收",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "analyze 0, format 0, tests 0 (all passing) on every checkpoint; builds blocked (T28)"
+   ]
   },
   {
    "id": "T30",
    "stage": "P5",
    "title": "视觉回归与实际使用走查",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "No linux desktop target and no device; no real screenshots produced; none substituted"
+   ]
   },
   {
    "id": "T31",
    "stage": "P5",
    "title": "同设备 B0/B1 性能与体积比较",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "Requires B0/B1 AOT builds and devices"
+   ]
   },
   {
    "id": "T32",
@@ -304,8 +335,10 @@
    "stage": "CONDITIONAL",
    "title": "只在重复下载被证实后增加有界磁盘缓存",
    "conditional": true,
-   "status": "not_started",
-   "evidence": []
+   "status": "not_applicable",
+   "evidence": [
+    "No evidence of repeated media downloads was produced (requires device network traces, T31); no cache added"
+   ]
   },
   {
    "id": "T34",
@@ -322,16 +355,20 @@
    "stage": "CONDITIONAL",
    "title": "大 ICS 解析的后台执行",
    "conditional": true,
-   "status": "not_started",
-   "evidence": []
+   "status": "blocked_external",
+   "evidence": [
+    "Host (JIT) IcsParser.parse: 200 events 10.7 ms p50, 1000 events 29.6 ms, 5000 events 151 ms (run-02/ics_parse_host.txt); parse runs on the UI isolate on hydrate and on 200. Real feed size unknown: asoul.love is denied by the environment network policy; device AOT timing unavailable. Moving parse to a worker also needs per-isolate timezone initialization, whose cost must be measured first."
+   ]
   },
   {
    "id": "T36",
    "stage": "CONDITIONAL",
    "title": "经过性能验收后的 Premium 精细交互",
    "conditional": true,
-   "status": "not_started",
-   "evidence": []
+   "status": "not_applicable",
+   "evidence": [
+    "Activation requires T31 device results showing Premium headroom; none available"
+   ]
   }
  ]
 }

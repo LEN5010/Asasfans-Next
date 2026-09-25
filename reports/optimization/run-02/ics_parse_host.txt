@@ -1,0 +1,4 @@
+host: linux, dart 3.13.3
+200 events (40 KiB): p50 10.68 ms, max 18.38 ms
+1000 events (202 KiB): p50 29.56 ms, max 50.08 ms
+5000 events (1022 KiB): p50 150.93 ms, max 199.37 ms
