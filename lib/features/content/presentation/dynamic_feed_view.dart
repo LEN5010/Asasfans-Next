@@ -132,16 +132,17 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
           scrollResetKey: state.query,
           canLoadMore: state.status == FeedStatus.ready,
           onLoadMore: () => _controller.loadMore(automatic: true),
-          child: _buildBody(state.copyWith(items: visible.items), [
-            filters,
-            RuleStatusBar(visibility: visible),
-          ]),
+          child: _buildBody(
+            state.copyWith(items: visible.items),
+            visible.userHidden.length,
+            [filters, RuleStatusBar(visibility: visible)],
+          ),
         ),
       );
     },
   );
 
-  Widget _buildBody(DynamicFeedState state, List<Widget> header) {
+  Widget _buildBody(DynamicFeedState state, int hidden, List<Widget> header) {
     _visible = [for (final post in state.items) post.identity];
     final returnQuery = ChannelSpec.ofDynamic(state.query).values;
     final placeholder = state.items.isNotEmpty
@@ -156,6 +157,8 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
             FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
               child: CircularProgressIndicator(),
             ),
+            FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
+              FeedAllHiddenMessage(count: hidden),
             FeedStatus.endOfList => const FeedMessage(
               icon: Icons.search_off_outlined,
               text: '没有符合条件的动态',

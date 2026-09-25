@@ -203,10 +203,14 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                                 onCalendar: _calendar,
                               ),
                             ),
-                          if (history) const OnThisDaySection(inset: edge),
                         ],
                         if (showClips) clipsShelf,
                         if (showFanart) fanartShelf,
+                        // On a phone the archive follows today's content
+                        // instead of pushing it below the first screen; a
+                        // wide window pairs it with the schedule above.
+                        if (history && !paired)
+                          const OnThisDaySection(inset: edge),
                         // Every module hidden is a choice, not a failure:
                         // say so and point at the setting that undoes it.
                         if (!calendar && !history && !showClips && !showFanart)

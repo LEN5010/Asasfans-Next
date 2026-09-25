@@ -152,16 +152,17 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
           scrollResetKey: state.query,
           canLoadMore: state.status == FeedStatus.ready,
           onLoadMore: () => _controller.loadMore(automatic: true),
-          child: _buildBody(state.copyWith(videos: visible.items), [
-            order,
-            RuleStatusBar(visibility: visible),
-          ]),
+          child: _buildBody(
+            state.copyWith(videos: visible.items),
+            visible.userHidden.length,
+            [order, RuleStatusBar(visibility: visible)],
+          ),
         ),
       );
     },
   );
 
-  Widget _buildBody(CommunityFeedState state, List<Widget> header) {
+  Widget _buildBody(CommunityFeedState state, int hidden, List<Widget> header) {
     _visible = [for (final video in state.videos) video.identity];
     final noun = switch (widget.channel) {
       CommunityChannel.clips => '切片',
@@ -180,6 +181,8 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
             FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
               child: CircularProgressIndicator(),
             ),
+            FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
+              FeedAllHiddenMessage(count: hidden),
             FeedStatus.endOfList => FeedMessage(
               icon: Icons.search_off_outlined,
               text: '没有符合条件的$noun',

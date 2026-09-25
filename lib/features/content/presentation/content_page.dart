@@ -468,6 +468,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
           canLoadMore: state.status == FeedStatus.ready,
           onLoadMore: () => _controller.loadMore(automatic: true),
           child: _FanartGrid(
+            hidden: visible.userHidden.length,
             onBuilt: (items) =>
                 _visible = [for (final item in items) item.identity],
             state: state.copyWith(items: visible.items),
@@ -487,6 +488,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
 
 class _FanartGrid extends ConsumerWidget {
   const _FanartGrid({
+    required this.hidden,
     required this.onBuilt,
     required this.state,
     required this.header,
@@ -496,6 +498,9 @@ class _FanartGrid extends ConsumerWidget {
   });
 
   final ValueChanged<List<FanartItem>> onBuilt;
+
+  /// Loaded items the user's rules hide.
+  final int hidden;
   final FanartFeedState state;
   final List<Widget> header;
   final ScrollController controller;
@@ -517,6 +522,8 @@ class _FanartGrid extends ConsumerWidget {
             FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
               child: CircularProgressIndicator(),
             ),
+            FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
+              FeedAllHiddenMessage(count: hidden),
             FeedStatus.endOfList => const FeedMessage(
               icon: Icons.search_off_outlined,
               text: '没有符合条件的内容',

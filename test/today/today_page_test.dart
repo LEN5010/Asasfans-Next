@@ -153,6 +153,22 @@ void main() {
     },
   );
 
+  testWidgets('a phone puts today\'s content before the archive', (
+    tester,
+  ) async {
+    _size(tester, const Size(390, 2400));
+    final calendar = _Calendar()..items = [_event('今日歌会', 21)];
+    await tester.pumpWidget(_host(calendar));
+    await tester.pumpAndSettle();
+    final schedule = tester.getTopLeft(find.text('今日安排')).dy;
+    final clips = tester.getTopLeft(find.text('最新切片')).dy;
+    final fanart = tester.getTopLeft(find.text('最新二创')).dy;
+    final history = tester.getTopLeft(find.text('历史上的今天')).dy;
+    expect(schedule, lessThan(clips));
+    expect(clips, lessThan(fanart));
+    expect(fanart, lessThan(history));
+  });
+
   testWidgets(
     'empty today falls forward to the first non-cancelled event within seven days',
     (tester) async {

@@ -167,8 +167,11 @@
    "stage": "P3",
    "title": "共享搜索筛选与异步状态组件",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Filter beside the search field (spec §7) with full hit area; all-hidden-by-rules state distinct from empty/error on fanart/videos/dynamics with a path to rules (test in rule_feed_integration_test); existing draft/apply/cancel filter panels and generation/cancellation kept",
+    "Not done: unified 'applied conditions' summary row; IME composition checks need a device."
+   ]
   },
   {
    "id": "T18",
@@ -183,8 +186,11 @@
    "stage": "P4",
    "title": "今日：以接下来的事情为中心",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Phone order: schedule → clips → fanart → history (history no longer pushes today's content below the first screen; wide keeps schedule|history pairing); all-hidden Today explains itself (P0 commit); tests in today_page_test",
+    "Not done: 'continue picking' entry (needs a design for sessions an earlier launch consumed)."
+   ]
   },
   {
    "id": "T20",

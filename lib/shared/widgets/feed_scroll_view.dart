@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_failure.dart';
 import '../../app/theme/app_tokens.dart';
+import 'app_controls.dart';
 import 'app_motion.dart';
 import 'retry_button.dart';
 
@@ -121,6 +123,38 @@ class FeedMessage extends StatelessWidget {
             const SizedBox(height: 16),
             RetryButton(failure: failure, onRetry: onRetry, filled: true),
           ],
+        ],
+      ),
+    ),
+  );
+}
+
+/// Everything the source returned is hidden by the user's own rules. That is
+/// neither an empty source nor an error, so it says which, and where to
+/// change it.
+class FeedAllHiddenMessage extends StatelessWidget {
+  const FeedAllHiddenMessage({required this.count, super.key});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.filter_alt_off_outlined,
+            size: 44,
+            color: Theme.of(context).colorScheme.outline,
+          ),
+          const SizedBox(height: 12),
+          Text('已加载的 $count 条内容都被你的规则屏蔽', textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          AppButton(
+            onPressed: () => context.go('/mine/rules'),
+            child: const Text('查看内容规则'),
+          ),
         ],
       ),
     ),

@@ -38,6 +38,7 @@ class _Source implements FanartRepository {
   int calls = 0;
   bool longHiddenRun = false;
   bool shortHiddenRun = false;
+  bool onlyHidden = false;
   @override
   Future<FanartPage> page({
     FanartQuery query = const FanartQuery(),
@@ -45,6 +46,12 @@ class _Source implements FanartRepository {
     RequestCancellation? cancellation,
   }) async {
     calls++;
+    if (onlyHidden) {
+      return FanartPage(
+        items: [_item(calls, 'hide $calls')],
+        snapshotId: 'same',
+      );
+    }
     final hidden = longHiddenRun
         ? calls < 6
         : shortHiddenRun
@@ -109,6 +116,18 @@ void main() {
       expect(find.text('hide 1'), findsOneWidget);
     },
   );
+  testWidgets('a source hidden entirely by rules says so, not "no results"', (
+    tester,
+  ) async {
+    source.onlyHidden = true;
+    await rules.save(const RuleDraft(kind: RuleKind.word, value: 'hide'));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.text('没有符合条件的内容'), findsNothing);
+    expect(find.text('已加载的 1 条内容都被你的规则屏蔽'), findsOneWidget);
+    expect(find.text('查看内容规则'), findsOneWidget);
+  });
+
   testWidgets(
     'all-hidden upstream pages stay ready and stop at viewport scan budget, not false end',
     (tester) async {
