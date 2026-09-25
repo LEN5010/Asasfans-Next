@@ -327,8 +327,10 @@
    "stage": "P5",
    "title": "独立审查、回退与最终交付",
    "conditional": false,
-   "status": "not_started",
-   "evidence": []
+   "status": "in_progress",
+   "evidence": [
+    "Independent read-only review done; 5 of 6 findings fixed in 2370072, 1 (cover decode softness) recorded; FINAL.md written with status PARTIAL_BLOCKED"
+   ]
   },
   {
    "id": "T33",

@@ -15,11 +15,24 @@ Plan package: `docs/optimization/` (local only — `/docs/` is gitignored by thi
 | Commit | Scope | Evidence |
 |---|---|---|
 | (baseline) 98e52c2 | — | analyze exit 0; test exit 1 (641 pass / 33 fail) — see `run-01/baseline-failures.md` |
+| 7eb7493 | T01/T02 stale tests, card tap, empty home | test 0 (674) |
+| f89abb5 | T04 perf identity (not built) | read-only review |
+| ebddc9c | T10 return restore | test 0 (682) |
+| ca8f41f | T07 glass tier | test 0 (689) |
+| 9fd2626 | T08/T09 images | test 0 (693) |
+| b46463d | T12 grid extent, rule memo | test 0 (695) |
+| f6f2abd | T14 visible-only resume | test 0 (696) |
+| 52aedf0 | T13 SQL measurement | host bench |
+| f6d4bda | T11 two mounted channels | test 0 (697) |
+| de37b9d | T15 touch targets, semantics fix | test 0 (704) |
+| 2067013 / 2735c33 | T17/T19/T26 increments | test 0 (706/707) |
+| ca06428 | T35 host ICS timing, statuses | analyze 0 |
+| 2370072 | independent review fixes | test 0 (709) |
 
 ## Current
 
 - HEAD before work: 98e52c2 (clean tree, branch `claude/zen-babbage-ll6g3y`).
-- Task status: `tasks-status.json`.
+- Task status: `tasks-status.json`. Final report: `FINAL.md` (status PARTIAL_BLOCKED).
 
 ## Decisions
 
@@ -29,7 +42,9 @@ Plan package: `docs/optimization/` (local only — `/docs/` is gitignored by thi
 ## Failed / blocked commands
 
 - `curl https://dl.google.com/android/repository/repository2-3.xml` → 403 from the environment proxy (network policy).
+- `curl https://asoul.love/calendar.ics` → 403 (network policy); real calendar size unknown.
+- Gradle configuration check could not resolve AGP (Google Maven host blocked); routing around the block was refused and not pursued.
 
 ## Next action
 
-See the bottom of `tasks-status.json`.
+Allow dl.google.com (or use a machine with the Android SDK), then run the Flutter Performance Validation workflow at f89abb5 (B0) and HEAD (B1) and the VALIDATION.md device scenarios.
