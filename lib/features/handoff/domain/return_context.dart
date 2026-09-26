@@ -130,3 +130,19 @@ class ReturnContext {
   String encodeQuery() => jsonEncode(query ?? const <String, Object?>{});
   String encodeAnchor() => jsonEncode(anchor?.toJson() ?? const {});
 }
+
+/// The browsing context behind the last trip out from a content channel:
+/// which channel, its committed query, the item left from and when. Shown as
+/// 继续挑选; not a return session and never persisted.
+class BrowseSnapshot {
+  const BrowseSnapshot({
+    required this.channel,
+    required this.at,
+    this.query,
+    this.anchor,
+  });
+  final String channel;
+  final Map<String, Object?>? query;
+  final ReturnAnchor? anchor;
+  final DateTime at;
+}

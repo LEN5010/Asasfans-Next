@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import '../../../core/domain/content_identity.dart';
 import '../../handoff/application/handoff_providers.dart';
+import '../../handoff/application/handoff_coordinator.dart';
 import '../../handoff/domain/return_context.dart';
 import '../../handoff/presentation/anchor_restore.dart';
 import 'content_search_control.dart';
@@ -57,6 +58,22 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
       _controller.loadInitial();
       unawaited(_restoreReturn());
     });
+    _handoff.addListener(_onHandoff);
+  }
+
+  late final HandoffCoordinator _handoff = ref.read(handoffCoordinatorProvider);
+
+  /// A 继续挑选 aimed at this feed while it is already built.
+  void _onHandoff() {
+    if (mounted && _handoff.hasBrowseRestoreFor('dynamics')) {
+      unawaited(_restoreReturn());
+    }
+  }
+
+  @override
+  void dispose() {
+    _handoff.removeListener(_onHandoff);
+    super.dispose();
   }
 
   /// Identities in display order, as last built.

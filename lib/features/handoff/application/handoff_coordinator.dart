@@ -132,6 +132,14 @@ class HandoffCoordinator extends ChangeNotifier {
         );
       }
       await _entry?.dispatched(sessionId);
+      if (target == ReturnTarget.contentChannel && channel != null) {
+        _browsing = BrowseSnapshot(
+          channel: channel,
+          query: query,
+          anchor: anchor,
+          at: _clock().toUtc(),
+        );
+      }
       return HandoffResult(
         HandoffOutcome.accepted,
         sessionId: sessionId,
@@ -196,6 +204,12 @@ class HandoffCoordinator extends ChangeNotifier {
   /// the restorer claimed it) or this process's cold start navigated to it.
   /// A warm return, or a session some earlier launch consumed, is not.
   Future<ReturnContext?> listRestoreFor(String channel) async {
+    // An explicit 继续挑选 wins, and is used up by the one feed it names.
+    final browse = _browseRestore;
+    if (browse != null && browse.channel == channel) {
+      _browseRestore = null;
+      return browse;
+    }
     final context = await lastReturn();
     if (context == null ||
         context.target != ReturnTarget.contentChannel ||
@@ -206,6 +220,46 @@ class HandoffCoordinator extends ChangeNotifier {
     }
     return context;
   }
+
+  BrowseSnapshot? _browsing;
+  ReturnContext? _browseRestore;
+  var _browseSerial = 0;
+
+  /// Where the user was last picking before a trip out, for 继续挑选.
+  ///
+  /// Held in memory for this process only and never written: it is a
+  /// convenience, separate from the one-shot [ReturnContext] that carries a
+  /// cold return. Reading it never consumes or replays a session.
+  BrowseSnapshot? get browsing => _browsing;
+
+  /// Drops the snapshot (dismissed, or history cleared).
+  void forgetBrowsing() {
+    if (_browsing == null && _browseRestore == null) return;
+    _browsing = null;
+    _browseRestore = null;
+    notifyListeners();
+  }
+
+  /// Asks the snapshot's channel feed to rebuild its query and anchor once.
+  /// Listeners (a mounted feed) react at once; a feed built later picks it
+  /// up through [listRestoreFor].
+  void resumeBrowsing() {
+    final snapshot = _browsing;
+    if (snapshot == null) return;
+    _browseRestore = ReturnContext(
+      sessionId: 'browse-${++_browseSerial}',
+      target: ReturnTarget.contentChannel,
+      createdAt: snapshot.at,
+      channel: snapshot.channel,
+      query: snapshot.query,
+      anchor: snapshot.anchor,
+    );
+    notifyListeners();
+  }
+
+  /// Whether a 继续挑选 restore is waiting for [channel].
+  bool hasBrowseRestoreFor(String channel) =>
+      _browseRestore?.channel == channel;
 
   Future<void> end() => _clearQuietly();
 
