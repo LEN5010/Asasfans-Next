@@ -1,0 +1,12 @@
+# R03 before the fix (HEAD aed99e0 + uncommitted harness/test)
+$ tool/flutterw test test/visual/media_geometry_test.dart
+Expected: a numeric value within <0.02> of <1.7777777777777777>
+  Actual: <0.8000000000000002>
+   Which:  differs by <0.9777777777777775>
+00:05 +0 -1: a video work shows its whole 16:9 cover [E]
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "六格长条漫：第一格在最上面，作者和正文不应被推到很远": []>
+   Which: means none were found but one was expected
+00:12 +3 -2: a long strip leaves the author and words on the first screen [E]
+00:13 +4 -2: Some tests failed.
+exit 1

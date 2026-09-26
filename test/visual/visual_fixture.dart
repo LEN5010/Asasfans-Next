@@ -10,7 +10,7 @@ import 'package:asasfans_next/features/novels/domain/novel_repository.dart';
 /// here is invented for the fixture (member names aside); nothing comes from
 /// the production sources or a real user. Bump [fixtureRevision] whenever
 /// the content changes, so two screenshots can be compared honestly.
-const fixtureRevision = 'v2-fixture-3';
+const fixtureRevision = 'v2-fixture-4';
 
 /// The fixed instant every screenshot is taken at: Saturday 26 September
 /// 2026, 12:00 in Shanghai.
@@ -33,6 +33,13 @@ const fixtureImages = <String, (int, int)>{
   'square-b': (900, 900),
   'tall-a': (720, 2600),
   'wide-a': (2400, 800),
+  // Diagnostic art (see Visual._diagnostic): coloured edge bands and edge
+  // labels, so a crop that loses an edge shows in pixels, not only in taste.
+  'diag-land': (1600, 900),
+  'diag-port': (900, 1600),
+  'diag-strip': (800, 6400),
+  'diag-white': (1200, 1200),
+  'diag-black': (1200, 1200),
   'avatar-1': (160, 160),
   'avatar-2': (160, 160),
   'avatar-3': (160, 160),
@@ -572,3 +579,33 @@ class FixtureCalendar implements CalendarRepository {
     );
   }
 }
+
+/// Works drawn from the diagnostic art: a landscape video cover, a portrait
+/// image, a long strip, and art that is all white or all black. Kept apart
+/// from [fixtureFanart] so the ordinary screenshots stay comparable.
+final diagnosticFanart = <FanartItem>[
+  _fanart(
+    101,
+    '横版视频封面：左右两边写着字，裁掉一边就看得出来',
+    author: '边缘测试',
+    images: ['diag-land'],
+    type: FanartContentType.video,
+    category: FanartCategory.handwriting,
+  ),
+  _fanart(102, '竖版图片：上下左右四条色带', author: '边缘测试', images: ['diag-port']),
+  _fanart(
+    103,
+    '六格长条漫：第一格在最上面，作者和正文不应被推到很远',
+    author: '长图测试',
+    images: ['diag-strip', 'diag-port'],
+  ),
+  _fanart(104, '全白的画面', author: '明暗测试', images: ['diag-white']),
+  _fanart(
+    105,
+    '全黑的视频封面',
+    author: '明暗测试',
+    images: ['diag-black'],
+    type: FanartContentType.video,
+  ),
+  _fanart(106, '横版图片：左右两边写着字', author: '边缘测试', images: ['diag-land']),
+];

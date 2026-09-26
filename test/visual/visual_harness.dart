@@ -119,7 +119,9 @@ abstract final class Visual {
           hue(base + 40, .45, .62),
         ]),
     );
-    if (name.startsWith('avatar')) {
+    if (name.startsWith('diag-')) {
+      _diagnostic(canvas, name, size);
+    } else if (name.startsWith('avatar')) {
       canvas.drawCircle(
         size.center(Offset.zero),
         size.width * .28,
@@ -154,6 +156,97 @@ abstract final class Visual {
     return data!.buffer.asUint8List();
   }
 
+  static const edgeLeft = Color(0xFFE53935);
+  static const edgeRight = Color(0xFF1E88E5);
+  static const edgeTop = Color(0xFF43A047);
+  static const edgeBottom = Color(0xFFFDD835);
+
+  /// Diagnostic art: a flat ground with a coloured band and a label on each
+  /// edge (red left, blue right, green top, yellow bottom) and a mark in the
+  /// centre; a strip is six numbered panels. White and black are flat, for
+  /// checking what is drawn over them.
+  static void _diagnostic(ui.Canvas canvas, String name, Size size) {
+    final white = name.endsWith('white');
+    final black = name.endsWith('black');
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..color = white
+            ? const Color(0xFFFFFFFF)
+            : black
+            ? const Color(0xFF000000)
+            : const Color(0xFF9E9E9E),
+    );
+    void label(String text, Offset at, {Color color = Colors.black}) {
+      final builder =
+          ui.ParagraphBuilder(
+              ui.ParagraphStyle(
+                textAlign: TextAlign.center,
+                fontSize: size.shortestSide * .06,
+              ),
+            )
+            ..pushStyle(ui.TextStyle(color: color))
+            ..addText(text);
+      final paragraph = builder.build()
+        ..layout(ui.ParagraphConstraints(width: size.shortestSide * .5));
+      canvas.drawParagraph(
+        paragraph,
+        at - Offset(paragraph.width / 2, paragraph.height / 2),
+      );
+    }
+
+    if (white || black) {
+      label('明暗', size.center(Offset.zero), color: const Color(0xFF808080));
+      return;
+    }
+    if (name.endsWith('strip')) {
+      final panel = size.height / 6;
+      for (var i = 0; i < 6; i++) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, i * panel, size.width, panel),
+          Paint()
+            ..color = HSLColor.fromAHSL(1, i * 50.0, .3, .7).toColor(),
+        );
+        canvas.drawRect(
+          Rect.fromLTWH(0, i * panel, size.width, size.width * .01),
+          Paint()..color = const Color(0xFF000000),
+        );
+        label('第 ${i + 1} 格', Offset(size.width / 2, (i + .5) * panel));
+      }
+    }
+    final band = size.shortestSide * .06;
+    canvas
+      ..drawRect(
+        Rect.fromLTWH(0, 0, band, size.height),
+        Paint()..color = edgeLeft,
+      )
+      ..drawRect(
+        Rect.fromLTWH(size.width - band, 0, band, size.height),
+        Paint()..color = edgeRight,
+      )
+      ..drawRect(
+        Rect.fromLTWH(0, 0, size.width, band),
+        Paint()..color = edgeTop,
+      )
+      ..drawRect(
+        Rect.fromLTWH(0, size.height - band, size.width, band),
+        Paint()..color = edgeBottom,
+      )
+      ..drawRect(
+        Rect.fromCenter(
+          center: size.center(Offset.zero),
+          width: band * 2,
+          height: band * 2,
+        ),
+        Paint()..color = const Color(0xFF000000),
+      );
+    label('左边的字', Offset(band * 1.2 + size.shortestSide * .25, size.height / 2));
+    label(
+      '右边的字',
+      Offset(size.width - band * 1.2 - size.shortestSide * .25, size.height / 2),
+    );
+  }
+
   /// Serves fixture artwork for any `fixture.invalid` image; 404 otherwise,
   /// so a screenshot never depends on a real server.
   static HttpClient httpClient() => _FixtureHttpClient(_images);
@@ -167,6 +260,8 @@ class VisualView {
     this.pixelRatio = 2,
     this.textScale = 1,
     this.brightness = Brightness.light,
+    this.safeArea = EdgeInsets.zero,
+    this.keyboard = 0,
   });
   final String name;
   final Size size;
@@ -174,12 +269,41 @@ class VisualView {
   final double textScale;
   final Brightness brightness;
 
+  /// System bars (status bar, gesture area), in logical px.
+  final EdgeInsets safeArea;
+
+  /// Height of an open soft keyboard, in logical px.
+  final double keyboard;
+
+  /// A phone with a notch-height status bar and a gesture bar.
+  VisualView get withSystemBars => VisualView(
+    '$name-bars',
+    size,
+    pixelRatio: pixelRatio,
+    textScale: textScale,
+    brightness: brightness,
+    safeArea: const EdgeInsets.only(top: 47, bottom: 34),
+    keyboard: keyboard,
+  );
+
+  VisualView withKeyboard(double height) => VisualView(
+    '$name-kb',
+    size,
+    pixelRatio: pixelRatio,
+    textScale: textScale,
+    brightness: brightness,
+    safeArea: safeArea,
+    keyboard: height,
+  );
+
   VisualView get dark => VisualView(
     '$name-dark',
     size,
     pixelRatio: pixelRatio,
     textScale: textScale,
     brightness: Brightness.dark,
+    safeArea: safeArea,
+    keyboard: keyboard,
   );
 
   VisualView scaled(double scale) => VisualView(
@@ -188,6 +312,8 @@ class VisualView {
     pixelRatio: pixelRatio,
     textScale: scale,
     brightness: brightness,
+    safeArea: safeArea,
+    keyboard: keyboard,
   );
 
   static const phone = VisualView('390', Size(390, 844));
@@ -198,7 +324,16 @@ class VisualView {
   void apply(WidgetTester tester) {
     tester.view
       ..physicalSize = size * pixelRatio
-      ..devicePixelRatio = pixelRatio;
+      ..devicePixelRatio = pixelRatio
+      ..padding = FakeViewPadding(
+        top: safeArea.top * pixelRatio,
+        bottom: safeArea.bottom * pixelRatio,
+      )
+      ..viewPadding = FakeViewPadding(
+        top: safeArea.top * pixelRatio,
+        bottom: safeArea.bottom * pixelRatio,
+      )
+      ..viewInsets = FakeViewPadding(bottom: keyboard * pixelRatio);
     tester.platformDispatcher
       ..textScaleFactorTestValue = textScale
       ..platformBrightnessTestValue = brightness;
@@ -314,6 +449,50 @@ double? firstTop(WidgetTester tester, String typeName) {
   return tops.isEmpty ? null : tops.reduce(math.min);
 }
 
+/// The pixels of the captured root, readable by logical position. Works in
+/// ordinary test runs too, so a layout claim about what is visible can be
+/// checked instead of only looked at.
+class RenderedFrame {
+  RenderedFrame._(this._rgba, this._width, this._ratio);
+  final ByteData _rgba;
+  final int _width;
+  final double _ratio;
+
+  Color at(Offset logical) {
+    final x = (logical.dx * _ratio).floor();
+    final y = (logical.dy * _ratio).floor();
+    final offset = (y * _width + x) * 4;
+    return Color.fromARGB(
+      _rgba.getUint8(offset + 3),
+      _rgba.getUint8(offset),
+      _rgba.getUint8(offset + 1),
+      _rgba.getUint8(offset + 2),
+    );
+  }
+
+  /// True when the pixel at [logical] is within [tolerance] (0–255 per
+  /// channel) of [expected].
+  bool near(Offset logical, Color expected, {int tolerance = 40}) {
+    final color = at(logical);
+    int channel(double value) => (value * 255).round();
+    return (channel(color.r) - channel(expected.r)).abs() <= tolerance &&
+        (channel(color.g) - channel(expected.g)).abs() <= tolerance &&
+        (channel(color.b) - channel(expected.b)).abs() <= tolerance;
+  }
+}
+
+Future<RenderedFrame> grabFrame(WidgetTester tester, {double ratio = 1}) async {
+  final boundary =
+      _root.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+  return (await tester.runAsync(() async {
+    final image = await boundary.toImage(pixelRatio: ratio);
+    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final frame = RenderedFrame._(data!, image.width, ratio);
+    image.dispose();
+    return frame;
+  }))!;
+}
+
 /// Writes `<scenario>_<view>.png` and its manifest entry when capturing.
 Future<void> shoot(
   WidgetTester tester,
@@ -345,6 +524,9 @@ Future<void> shoot(
       'scenario': scenario,
       'fixture_revision': fixtureRevision,
       'viewport_logical': [view.size.width, view.size.height],
+      if (view.safeArea != EdgeInsets.zero)
+        'safe_area_logical': [view.safeArea.top, view.safeArea.bottom],
+      if (view.keyboard > 0) 'keyboard_logical': view.keyboard,
       'device_pixel_ratio': view.pixelRatio,
       'text_scale': view.textScale,
       'brightness': view.brightness.name,
