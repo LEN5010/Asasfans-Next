@@ -92,11 +92,11 @@
     "模式卡ID、源URL/版本/commit、对应真实路径与验收动作；没有测试过的应用明确仅为文档/源码研究。"
    ],
    "definition_of_done": "每个参考至少导出一个可执行选择或明确拒绝；研究达到选择依据后停止，不无限扩展项目清单。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
     "code": null,
     "layout": null,
-    "design": null,
+    "design": "PATTERNS.md: 12 cards R01-R12 + reject list; Apple 219/251/292/255/257 and pub.dev read; pocketcasts/flexibits/culturedcode blocked by egress proxy (marked not re-verified); PiliPlus/LoveIwara out of repo scope, not read",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -125,11 +125,11 @@
     "路由与任务流图（文本可）、字段/文案表、旧路径兼容测试清单。"
    ],
    "definition_of_done": "三种候选都遵循同一功能合同，视觉方向不能靠删功能获得简洁。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
     "code": null,
     "layout": null,
-    "design": null,
+    "design": "IA.md: layers, flows, copy table, old-path checklist; CAPABILITIES.md field table",
     "device": null
    },
    "accepted_by_user": "pending"
