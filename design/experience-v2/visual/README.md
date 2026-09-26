@@ -21,3 +21,11 @@ Measured first-item top on a 390 × 844 phone (logical px from the window top, `
 - **Dynamics / reader**: already read well. The reader's typography is the best in the app, and dynamics are a reasonable reading column in cards.
 - **Wide (1280)**: pages stretch cards in fixed columns. Mine has a three-level rail (app rail → section list → content), and Today pairs schedule and archive side by side.
 - **Dark**: a straight inversion of the light theme. The member-colour schedule pills stay saturated.
+
+## Later folders
+
+| Folder | What |
+|---|---|
+| `directions/` | U05 prototypes (provenance `prototype`), plus `directions-gray.png` and `directions-dark.png` |
+| `sample/` | U06 at `03c47db`: every page after the direction-A sample, plus the flow steps (`flow-*`) and the settings page |
+| `before-after-gray.png` | Baseline vs sample in grayscale: Today, 二创, 我的 |
