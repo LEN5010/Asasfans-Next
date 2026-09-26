@@ -42,6 +42,171 @@ Color calendarEventColor(CalendarEvent event) {
       : Color.lerp(AppTheme.memberColors['A-SOUL'], Colors.black, .18)!;
 }
 
+final _tag = RegExp(r'【([^】]*)】');
+final _colon = RegExp('[:：]');
+
+/// An event title split for display.
+/// 【突击】嘉然突击：【突击】一起看… → 突击 / 嘉然突击 / 【突击】一起看…
+({String headline, String subtitle, String label, bool live})
+calendarEventParts(CalendarEvent event) {
+  final title = event.title.trim();
+  final split = title.indexOf(_colon);
+  final head = (split < 0 ? title : title.substring(0, split))
+      .replaceAll(_tag, '')
+      .trim();
+  final rest = split < 0 ? '' : title.substring(split + 1).trim();
+  final live = EventClassifier.classify(event) == EventKind.live;
+  return (
+    headline: head.isNotEmpty
+        ? head
+        : rest.isNotEmpty
+        ? rest
+        : '未命名安排',
+    subtitle: head.isNotEmpty ? rest : '',
+    label:
+        _tag.firstMatch(title)?.group(1)?.split('/').first.trim() ??
+        (live ? '直播' : '日程'),
+    live: live,
+  );
+}
+
+/// One agenda line: time, who (a thin bar in their colours), what, and its
+/// state in words. Quieter than [CalendarEventTile]: no filled block, so a
+/// list of several reads as a schedule rather than a stack of banners.
+class CalendarAgendaRow extends StatelessWidget {
+  const CalendarAgendaRow({
+    required this.event,
+    this.showDay = false,
+    this.today,
+    super.key,
+  });
+  final CalendarEvent event;
+
+  /// Show which day, for an event that is not on the list's own day.
+  final bool showDay;
+
+  /// The Shanghai day the list is anchored to, for 今天/明天 labels.
+  final DateTime? today;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final (:headline, :subtitle, :label, :live) = calendarEventParts(event);
+    final cast = calendarEventCast(event);
+    final startDay = CalendarTime.dayOf(event.start, allDay: event.allDay);
+    final gap = today == null ? null : startDay.difference(today!).inDays;
+    final day = switch (gap) {
+      0 => '今天',
+      1 => '明天',
+      _ => '${startDay.month}月${startDay.day}日',
+    };
+    final state = event.isCancelled
+        ? '已取消'
+        : event.status == EventStatus.tentative
+        ? '待定'
+        : label;
+    final muted = event.isCancelled;
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    return Semantics(
+      button: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => showCalendarEvent(context, event),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 60 * scale.clamp(1.0, 1.6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.allDay ? '全天' : CalendarAgenda.time(event.start),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: muted ? colors.onSurfaceVariant : null,
+                        ),
+                      ),
+                      if (showDay) Text(day, style: theme.textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+                // Who appears: one segment per member.
+                SizedBox(
+                  width: 4,
+                  height: 36,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (cast.isEmpty || muted)
+                          Expanded(
+                            child: ColoredBox(
+                              color: muted
+                                  ? colors.outlineVariant
+                                  : calendarEventColor(event),
+                            ),
+                          )
+                        else
+                          for (final member in cast)
+                            Expanded(
+                              child: ColoredBox(
+                                color: AppTheme.memberColors[member]!,
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        headline,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          height: 1.35,
+                          decoration: muted ? TextDecoration.lineThrough : null,
+                          color: muted ? colors.onSurfaceVariant : null,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty)
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    state,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: muted ? colors.error : colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CalendarEventTile extends StatelessWidget {
   const CalendarEventTile({
     required this.event,
@@ -55,9 +220,6 @@ class CalendarEventTile extends StatelessWidget {
   final bool showDate;
   final bool compact;
 
-  static final _tag = RegExp(r'【([^】]*)】');
-  static final _colon = RegExp('[:：]');
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -65,23 +227,7 @@ class CalendarEventTile extends StatelessWidget {
     final startDay = CalendarTime.dayOf(event.start, allDay: event.allDay);
     final date = showDate || (day != null && day != startDay);
     final scale = MediaQuery.textScalerOf(context).scale(1);
-    // 【突击】嘉然突击：【突击】一起看… → 突击 / 嘉然突击 / 【突击】一起看…
-    final title = event.title.trim();
-    final split = title.indexOf(_colon);
-    final head = (split < 0 ? title : title.substring(0, split))
-        .replaceAll(_tag, '')
-        .trim();
-    final rest = split < 0 ? '' : title.substring(split + 1).trim();
-    final headline = head.isNotEmpty
-        ? head
-        : rest.isNotEmpty
-        ? rest
-        : '未命名安排';
-    final subtitle = head.isNotEmpty ? rest : '';
-    final live = EventClassifier.classify(event) == EventKind.live;
-    final label =
-        _tag.firstMatch(title)?.group(1)?.split('/').first.trim() ??
-        (live ? '直播' : '日程');
+    final (:headline, :subtitle, :label, :live) = calendarEventParts(event);
     // White text throughout; the fill is dimmed so light colours carry it.
     final fill = event.isCancelled
         ? const Color(0xFF7D7881)

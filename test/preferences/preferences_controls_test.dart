@@ -42,6 +42,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('我的').last);
       await tester.pumpAndSettle();
+      // Preferences live on their own page, reached from 我的 → 设置.
+      await tester.scrollUntilVisible(
+        find.text('设置'),
+        180,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(find.text('设置'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('主题'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('深色'));

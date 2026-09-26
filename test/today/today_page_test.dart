@@ -122,7 +122,7 @@ void _size(WidgetTester tester, Size value) {
 
 void main() {
   testWidgets(
-    'Density: desktop pairs modules but keeps schedule events vertical',
+    'Density: a wide window gives time its own column beside the content',
     (tester) async {
       _size(tester, const Size(1280, 1100));
       final calendar = _Calendar()
@@ -130,18 +130,20 @@ void main() {
       await tester.pumpWidget(_host(calendar));
       await tester.pumpAndSettle();
       expect(find.text('今日歌会'), findsOneWidget);
-      expect(find.text('最新二创正文'), findsOneWidget);
+      expect(find.text('文字作品'), findsOneWidget);
       expect(find.text('最新切片标题'), findsOneWidget);
       expect(find.text('Asasfans Next'), findsNothing);
       final art = tester.getRect(find.byType(FanartCard));
-      final clip = tester.getRect(find.byType(VideoCard));
-      expect(art.top, greaterThan(clip.bottom));
-      expect(find.text('最近更新'), findsNothing);
-      expect(
-        tester.getTopLeft(find.text('今日安排')).dx,
-        lessThan(tester.getTopLeft(find.text('历史上的今天')).dx),
-      );
-      expect(tester.getTopLeft(find.text('历史上的今天')).dy, lessThan(clip.top));
+      final clip = tester.getRect(find.byType(VideoRow));
+      final schedule = tester.getRect(find.text('今日安排'));
+      // Works lead the content column; clips follow them.
+      expect(art.bottom, lessThan(clip.top));
+      // The schedule sits in its own column to the left, level with works.
+      expect(schedule.right, lessThan(art.left));
+      expect(schedule.top, lessThan(art.bottom));
+      // The archive follows today's own content.
+      expect(tester.getTopLeft(find.text('历史上的今天')).dy, greaterThan(clip.top));
+      // Events stay one per line, not side by side.
       expect(
         tester.getTopLeft(find.text('今日歌会')).dx,
         tester.getTopLeft(find.text('今日杂谈')).dx,
@@ -153,7 +155,7 @@ void main() {
     },
   );
 
-  testWidgets('a phone puts today\'s content before the archive', (
+  testWidgets('a phone puts works before clips and both before the archive', (
     tester,
   ) async {
     _size(tester, const Size(390, 2400));
@@ -161,12 +163,12 @@ void main() {
     await tester.pumpWidget(_host(calendar));
     await tester.pumpAndSettle();
     final schedule = tester.getTopLeft(find.text('今日安排')).dy;
-    final clips = tester.getTopLeft(find.text('最新切片')).dy;
     final fanart = tester.getTopLeft(find.text('最新二创')).dy;
+    final clips = tester.getTopLeft(find.text('最新切片')).dy;
     final history = tester.getTopLeft(find.text('历史上的今天')).dy;
-    expect(schedule, lessThan(clips));
-    expect(clips, lessThan(fanart));
-    expect(fanart, lessThan(history));
+    expect(schedule, lessThan(fanart));
+    expect(fanart, lessThan(clips));
+    expect(clips, lessThan(history));
   });
 
   testWidgets(
@@ -183,7 +185,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('接下来'), findsOneWidget);
       expect(find.text('下次歌会'), findsOneWidget);
-      expect(find.text('9-23'), findsOneWidget);
+      expect(find.text('9月23日'), findsOneWidget);
       expect(find.text('已取消安排'), findsNothing);
       expect(find.text('更晚安排'), findsNothing);
     },
@@ -292,14 +294,14 @@ void main() {
         ..items = [_event('九月安排', 30), _event('十月安排', 31)];
       await tester.pumpWidget(_host(calendar, clock: () => now));
       await tester.pumpAndSettle();
-      expect(find.text('今日 · 9 月 30 日'), findsOneWidget);
+      expect(find.text('9月30日 星期三'), findsOneWidget);
       final container = ProviderScope.containerOf(
         tester.element(find.byType(TodayPage)),
       );
       now = now.add(const Duration(seconds: 2));
       container.read(shanghaiDateProvider.notifier).resync();
       await tester.pumpAndSettle();
-      expect(find.text('今日 · 10 月 1 日'), findsOneWidget);
+      expect(find.text('10月1日 星期四'), findsOneWidget);
       expect(find.text('十月安排'), findsOneWidget);
       expect(find.text('九月安排'), findsNothing);
       expect(calendar.forced, [false, false]);
@@ -339,7 +341,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(
-      find.byType(VideoCard),
+      find.byType(VideoRow),
       160,
       scrollable: find
           .descendant(
@@ -350,6 +352,6 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.byType(VideoCard), findsOneWidget);
+    expect(find.byType(VideoRow), findsOneWidget);
   });
 }

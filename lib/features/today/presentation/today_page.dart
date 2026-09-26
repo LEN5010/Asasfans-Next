@@ -1,9 +1,7 @@
 import '../../rules/application/feed_visibility.dart';
-import '../../rules/domain/content_rules.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,20 +10,18 @@ import 'package:go_router/go_router.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../../app/theme/app_tokens.dart';
-import '../../../shared/widgets/app_page_bar.dart';
-import '../../../shared/widgets/media_grid_delegate.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/resume_when_visible.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
+import '../../calendar/domain/calendar_event.dart';
+import '../../../shared/widgets/page_heading.dart';
 import '../../calendar/presentation/calendar_event_widgets.dart';
 import '../../content/presentation/video_card.dart';
 import '../../content/presentation/fanart_card.dart';
 import '../../content/presentation/fanart_detail_page.dart';
-import '../../content/domain/fanart_repository.dart';
-import '../../content/domain/community_video_repository.dart';
 import '../../preferences/application/preferences_controller.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../library/application/content_snapshots.dart';
@@ -83,147 +79,119 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
     final preferences = ref.watch(preferencesControllerProvider);
     if (preferences.loading && !preferences.ready) {
       return const Scaffold(
-        appBar: AppPageBar(title: Text('今日')),
+        backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
       );
     }
     final settings = preferences.values;
     final showFanart = settings.shows(HomeSection.fanart);
     final showClips = settings.shows(HomeSection.clips);
-    final fanart = showFanart
-        ? ref.watch(todayFanartProvider)
-        : const AsyncData<List<FanartItem>>([]);
-    final clips = showClips
-        ? ref.watch(todayClipsProvider)
-        : const AsyncData<List<CommunityVideo>>([]);
+    final calendar = settings.shows(HomeSection.calendar);
+    final history = settings.shows(HomeSection.history);
     final day = ref.watch(shanghaiDateProvider);
-    final fanartShelf = _ContentShelf(
-      title: '最新二创',
-      items: fanart,
-      onAll: () => context.go('/content/fanart'),
-      onRetry: () => ref.invalidate(todayFanartProvider),
-      extent: FanartCard.extentFor,
-      subjectOf: RuleSubjects.fanart,
-      card: (item) => FanartCard(
-        item: item,
-        onLongPress: () =>
-            showContentActions(context, ContentSnapshots.fanart(item)),
-        onTap: () => openFanart(context, ref, item),
-      ),
+    final heading = RootHeading(
+      title: '${day.month}月${day.day}日 星期${'一二三四五六日'[day.weekday - 1]}',
+      subtitle: '今天，来枝江看看',
+      actions: [
+        const UpdatesBellButton(),
+        AppButton.icon(
+          tooltip: '刷新今日',
+          onPressed: _refreshing ? null : () => _refresh(true),
+          icon: _refreshing
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.refresh),
+        ),
+      ],
     );
-    final clipsShelf = _ContentShelf(
-      title: '最新切片',
-      items: clips,
-      onAll: () => context.go('/content/clips'),
-      onRetry: () => ref.invalidate(todayClipsProvider),
-      extent: VideoCard.extentFor,
-      subjectOf: RuleSubjects.video,
-      card: (video) => VideoCard(video: video),
-    );
+    final schedule = calendar
+        ? _ScheduleSection(day: day, onCalendar: _calendar)
+        : null;
+    final works = showFanart ? const _WorksSection() : null;
+    final clips = showClips ? const _ClipsSection() : null;
     return Scaffold(
-      extendBodyBehindAppBar: true,
       // The shell's backdrop shows through the main pages.
       backgroundColor: Colors.transparent,
-      appBar: AppPageBar(
-        title: Text('今日 · ${CalendarAgenda.date(day)}'),
-        actions: [
-          const UpdatesBellButton(),
-          AppButton.icon(
-            tooltip: '刷新今日',
-            onPressed: _refreshing ? null : () => _refresh(true),
-            icon: _refreshing
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: Builder(
-        // Inside the body, so MediaQuery carries the page bar height.
-        builder: (context) => Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1360),
-            child: RefreshIndicator(
-              onRefresh: () => _refresh(true),
-              edgeOffset: MediaQuery.paddingOf(context).top,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final calendar = settings.shows(HomeSection.calendar);
-                  final history = settings.shows(HomeSection.history);
-                  final paired =
-                      calendar &&
-                      history &&
-                      // Measured after the desktop rail, so a mid-size window
-                      // pairs instead of stretching the schedule full width.
-                      constraints.maxWidth >=
-                          680 * MediaQuery.textScalerOf(context).scale(1);
-                  // Horizontal shelves run to the edges and carry the page
-                  // inset themselves, so cards are not cut at the margin.
-                  const edge = EdgeInsets.symmetric(horizontal: 16);
-                  return ListView(
-                    key: const PageStorageKey('today-scroll'),
-                    padding: pageInsets(context, horizontal: 0, top: 4),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      for (final (index, module) in <Widget>[
-                        if (paired)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 16),
-                                child: SizedBox(
-                                  width: (constraints.maxWidth * .32).clamp(
-                                    280,
-                                    360,
-                                  ),
-                                  child: _ScheduleSection(
-                                    day: day,
-                                    onCalendar: _calendar,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 24),
-                              const Expanded(
-                                child: OnThisDaySection(
-                                  inset: EdgeInsets.only(right: 16),
-                                ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          if (calendar)
-                            Padding(
-                              padding: edge,
-                              child: _ScheduleSection(
-                                day: day,
-                                onCalendar: _calendar,
-                              ),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1360),
+          child: RefreshIndicator(
+            onRefresh: () => _refresh(true),
+            edgeOffset: MediaQuery.paddingOf(context).top,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final gutter = AppTokens.gutter(width);
+                final edge = EdgeInsets.symmetric(horizontal: gutter);
+                // Wide windows give time its own column beside the content,
+                // instead of stretching a phone's single column.
+                final paired =
+                    schedule != null &&
+                    (works != null || clips != null) &&
+                    width >= 840 * MediaQuery.textScalerOf(context).scale(1);
+                final modules = <Widget>[
+                  if (paired)
+                    Padding(
+                      padding: edge,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: (width * .3).clamp(300, 380),
+                            child: schedule,
+                          ),
+                          const SizedBox(width: 32),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ?works,
+                                if (works != null && clips != null)
+                                  const SizedBox(height: AppTokens.sectionGap),
+                                ?clips,
+                              ],
                             ),
+                          ),
                         ],
-                        if (showClips) clipsShelf,
-                        if (showFanart) fanartShelf,
-                        // On a phone the archive follows today's content
-                        // instead of pushing it below the first screen; a
-                        // wide window pairs it with the schedule above.
-                        if (history && !paired)
-                          const OnThisDaySection(inset: edge),
-                        // Every module hidden is a choice, not a failure:
-                        // say so and point at the setting that undoes it.
-                        if (!calendar && !history && !showClips && !showFanart)
-                          const Padding(padding: edge, child: _AllHidden()),
-                      ].indexed)
-                        Padding(
-                          padding: EdgeInsets.only(top: index == 0 ? 0 : 20),
-                          child: module,
+                      ),
+                    )
+                  else ...[
+                    if (schedule != null)
+                      Padding(padding: edge, child: schedule),
+                    if (works != null) Padding(padding: edge, child: works),
+                    if (clips != null) Padding(padding: edge, child: clips),
+                  ],
+                  // The archive comes after today's own content.
+                  if (history) OnThisDaySection(inset: edge),
+                  // Every module hidden is a choice, not a failure: say so
+                  // and point at the setting that undoes it.
+                  if (!calendar && !history && !showClips && !showFanart)
+                    Padding(padding: edge, child: const _AllHidden()),
+                ];
+                return ListView(
+                  key: const PageStorageKey('today-scroll'),
+                  padding: EdgeInsets.fromLTRB(
+                    0,
+                    MediaQuery.paddingOf(context).top + 16,
+                    0,
+                    MediaQuery.paddingOf(context).bottom + 24,
+                  ),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    Padding(padding: edge, child: heading),
+                    for (final module in modules)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppTokens.sectionGap - 8,
                         ),
-                    ],
-                  );
-                },
-              ),
+                        child: module,
+                      ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -232,6 +200,8 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
   }
 }
 
+/// Today's schedule, or the next thing on it: at most two lines of today,
+/// else the first live event within a week.
 class _ScheduleSection extends ConsumerWidget {
   const _ScheduleSection({required this.day, required this.onCalendar});
   final DateTime day;
@@ -239,11 +209,32 @@ class _ScheduleSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final schedule = ref.watch(todayScheduleProvider);
+    var next = false;
+    var entries = const <CalendarEvent>[];
+    if (schedule case AsyncData(:final value)) {
+      entries = CalendarAgenda.onDay(value.events, day);
+      if (entries.isEmpty) {
+        for (var offset = 1; offset <= 7; offset++) {
+          entries = CalendarAgenda.onDay(
+            value.events.where((event) => !event.isCancelled),
+            day.add(Duration(days: offset)),
+          );
+          if (entries.isNotEmpty) {
+            entries = entries.take(1).toList();
+            next = true;
+            break;
+          }
+        }
+      }
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader(title: '今日安排', onAll: onCalendar, action: '日历'),
-        const SizedBox(height: 6),
+        SectionHeading(
+          title: next ? '接下来' : '今日安排',
+          action: '日历',
+          onAction: onCalendar,
+        ),
         AppFadeSwitcher(
           phase: asyncPhase(schedule),
           child: schedule.when(
@@ -254,64 +245,31 @@ class _ScheduleSection extends ConsumerWidget {
                 monthEventsProvider(DateTime.utc(day.year, day.month)),
               ),
             ),
-            data: (snapshot) {
-              var entries = CalendarAgenda.onDay(snapshot.events, day);
-              var next = false;
-              if (entries.isEmpty) {
-                for (var offset = 1; offset <= 7; offset++) {
-                  entries = CalendarAgenda.onDay(
-                    snapshot.events.where((event) => !event.isCancelled),
-                    day.add(Duration(days: offset)),
-                  );
-                  if (entries.isNotEmpty) {
-                    entries = entries.take(1).toList();
-                    next = true;
-                    break;
-                  }
-                }
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (snapshot.isStale)
-                    CalendarStaleBanner(fetchedAt: snapshot.fetchedAt),
-                  if (snapshot.offlineCacheUnavailable)
-                    const CalendarCacheFailureBanner(),
-                  if (snapshot.followSyncUnavailable)
-                    const CalendarFollowSyncBanner(),
-                  if (entries.isEmpty)
-                    const _EmptySection('今天没有安排')
-                  else ...[
-                    if (next)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          '接下来',
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
+            data: (snapshot) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (snapshot.isStale)
+                  CalendarStaleBanner(fetchedAt: snapshot.fetchedAt),
+                if (snapshot.offlineCacheUnavailable)
+                  const CalendarCacheFailureBanner(),
+                if (snapshot.followSyncUnavailable)
+                  const CalendarFollowSyncBanner(),
+                if (entries.isEmpty)
+                  const _EmptySection('接下来一周没有安排')
+                else ...[
+                  for (final event in entries.take(2))
+                    CalendarAgendaRow(event: event, showDay: next, today: day),
+                  if (entries.length > 2)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: AppButton(
+                        onPressed: onCalendar,
+                        child: Text('还有 ${entries.length - 2} 项安排'),
                       ),
-                    for (final event in entries.take(2))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: CalendarEventTile(
-                          event: event,
-                          day: next ? null : day,
-                          showDate: next,
-                          compact: true,
-                        ),
-                      ),
-                    if (entries.length > 2)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: AppButton(
-                          onPressed: onCalendar,
-                          child: Text('还有 ${entries.length - 2} 项安排'),
-                        ),
-                      ),
-                  ],
+                    ),
                 ],
-              );
-            },
+              ],
+            ),
           ),
         ),
       ],
@@ -319,170 +277,159 @@ class _ScheduleSection extends ConsumerWidget {
   }
 }
 
-class _ContentShelf<T> extends StatefulWidget {
-  const _ContentShelf({
-    required this.title,
-    required this.items,
-    required this.onAll,
-    required this.onRetry,
-    required this.extent,
-    required this.subjectOf,
-    required this.card,
-  });
-  final String title;
-  final AsyncValue<List<T>> items;
-  final VoidCallback onAll;
-  final VoidCallback onRetry;
-  final double Function(T, double, TextScaler) extent;
-  final RuleSubject Function(T) subjectOf;
-  final Widget Function(T) card;
+/// The newest works as a row of tiles, as many as the width holds.
+class _WorksSection extends ConsumerWidget {
+  const _WorksSection();
   @override
-  State<_ContentShelf<T>> createState() => _ContentShelfState<T>();
-}
-
-class _ContentShelfState<T> extends State<_ContentShelf<T>> {
-  final _scroll = ScrollController();
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _move(int direction) {
-    if (!_scroll.hasClients) return;
-    _scroll.animateTo(
-      (_scroll.offset + direction * _scroll.position.viewportDimension * .76)
-          .clamp(0, _scroll.position.maxScrollExtent),
-      duration: appMotion(context, AppTokens.controlMotion),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      // The shelf runs to the page edges; only its heading keeps the inset.
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _SectionHeader(
-          title: widget.title,
-          onAll: widget.onAll,
-          onPrevious: () => _move(-1),
-          onNext: () => _move(1),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(todayFanartProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeading(
+          title: '最新二创',
+          action: '查看二创',
+          onAction: () => context.go('/content/fanart'),
         ),
-      ),
-      const SizedBox(height: 6),
-      AppFadeSwitcher(
-        phase: asyncPhase(widget.items),
-        child: widget.items.when(
-          loading: () => const _SectionLoading(),
-          error: (error, _) =>
-              _SectionError(error: error, onRetry: widget.onRetry),
-          data: (raw) => RuleFilterScope(
-            items: raw,
-            subjectOf: widget.subjectOf,
-            builder: (visible) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: RuleStatusBar(visibility: visible),
-                ),
-                _cards(visible.items.take(6).toList()),
-              ],
+        const SizedBox(height: 4),
+        AppFadeSwitcher(
+          phase: asyncPhase(items),
+          child: items.when(
+            loading: () => const _SectionLoading(),
+            error: (error, _) => _SectionError(
+              error: error,
+              onRetry: () => ref.invalidate(todayFanartProvider),
+            ),
+            data: (raw) => RuleFilterScope(
+              items: raw,
+              subjectOf: RuleSubjects.fanart,
+              builder: (visible) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RuleStatusBar(visibility: visible),
+                  if (visible.items.isEmpty)
+                    const _EmptySection('暂时没有内容')
+                  else
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final scaler = MediaQuery.textScalerOf(context);
+                        final width = constraints.maxWidth;
+                        const gap = AppTokens.itemGap;
+                        final minimum =
+                            (width >= 760 ? 200.0 : 136.0) *
+                            scaler.scale(1).clamp(1.0, 1.6);
+                        final columns = ((width + gap) / (minimum + gap))
+                            .floor()
+                            .clamp(1, 5);
+                        final cell = (width - gap * (columns - 1)) / columns;
+                        final shown = visible.items.take(columns).toList();
+                        return SizedBox(
+                          height: FanartCard.extentFor(
+                            shown.first,
+                            cell,
+                            scaler,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final (index, item) in shown.indexed) ...[
+                                if (index > 0) const SizedBox(width: gap),
+                                SizedBox(
+                                  width: cell,
+                                  child: FanartCard(
+                                    item: item,
+                                    onLongPress: () => showContentActions(
+                                      context,
+                                      ContentSnapshots.fanart(item),
+                                    ),
+                                    onTap: () => openFanart(context, ref, item),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    ],
-  );
-  Widget _cards(List<T> values) => values.isEmpty
-      ? const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: _EmptySection('暂时没有内容'),
-        )
-      : LayoutBuilder(
-          builder: (context, constraints) {
-            final scaler = MediaQuery.textScalerOf(context);
-            // Match the existing video grid instead of enlarging shelf cards.
-            final columns = MediaGridDelegate.columnsFor(
-              constraints.maxWidth,
-              textScale: scaler.scale(1),
-            );
-            final width = MediaGridDelegate.cellWidth(
-              constraints.maxWidth,
-              columns,
-            );
-            final gap = MediaGridDelegate.spacingFor(constraints.maxWidth);
-            final height = values
-                .map((value) => widget.extent(value, width, scaler))
-                .reduce(math.max);
-            return SizedBox(
-              height: height,
-              child: ListView.separated(
-                controller: _scroll,
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: values.length,
-                separatorBuilder: (_, _) => SizedBox(width: gap),
-                itemBuilder: (_, index) => SizedBox(
-                  width: width,
-                  height: height,
-                  child: widget.card(values[index]),
-                ),
-              ),
-            );
-          },
-        );
+      ],
+    );
+  }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.onAll,
-    this.action = '更多',
-    this.onPrevious,
-    this.onNext,
-  });
-  final String title;
-  final VoidCallback onAll;
-  final String action;
-  final VoidCallback? onPrevious, onNext;
+/// A few new clips as list lines: they accompany the works, not compete.
+class _ClipsSection extends ConsumerWidget {
+  const _ClipsSection();
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-      ),
-      if (onPrevious != null && MediaQuery.sizeOf(context).width >= 760)
-        AppButton.icon(
-          tooltip: '上一组$title',
-          onPressed: onPrevious,
-          icon: const Icon(Icons.chevron_left),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(todayClipsProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeading(
+          title: '最新切片',
+          action: '全部视频',
+          onAction: () => context.go('/content/clips'),
         ),
-      if (onNext != null && MediaQuery.sizeOf(context).width >= 760)
-        AppButton.icon(
-          tooltip: '下一组$title',
-          onPressed: onNext,
-          icon: const Icon(Icons.chevron_right),
+        AppFadeSwitcher(
+          phase: asyncPhase(items),
+          child: items.when(
+            loading: () => const _SectionLoading(),
+            error: (error, _) => _SectionError(
+              error: error,
+              onRetry: () => ref.invalidate(todayClipsProvider),
+            ),
+            data: (raw) => RuleFilterScope(
+              items: raw,
+              subjectOf: RuleSubjects.video,
+              builder: (visible) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RuleStatusBar(visibility: visible),
+                  if (visible.items.isEmpty)
+                    const _EmptySection('暂时没有内容')
+                  else
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Two columns of lines once each can keep ~340 px.
+                        final columns = constraints.maxWidth >= 700 ? 2 : 1;
+                        final shown = visible.items
+                            .take(columns == 2 ? 4 : 3)
+                            .toList();
+                        return Wrap(
+                          spacing: 24,
+                          children: [
+                            for (final video in shown)
+                              SizedBox(
+                                width: columns == 2
+                                    ? (constraints.maxWidth - 24) / 2
+                                    : constraints.maxWidth,
+                                child: VideoRow(video: video),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
-      AppButton(onPressed: onAll, child: Text(action)),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class _EmptySection extends StatelessWidget {
   const _EmptySection(this.text);
   final String text;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    alignment: Alignment.centerLeft,
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-    ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
     child: Text(
       text,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -499,11 +446,10 @@ class _AllHidden extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const _EmptySection('首页模块都已隐藏'),
-      const SizedBox(height: 8),
       AppButton.withIcon(
         icon: const Icon(Icons.tune),
-        label: const Text('在“我的 · 偏好”中显示模块'),
-        onPressed: () => context.go('/mine'),
+        label: const Text('在“我的 · 设置”中显示模块'),
+        onPressed: () => context.go('/mine/settings'),
       ),
     ],
   );

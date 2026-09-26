@@ -30,6 +30,7 @@ class MediaCover extends StatelessWidget {
     this.badge,
     this.video = false,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
     super.key,
   });
   final Uri? image;
@@ -37,6 +38,9 @@ class MediaCover extends StatelessWidget {
   final String? badge;
   final bool video;
   final BoxFit fit;
+
+  /// Where a cropped image anchors; tall art keeps its top in view.
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -54,6 +58,7 @@ class MediaCover extends StatelessWidget {
                 devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
               ),
               fit: fit,
+              alignment: alignment,
               errorBuilder: (_, _, _) => _fallback(context),
               // A network cover cross-fades from the loading tone; a cached
               // one appears at once.

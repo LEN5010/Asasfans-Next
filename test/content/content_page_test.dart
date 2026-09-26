@@ -1,6 +1,5 @@
 import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/shared/widgets/app_controls.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
@@ -455,7 +454,9 @@ void main() {
     expect(find.byTooltip('随机二创'), findsNothing);
   });
 
-  testWidgets('a narrow window drops to one readable column', (tester) async {
+  testWidgets('the narrowest phone keeps two readable artwork columns', (
+    tester,
+  ) async {
     tester.view
       ..physicalSize = const Size(320, 640)
       ..devicePixelRatio = 1;
@@ -464,9 +465,28 @@ void main() {
     await tester.pumpWidget(_app(_StubRepository()));
     await tester.pumpAndSettle();
 
-    // Fanart is a lazy masonry; 320 - 32 padding leaves room for one
-    // readable column above the 160 floor.
-    expect(_masonryColumns(tester), 1);
+    // A fixed-extent grid: two columns of tiles no narrower than 136.
+    expect(_gridColumns(tester), 2);
+    expect(
+      tester.getSize(find.byType(FanartCard).first).width,
+      greaterThanOrEqualTo(136),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('double text size drops to one readable column', (tester) async {
+    tester.view
+      ..physicalSize = const Size(390, 844)
+      ..devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+
+    await tester.pumpWidget(_app(_StubRepository()));
+    await tester.pumpAndSettle();
+
+    expect(_gridColumns(tester), 1);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('wide windows use more columns than a phone', (tester) async {
@@ -478,7 +498,7 @@ void main() {
     await tester.pumpWidget(_app(_StubRepository()));
     await tester.pumpAndSettle();
 
-    expect(_masonryColumns(tester), greaterThan(2));
+    expect(_gridColumns(tester), greaterThan(2));
   });
 
   testWidgets(
@@ -539,9 +559,9 @@ void main() {
   );
 }
 
-int _masonryColumns(WidgetTester tester) {
-  final grid = tester.widget<SliverMasonryGrid>(find.byType(SliverMasonryGrid));
-  return (grid.gridDelegate as SliverSimpleGridDelegateWithFixedCrossAxisCount)
+int _gridColumns(WidgetTester tester) {
+  final grid = tester.widget<SliverGrid>(find.byType(SliverGrid));
+  return (grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount)
       .crossAxisCount;
 }
 

@@ -20,7 +20,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
-import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/domain/return_context.dart';
 import '../../handoff/presentation/anchor_restore.dart';
@@ -29,6 +28,7 @@ import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart';
 import '../domain/community_video_repository.dart';
 import '../domain/fanart_repository.dart';
+import 'channel_tabs.dart';
 import 'community_feed_view.dart';
 import 'content_search_control.dart';
 import 'dynamic_feed_view.dart';
@@ -165,7 +165,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
         // A new channel starts with its controls visible.
         revealKey: _current,
         titleIsControl: true,
-        controlExtent: AppSegments.heightFor(context),
+        controlExtent: ChannelTabs.heightFor(MediaQuery.textScalerOf(context)),
         title: _ChannelStrip(current: _current),
       ),
       body: ClipRect(
@@ -183,15 +183,14 @@ class _ContentPageState extends ConsumerState<ContentPage>
   }
 }
 
-/// One stable segmented control, with no outer glass shell.
+/// The channels, as the page's title: text tabs, not another filter row.
 class _ChannelStrip extends StatelessWidget {
   const _ChannelStrip({required this.current});
   final ContentChannel current;
   @override
-  Widget build(BuildContext context) => ConstrainedBox(
-    constraints: const BoxConstraints(maxWidth: 400),
-    child: AppSegments<ContentChannel>(
-      navigation: true,
+  Widget build(BuildContext context) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: ChannelTabs<ContentChannel>(
       values: ContentChannel.values,
       labelOf: (value) => value.label,
       selected: current,
@@ -430,7 +429,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             child: Align(
               alignment: Alignment.centerLeft,
               child: ConstrainedBox(
@@ -443,7 +442,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
                     Expanded(
                       child: ContentSearchControl(
                         value: state.query.keyword,
-                        hint: '搜索正文或作者',
+                        hint: '搜索二创正文或作者',
                         expanded: true,
                         onSubmitted: (keyword) =>
                             _applyQuery(state.query.copyWith(keyword: keyword)),
@@ -541,58 +540,84 @@ class _FanartGrid extends ConsumerWidget {
             ),
             _ => null,
           };
-    return LayoutBuilder(
-      builder: (context, constraints) => FeedScrollView(
-        storageKey: const PageStorageKey('fanart-feed'),
-        controller: controller,
-        onRefresh: onRefresh,
-        header: header,
-        placeholder: placeholder,
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-            sliver: SliverContentMasonry(
-              minColumnWidth: constraints.maxWidth < 760 ? 160 : 220,
-              itemCount: state.items.length,
-              itemBuilder: (context, index) {
-                final item = state.items[index];
-                return FanartCard(
-                  key: ValueKey(item.identity),
-                  masonry: true,
-                  item: item,
-                  onLongPress: () => showContentActions(
-                    context,
-                    ContentSnapshots.fanart(item),
-                    ruleSubject: RuleSubjects.fanart(item),
+    return FeedScrollView(
+      storageKey: const PageStorageKey('fanart-feed'),
+      controller: controller,
+      onRefresh: onRefresh,
+      header: header,
+      placeholder: placeholder,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          sliver: SliverLayoutBuilder(
+            builder: (context, constraints) {
+              if (state.items.isEmpty) {
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              }
+              final width = constraints.crossAxisExtent;
+              final scaler = MediaQuery.textScalerOf(context);
+              final gap = width >= 760 ? 16.0 : 12.0;
+              // One stable extent per width: tiles share the portrait box
+              // and caption lines, so the grid never shifts as art loads.
+              final minimum =
+                  (width >= 760 ? 200.0 : 136.0) *
+                  scaler.scale(1).clamp(1.0, 1.6);
+              final columns = ((width + gap) / (minimum + gap)).floor().clamp(
+                1,
+                6,
+              );
+              final cell = (width - gap * (columns - 1)) / columns;
+              return SliverGrid.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: gap,
+                  mainAxisSpacing: gap + 4,
+                  mainAxisExtent: FanartCard.extentFor(
+                    state.items.first,
+                    cell,
+                    scaler,
                   ),
-                  // A root route or an external open keeps the branch's
-                  // scroll position and loaded pages.
-                  onTap: () => openFanart(
-                    context,
-                    ref,
-                    item,
-                    returnTo: ReturnTarget.contentChannel,
-                    channel: ContentChannel.fanart.slug,
-                    query: ChannelSpec.ofFanart(state.query).values,
-                    anchor: ReturnAnchor(
-                      identity: item.identity,
-                      offset: controller.offset,
+                ),
+                itemCount: state.items.length,
+                itemBuilder: (context, index) {
+                  final item = state.items[index];
+                  return FanartCard(
+                    key: ValueKey(item.identity),
+                    item: item,
+                    onLongPress: () => showContentActions(
+                      context,
+                      ContentSnapshots.fanart(item),
+                      ruleSubject: RuleSubjects.fanart(item),
                     ),
-                  ),
-                );
-              },
-            ),
+                    // A root route or an external open keeps the branch's
+                    // scroll position and loaded pages.
+                    onTap: () => openFanart(
+                      context,
+                      ref,
+                      item,
+                      returnTo: ReturnTarget.contentChannel,
+                      channel: ContentChannel.fanart.slug,
+                      query: ChannelSpec.ofFanart(state.query).values,
+                      anchor: ReturnAnchor(
+                        identity: item.identity,
+                        offset: controller.offset,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
-          SliverToBoxAdapter(
-            child: FeedStatusFooter(
-              status: state.status,
-              failure: state.failure,
-              onRetry: onRetryAppend,
-              onRefresh: onRefresh,
-            ),
+        ),
+        SliverToBoxAdapter(
+          child: FeedStatusFooter(
+            status: state.status,
+            failure: state.failure,
+            onRetry: onRetryAppend,
+            onRefresh: onRefresh,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
