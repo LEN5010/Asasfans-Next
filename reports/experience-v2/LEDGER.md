@@ -34,3 +34,9 @@ Allow `dl.google.com`, or use a machine with the Android SDK. Then dispatch *Flu
 | # | Commit | Tasks | Commands and exit codes | Notes |
 |---|---|---|---|---|
 | 1 | `909b4c1` | U02 harness | `analyze` 0; `format --set-exit-if-changed` 0; `test test/content test/shared test/calendar` 0 (278 passed); `test test/visual/current_pages_test.dart` 0 (35 passed) | Harness, fixture, capture script. The button and quick-chip label styles now derive from the theme. Before this, the tester rendered those labels as tofu because they had no font family |
+| 2 | `17afaa8`, `48c9b6a` | U01–U04 | docs only | Plan tracked; CAPABILITIES, PATTERNS, IA; 35 baseline renders |
+| 3 | `eeaa3c0` | U05 | `test test/visual/directions_test.dart` 0 (12) | Three directions; internal choice A |
+| 4 | `03c47db`, `1496e1f` | U06 | `analyze` 0; `test` 0 (763 passed) | Today/二创/我的 sample; 16 old-layout tests re-targeted (listed in FINAL.md); flows filter/detail/save |
+| 5 | `71b4d26`, `e1690b7`, `5ccbea0` | U07–U10 | `test` 0 (771) | QuerySummary ×4 channels, frameless video, gallery |
+| 6 | `68fc475`…`b8c72b9` | U13–U16, U19 | `test` 0 (790) | Calendar, dynamics, novels, detail, 继续挑选 |
+| 7 | `686be5d`, `7f1f4c8`, `bb6dd00` | U21 | `analyze` 0; `format` 0; `test` 0 (853) | Stress matrix, input test, 90 final renders |

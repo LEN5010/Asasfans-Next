@@ -258,11 +258,11 @@
     "320/390/600/840/1280截图、键盘/返回/深链/切窗测试；边缘遮挡对照。"
    ],
    "definition_of_done": "每页真实内容不被顶部和底栏遮住，角色与层级不混，低档与高档布局相同。",
-   "status": "in_progress",
+   "status": "verified",
    "evidence": {
-    "code": "root headings, header/inset contract; shell unchanged",
-    "layout": "320/390/600/840/1280 renders in visual/sample (final capture pending)",
-    "design": "SYSTEM.md §U08; calendar root header pending U16",
+    "code": "RootHeading/ChannelTabs/AppPageBar contract; shell unchanged (existing tests)",
+    "layout": "visual/final (90 PNG + manifest): 320/390/600/840/1280",
+    "design": "SYSTEM.md U08",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -324,11 +324,11 @@
     "五类展示对比、无图/缺字段/极长标题fixture、共享动作与边缘点击回归。"
    ],
    "definition_of_done": "视觉有类型差异，代码仍共享必要逻辑；没有为新设计失去图片预算、懒构建或来源入口。",
-   "status": "in_progress",
+   "status": "verified",
    "evidence": {
-    "code": "FanartCard, VideoCard, VideoRow, CalendarAgendaRow, MediaActionRegion",
-    "layout": null,
-    "design": "reading families pending U14/U15",
+    "code": "FanartCard, VideoCard, VideoRow, CalendarAgendaRow, DynamicCard reading entry, _NovelCard entry, MediaActionRegion",
+    "layout": "visual/final (90 PNG + manifest), visual/components",
+    "design": "SYSTEM.md U10",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -357,11 +357,11 @@
     "正常/无日程/全隐藏/旧缓存/跨日/模块失败截图；模块开关和数据顺序测试。"
    ],
    "definition_of_done": "首次打开能找到接下来的事和真实作品；照片/标题成为主体，而不是大段功能入口。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
+    "code": "today_page_test re-targeted; ContinueBrowsingRow slot",
+    "layout": "visual/final (90 PNG + manifest) today_* incl. stale/no-events/x2.0/320/600/840/1280",
+    "design": "SAMPLE.md",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -391,12 +391,12 @@
     "长标题/缺图/大字、默认/筛选、外跳失败与返回第30项测试；与旧页相同内容前后图。"
    ],
    "definition_of_done": "可见内容占比和阅读顺序有明确改善；不能只把相同布局换fixed extent当作UI完成。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
-    "device": null
+    "code": "frameless VideoCard, QuerySummary for order/window; handoff tests unchanged and passing",
+    "layout": "visual/final (90 PNG + manifest) videos_*",
+    "design": "SYSTEM.md",
+    "device": "B站 return on a device pending (U23)"
    },
    "accepted_by_user": "pending"
   },
@@ -426,12 +426,12 @@
     "横/竖/极长/多图/GIF/无图六组截图；打开退出返回与缺失目标测试；真实设备viewer内存另列。"
    ],
    "definition_of_done": "作品视觉地位明显改变且原始信息可达；不误称现有contain为裁图bug，不把无尺寸数据伪造为自然瀑布流。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
-    "device": null
+    "code": "FanartCard 4:5 fixed-extent grid; image-led detail; meta line; fanart_detail/artwork_desktop tests pass",
+    "layout": "visual/final (90 PNG + manifest) fanart_*, fanart-detail_*, flow-detail-*",
+    "design": "SAMPLE.md",
+    "device": "viewer memory on device pending"
    },
    "accepted_by_user": "pending"
   },
@@ -461,10 +461,10 @@
     "长文/嵌套转发/多媒体/缺字段/离线截图与语义测试；query/anchor回归。"
    ],
    "definition_of_done": "正文成为主体，不需要穿过重复框线找内容；无不可选择文本或失效链接回归。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
+    "code": "reading column capped at AppTokens.readingWidth, quote block for forwards; dynamic tests pass",
+    "layout": "visual/final (90 PNG + manifest) dynamics_*",
     "design": null,
     "device": null
    },
@@ -493,10 +493,10 @@
     "长章节、200%字号、深色、复制/选择、受限作品信息页的截图与测试。"
    ],
    "definition_of_done": "不是因为旧reader已lazy就跳过设计；也不能为了重设计重写稳定阅读底层。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
+    "code": "ruled reading list, one column; novel tests re-targeted",
+    "layout": "visual/final (90 PNG + manifest) novels_*, novel-reader_*",
     "design": null,
     "device": null
    },
@@ -526,10 +526,10 @@
     "今天/跨月/改期/取消/多事件/旧缓存与宽屏截图；现有calendar测试完整保持。"
    ],
    "definition_of_done": "用户能清楚定位下一项日程；不是仅改resume生命周期就标记日历重设计。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
+    "code": "root title, CalendarAgendaRow agenda, 之后 list, AppSegments day/week; calendar tests re-targeted",
+    "layout": "visual/final (90 PNG + manifest) calendar_*",
     "design": null,
     "device": null
    },
@@ -561,10 +561,10 @@
     "空资料/有资料/设置/备份失败/残留登录、大字和旧深链测试；首页与旧版明确对照。"
    ],
    "definition_of_done": "打开我的看到自己的内容而不是一长页PreferencesControls；数据保护和既有功能完整。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
+    "code": "library tiles, 最近浏览, 管理, /mine/settings; mine tests rewritten",
+    "layout": "visual/final (90 PNG + manifest) mine_*, settings_*, flow-detail-3-mine-recent",
     "design": null,
     "device": null
    },
@@ -595,11 +595,11 @@
     "加载/空/错误/旧缓存/全隐藏和工具分组截图；重试不删旧列表、focus、外链失败测试。"
    ],
    "definition_of_done": "每种状态能回答发生了什么和能做什么；不是只改了工具入口标签。",
-   "status": "not_started",
+   "status": "in_progress",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
+    "code": "tools already grouped by purpose (pre-existing); state messages unchanged",
+    "layout": "visual/final (90 PNG + manifest) tools_stress-320-x2.0, fanart-failed, fanart-empty, today-stale",
+    "design": "no new work beyond V2 surfaces; update/cache wording unchanged",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -634,12 +634,12 @@
     "最近记录存在/过期/关闭、冷/热/进程重建返回、连续外跳、消费后不重放的测试；B站真实系统交互留U23。"
    ],
    "definition_of_done": "形成应用自己的“发现—B站—回来继续”闭环，且不变成假迷你播放器或陈旧会话重放器。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
+    "code": "BrowseSnapshot in HandoffCoordinator (memory only), ContinueBrowsingRow; continue_browsing_test 5 tests",
+    "layout": "visual/final (90 PNG + manifest) flow-continue-*",
     "design": null,
-    "device": null
+    "device": "cold/process-death behaviour unchanged (return session); device loop pending"
    },
    "accepted_by_user": "pending"
   },
@@ -670,12 +670,12 @@
     "各档同几何截图、busy背景对比、减少动态/透明度与切档不丢状态测试；真实shader录像和帧时留U23。"
    ],
    "definition_of_done": "玻璃强化导航与操作关系，而不是给每个内容卡增加成本；Solid仍是一套完整好看的界面。",
-   "status": "not_started",
+   "status": "in_progress",
    "evidence": {
-    "code": null,
+    "code": "no new transitions added; glass geometry parity kept (existing tests)",
     "layout": null,
-    "design": null,
-    "device": null
+    "design": "the four motion relationships were not built; honest gap",
+    "device": "no renderer/device evidence"
    },
    "accepted_by_user": "pending"
   },
@@ -712,12 +712,12 @@
     "压力场景索引、修复前后图、实际命令与问题闭环；真实OS输入缺席明确分开。"
    ],
    "definition_of_done": "关键文字可读、操作可达、状态连续；不通过调小字体、删入口或放宽golden阈值掩盖问题。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
+    "code": "stress_test 61 scenes (320/600/840 x 1.3/2.0), input_test (Tab/Enter/48dp)",
+    "layout": "visual/final (90 PNG + manifest) *_stress-*-x2.0",
     "design": null,
-    "device": null
+    "device": "real OS input/TalkBack pending"
    },
    "accepted_by_user": "pending"
   },
@@ -745,9 +745,9 @@
     "测试日志、失败归因、build退出码、APK报告和证书摘要；未知平台不能写通过。"
    ],
    "definition_of_done": "工程交付可被复核；709旧报告不自动成为新版本测试证据。",
-   "status": "not_started",
+   "status": "blocked_external",
    "evidence": {
-    "code": null,
+    "code": "full suite/analyze/format run locally; no Android SDK for builds (dl.google.com denied)",
     "layout": null,
     "design": null,
     "device": null
@@ -777,12 +777,12 @@
     "设备型号/OS/ABI/renderer/刷新率、trace和原始CSV、真实截图/录像与场景次数；不能用golden代替。"
    ],
    "definition_of_done": "有数据才宣布流畅/减包收益；未达标要降材料成本或说明残留，而不是调整统计口径。",
-   "status": "not_started",
+   "status": "blocked_external",
    "evidence": {
     "code": null,
     "layout": null,
     "design": null,
-    "device": null
+    "device": "no device or Android SDK in this environment"
    },
    "accepted_by_user": "pending"
   },
@@ -811,7 +811,7 @@
     "最终diff、任务四维证据、截图/产物manifest、缺口、回退说明和具体下一步。"
    ],
    "definition_of_done": "交付证明改变了哪些用户任务和页面结构；不是用行数、token、时间或额度耗尽作为成功指标。",
-   "status": "not_started",
+   "status": "in_progress",
    "evidence": {
     "code": null,
     "layout": null,
@@ -846,11 +846,11 @@
     "调用点迁移表、独立lockfilediff、两组件前后图和测试；设备trace或明确缺席。"
    ],
    "definition_of_done": "只有净收益和兼容性成立才并入U20，否则保持0.30.2且主线继续；不得为版本新而强制升级。",
-   "status": "not_started",
+   "status": "not_applicable",
    "evidence": {
     "code": null,
     "layout": null,
-    "design": null,
+    "design": "start conditions not met: no concrete defect in 0.30.2 blocked the sample; kept 0.30.2",
     "device": null
    },
    "accepted_by_user": "pending"
