@@ -106,14 +106,21 @@ class ChannelSpec {
     source: _enumOf(FanartSource.values, values['source'], FanartSource.all),
   );
 
+  /// Range ends are stored as UTC instants and come back as the same
+  /// instant in local time: the picker and the request both read calendar
+  /// fields from them, and a UTC value would shift the picked days by the
+  /// zone offset (9/20 would read as 9/19 in UTC+8).
+  static DateTime? _date(Object? value) =>
+      DateTime.tryParse(value as String? ?? '')?.toLocal();
+
   DynamicQuery toDynamic() => DynamicQuery(
     keyword: values['keyword'] as String? ?? '',
     memberId: values['memberId'] as String?,
     type: values['type'] == null
         ? null
         : _enumOf(DynamicType.values, values['type'], DynamicType.text),
-    from: DateTime.tryParse(values['from'] as String? ?? ''),
-    to: DateTime.tryParse(values['to'] as String? ?? ''),
+    from: _date(values['from']),
+    to: _date(values['to']),
     sort: _enumOf(DynamicSort.values, values['sort'], DynamicSort.newest),
   );
 }

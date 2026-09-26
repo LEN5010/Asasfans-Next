@@ -156,8 +156,12 @@ class FanartFilterBar extends StatelessWidget {
     void set(FanartQuery next) => onChanged(next);
     return QuerySummary(
       clearTooltip: '重置筛选',
-      onClear: () =>
-          onChanged(FanartFilterRules.reset(query).copyWith(keyword: '')),
+      // Clears what this line shows; the members keep their own strip.
+      onClear: () => onChanged(
+        FanartFilterRules.reset(
+          query,
+        ).copyWith(keyword: '', characters: query.characters),
+      ),
       applied: [
         if (query.keyword.isNotEmpty)
           (

@@ -168,13 +168,19 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                     )
                   else ...[
                     if (schedule != null)
-                      Padding(padding: edge, child: schedule)
-                    else
+                      Padding(padding: edge, child: schedule),
+                    // Without a schedule the continue row leads the works,
+                    // in the same module, so an empty slot adds no gap.
+                    if (works != null)
                       Padding(
                         padding: edge,
-                        child: const ContinueBrowsingRow(),
+                        child: schedule != null
+                            ? works
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [const ContinueBrowsingRow(), works],
+                              ),
                       ),
-                    if (works != null) Padding(padding: edge, child: works),
                     if (clips != null) Padding(padding: edge, child: clips),
                   ],
                   // The archive comes after today's own content.
@@ -385,7 +391,7 @@ class _ClipsSection extends ConsumerWidget {
       children: [
         SectionHeading(
           title: '最新切片',
-          action: '全部视频',
+          action: '查看切片',
           onAction: () => context.go('/content/clips'),
         ),
         AppFadeSwitcher(

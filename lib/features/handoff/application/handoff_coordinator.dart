@@ -257,6 +257,10 @@ class HandoffCoordinator extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Drops a 继续挑选 restore no feed claimed, so it cannot surface later
+  /// on an unrelated visit to that channel.
+  void dropBrowseRestore() => _browseRestore = null;
+
   /// Whether a 继续挑选 restore is waiting for [channel].
   bool hasBrowseRestoreFor(String channel) =>
       _browseRestore?.channel == channel;

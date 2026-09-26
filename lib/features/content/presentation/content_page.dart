@@ -83,6 +83,25 @@ class _ContentPageState extends ConsumerState<ContentPage>
       CommunityChannel.values.where((c) => c.name == name).firstOrNull ??
       CommunityChannel.latest;
 
+  late final HandoffCoordinator _handoff = ref.read(handoffCoordinatorProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    _handoff.addListener(_onHandoff);
+  }
+
+  /// 继续挑选 into a video kind: the kind lives in page state, not only in
+  /// the route, so a route that did not change must still switch to it.
+  void _onHandoff() {
+    final kind = CommunityChannel.values
+        .where((value) => _handoff.hasBrowseRestoreFor(value.name))
+        .firstOrNull;
+    if (kind != null && kind != _kind && mounted) {
+      setState(() => _kind = kind);
+    }
+  }
+
   @override
   void didUpdateWidget(ContentPage oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -110,6 +129,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
 
   @override
   void dispose() {
+    _handoff.removeListener(_onHandoff);
     _slide.dispose();
     super.dispose();
   }
