@@ -174,14 +174,13 @@ void main() {
       // The settings page says what is in effect and why.
       await tester.tap(find.text('我的').last);
       await tester.pumpAndSettle();
-      final mine = find
-          .descendant(
-            of: find.byType(MinePage),
-            matching: find.byType(Scrollable),
-          )
-          .first;
-      await tester.scrollUntilVisible(find.text('设置'), 200, scrollable: mine);
-      await tester.tap(find.text('设置'));
+      // Settings sit beside the page title.
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MinePage),
+          matching: find.byTooltip('设置'),
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.textContaining('当前：'),

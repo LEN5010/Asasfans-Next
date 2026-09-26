@@ -66,9 +66,16 @@ class MinePage extends ConsumerWidget {
                   MediaQuery.paddingOf(context).bottom + 24,
                 ),
                 children: [
-                  const RootHeading(
+                  RootHeading(
                     title: '我的',
                     subtitle: '收藏、记录和本地资料，都保存在这台设备上',
+                    actions: [
+                      AppButton.icon(
+                        tooltip: '设置',
+                        onPressed: () => context.go('/mine/settings'),
+                        icon: const Icon(Icons.settings_outlined),
+                      ),
+                    ],
                   ),
                   // Only while an earlier build's sign-in is still here.
                   if (hasLocalLogin) ...const [
@@ -131,7 +138,10 @@ class MinePage extends ConsumerWidget {
   }
 }
 
-/// The library as tiles: each a place of my own, reached in one tap.
+/// The library as tiles: each a place of my own, reached in one tap. The
+/// first two (收藏, 稍后看) are what people come back for, so they lead at a
+/// larger size; the rest follow as compact rows. Labels may take two lines,
+/// and large text gets fewer columns, so a name is never cut to a stub.
 class _LibraryGrid extends StatelessWidget {
   const _LibraryGrid({required this.entries, required this.onOpen});
   final List<(String, String, IconData)> entries;
@@ -140,46 +150,84 @@ class _LibraryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    Widget tile((String, String, IconData) entry, {required bool lead}) {
+      final (label, path, icon) = entry;
+      final text = Text(
+        label,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: lead ? theme.textTheme.titleMedium : theme.textTheme.titleSmall,
+      );
+      return Material(
+        // The lead is larger, not louder: the same light tint as 继续挑选.
+        color: lead
+            ? colors.primaryContainer.withValues(alpha: .5)
+            : colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => onOpen(path),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: lead
+                  ? const EdgeInsets.fromLTRB(16, 16, 12, 16)
+                  : const EdgeInsets.fromLTRB(14, 10, 10, 10),
+              child: lead
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(icon, color: colors.primary),
+                        const SizedBox(height: 18),
+                        text,
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Icon(icon, size: 20, color: colors.primary),
+                        const SizedBox(width: 10),
+                        Expanded(child: text),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final scale = MediaQuery.textScalerOf(context).scale(1);
-        final columns = (constraints.maxWidth / (110 * scale.clamp(1.0, 2.0)))
-            .floor()
-            .clamp(2, 6);
         const gap = 10.0;
+        final lead = entries.take(2).toList();
+        final rest = entries.skip(2).toList();
+        final columns = (constraints.maxWidth / (150 * scale.clamp(1.0, 2.5)))
+            .floor()
+            .clamp(1, 4);
         final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final (label, path, icon) in entries)
-              SizedBox(
-                width: width,
-                child: Material(
-                  color: colors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () => onOpen(path),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 10, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(icon, color: colors.primary),
-                          const SizedBox(height: 10),
-                          Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleSmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (index, entry) in lead.indexed) ...[
+                    if (index > 0) const SizedBox(width: gap),
+                    Expanded(child: tile(entry, lead: true)),
+                  ],
+                ],
               ),
+            ),
+            const SizedBox(height: gap),
+            Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final entry in rest)
+                  SizedBox(width: width, child: tile(entry, lead: false)),
+              ],
+            ),
           ],
         );
       },

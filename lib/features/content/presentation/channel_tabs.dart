@@ -44,6 +44,8 @@ class ChannelTabs<T> extends StatelessWidget {
                 selected: value == selected,
                 button: true,
                 inMutuallyExclusiveGroup: true,
+                // The selected channel is the page's title.
+                header: value == selected,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
                   // The selected tab stays a focus stop; activating it again

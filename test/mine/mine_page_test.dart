@@ -85,13 +85,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // Not stretched: the page reads as a column, with every library entry
-    // on one row.
+    // Not stretched: the page reads as a column. 收藏 and 稍后看 lead side
+    // by side; the other four share one row below them.
     final saved = tester.getRect(find.text('收藏'));
+    final later = tester.getRect(find.text('稍后看'));
+    final history = tester.getRect(find.text('历史记录'));
     final updates = tester.getRect(find.text('应用内更新'));
-    expect(saved.top, updates.top);
+    expect(saved.top, later.top);
+    expect(history.top, updates.top);
+    expect(history.top, greaterThan(saved.bottom));
     expect(updates.right - saved.left, lessThan(900));
     await tester.scrollUntilVisible(find.text('关于'), 180);
+    // The page is longer now; bring the row fully into view before the tap.
+    await tester.ensureVisible(find.text('关于'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('关于'));
     await tester.pumpAndSettle();
     expect(find.byType(LicensePage), findsOneWidget);
