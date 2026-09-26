@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/platform/external_link_service.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
+import 'package:asasfans_next/features/content/domain/community_video_repository.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
@@ -189,5 +190,67 @@ void main() {
     await settleVisual(tester);
     expect(find.byType(ContinueBrowsingRow), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('继续挑选')), findsNothing);
+  });
+
+  testVisual('a video kind is reached even when the route does not change', (
+    tester,
+  ) async {
+    await pumpVisualApp(
+      tester,
+      view: VisualView.phone,
+      location: '/content/videos?kind=clips',
+    );
+    final container = visualContainer(tester);
+    final handoff = container.read(handoffCoordinatorProvider);
+    // Leave for B站 from 切片, sorted by score.
+    await tester.runAsync(
+      () => handoff.open(
+        url: Uri.https('www.bilibili.com', '/video/BV1fixture1'),
+        target: ReturnTarget.contentChannel,
+        channel: 'clips',
+        query: const {'order': 'score'},
+      ),
+    );
+    // Back in the app, the user switches kind with the segments: the route
+    // still says clips.
+    await tester.tap(find.text('全部').first);
+    await settleVisual(tester);
+    expect(
+      container
+          .read(communityFeedControllerProvider(CommunityChannel.latest))
+          .state
+          .videos,
+      isNotEmpty,
+    );
+
+    visualRouter(tester).go('/today');
+    await settleVisual(tester);
+    await tester.tap(find.byType(ContinueBrowsingRow));
+    await settleVisual(tester);
+    expect(
+      container
+          .read(communityFeedControllerProvider(CommunityChannel.clips))
+          .state
+          .query
+          .order,
+      CommunityVideoOrder.score,
+    );
+    // Claimed, so nothing is left to surface on a later visit.
+    expect(handoff.hasBrowseRestoreFor('clips'), isFalse);
+  });
+
+  test('an unclaimed resume is dropped, not kept for a later visit', () async {
+    final coordinator = HandoffCoordinator(_Links(), store);
+    await tripFrom(coordinator);
+    coordinator
+      ..resumeBrowsing()
+      ..dropBrowseRestore();
+    expect(coordinator.hasBrowseRestoreFor('fanart'), isFalse);
+    // What a feed now gets is the trip's own pending return session, not a
+    // left-over 继续挑选.
+    final next = await coordinator.listRestoreFor('fanart');
+    expect(next?.sessionId, isNot(startsWith('browse-')));
+    // The snapshot itself stays until dismissed.
+    expect(coordinator.browsing, isNotNull);
   });
 }

@@ -62,13 +62,30 @@ void main() {
     final restored = (await repository.channels()).single.spec.toDynamic();
     expect(restored.memberId, 'uid:123');
     expect(restored.type, DynamicType.video);
-    expect(restored.from, DateTime.utc(2026, 1, 1));
-    expect(restored.to, DateTime.utc(2026, 2, 1));
+    // The same instants, now in local time (whose calendar fields the
+    // picker and the request read).
+    expect(restored.from!.isAtSameMomentAs(DateTime.utc(2026, 1, 1)), isTrue);
+    expect(restored.to!.isAtSameMomentAs(DateTime.utc(2026, 2, 1)), isTrue);
+    expect(restored.from!.isUtc, isFalse);
     expect(
       restored.isServerAcceptable,
       isTrue,
       reason: 'a restored range must still be ordered',
     );
+  });
+
+  test('picked days come back as the same days in local time', () {
+    // What the date picker produces: local midnights, `to` exclusive.
+    final query = DynamicQuery(
+      from: DateTime(2026, 9, 20),
+      to: DateTime(2026, 9, 23),
+    );
+    final restored = ChannelSpec(
+      version: ChannelSpec.currentVersion,
+      values: ChannelSpec.ofDynamic(query).values,
+    ).toDynamic();
+    expect(restored.from, DateTime(2026, 9, 20));
+    expect(restored.to, DateTime(2026, 9, 23));
   });
 
   test('an empty query round trips without inventing filters', () async {

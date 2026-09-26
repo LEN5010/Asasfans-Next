@@ -46,7 +46,11 @@ class ChannelTabs<T> extends StatelessWidget {
                 inMutuallyExclusiveGroup: true,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: value == selected ? null : () => onChanged(value),
+                  // The selected tab stays a focus stop; activating it again
+                  // changes nothing.
+                  onTap: () {
+                    if (value != selected) onChanged(value);
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Column(

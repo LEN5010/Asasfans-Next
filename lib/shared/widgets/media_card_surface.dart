@@ -104,14 +104,18 @@ class _MediaActionRegionState extends State<MediaActionRegion> {
     final motion = AppGlassScope.of(context).canAnimate
         ? AppTokens.pressMotion
         : Duration.zero;
+    // Without a tap there is nothing to activate: no focus stop and no
+    // press-in, so resting a finger on selectable prose moves nothing.
+    final tappable = widget.onTap != null;
     return AnimatedScale(
-      scale: pressed ? .98 : 1,
+      scale: pressed && tappable ? .98 : 1,
       duration: motion,
       curve: Curves.easeOutCubic,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
           borderRadius: radius,
+          canRequestFocus: tappable,
           onTap: widget.onTap,
           onLongPress: widget.onMore,
           onSecondaryTap: widget.onMore,

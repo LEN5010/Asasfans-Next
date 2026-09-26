@@ -279,5 +279,12 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    // The folded switch still reaches the week agenda.
+    await tester.tap(find.text('当天'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('周议程'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining(' — '), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -147,7 +147,7 @@ class VideoCard extends ConsumerWidget {
             ],
           ),
           Positioned(
-            right: -4,
+            right: 0,
             bottom: 0,
             child: MediaMoreButton(onPressed: more),
           ),

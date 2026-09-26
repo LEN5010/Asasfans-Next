@@ -133,6 +133,7 @@ void main() {
       expect(find.text('文字作品'), findsOneWidget);
       expect(find.text('最新切片标题'), findsOneWidget);
       expect(find.text('Asasfans Next'), findsNothing);
+      expect(find.text('最近更新'), findsNothing);
       final art = tester.getRect(find.byType(FanartCard));
       final clip = tester.getRect(find.byType(VideoRow));
       final schedule = tester.getRect(find.text('今日安排'));

@@ -1,4 +1,5 @@
 import 'package:asasfans_next/features/content/presentation/content_page.dart';
+import 'package:asasfans_next/features/library/application/library_providers.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/shared/widgets/app_controls.dart';
@@ -101,6 +102,14 @@ void main() {
     );
     await settleVisual(tester);
     expect(tester.widget<AppSwitch>(later).value, isTrue);
+    // And it is stored, not only drawn.
+    final item = tester.widget<FanartCard>(find.byType(FanartCard).first).item;
+    final state = await tester.runAsync(
+      () => visualContainer(
+        tester,
+      ).read(libraryRepositoryProvider).itemState(item.identity),
+    );
+    expect(state!.later, isTrue);
     await shoot(tester, 'flow-save-1-later-on', view);
   });
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../content/domain/community_video_repository.dart';
+import '../../content/domain/dynamic_repository.dart';
 import '../../content/domain/fanart_repository.dart';
 import '../../content/domain/saved_channel.dart';
 import '../../content/presentation/dynamic_card.dart' show dynamicTypeLabel;
@@ -31,6 +32,23 @@ List<String> describeBrowse(BrowseSnapshot snapshot) {
         '二创',
         for (final member in query.characters) member.wire,
         if (query.category != FanartCategory.all) query.category.wire,
+        ...switch (query.contentType) {
+          FanartContentType.image => ['图片'],
+          FanartContentType.video => ['视频'],
+          FanartContentType.text => ['文字'],
+          FanartContentType.other => ['其他类型'],
+          FanartContentType.all => const <String>[],
+        },
+        if (query.source == FanartSource.bilibili) 'Bilibili',
+        if (query.source == FanartSource.douban) '豆瓣',
+        if (query.kind == FanartKind.material) '物料',
+        if (query.kind == FanartKind.all) '全部内容',
+        ...switch (query.sort) {
+          FanartSort.oldest => ['最早'],
+          FanartSort.views => ['播放最多'],
+          FanartSort.favorites => ['收藏最多'],
+          FanartSort.newest => const <String>[],
+        },
         if (query.keyword.isNotEmpty) '“${query.keyword}”',
       ];
     case 'dynamics':
@@ -39,6 +57,13 @@ List<String> describeBrowse(BrowseSnapshot snapshot) {
         '动态',
         if (query.memberId != null) '指定成员',
         if (query.type != null) dynamicTypeLabel(query.type!),
+        if (query.from != null || query.to != null) '已选日期',
+        ...switch (query.sort) {
+          DynamicSort.oldest => ['最早发布'],
+          DynamicSort.likes => ['点赞最多'],
+          DynamicSort.comments => ['评论最多'],
+          DynamicSort.newest => const <String>[],
+        },
         if (query.keyword.isNotEmpty) '“${query.keyword}”',
       ];
   }
@@ -79,9 +104,15 @@ class ContinueBrowsingRow extends ConsumerWidget {
             borderRadius: BorderRadius.circular(14),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: () {
+              onTap: () async {
                 handoff.resumeBrowsing();
                 context.go(route);
+                // The feed claims the restore on the frame it is built; one
+                // left unclaimed after that is dropped, never kept for later.
+                for (var frame = 0; frame < 3; frame++) {
+                  await WidgetsBinding.instance.endOfFrame;
+                }
+                handoff.dropBrowseRestore();
               },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
