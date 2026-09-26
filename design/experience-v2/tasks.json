@@ -595,11 +595,11 @@
     "加载/空/错误/旧缓存/全隐藏和工具分组截图；重试不删旧列表、focus、外链失败测试。"
    ],
    "definition_of_done": "每种状态能回答发生了什么和能做什么；不是只改了工具入口标签。",
-   "status": "in_progress",
+   "status": "verified",
    "evidence": {
-    "code": "tools already grouped by purpose (pre-existing); state messages unchanged",
-    "layout": "visual/final (90 PNG + manifest) tools_stress-320-x2.0, fanart-failed, fanart-empty, today-stale",
-    "design": "no new work beyond V2 surfaces; update/cache wording unchanged",
+    "code": "999829a: FeedMessage.empty (filtered vs source-empty, each with a next step), FeedStaleNotice at the top on a failed refresh, footer wording, 更新 scope line, library empty hints; tools sheet already grouped with open-failure text (unchanged)",
+    "layout": "visual/v2.1 state-* (states_test)",
+    "design": "internal: states distinct in words and action",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -670,12 +670,12 @@
     "各档同几何截图、busy背景对比、减少动态/透明度与切档不丢状态测试；真实shader录像和帧时留U23。"
    ],
    "definition_of_done": "玻璃强化导航与操作关系，而不是给每个内容卡增加成本；Solid仍是一套完整好看的界面。",
-   "status": "in_progress",
+   "status": "verified",
    "evidence": {
-    "code": "no new transitions added; glass geometry parity kept (existing tests)",
-    "layout": null,
-    "design": "the four motion relationships were not built; honest gap",
-    "device": "no renderer/device evidence"
+    "code": "9597ab4, 9473f4a: Hero tile→detail (HeroMode off under reduced motion), filter arrival tint (stateful, 900 ms) with focus back on the entry, save result line only after storage; glass unchanged",
+    "layout": "visual/v2.1 motion-* (motion_test: mid-flight, tint, focus, refused save)",
+    "design": "internal: relationships in Solid; optics not assessed",
+    "device": "pending: real glass, GPU cost and frame time need a device"
    },
    "accepted_by_user": "pending"
   },
@@ -714,10 +714,10 @@
    "definition_of_done": "关键文字可读、操作可达、状态连续；不通过调小字体、删入口或放宽golden阈值掩盖问题。",
    "status": "verified",
    "evidence": {
-    "code": "stress_test 61 scenes (320/600/840 x 1.3/2.0), input_test (Tab/Enter/48dp)",
-    "layout": "visual/final (90 PNG + manifest) *_stress-*-x2.0",
+    "code": "R05/R08: 48 dp creator bands, AppSegments 48 dp hit band, geometry contracts with system bars and keyboard, deliberate-break check (v2.1/r08-mutation.txt)",
+    "layout": "visual/v2.1 *_stress-*, *-end, tools-search-keyboard",
     "design": null,
-    "device": "real OS input/TalkBack pending"
+    "device": "pending: OS input, TalkBack and system fonts"
    },
    "accepted_by_user": "pending"
   },
@@ -811,9 +811,9 @@
     "最终diff、任务四维证据、截图/产物manifest、缺口、回退说明和具体下一步。"
    ],
    "definition_of_done": "交付证明改变了哪些用户任务和页面结构；不是用行数、token、时间或额度耗尽作为成功指标。",
-   "status": "in_progress",
+   "status": "verified",
    "evidence": {
-    "code": "independent read-only review; 11 of 14 findings fixed in aa04831; 856 tests pass",
+    "code": "V2.1: read-only review of 546dbd0..cdaae50 — 4 should-fix and 8 minor; all 4 should-fix and 5 minor fixed in 9473f4a, 3 minor noted in FINAL.md",
     "layout": null,
     "design": "reports/experience-v2/FINAL.md (PARTIAL_BLOCKED)",
     "device": "none"
@@ -852,6 +852,168 @@
     "layout": null,
     "design": "start conditions not met: no concrete defect in 0.30.2 blocked the sample; kept 0.30.2",
     "device": null
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R01",
+   "title": "二创详情外跳携带来源上下文",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R01"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "2d057dc; failing first (v2.1/r01-r02-before.txt): image, text, Today and cold-restore paths in fanart_detail_origin_test",
+    "layout": null,
+    "design": null,
+    "device": "pending"
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R02",
+   "title": "摘要宽度约束与清空语义",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R02"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "aed99e0; failing first (overflow up to 3122 px); 320/390 × 1x/2x, 40-char Chinese, 120-char unbroken, six conditions; 9473f4a empty-state 清除全部条件",
+    "layout": "visual/v2.1 flow-filter-*",
+    "design": null,
+    "device": null
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R03",
+   "title": "媒体类型决定预览，解码与布局同步",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R03"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "9881055, cdaae50, 9473f4a; failing first (v2.1/r03-before.txt); video 16:9 whole within one extent, CoverDecodeImage, detail cap only for long art; pixel-sampled edge bands",
+    "layout": "visual/v2.1 diag-*",
+    "design": null,
+    "device": "pending: real images and decode cost"
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R04",
+   "title": "继续挑选单次请求协议",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R04"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "6e5ccb1; stale-restore reproduced only in a gated test (v2.1/r04-before.txt), not in ordinary use; request ids, generation/serial guards in three feeds",
+    "layout": null,
+    "design": null,
+    "device": null
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R05",
+   "title": "逐页视觉与触控收口",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R05"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "56efedc, 9473f4a; creator bands (content-width, never over the work), compact dates, VideoRow stacking, calendar fold + 320 week-agenda path (day cells 44 dp: declared exception), 我的 lead tiles, header semantics, AppSegments 48 dp",
+    "layout": "visual/v2.1 calendar-folded, mine-library, today-video-stacked",
+    "design": null,
+    "device": "pending: TalkBack, system fonts"
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R06",
+   "title": "U18 状态与工具",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R06"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "999829a (see U18)",
+    "layout": "visual/v2.1 state-*",
+    "design": null,
+    "device": null
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R07",
+   "title": "U20 必要交互",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R07"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "9597ab4, 9473f4a (see U20)",
+    "layout": "visual/v2.1 motion-*",
+    "design": null,
+    "device": "pending"
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R08",
+   "title": "视觉证据盲区",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R08"
+   ],
+   "status": "verified",
+   "evidence": {
+    "code": "a53ea3e, e54c139, cdaae50: diagnostic art, RenderedFrame sampler, system bars/keyboard, geometry contracts; deliberate break fails (v2.1/r08-mutation.txt); no pixel goldens (machine-dependent font)",
+    "layout": "visual/v2.1",
+    "design": null,
+    "device": null
+   },
+   "accepted_by_user": "pending"
+  },
+  {
+   "id": "R09",
+   "title": "候选构建、设备与交付",
+   "phase": "V2.1",
+   "depends_on": [],
+   "conditional": false,
+   "scope": [
+    "design/experience-v2/review-546dbd0/FOLLOWUP_TASKS.md#R09"
+   ],
+   "status": "blocked_external",
+   "evidence": {
+    "code": "local checks at the final commit (reports/experience-v2/v2.1/final-checks.txt); no CI dispatched, no APK (dl.google.com denied), no device",
+    "layout": null,
+    "design": null,
+    "device": "pending"
    },
    "accepted_by_user": "pending"
   }
