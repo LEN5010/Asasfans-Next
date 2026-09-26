@@ -101,13 +101,14 @@ void main() {
           final gap = MediaGridDelegate.spacingFor(width);
           // VideoCard.extentForWidth's formula, restated so the test does not
           // depend on the widget library.
+          final meta = (scaler.scale(12) * 1.35).ceilToDouble();
           final extent =
               cell / (16 / 9) +
-              22 +
+              8 +
               (scaler.scale(14) * 1.4).ceilToDouble() * 2 +
-              (scaler.scale(12) * 1.35).ceilToDouble() +
-              4 +
-              (scaler.scale(11) * 1.35).ceilToDouble();
+              2 +
+              meta +
+              (meta + 8 < 48 ? 48 : meta + 8);
           final constraints = _constraints().copyWith(
             crossAxisExtent: width - 32,
           );

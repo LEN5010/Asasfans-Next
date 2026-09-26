@@ -17,13 +17,33 @@ Future<void> openCreatorPage(BuildContext context, String mid) async {
   }
 }
 
+/// Opens a creator's Bilibili space. With a [minHeight] the whole band is
+/// the target while the words stay their size, centred in it; the band is
+/// the link's own space in the layout, so it never lies over the work's tap
+/// or a neighbouring button.
 class CreatorLink extends StatelessWidget {
-  const CreatorLink({required this.mid, required this.child, super.key});
+  const CreatorLink({
+    required this.mid,
+    required this.child,
+    this.minHeight = 0,
+    super.key,
+  });
   final String? mid;
   final Widget child;
+  final double minHeight;
   @override
   Widget build(BuildContext context) {
-    if (mid == null || !validBilibiliMid(mid!)) return child;
+    final content = minHeight > 0
+        ? ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              widthFactor: 1,
+              child: child,
+            ),
+          )
+        : child;
+    if (mid == null || !validBilibiliMid(mid!)) return content;
     return Semantics(
       button: true,
       child: Tooltip(
@@ -31,7 +51,7 @@ class CreatorLink extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: () => openCreatorPage(context, mid!),
-          child: child,
+          child: content,
         ),
       ),
     );

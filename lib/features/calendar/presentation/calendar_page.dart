@@ -6,7 +6,9 @@ import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/page_heading.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/horizontal_choices.dart';
+import '../../../shared/widgets/query_summary.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,6 +35,9 @@ class CalendarPage extends ConsumerStatefulWidget {
 class _CalendarPageState extends ConsumerState<CalendarPage>
     with ResumeWhenVisible {
   CalendarFilter _filter = CalendarFilter.all;
+
+  /// Whether the type and member choices are open (compact layout only).
+  bool _filtersOpen = false;
   Set<String> _members = {};
   bool _week = false;
   bool _monthExpanded = false;
@@ -120,6 +125,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
         ),
       ),
     );
+    final filtered = _filter != CalendarFilter.all || _members.isNotEmpty;
+    void reset() => setState(() {
+      _filter = CalendarFilter.all;
+      _members = {};
+    });
     Widget filters({required bool wide}) => _CalendarFilters(
       wide: wide,
       filter: _filter,
@@ -130,20 +140,18 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
             ? ({..._members}..remove(value))
             : {..._members, value},
       ),
-      onReset: () => setState(() {
-        _filter = CalendarFilter.all;
-        _members = {};
-      }),
+      onReset: reset,
     );
-    Widget agenda({required bool scrollable}) => _Agenda(
+    Widget agenda({required bool scrollable, bool segments = true}) => _Agenda(
       key: ValueKey('calendar-agenda-$scrollable'),
       day: selected,
       week: _week,
+      segments: segments,
       onWeek: (value) => setState(() => _week = value),
       snapshot: snapshot,
       events: events,
       scrollable: scrollable,
-      filtered: _filter != CalendarFilter.all || _members.isNotEmpty,
+      filtered: filtered,
       onRetry: () => _refresh(month),
     );
     final heading = RootHeading(
@@ -245,9 +253,80 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                   events: events,
                   onSelect: _select,
                 ),
-              const SizedBox(height: 4),
-              filters(wide: false),
-              agenda(scrollable: false),
+              const SizedBox(height: 8),
+              // One row of controls under the dates: day or week, and the
+              // less used type and member choices folded behind 筛选.
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTokens.gutter(constraints.maxWidth),
+                ),
+                // Large text wraps the button under the switch rather than
+                // squeezing either.
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 240),
+                      child: _DayOrWeek(
+                        week: _week,
+                        onWeek: (value) => setState(() => _week = value),
+                      ),
+                    ),
+                    AppButton.withIcon(
+                      tooltip: _filtersOpen ? '收起筛选' : '按类型或成员筛选',
+                      selected: _filtersOpen || filtered,
+                      onPressed: () =>
+                          setState(() => _filtersOpen = !_filtersOpen),
+                      icon: const Icon(Icons.tune, size: 18),
+                      label: Text(
+                        filtered
+                            ? '筛选 ${(_filter != CalendarFilter.all ? 1 : 0) + _members.length}'
+                            : '筛选',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedSize(
+                duration: appMotion(context, AppTokens.controlMotion),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: _filtersOpen
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: filters(wide: false),
+                      )
+                    : QuerySummary(
+                        padding: EdgeInsets.fromLTRB(
+                          AppTokens.gutter(constraints.maxWidth),
+                          4,
+                          AppTokens.gutter(constraints.maxWidth) - 8,
+                          0,
+                        ),
+                        clearTooltip: '清除日历筛选',
+                        onClear: reset,
+                        applied: [
+                          if (_filter != CalendarFilter.all)
+                            (
+                              label: _filter.label,
+                              remove: () => setState(
+                                () => _filter = CalendarFilter.all,
+                              ),
+                            ),
+                          for (final name in _members)
+                            (
+                              label: name,
+                              remove: () => setState(
+                                () => _members = {..._members}..remove(name),
+                              ),
+                            ),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: 12),
+              agenda(scrollable: false, segments: false),
             ],
           );
         },
@@ -372,6 +451,19 @@ class _CalendarFilters extends StatelessWidget {
 }
 
 const _chipText = TextStyle(fontSize: 13);
+
+class _DayOrWeek extends StatelessWidget {
+  const _DayOrWeek({required this.week, required this.onWeek});
+  final bool week;
+  final ValueChanged<bool> onWeek;
+  @override
+  Widget build(BuildContext context) => AppSegments<bool>(
+    values: const [false, true],
+    labelOf: (value) => value ? '周议程' : '当天',
+    selected: week,
+    onChanged: onWeek,
+  );
+}
 
 class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
@@ -582,6 +674,7 @@ class _Agenda extends StatelessWidget {
     required this.day,
     required this.week,
     required this.onWeek,
+    this.segments = true,
     required this.snapshot,
     required this.events,
     required this.filtered,
@@ -592,6 +685,10 @@ class _Agenda extends StatelessWidget {
   final DateTime day;
   final bool week;
   final ValueChanged<bool> onWeek;
+
+  /// Whether the day/week switch leads the agenda (the compact layout puts
+  /// it in the control row instead).
+  final bool segments;
   final AsyncValue<CalendarSnapshot> snapshot;
   final List<CalendarEvent> events;
   final bool filtered;
@@ -603,19 +700,16 @@ class _Agenda extends StatelessWidget {
     final from = week ? CalendarAgenda.weekStart(day) : day;
     final until = from.add(Duration(days: week ? 7 : 1));
     final children = <Widget>[
-      Align(
-        alignment: Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 240),
-          child: AppSegments<bool>(
-            values: const [false, true],
-            labelOf: (value) => value ? '周议程' : '当天',
-            selected: week,
-            onChanged: onWeek,
+      if (segments) ...[
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 240),
+            child: _DayOrWeek(week: week, onWeek: onWeek),
           ),
         ),
-      ),
-      const SizedBox(height: 12),
+        const SizedBox(height: 12),
+      ],
       Semantics(
         header: true,
         child: Text(

@@ -235,36 +235,46 @@ class FanartCard extends StatelessWidget {
       height: _bylineExtent(scaler),
       child: Row(
         children: [
-          ContentAvatar(
-            name: item.authorName,
-            image: item.authorAvatarUrl,
-            size: 20,
-          ),
-          const SizedBox(width: 6),
+          // Who made it, as one target the height of the line: the avatar,
+          // the name and the members together.
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CreatorLink(
-                  mid: item.authorUid,
-                  child: Text(
-                    item.authorName.isEmpty ? '未知作者' : item.authorName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors.onSurface,
+            child: CreatorLink(
+              mid: item.authorUid,
+              minHeight: _bylineExtent(scaler),
+              child: Row(
+                children: [
+                  ContentAvatar(
+                    name: item.authorName,
+                    image: item.authorAvatarUrl,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.authorName.isEmpty ? '未知作者' : item.authorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurface,
+                          ),
+                        ),
+                        if (members.isNotEmpty)
+                          Text(
+                            members,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                      ],
                     ),
                   ),
-                ),
-                if (members.isNotEmpty)
-                  Text(
-                    members,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
-                  ),
-              ],
+                  const SizedBox(width: 4),
+                ],
+              ),
             ),
           ),
           MediaMoreButton(onPressed: more),
