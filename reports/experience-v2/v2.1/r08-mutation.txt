@@ -1,0 +1,9 @@
+# R08 deliberate regression: 我的 list bottom padding without the bar/safe-area inset
+$ sed: MediaQuery.paddingOf(context).bottom + 24 -> 24 (lib/features/mine/presentation/mine_page.dart, first ListView)
+$ tool/flutterw test test/visual/layout_contract_test.dart
+Expected: a value less than or equal to <746.0>
+  Actual: <799.0>
+00:08 +2 -1: mine: the head clears the status bar, and the end clears the floating bar [E]
+00:09 +3 -1: Some tests failed.
+exit 1
+(restored; git diff after restore:)

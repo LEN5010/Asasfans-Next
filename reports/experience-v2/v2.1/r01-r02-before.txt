@@ -1,0 +1,25 @@
+# R01 before the fix (HEAD 546dbd0 + the new test only)
+$ tool/flutterw test test/handoff/fanart_detail_origin_test.dart
+a multi-image work returns to the narrowed channel [E]
+  Expected: ReturnTarget:<ReturnTarget.contentChannel>
+    Actual: ReturnTarget:<ReturnTarget.today>
+a text work returns to the narrowed channel [E]
+  Expected: ReturnTarget:<ReturnTarget.contentChannel>
+    Actual: ReturnTarget:<ReturnTarget.today>
+a work opened from Today keeps Today as its return  (passed)
+a cold start after the detail trip rebuilds the channel [E]
+  Expected: '/content/fanart'
+    Actual: '/today'
++1 -3: Some tests failed.
+
+# R02 before the fix (HEAD 2d057dc + the new tests only)
+$ tool/flutterw test test/shared/query_summary_test.dart
+long conditions stay inside the line 320.0 wide at 1.0x [E]  RenderFlex overflowed by 348 / 1449 px
+long conditions stay inside the line 320.0 wide at 2.0x [E]  RenderFlex overflowed by 927 / 3122 px
+long conditions stay inside the line 390.0 wide at 1.0x [E]  RenderFlex overflowed by 278 / 1379 px
+long conditions stay inside the line 390.0 wide at 2.0x [E]  RenderFlex overflowed by 857 / 3052 px
+many conditions fold behind a count until asked [E]
+clearing fanart conditions says it keeps the members, and equals removing each one [E]
++3 -6: Some tests failed.
+
+(Transcribed from the session's command output: the same lines, trimmed of stack traces.)
