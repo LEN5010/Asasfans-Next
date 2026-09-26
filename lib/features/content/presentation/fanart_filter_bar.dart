@@ -155,8 +155,10 @@ class FanartFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     void set(FanartQuery next) => onChanged(next);
     return QuerySummary(
-      clearTooltip: '重置筛选',
-      // Clears what this line shows; the members keep their own strip.
+      // Clears what this line shows; the members keep their own strip, and
+      // the button says so.
+      clearLabel: '清除条件',
+      clearTooltip: '清除条件，成员不变',
       onClear: () => onChanged(
         FanartFilterRules.reset(
           query,

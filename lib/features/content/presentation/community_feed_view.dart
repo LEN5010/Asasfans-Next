@@ -332,6 +332,9 @@ class _FilterRow extends StatelessWidget {
         // once they differ from the default, since the menu hides them.
         QuerySummary(
           padding: const EdgeInsets.only(top: 4),
+          // The kind is not a condition here; clearing leaves it alone.
+          clearLabel: '清除条件',
+          clearTooltip: '清除排序和时间，类型不变',
           onClear: () => onChanged(
             query.copyWith(order: CommunityVideoOrder.newest, clearDays: true),
           ),

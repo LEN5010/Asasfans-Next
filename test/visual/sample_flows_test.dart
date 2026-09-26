@@ -48,7 +48,7 @@ void main() {
     await tester.tap(find.byTooltip('移除“手书·动画”'));
     await settleVisual(tester);
     expect(find.byTooltip('移除“手书·动画”'), findsNothing);
-    expect(find.byTooltip('重置筛选'), findsNothing);
+    expect(find.byTooltip('清除条件，成员不变'), findsNothing);
   });
 
   testVisual('detail: open a work and come back to the same place', (
