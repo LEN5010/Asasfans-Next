@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/feed_offset_memory.dart';
@@ -11,7 +12,6 @@ import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/query_summary.dart';
-import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../content/presentation/content_images.dart';
 import '../../content/presentation/content_search_control.dart';
 import '../../content/application/fanart_feed_controller.dart' show FeedStatus;
@@ -92,25 +92,43 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView>
       controller: _scrollController,
       onRefresh: _controller.refresh,
       header: [
-        _NovelFilters(
-          query: state.query,
-          total: state.status == FeedStatus.loadingFirstPage
-              ? null
-              : state.total,
-          onChanged: _applyQuery,
+        // The controls sit over the reading list they filter.
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: AppTokens.readingWidth + 32,
+            ),
+            child: _NovelFilters(
+              query: state.query,
+              total: state.status == FeedStatus.loadingFirstPage
+                  ? null
+                  : state.total,
+              onChanged: _applyQuery,
+            ),
+          ),
         ),
       ],
       placeholder: placeholder,
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverContentMasonry(
-            itemCount: state.items.length,
-            itemBuilder: (context, index) => _NovelCard(
-              key: ValueKey(state.items[index].identity),
-              item: state.items[index],
-            ),
-          ),
+        // A reading list, like a bibliography: one column, ruled entries.
+        SliverLayoutBuilder(
+          builder: (context, constraints) {
+            final side = math.max(
+              16.0,
+              (constraints.crossAxisExtent - AppTokens.readingWidth) / 2,
+            );
+            return SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: side),
+              sliver: SliverList.separated(
+                itemCount: state.items.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) => _NovelCard(
+                  key: ValueKey(state.items[index].identity),
+                  item: state.items[index],
+                ),
+              ),
+            );
+          },
         ),
         SliverToBoxAdapter(
           child: FeedStatusFooter(
@@ -438,122 +456,99 @@ class _NovelCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final author = item.authorName.isEmpty ? '匿名作者' : item.authorName;
-    return MediaCardSurface(
+    final serif = theme.textTheme.bodyLarge?.copyWith(
+      fontFamily: 'serif',
+      fontFamilyFallback: const ['Songti SC', 'Noto Serif CJK SC'],
+      height: 1.75,
+      color: colors.onSurfaceVariant,
+    );
+    // An entry in a reading list: the title leads, then who and how long,
+    // then a few lines of the text itself. No cover is invented.
+    return MediaActionRegion(
       onTap: () => openNovel(context, item),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ContentAvatar(name: author),
-                const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(author, style: theme.textTheme.titleSmall),
-                      if (item.createdAt != null)
-                        Text(
-                          formatNovelDate(item.createdAt!, includeTime: true),
-                          style: theme.textTheme.bodySmall,
-                        ),
-                    ],
+                  child: Text(
+                    item.title.isEmpty ? '无题' : item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
                   ),
                 ),
-                if (item.isR18) const NovelR18Badge(),
+                if (item.isR18) ...[
+                  const SizedBox(width: 8),
+                  const NovelR18Badge(),
+                ],
               ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              [
+                author,
+                if (item.createdAt != null) formatNovelDate(item.createdAt!),
+                formatNovelCharCount(item.charCount),
+              ].join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
             ),
             if (item.characters.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.only(top: 8),
                 child: NovelCharacterTags(characters: item.characters),
               ),
             const SizedBox(height: 10),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHigh.withValues(
-                  alpha: .55,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: item.isR18
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.lock_outline,
-                            size: 22,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '仅提供作品信息与原帖链接',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (item.images.isNotEmpty) ...[
-                            ContentImageGallery(
-                              images: item.images,
-                              preview: true,
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                          Text(
-                            item.excerpt.isEmpty
-                                ? '暂无预览文本'
-                                : item.excerpt.trim(),
-                            maxLines: 6,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontFamily: 'serif',
-                              fontFamilyFallback: const [
-                                'Songti SC',
-                                'Noto Serif CJK SC',
-                              ],
-                              height: 1.65,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              item.title.isEmpty ? '无题' : item.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    formatNovelCharCount(item.charCount),
-                    style: theme.textTheme.bodySmall,
+            if (item.isR18)
+              Row(
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    size: 18,
+                    color: colors.onSurfaceVariant,
                   ),
-                ),
-                AppButton(
-                  onPressed: item.isR18 && item.sourceUrl != null
-                      ? () => openNovelSource(context, ref, item.sourceUrl!)
-                      : () => openNovel(context, item),
-                  child: Text(
-                    item.isR18
-                        ? (item.sourceUrl == null ? '作品信息' : '查看原帖 ↗')
-                        : '阅读全文',
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '仅提供作品信息与原帖链接',
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ),
-                ),
+                ],
+              )
+            else ...[
+              if (item.images.isNotEmpty) ...[
+                ContentImageGallery(images: item.images, preview: true),
+                const SizedBox(height: 10),
               ],
+              Text(
+                item.excerpt.isEmpty ? '暂无预览文本' : item.excerpt.trim(),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: serif,
+              ),
+            ],
+            Align(
+              alignment: Alignment.centerRight,
+              child: AppButton(
+                onPressed: item.isR18 && item.sourceUrl != null
+                    ? () => openNovelSource(context, ref, item.sourceUrl!)
+                    : () => openNovel(context, item),
+                child: Text(
+                  item.isR18
+                      ? (item.sourceUrl == null ? '作品信息' : '查看原帖 ↗')
+                      : '阅读全文',
+                  style: TextStyle(color: colors.primary),
+                ),
+              ),
             ),
           ],
         ),

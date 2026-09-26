@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:asasfans_next/app/theme/app_tokens.dart';
 
 NovelSummary _summary(String tid, {NovelRating rating = NovelRating.sfw}) =>
     NovelSummary(
@@ -107,13 +108,18 @@ void main() {
       expect(repository.queries.single.rating, NovelRatingFilter.all);
       expect(find.text('作品 1'), findsOneWidget);
       expect(find.text('摘要 1'), findsOneWidget);
-      expect(find.text('2.3 万字'), findsNWidgets(2));
+      expect(find.textContaining('2.3 万字'), findsNWidgets(2));
       expect(find.text('仅提供作品信息与原帖链接'), findsOneWidget);
       expect(find.textContaining('2 部'), findsOneWidget);
       expect(find.text('摘要 2'), findsNothing);
       final first = tester.getTopLeft(find.text('作品 1'));
       final second = tester.getTopLeft(find.text('作品 2'));
-      expect(width > 760 ? second.dx > first.dx : second.dy > first.dy, isTrue);
+      // A reading list at every width: one column, capped and centred.
+      expect(second.dy, greaterThan(first.dy));
+      expect(second.dx, first.dx);
+      if (width > 760) {
+        expect(first.dx, greaterThan((width - AppTokens.readingWidth) / 2 - 1));
+      }
       expect(tester.takeException(), isNull);
     });
   }
