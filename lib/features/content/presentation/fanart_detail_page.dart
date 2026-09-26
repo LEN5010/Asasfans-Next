@@ -148,12 +148,16 @@ class FanartDetailPage extends ConsumerWidget {
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 780),
+                // The work leads: its first image, then who made it and
+                // what they wrote, then the rest of the set.
                 child: ListView(
                   padding: pageInsets(context),
                   children: [
+                    ...images.take(1),
+                    if (images.isNotEmpty) const SizedBox(height: 4),
                     ...info,
-                    if (images.isNotEmpty) const SizedBox(height: 16),
-                    ...images,
+                    if (images.length > 1) const SizedBox(height: 16),
+                    ...images.skip(1),
                   ],
                 ),
               ),
@@ -288,25 +292,25 @@ class _MetaRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final labels = [
+    final labels = <String>[
       item.category.wire,
       for (final tag in item.characterTags) tag.wire,
       if (item.viewCount != null) '播放 ${item.viewCount}',
       if (item.favoriteCount != null) '收藏 ${item.favoriteCount}',
     ];
+    if (item.images.length > 1) labels.add('${item.images.length} 张 · 点按看原图');
     if (labels.isEmpty) return const SizedBox.shrink();
+    // One quiet line of facts, not a chip for each.
+    final style = theme.textTheme.bodySmall;
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 12),
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        runSpacing: 4,
         children: [
-          for (final label in labels)
-            Chip(
-              label: Text(label),
-              visualDensity: VisualDensity.compact,
-              labelStyle: theme.textTheme.labelSmall,
-            ),
+          for (final (index, label) in labels.indexed) ...[
+            if (index > 0) Text('  ·  ', style: style),
+            Text(label, style: style),
+          ],
         ],
       ),
     );
