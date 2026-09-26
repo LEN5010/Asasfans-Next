@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import '../../../core/domain/content_identity.dart';
 import '../../handoff/application/handoff_providers.dart';
@@ -22,7 +23,6 @@ import '../../../shared/widgets/query_summary.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../../../shared/widgets/app_controls.dart';
-import '../../../shared/widgets/sliver_content_masonry.dart';
 import 'content_images.dart';
 import 'dynamic_card.dart';
 import '../application/content_providers.dart';
@@ -32,6 +32,10 @@ import '../domain/dynamic_repository.dart';
 import 'feed_status_footer.dart';
 
 /// Historical dynamics list with keyword search and auto-append.
+/// The widest a dynamic's text runs, in logical px: about 40 Chinese
+/// characters at the reading size.
+const readingWidth = 720.0;
+
 class DynamicFeedView extends ConsumerStatefulWidget {
   const DynamicFeedView({super.key});
 
@@ -125,9 +129,12 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      final filters = _DynamicFilterBar(
-        query: state.query,
-        onChanged: _applyQuery,
+      // The controls sit over the reading column they filter.
+      final filters = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: readingWidth + 32),
+          child: _DynamicFilterBar(query: state.query, onChanged: _applyQuery),
+        ),
       );
       return RuleFilterScope(
         items: state.items,
@@ -184,19 +191,29 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
       header: header,
       placeholder: placeholder,
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverContentMasonry(
-            itemCount: state.items.length,
-            itemBuilder: (context, index) => DynamicCard(
-              key: ValueKey(state.items[index].identity),
-              post: state.items[index],
-              returnQuery: returnQuery,
-              anchorOf: () => ReturnAnchor(
-                identity: state.items[index].identity,
-                offset: _scrollController.hasClients
-                    ? _scrollController.offset
-                    : null,
+        // One reading column: a comfortable line length on wide windows
+        // rather than a wall of cards.
+        SliverLayoutBuilder(
+          builder: (context, constraints) => SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              math.max(16, (constraints.crossAxisExtent - readingWidth) / 2),
+              0,
+              math.max(16, (constraints.crossAxisExtent - readingWidth) / 2),
+              0,
+            ),
+            sliver: SliverList.separated(
+              itemCount: state.items.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) => DynamicCard(
+                key: ValueKey(state.items[index].identity),
+                post: state.items[index],
+                returnQuery: returnQuery,
+                anchorOf: () => ReturnAnchor(
+                  identity: state.items[index].identity,
+                  offset: _scrollController.hasClients
+                      ? _scrollController.offset
+                      : null,
+                ),
               ),
             ),
           ),
