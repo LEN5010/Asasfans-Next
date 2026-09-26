@@ -1,0 +1,29 @@
+# Final checks at 227aa754a384787533ac6278cdf4c8e37e47e06d (2026-09-26T18:07:04Z); clean worktree: 1 changed files
+
+$ tool/flutterw --verify-sdk
+{"sdk":"/home/user/sdk/flutter","version":"3.47.3","revision":"e8113bf45620cbeb8aff64947ee4c93e16adb4cf","dartVersion":"3.13.3"}
+exit 0
+
+$ tool/flutterw pub get --enforce-lockfile
+Got dependencies!
+46 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+exit 0
+
+$ tool/flutterw analyze --no-pub
+📎
+Analyzing Asasfans-Next...                                      
+No issues found! (ran in 8.0s)
+exit 0
+
+$ dart format --output=none --set-exit-if-changed lib test tool reports
+  /
+📎
+Formatted 313 files (0 changed) in 1.33 seconds.
+exit 0
+
+$ tool/flutterw test --no-pub
+03:33 +902: /home/user/Asasfans-Next/test/calendar/calendar_agenda_layout_test.dart: loading errors do not remove date and filter controls
+03:33 +903: /home/user/Asasfans-Next/test/calendar/calendar_agenda_layout_test.dart: expanded month and agenda fit a narrow window with large text
+03:34 +904: All tests passed!
+exit 0
