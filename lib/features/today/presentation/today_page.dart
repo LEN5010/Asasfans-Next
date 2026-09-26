@@ -29,6 +29,7 @@ import '../../library/presentation/content_actions.dart';
 import '../../updates/presentation/updates_bell_button.dart';
 import '../application/today_providers.dart';
 import 'on_this_day_section.dart';
+import '../../handoff/presentation/continue_browsing.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
@@ -107,7 +108,14 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
       ],
     );
     final schedule = calendar
-        ? _ScheduleSection(day: day, onCalendar: _calendar)
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ScheduleSection(day: day, onCalendar: _calendar),
+              // The one optional task slot: back to where picking stopped.
+              const ContinueBrowsingRow(),
+            ],
+          )
         : null;
     final works = showFanart ? const _WorksSection() : null;
     final clips = showClips ? const _ClipsSection() : null;
@@ -160,7 +168,12 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                     )
                   else ...[
                     if (schedule != null)
-                      Padding(padding: edge, child: schedule),
+                      Padding(padding: edge, child: schedule)
+                    else
+                      Padding(
+                        padding: edge,
+                        child: const ContinueBrowsingRow(),
+                      ),
                     if (works != null) Padding(padding: edge, child: works),
                     if (clips != null) Padding(padding: edge, child: clips),
                   ],

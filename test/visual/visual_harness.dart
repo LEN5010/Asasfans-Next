@@ -294,6 +294,9 @@ Future<void> pushVisual(WidgetTester tester, Route<void> route) async {
   await settleVisual(tester);
 }
 
+ProviderContainer visualContainer(WidgetTester tester) =>
+    ProviderScope.containerOf(tester.element(find.byType(AsasfansApp)));
+
 GoRouter visualRouter(WidgetTester tester) => ProviderScope.containerOf(
   tester.element(find.byType(AsasfansApp)),
 ).read(appRouterProvider);

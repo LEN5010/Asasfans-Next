@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../handoff/application/handoff_providers.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
@@ -223,6 +224,8 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
                         context,
                         () => repository.clearHistory(action: action),
                       );
+                      // 继续挑选 is browsing history too; clearing it goes.
+                      ref.read(handoffCoordinatorProvider).forgetBrowsing();
                     }
                   },
           ),
