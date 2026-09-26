@@ -97,19 +97,22 @@ void main() {
     expect(coordinator.hasBrowseRestoreFor('fanart'), isFalse);
   });
 
-  test('a claimed request is gone; cancelling it later changes nothing', () async {
-    final coordinator = await leftFrom('fanart');
-    final request = coordinator.resumeBrowsing()!;
-    expect(await coordinator.listRestoreFor('fanart'), isNotNull);
-    final next = coordinator.resumeBrowsing()!;
-    coordinator.cancelBrowseRestore(request);
-    // The newer request survives the stale cancel.
-    expect(coordinator.hasBrowseRestoreFor('fanart'), isTrue);
-    expect(
-      (await coordinator.listRestoreFor('fanart'))?.sessionId,
-      'browse-$next',
-    );
-  });
+  test(
+    'a claimed request is gone; cancelling it later changes nothing',
+    () async {
+      final coordinator = await leftFrom('fanart');
+      final request = coordinator.resumeBrowsing()!;
+      expect(await coordinator.listRestoreFor('fanart'), isNotNull);
+      final next = coordinator.resumeBrowsing()!;
+      coordinator.cancelBrowseRestore(request);
+      // The newer request survives the stale cancel.
+      expect(coordinator.hasBrowseRestoreFor('fanart'), isTrue);
+      expect(
+        (await coordinator.listRestoreFor('fanart'))?.sessionId,
+        'browse-$next',
+      );
+    },
+  );
 
   test('nothing to resume gives no request', () {
     final coordinator = HandoffCoordinator(_Links(), store);
@@ -151,9 +154,7 @@ void main() {
     );
   });
 
-  testWidgets('a query the user commits during a restore wins', (
-    tester,
-  ) async {
+  testWidgets('a query the user commits during a restore wins', (tester) async {
     tester.view
       ..physicalSize = const Size(1000, 900)
       ..devicePixelRatio = 1;

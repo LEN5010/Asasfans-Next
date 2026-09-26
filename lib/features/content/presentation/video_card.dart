@@ -75,75 +75,78 @@ class VideoCard extends ConsumerWidget {
           : openContentSource(context, ref, ContentSnapshots.video(video)),
       onMore: more,
       child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: MediaCover(
-                  image: video.coverUrl,
-                  aspectRatio: 16 / 9,
-                  video: true,
-                  badge: video.duration == null
-                      ? null
-                      : _duration(video.duration!),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: MediaCover(
+              image: video.coverUrl,
+              aspectRatio: 16 / 9,
+              video: true,
+              badge: video.duration == null ? null : _duration(video.duration!),
+            ),
+          ),
+          const SizedBox(height: _gap),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: SizedBox(
+              height: _titleExtent(scaler),
+              child: Text(
+                video.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  height: 1.4,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: _gap),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: SizedBox(
-                  height: _titleExtent(scaler),
-                  child: Text(
-                    video.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      height: 1.4,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: SizedBox(
-                  height: _metaExtent(scaler),
-                  child: VideoMeta(video: video),
-                ),
-              ),
-              SizedBox(
-                height: _bylineExtent(scaler),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: CreatorLink(
-                        mid: video.creatorId,
-                        minHeight: _bylineExtent(scaler),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Text(
-                            video.creatorName.isEmpty
-                                ? '未知作者'
-                                : video.creatorName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 12,
-                              height: 1.35,
-                              color: theme.colorScheme.onSurface,
-                            ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: SizedBox(
+              height: _metaExtent(scaler),
+              child: VideoMeta(video: video),
+            ),
+          ),
+          SizedBox(
+            height: _bylineExtent(scaler),
+            child: Row(
+              children: [
+                // The link is the name's width; the rest of the line
+                // still opens the video.
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: CreatorLink(
+                      mid: video.creatorId,
+                      minHeight: _bylineExtent(scaler),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: Text(
+                          video.creatorName.isEmpty
+                              ? '未知作者'
+                              : video.creatorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            height: 1.35,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                       ),
                     ),
-                    MediaMoreButton(onPressed: more),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                MediaMoreButton(onPressed: more),
+              ],
+            ),
           ),
+        ],
+      ),
     );
   }
 
@@ -287,15 +290,18 @@ class VideoRow extends ConsumerWidget {
     final byline = Row(
       children: [
         Expanded(
-          child: CreatorLink(
-            mid: video.creatorId,
-            minHeight: MediaMoreButton.reserve,
-            child: Text(
-              video.creatorName.isEmpty ? '未知作者' : video.creatorName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: CreatorLink(
+              mid: video.creatorId,
+              minHeight: MediaMoreButton.reserve,
+              child: Text(
+                video.creatorName.isEmpty ? '未知作者' : video.creatorName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ),

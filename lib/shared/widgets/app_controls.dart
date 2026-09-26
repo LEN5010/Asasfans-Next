@@ -230,6 +230,7 @@ class AppSegments<T> extends StatelessWidget {
             AppTokens.controlTarget(context),
             MediaQuery.textScalerOf(context).scale(14) * 1.3 + 16,
           );
+    final hit = math.max(height, AppTokens.touchTarget(context));
     final selectedIndex = values.indexOf(selected);
     final selectedStyle = TextStyle(
       fontSize: 14,
@@ -267,73 +268,78 @@ class AppSegments<T> extends StatelessWidget {
             quality: AppGlassStyle.qualityOf(context),
             settings: AppGlassStyle.settings(Theme.of(context).brightness),
           )
+        // Looks [height] tall; on touch the segments are hit across a 48 dp
+        // band, as AppButton is, so the track sits centred in it.
         : SizedBox(
-            height: height,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(
-                  navigation ? height / 2 : 12,
-                ),
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: AnimatedAlign(
-                      alignment: AlignmentDirectional(
-                        -1 + 2 * selectedIndex / (values.length - 1),
-                        0,
+            height: hit,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: (hit - height) / 2),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(
+                        navigation ? height / 2 : 12,
                       ),
-                      duration: duration,
-                      curve: Curves.easeOutCubic,
-                      child: FractionallySizedBox(
-                        widthFactor: 1 / values.length,
-                        heightFactor: 1,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: colors.primaryContainer,
-                            borderRadius: BorderRadius.circular(
-                              navigation ? (height - 8) / 2 : 8,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: AnimatedAlign(
+                        alignment: AlignmentDirectional(
+                          -1 + 2 * selectedIndex / (values.length - 1),
+                          0,
+                        ),
+                        duration: duration,
+                        curve: Curves.easeOutCubic,
+                        child: FractionallySizedBox(
+                          widthFactor: 1 / values.length,
+                          heightFactor: 1,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: colors.primaryContainer,
+                              borderRadius: BorderRadius.circular(
+                                navigation ? (height - 8) / 2 : 8,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final value in values)
-                        Expanded(
-                          child: Semantics(
-                            selected: value == selected,
-                            child: TextButton(
-                              onPressed: onChanged == null
-                                  ? null
-                                  : () => onChanged!(value),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final value in values)
+                      Expanded(
+                        child: Semantics(
+                          selected: value == selected,
+                          child: TextButton(
+                            onPressed: onChanged == null
+                                ? null
+                                : () => onChanged!(value),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(
-                                labelOf(value),
-                                style: value == selected
-                                    ? selectedStyle
-                                    : normalStyle,
-                              ),
+                            ),
+                            child: Text(
+                              labelOf(value),
+                              style: value == selected
+                                  ? selectedStyle
+                                  : normalStyle,
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ],
-              ),
+                      ),
+                  ],
+                ),
+              ],
             ),
           );
     // Also blocks drag selection: the package's drag handler ignores the

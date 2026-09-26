@@ -95,10 +95,7 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView>
       onRefresh: _controller.refresh,
       header: [
         if (state.status == FeedStatus.failed && state.items.isNotEmpty)
-          FeedStaleNotice(
-            failure: state.failure,
-            onRetry: _controller.refresh,
-          ),
+          FeedStaleNotice(failure: state.failure, onRetry: _controller.refresh),
         // The controls sit over the reading list they filter.
         Center(
           child: ConstrainedBox(

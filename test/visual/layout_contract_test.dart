@@ -43,9 +43,9 @@ void main() {
     testVisual('$name: the head clears the status bar, and the end clears '
         'the floating bar', (tester) async {
       await pumpVisualApp(tester, view: bars, location: location);
-      final top = texts(tester).map((rect) => rect.top).reduce(
-        (a, b) => a < b ? a : b,
-      );
+      final top = texts(
+        tester,
+      ).map((rect) => rect.top).reduce((a, b) => a < b ? a : b);
       expect(top, greaterThanOrEqualTo(bars.safeArea.top));
 
       // To the very end, as far as the list goes (loading more as it does).
@@ -64,14 +64,38 @@ void main() {
     });
   }
 
-  testVisual('a focused search stays above the keyboard', (tester) async {
+  testVisual('a search in a bottom panel stays above the keyboard', (
+    tester,
+  ) async {
+    // A panel rises from the bottom edge, where a keyboard opens: its field
+    // is the one that could end up underneath. (A page's own search sits at
+    // the top and is never at risk.)
     final keyboard = bars.withKeyboard(300);
-    await pumpVisualApp(tester, view: keyboard, location: '/content/fanart');
-    await tester.tap(find.byType(TextField).first);
+    await pumpVisualApp(tester, view: bars, location: '/mine');
+    final entry = find.text('工具与相关站点');
+    await tester.scrollUntilVisible(
+      entry,
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.runAsync(
+      () => Scrollable.ensureVisible(tester.element(entry), alignment: .5),
+    );
     await settleVisual(tester);
-    final field = tester.getRect(find.byType(TextField).first);
-    expect(field.bottom, lessThanOrEqualTo(keyboard.size.height - 300));
+    await tester.tap(entry);
+    await settleVisual(tester);
+    final search = find.widgetWithText(TextField, '搜索工具');
+    await tester.tap(search);
+    // The keyboard rises after the tap, as on a phone.
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: keyboard.keyboard * keyboard.pixelRatio,
+    );
+    await settleVisual(tester);
+    expect(
+      tester.getRect(search).bottom,
+      lessThanOrEqualTo(keyboard.size.height - keyboard.keyboard),
+    );
     expect(tester.takeException(), isNull);
-    await shoot(tester, 'fanart-search-keyboard', keyboard);
+    await shoot(tester, 'tools-search-keyboard', keyboard);
   });
 }

@@ -97,7 +97,9 @@ class FanartCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
-                  child: _outlined(context, cover: MediaCover(
+                  child: _outlined(
+                    context,
+                    cover: MediaCover(
                       image: item.images.firstOrNull,
                       aspectRatio: videoRatio,
                       video: true,
@@ -106,23 +108,25 @@ class FanartCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // The words and the byline follow the cover; what the
-                // shorter cover frees stays below them, as the end of the
-                // tile, rather than floating the byline away from its work.
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: words),
-                  child: Text(
-                    text.isNotEmpty ? text : '视频作品',
-                    maxLines: math.max(1, (words / line).floor()),
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      height: 1.4,
-                      fontWeight: FontWeight.w500,
+                // The words take what the shorter cover frees, and the
+                // byline sits at the tile's foot, level with its row's
+                // neighbours: the middle of the tile stays the work's own.
+                SizedBox(
+                  height: words,
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      text.isNotEmpty ? text : '视频作品',
+                      maxLines: math.max(1, (words / line).floor()),
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 2),
                 _byline(context, members, more),
               ],
             );
@@ -244,9 +248,9 @@ class FanartCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
           border: Border.all(
-            color: Theme.of(context).colorScheme.onSurface.withValues(
-              alpha: .08,
-            ),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: .08),
           ),
         ),
         child: cover,
@@ -261,44 +265,49 @@ class FanartCard extends StatelessWidget {
       child: Row(
         children: [
           // Who made it, as one target the height of the line: the avatar,
-          // the name and the members together.
+          // the name and the members together, and no wider than them; the
+          // rest of the line still opens the work.
           Expanded(
-            child: CreatorLink(
-              mid: item.authorUid,
-              minHeight: _bylineExtent(scaler),
-              child: Row(
-                children: [
-                  ContentAvatar(
-                    name: item.authorName,
-                    image: item.authorAvatarUrl,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.authorName.isEmpty ? '未知作者' : item.authorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.onSurface,
-                          ),
-                        ),
-                        if (members.isNotEmpty)
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: CreatorLink(
+                mid: item.authorUid,
+                minHeight: _bylineExtent(scaler),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ContentAvatar(
+                      name: item.authorName,
+                      image: item.authorAvatarUrl,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            members,
+                            item.authorName.isEmpty ? '未知作者' : item.authorName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.onSurface,
+                            ),
                           ),
-                      ],
+                          if (members.isNotEmpty)
+                            Text(
+                              members,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                ],
+                    const SizedBox(width: 4),
+                  ],
+                ),
               ),
             ),
           ),

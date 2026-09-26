@@ -205,8 +205,7 @@ abstract final class Visual {
       for (var i = 0; i < 6; i++) {
         canvas.drawRect(
           Rect.fromLTWH(0, i * panel, size.width, panel),
-          Paint()
-            ..color = HSLColor.fromAHSL(1, i * 50.0, .3, .7).toColor(),
+          Paint()..color = HSLColor.fromAHSL(1, i * 50.0, .3, .7).toColor(),
         );
         canvas.drawRect(
           Rect.fromLTWH(0, i * panel, size.width, size.width * .01),
@@ -241,10 +240,16 @@ abstract final class Visual {
         ),
         Paint()..color = const Color(0xFF000000),
       );
-    label('左边的字', Offset(band * 1.2 + size.shortestSide * .25, size.height / 2));
+    label(
+      '左边的字',
+      Offset(band * 1.2 + size.shortestSide * .25, size.height / 2),
+    );
     label(
       '右边的字',
-      Offset(size.width - band * 1.2 - size.shortestSide * .25, size.height / 2),
+      Offset(
+        size.width - band * 1.2 - size.shortestSide * .25,
+        size.height / 2,
+      ),
     );
   }
 

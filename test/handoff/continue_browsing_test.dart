@@ -12,7 +12,6 @@ import 'package:asasfans_next/features/handoff/application/handoff_providers.dar
 import 'package:asasfans_next/features/handoff/data/sqlite_return_store.dart';
 import 'package:asasfans_next/features/handoff/domain/return_context.dart';
 import 'package:asasfans_next/features/handoff/presentation/continue_browsing.dart';
-import 'package:asasfans_next/shared/widgets/media_cover.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -150,8 +149,8 @@ void main() {
     );
     await settleVisual(tester);
     final left = tester.widget<FanartCard>(video).item.identity;
-    // On the cover: the tile's middle is its byline, which links the maker.
-    await tester.tap(find.descendant(of: video, matching: find.byType(MediaCover)));
+    // The middle of the tile is the work's own tap.
+    await tester.tap(video);
     await settleVisual(tester);
 
     final container = visualContainer(tester);

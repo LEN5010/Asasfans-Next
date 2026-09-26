@@ -311,9 +311,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                           if (_filter != CalendarFilter.all)
                             (
                               label: _filter.label,
-                              remove: () => setState(
-                                () => _filter = CalendarFilter.all,
-                              ),
+                              remove: () =>
+                                  setState(() => _filter = CalendarFilter.all),
                             ),
                           for (final name in _members)
                             (

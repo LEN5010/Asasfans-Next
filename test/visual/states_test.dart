@@ -97,7 +97,7 @@ void main() {
   testVisual('the updates inbox says what it holds and when', (tester) async {
     await pumpVisualApp(tester, view: view, location: '/mine/updates');
     expect(find.text('由应用运行时检查得到，不是系统推送'), findsOneWidget);
-    expect(find.textContaining('应用没有运行时不会收到'), findsOneWidget);
+    expect(find.textContaining('订阅的 UP 主发了新视频'), findsOneWidget);
     await shoot(tester, 'state-updates-empty', view);
   });
 

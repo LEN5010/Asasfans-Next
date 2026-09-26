@@ -345,14 +345,16 @@ void main() {
     final feed = ProviderScope.containerOf(
       tester.element(find.byType(ContentPage)),
     ).read(fanartFeedControllerProvider(ContentChannel.fanart));
-    await feed.applyQuery(const FanartQuery(category: FanartCategory.handwriting));
+    await feed.applyQuery(
+      const FanartQuery(category: FanartCategory.handwriting),
+    );
     await tester.pumpAndSettle();
     expect(find.text('没有符合条件的二创'), findsOneWidget);
     // The empty state's own button (the summary line has one too).
     await tester.tap(
       find.descendant(
         of: find.byType(FeedMessage),
-        matching: find.widgetWithText(AppButton, '清除条件'),
+        matching: find.widgetWithText(AppButton, '清除全部条件'),
       ),
     );
     await tester.pumpAndSettle();
