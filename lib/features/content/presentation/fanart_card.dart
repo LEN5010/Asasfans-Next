@@ -18,16 +18,25 @@ import '../domain/fanart_repository.dart';
 /// its whole 16:9 cover and lets its words take the height the cover leaves.
 /// Every tile, whatever its type, fills the same extent for a given width
 /// ([extentFor]) by construction, so grids stay fixed and returns land.
+/// The shared tag between a work's tile and its detail page.
+Object fanartHeroTag(FanartItem item) => ('fanart-art', item.identity);
+
 class FanartCard extends StatelessWidget {
   const FanartCard({
     required this.item,
     this.onTap,
     this.onLongPress,
+    this.heroTag,
     super.key,
   });
   final FanartItem item;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+
+  /// Links the tile's art to the detail's first image, so opening and
+  /// closing a work reads as the same picture moving. Only where each work
+  /// appears once (the channel grid); see [fanartHeroTag].
+  final Object? heroTag;
 
   static bool isText(FanartItem item) =>
       item.contentType == FanartContentType.text ||
@@ -174,16 +183,22 @@ class FanartCard extends StatelessWidget {
                       ),
                     ),
                   )
-                : _outlined(context, cover: MediaCover(
-                    image: item.images.firstOrNull,
-                    aspectRatio: AppTokens.artworkRatio,
-                    // A tile shows a crop; the detail shows the whole image.
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    badge: item.images.length > 1
-                        ? '${item.images.length} 张'
-                        : null,
-                  ),
+                : _hero(
+                    context,
+                    _outlined(
+                      context,
+                      cover: MediaCover(
+                        image: item.images.firstOrNull,
+                        aspectRatio: AppTokens.artworkRatio,
+                        // A tile shows a crop; the detail shows the whole
+                        // image.
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        badge: item.images.length > 1
+                            ? '${item.images.length} 张'
+                            : null,
+                      ),
+                    ),
                   ),
           ),
           const SizedBox(height: 8),
@@ -208,6 +223,16 @@ class FanartCard extends StatelessWidget {
           _byline(context, members, more),
         ],
       ),
+    );
+  }
+
+  Widget _hero(BuildContext context, Widget child) {
+    final tag = heroTag;
+    if (tag == null) return child;
+    return HeroMode(
+      // Reduced motion: the detail simply appears.
+      enabled: !MediaQuery.disableAnimationsOf(context),
+      child: Hero(tag: tag, child: child),
     );
   }
 

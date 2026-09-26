@@ -643,6 +643,7 @@ class _FanartGrid extends ConsumerWidget {
                   return FanartCard(
                     key: ValueKey(item.identity),
                     item: item,
+                    heroTag: fanartHeroTag(item),
                     onLongPress: () => showContentActions(
                       context,
                       ContentSnapshots.fanart(item),
@@ -661,6 +662,7 @@ class _FanartGrid extends ConsumerWidget {
                         identity: item.identity,
                         offset: controller.offset,
                       ),
+                      heroTag: fanartHeroTag(item),
                     ),
                   );
                 },

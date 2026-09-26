@@ -44,6 +44,26 @@ class QuerySummary extends StatefulWidget {
 class _QuerySummaryState extends State<QuerySummary> {
   bool _expanded = false;
 
+  /// Labels shown on the previous build, so a condition that just arrived
+  /// (applied from the panel) can be marked as new for a moment: the panel
+  /// closes, and the eye finds what it changed in the line it left.
+  Set<String> _previous = const {};
+  Set<String> _fresh = const {};
+
+  @override
+  void initState() {
+    super.initState();
+    _previous = {for (final condition in widget.applied) condition.label};
+  }
+
+  @override
+  void didUpdateWidget(QuerySummary oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final now = {for (final condition in widget.applied) condition.label};
+    _fresh = now.difference(_previous);
+    _previous = now;
+  }
+
   /// The line grows and folds with the conditions rather than jumping the
   /// feed below it; reduced motion makes it immediate.
   @override
@@ -80,7 +100,10 @@ class _QuerySummaryState extends State<QuerySummary> {
                     ),
                   ),
                 for (final condition in shown)
-                  AppButton(
+                  _Arrival(
+                    key: ValueKey(condition.label),
+                    fresh: _fresh.contains(condition.label),
+                    child: AppButton(
                     tooltip: '移除“${condition.label}”',
                     onPressed: condition.remove,
                     // A keyword can be any length: the chip never outgrows
@@ -105,6 +128,7 @@ class _QuerySummaryState extends State<QuerySummary> {
                       ],
                     ),
                   ),
+                  ),
                 if (folds)
                   AppButton(
                     onPressed: () => setState(() => _expanded = !_expanded),
@@ -126,6 +150,36 @@ class _QuerySummaryState extends State<QuerySummary> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// A condition that just arrived starts tinted and settles to the plain
+/// line; one that was already there is drawn plain. Reduced motion shows it
+/// plain at once, since the words say the same.
+class _Arrival extends StatelessWidget {
+  const _Arrival({required this.fresh, required this.child, super.key});
+  final bool fresh;
+  final Widget child;
+
+  static const duration = Duration(milliseconds: 900);
+
+  @override
+  Widget build(BuildContext context) {
+    if (!fresh || MediaQuery.disableAnimationsOf(context)) return child;
+    final tint = Theme.of(context).colorScheme.primaryContainer;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 1, end: 0),
+      duration: duration,
+      curve: Curves.easeOut,
+      child: child,
+      builder: (context, value, child) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: tint.withValues(alpha: value * .9),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: child,
       ),
     );
   }

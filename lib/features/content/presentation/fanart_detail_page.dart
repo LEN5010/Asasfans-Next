@@ -33,6 +33,7 @@ void openFanart(
   String? channel,
   Map<String, Object?>? query,
   ReturnAnchor? anchor,
+  Object? heroTag,
 }) {
   if (item.contentType == FanartContentType.video && item.sourceUrl != null) {
     openContentSource(
@@ -57,7 +58,8 @@ void openFanart(
   );
   Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(
-      builder: (_) => FanartDetailPage(item: item, origin: origin),
+      builder: (_) =>
+          FanartDetailPage(item: item, origin: origin, heroTag: heroTag),
     ),
   );
 }
@@ -71,10 +73,14 @@ class FanartDetailPage extends ConsumerWidget {
   const FanartDetailPage({
     required this.item,
     this.origin = WatchOrigin.today,
+    this.heroTag,
     super.key,
   });
 
   final FanartItem item;
+
+  /// The tile's tag, when opened from a tile that has one.
+  final Object? heroTag;
 
   /// Where the work was picked from, handed on to any trip out of the page.
   final WatchOrigin origin;
@@ -138,6 +144,7 @@ class FanartDetailPage extends ConsumerWidget {
                     cap: oneColumn && index == 0
                         ? math.max(240, constraints.maxHeight * .55)
                         : null,
+                    heroTag: index == 0 ? heroTag : null,
                     onTap: () =>
                         Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute<void>(
@@ -269,12 +276,14 @@ class _DetailImage extends StatefulWidget {
     required this.index,
     required this.onTap,
     this.cap,
+    this.heroTag,
   });
 
   final FanartItem item;
   final int index;
   final VoidCallback onTap;
   final double? cap;
+  final Object? heroTag;
 
   @override
   State<_DetailImage> createState() => _DetailImageState();
@@ -387,13 +396,17 @@ class _DetailImageState extends State<_DetailImage> {
             ],
           );
         }
-        return GestureDetector(
-          onTap: widget.onTap,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-            child: image,
-          ),
+        Widget framed = ClipRRect(
+          borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+          child: image,
         );
+        if (widget.heroTag case final tag?) {
+          framed = HeroMode(
+            enabled: !MediaQuery.disableAnimationsOf(context),
+            child: Hero(tag: tag, child: framed),
+          );
+        }
+        return GestureDetector(onTap: widget.onTap, child: framed);
       },
     );
   }
