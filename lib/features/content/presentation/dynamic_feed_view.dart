@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_motion.dart';
+import '../../../shared/widgets/query_summary.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../../../shared/widgets/app_controls.dart';
@@ -233,13 +234,6 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
     final member = members
         .where((member) => member.id == query.memberId)
         .firstOrNull;
-    final summary = [
-      if (query.keyword.isNotEmpty) '“${query.keyword}”',
-      if (query.memberId != null) member?.name ?? '指定成员',
-      if (query.type != null) dynamicTypeLabel(query.type!),
-      if (query.from != null || query.to != null) '已选日期',
-      _sortLabel(query.sort),
-    ].join(' · ');
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 760;
@@ -327,24 +321,39 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
                   ),
                 ),
               ),
-              if (query != const DynamicQuery())
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        summary,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+              QuerySummary(
+                padding: const EdgeInsets.only(top: 2),
+                clearTooltip: '清除筛选',
+                onClear: () => apply(const DynamicQuery()),
+                applied: [
+                  if (query.keyword.isNotEmpty)
+                    (
+                      label: '“${query.keyword}”',
+                      remove: () => apply(query.copyWith(keyword: '')),
                     ),
-                    AppButton.icon(
-                      tooltip: '清除筛选',
-                      onPressed: () => apply(const DynamicQuery()),
-                      icon: const Icon(Icons.close),
+                  if (query.memberId != null)
+                    (
+                      label: member?.name ?? '指定成员',
+                      remove: () => apply(query.copyWith(clearMember: true)),
                     ),
-                  ],
-                ),
+                  if (query.type != null)
+                    (
+                      label: dynamicTypeLabel(query.type!),
+                      remove: () => apply(query.copyWith(clearType: true)),
+                    ),
+                  if (query.from != null || query.to != null)
+                    (
+                      label: _rangeLabel(query.from, query.to),
+                      remove: () => apply(query.copyWith(clearRange: true)),
+                    ),
+                  if (query.sort != DynamicSort.newest)
+                    (
+                      label: _sortLabel(query.sort),
+                      remove: () =>
+                          apply(query.copyWith(sort: DynamicSort.newest)),
+                    ),
+                ],
+              ),
               // The inline panel grows open and folds away instead of jumping.
               AnimatedSize(
                 duration: appMotion(context, AppTokens.controlMotion),
@@ -371,6 +380,20 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
       },
     );
   }
+}
+
+/// A date range in words. The picker stores calendar dates and the server's
+/// `to` is exclusive, so the last day shown is the one before it.
+String _rangeLabel(DateTime? from, DateTime? to) {
+  String day(DateTime value) => '${value.month}月${value.day}日';
+  final last = to?.subtract(const Duration(days: 1));
+  return switch ((from, last)) {
+    (final from?, final last?) when day(from) == day(last) => day(from),
+    (final from?, final last?) => '${day(from)}–${day(last)}',
+    (final from?, null) => '${day(from)} 起',
+    (null, final last?) => '至 ${day(last)}',
+    _ => '已选日期',
+  };
 }
 
 String _sortLabel(DynamicSort sort) => switch (sort) {

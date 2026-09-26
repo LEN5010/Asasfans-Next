@@ -49,7 +49,9 @@ class VideoCard extends ConsumerWidget {
       ContentSnapshots.video(video),
       ruleSubject: RuleSubjects.video(video),
     );
-    return MediaCardSurface(
+    // No frame: the cover and the words are the card, as with works.
+    return MediaActionRegion(
+      radius: 10,
       // Videos are watched on Bilibili; the app has no player or detail page.
       onTap: () => video.identity.source == ContentSource.bilibiliVideo
           ? watchOnBilibili(context, ref, video, origin: origin)
@@ -60,16 +62,19 @@ class VideoCard extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              MediaCover(
-                image: video.coverUrl,
-                aspectRatio: 16 / 9,
-                video: true,
-                badge: video.duration == null
-                    ? null
-                    : _duration(video.duration!),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: MediaCover(
+                  image: video.coverUrl,
+                  aspectRatio: 16 / 9,
+                  video: true,
+                  badge: video.duration == null
+                      ? null
+                      : _duration(video.duration!),
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                padding: const EdgeInsets.fromLTRB(2, 8, 2, 0),
                 child: SizedBox(
                   height: MediaCardMetrics.line(scaler, 14, 1.4) * 2,
                   child: Text(
@@ -87,7 +92,7 @@ class VideoCard extends ConsumerWidget {
               const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  12,
+                  2,
                   0,
                   MediaMoreButton.reserve,
                   0,
@@ -113,7 +118,7 @@ class VideoCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    12,
+                    2,
                     0,
                     MediaMoreButton.reserve,
                     0,
@@ -142,8 +147,8 @@ class VideoCard extends ConsumerWidget {
             ],
           ),
           Positioned(
-            right: 2,
-            bottom: 2,
+            right: -4,
+            bottom: 0,
             child: MediaMoreButton(onPressed: more),
           ),
         ],
