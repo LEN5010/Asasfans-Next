@@ -1,7 +1,7 @@
 [
   {
     "file": "calendar_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -20,7 +20,7 @@
   },
   {
     "file": "calendar_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -39,7 +39,7 @@
   },
   {
     "file": "calendar_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -58,7 +58,7 @@
   },
   {
     "file": "calendar_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -77,7 +77,7 @@
   },
   {
     "file": "calendar_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -96,7 +96,7 @@
   },
   {
     "file": "calendar_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -115,7 +115,7 @@
   },
   {
     "file": "calendar_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -134,7 +134,7 @@
   },
   {
     "file": "calendar_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "calendar",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -153,7 +153,7 @@
   },
   {
     "file": "dynamics_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -175,7 +175,7 @@
   },
   {
     "file": "dynamics_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -197,7 +197,7 @@
   },
   {
     "file": "dynamics_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -219,7 +219,7 @@
   },
   {
     "file": "dynamics_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -238,7 +238,7 @@
   },
   {
     "file": "dynamics_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -257,7 +257,7 @@
   },
   {
     "file": "dynamics_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -276,7 +276,7 @@
   },
   {
     "file": "dynamics_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -295,7 +295,7 @@
   },
   {
     "file": "dynamics_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "dynamics",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -314,7 +314,7 @@
   },
   {
     "file": "fanart-detail_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart-detail",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -333,7 +333,7 @@
   },
   {
     "file": "fanart-detail_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart-detail",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -352,7 +352,7 @@
   },
   {
     "file": "fanart-empty_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart-empty",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -371,7 +371,7 @@
   },
   {
     "file": "fanart-failed_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart-failed",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -390,7 +390,7 @@
   },
   {
     "file": "fanart_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -412,7 +412,7 @@
   },
   {
     "file": "fanart_320.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -431,7 +431,7 @@
   },
   {
     "file": "fanart_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -453,7 +453,7 @@
   },
   {
     "file": "fanart_390-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -472,7 +472,7 @@
   },
   {
     "file": "fanart_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -494,7 +494,7 @@
   },
   {
     "file": "fanart_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -513,7 +513,7 @@
   },
   {
     "file": "fanart_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -532,7 +532,7 @@
   },
   {
     "file": "fanart_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -551,7 +551,7 @@
   },
   {
     "file": "fanart_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -570,7 +570,7 @@
   },
   {
     "file": "fanart_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "fanart",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -589,7 +589,7 @@
   },
   {
     "file": "flow-continue-1-today_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-continue-1-today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -608,7 +608,7 @@
   },
   {
     "file": "flow-continue-2-restored_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-continue-2-restored",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -627,7 +627,7 @@
   },
   {
     "file": "flow-detail-1-open_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-detail-1-open",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -646,7 +646,7 @@
   },
   {
     "file": "flow-detail-2-back_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-detail-2-back",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -665,7 +665,7 @@
   },
   {
     "file": "flow-detail-3-mine-recent_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-detail-3-mine-recent",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -684,7 +684,7 @@
   },
   {
     "file": "flow-filter-1-draft_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-filter-1-draft",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -703,7 +703,7 @@
   },
   {
     "file": "flow-filter-2-applied_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-filter-2-applied",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -722,7 +722,7 @@
   },
   {
     "file": "flow-save-1-later-on_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "flow-save-1-later-on",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -741,7 +741,7 @@
   },
   {
     "file": "input-focus-tile_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "input-focus-tile",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -760,7 +760,7 @@
   },
   {
     "file": "mine_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -779,7 +779,7 @@
   },
   {
     "file": "mine_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -798,7 +798,7 @@
   },
   {
     "file": "mine_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -817,7 +817,7 @@
   },
   {
     "file": "mine_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -836,7 +836,7 @@
   },
   {
     "file": "mine_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -855,7 +855,7 @@
   },
   {
     "file": "mine_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -874,7 +874,7 @@
   },
   {
     "file": "mine_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -893,7 +893,7 @@
   },
   {
     "file": "mine_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "mine",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -912,7 +912,7 @@
   },
   {
     "file": "novel-reader_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novel-reader",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -931,7 +931,7 @@
   },
   {
     "file": "novel-reader_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novel-reader",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -950,7 +950,7 @@
   },
   {
     "file": "novels_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -972,7 +972,7 @@
   },
   {
     "file": "novels_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -994,7 +994,7 @@
   },
   {
     "file": "novels_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1016,7 +1016,7 @@
   },
   {
     "file": "novels_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1035,7 +1035,7 @@
   },
   {
     "file": "novels_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1054,7 +1054,7 @@
   },
   {
     "file": "novels_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1073,7 +1073,7 @@
   },
   {
     "file": "novels_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1092,7 +1092,7 @@
   },
   {
     "file": "novels_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "novels",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1111,7 +1111,7 @@
   },
   {
     "file": "rules_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "rules",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1130,7 +1130,7 @@
   },
   {
     "file": "rules_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "rules",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1149,7 +1149,7 @@
   },
   {
     "file": "rules_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "rules",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1168,7 +1168,7 @@
   },
   {
     "file": "settings_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "settings",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1187,7 +1187,7 @@
   },
   {
     "file": "settings_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "settings",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1206,7 +1206,7 @@
   },
   {
     "file": "settings_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "settings",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1225,7 +1225,7 @@
   },
   {
     "file": "settings_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "settings",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1244,7 +1244,7 @@
   },
   {
     "file": "today-no-events_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today-no-events",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1263,7 +1263,7 @@
   },
   {
     "file": "today-stale_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today-stale",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1282,7 +1282,7 @@
   },
   {
     "file": "today_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1301,7 +1301,7 @@
   },
   {
     "file": "today_320.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1320,7 +1320,7 @@
   },
   {
     "file": "today_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1339,7 +1339,7 @@
   },
   {
     "file": "today_390-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1358,7 +1358,7 @@
   },
   {
     "file": "today_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1377,7 +1377,7 @@
   },
   {
     "file": "today_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1396,7 +1396,7 @@
   },
   {
     "file": "today_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1415,7 +1415,7 @@
   },
   {
     "file": "today_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1434,7 +1434,7 @@
   },
   {
     "file": "today_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1453,7 +1453,7 @@
   },
   {
     "file": "today_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "today",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1472,7 +1472,7 @@
   },
   {
     "file": "tools_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "tools",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1491,7 +1491,7 @@
   },
   {
     "file": "updates_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "updates",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1510,7 +1510,7 @@
   },
   {
     "file": "updates_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "updates",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1529,7 +1529,7 @@
   },
   {
     "file": "updates_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "updates",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1548,7 +1548,7 @@
   },
   {
     "file": "videos_1280.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1570,7 +1570,7 @@
   },
   {
     "file": "videos_320.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1589,7 +1589,7 @@
   },
   {
     "file": "videos_390-dark.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1611,7 +1611,7 @@
   },
   {
     "file": "videos_390-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1630,7 +1630,7 @@
   },
   {
     "file": "videos_390.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1652,7 +1652,7 @@
   },
   {
     "file": "videos_600.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1671,7 +1671,7 @@
   },
   {
     "file": "videos_840.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1690,7 +1690,7 @@
   },
   {
     "file": "videos_stress-320-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1709,7 +1709,7 @@
   },
   {
     "file": "videos_stress-600-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [
@@ -1728,7 +1728,7 @@
   },
   {
     "file": "videos_stress-840-x2.0.png",
-    "commit": "7f1f4c85f41b6a88f7f3904b9eedb6af40acf9ee",
+    "commit": "aa048318118261c90b3cd00c1701669c570bc4f4",
     "scenario": "videos",
     "fixture_revision": "v2-fixture-3",
     "viewport_logical": [

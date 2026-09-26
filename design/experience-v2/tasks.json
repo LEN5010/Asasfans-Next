@@ -813,10 +813,10 @@
    "definition_of_done": "交付证明改变了哪些用户任务和页面结构；不是用行数、token、时间或额度耗尽作为成功指标。",
    "status": "in_progress",
    "evidence": {
-    "code": null,
+    "code": "independent read-only review; 11 of 14 findings fixed in aa04831; 856 tests pass",
     "layout": null,
-    "design": null,
-    "device": null
+    "design": "reports/experience-v2/FINAL.md (PARTIAL_BLOCKED)",
+    "device": "none"
    },
    "accepted_by_user": "pending"
   },

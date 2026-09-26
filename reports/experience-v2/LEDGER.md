@@ -40,3 +40,4 @@ Allow `dl.google.com`, or use a machine with the Android SDK. Then dispatch *Flu
 | 5 | `71b4d26`, `e1690b7`, `5ccbea0` | U07–U10 | `test` 0 (771) | QuerySummary ×4 channels, frameless video, gallery |
 | 6 | `68fc475`…`b8c72b9` | U13–U16, U19 | `test` 0 (790) | Calendar, dynamics, novels, detail, 继续挑选 |
 | 7 | `686be5d`, `7f1f4c8`, `bb6dd00` | U21 | `analyze` 0; `format` 0; `test` 0 (853) | Stress matrix, input test, 90 final renders |
+| 8 | `760c27f`, `aa04831` | U20 (fold), U24 | all five checks 0 (`final-checks.txt`, 856 passed) | Review fixes; FINAL.md written; renders recaptured at `aa04831` |

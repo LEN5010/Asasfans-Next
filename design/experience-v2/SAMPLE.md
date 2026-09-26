@@ -18,9 +18,9 @@ Other channels moved slightly because the tab row is 48 px: videos 126 → 135, 
 
 1. **Filter.** Open the panel, pick 手书·动画 and apply. The summary shows "手书·动画 ×" and the button shows a count of 1. A second draft (物料) closed without applying changes nothing. Removing the one condition clears the summary. Steps: `flow-filter-1-draft`, `flow-filter-2-applied`.
 2. **Detail and back.** Scroll 420 px, open an image work, then 返回. The grid offset is identical before and after (asserted). The visit appears in 我的 → 最近浏览. Steps: `flow-detail-1-open`, `flow-detail-2-back`, `flow-detail-3-mine-recent`.
-3. **Save.** Long-press a tile and turn on 稍后看. The switch shows the result in the sheet where it happened (asserted persisted). Step: `flow-save-1-later-on`.
+3. **Save.** Long-press a tile and turn on 稍后看. The switch shows the result in the sheet where it happened. Since `aa04831` the test also reads the repository and asserts `later == true`. Step: `flow-save-1-later-on`.
 
-External B站 return in the new grid is covered by the existing handoff tests, which pass unchanged: identity anchor, fixed extent. Real system return is left to device testing (U23).
+External B站 return in the new grid is covered by the existing handoff tests (`test/handoff/return_*`). Their assertions are unchanged, and they pass in every full-suite run recorded in the ledger. Real system return is left to device testing (U23).
 
 ## Round 1 findings and what was done
 
