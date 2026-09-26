@@ -1,0 +1,248 @@
+[
+  {
+    "file": "dir-a_fanart_390-dark.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-a_fanart",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 194.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-a_fanart_390.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-a_fanart",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 194.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-a_today_390-dark.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-a_today",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-a_today_390.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-a_today",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-b_fanart_390-dark.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-b_fanart",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 206.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-b_fanart_390.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-b_fanart",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 206.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-b_today_390-dark.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-b_today",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-b_today_390.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-b_today",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-c_fanart_390-dark.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-c_fanart",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 62.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-c_fanart_390.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-c_fanart",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 62.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-c_today_390-dark.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-c_today",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  },
+  {
+    "file": "dir-c_today_390.png",
+    "commit": "48c9b6aa5e553edd2541b1f5edfa650bae6e1fc2+dirty",
+    "scenario": "dir-c_today",
+    "fixture_revision": "v2-fixture-3",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "prototype",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time; U05 direction study; not the current app"
+  }
+]

@@ -209,6 +209,9 @@ class VisualView {
 
 final _root = GlobalKey();
 
+/// The boundary [shoot] captures; wrap whatever is pumped in it.
+Widget visualRoot(Widget child) => RepaintBoundary(key: _root, child: child);
+
 /// A widget test with fixture images served. The image client is a painting
 /// debug variable, which must be unset before the test body ends.
 void testVisual(String description, WidgetTesterCallback body) =>
@@ -254,9 +257,8 @@ Future<ProviderContainer> pumpVisualApp(
 }) async {
   view.apply(tester);
   await tester.pumpWidget(
-    RepaintBoundary(
-      key: _root,
-      child: ProviderScope(
+    visualRoot(
+      ProviderScope(
         overrides: overrides.isEmpty ? visualOverrides() : overrides,
         child: const AsasfansApp(),
       ),
