@@ -49,12 +49,16 @@ class MediaCover extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         if (image != null)
-          // Decoded for the width this cover is drawn at, not a fixed 800.
+          // Decoded for the box this cover is drawn in, not a fixed 800: a
+          // cropped cover needs enough pixels to fill the height too.
           LayoutBuilder(
             builder: (context, constraints) => Image(
               image: MediaImagePolicy.preview(
                 image!,
                 logicalWidth: constraints.maxWidth,
+                logicalHeight: fit == BoxFit.cover
+                    ? constraints.maxHeight
+                    : null,
                 devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
               ),
               fit: fit,

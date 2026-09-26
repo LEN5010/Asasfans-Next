@@ -12,10 +12,12 @@ import '../../library/presentation/content_actions.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../domain/fanart_repository.dart';
 
-/// A work tile: the artwork in a stable portrait box with no card frame,
-/// then its words, then who made it. A text work shows its words in the
-/// same box instead of a fabricated cover. Every tile has the same extent
-/// for a given width ([extentFor]), so grids stay fixed and returns land.
+/// A work tile with no card frame. An image work is its art in a stable
+/// portrait box, then its words, then who made it. A text work shows its
+/// words in the same box instead of a fabricated cover. A video work keeps
+/// its whole 16:9 cover and lets its words take the height the cover leaves.
+/// Every tile, whatever its type, fills the same extent for a given width
+/// ([extentFor]) by construction, so grids stay fixed and returns land.
 class FanartCard extends StatelessWidget {
   const FanartCard({
     required this.item,
@@ -33,6 +35,17 @@ class FanartCard extends StatelessWidget {
 
   static double extentFor(FanartItem item, double width, TextScaler scaler) =>
       width / AppTokens.artworkRatio + captionExtent(scaler);
+
+  /// Video covers are shown whole: a landscape frame cropped into the
+  /// portrait box would keep less than half its width.
+  static const videoRatio = 16 / 9;
+
+  /// The words block of a video tile: what the portrait box and the title
+  /// would take, less the 16:9 cover.
+  static double videoWordsExtent(double width, TextScaler scaler) =>
+      width / AppTokens.artworkRatio -
+      width / videoRatio +
+      _titleExtent(scaler);
 
   static double captionExtent(TextScaler scaler) =>
       8 + _titleExtent(scaler) + _bylineExtent(scaler);
@@ -62,6 +75,52 @@ class FanartCard extends StatelessWidget {
     }
 
     final members = item.characterTags.map((tag) => tag.wire).join(' · ');
+    if (video && !textOnly) {
+      return MediaActionRegion(
+        onTap: onTap,
+        onMore: more,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final words = videoWordsExtent(constraints.maxWidth, scaler);
+            final line = MediaCardMetrics.line(scaler, 14, 1.4);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
+                  child: _outlined(context, cover: MediaCover(
+                      image: item.images.firstOrNull,
+                      aspectRatio: videoRatio,
+                      video: true,
+                      badge: '去 B 站看 ↗',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // The words and the byline follow the cover; what the
+                // shorter cover frees stays below them, as the end of the
+                // tile, rather than floating the byline away from its work.
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: words),
+                  child: Text(
+                    text.isNotEmpty ? text : '视频作品',
+                    maxLines: math.max(1, (words / line).floor()),
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      height: 1.4,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                _byline(context, members, more),
+              ],
+            );
+          },
+        ),
+      );
+    }
     return MediaActionRegion(
       onTap: onTap,
       onMore: more,
@@ -115,18 +174,16 @@ class FanartCard extends StatelessWidget {
                       ),
                     ),
                   )
-                : MediaCover(
+                : _outlined(context, cover: MediaCover(
                     image: item.images.firstOrNull,
                     aspectRatio: AppTokens.artworkRatio,
                     // A tile shows a crop; the detail shows the whole image.
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
-                    video: video,
-                    badge: video
-                        ? '去 B 站看 ↗'
-                        : item.images.length > 1
+                    badge: item.images.length > 1
                         ? '${item.images.length} 张'
                         : null,
+                  ),
                   ),
           ),
           const SizedBox(height: 8),
@@ -137,8 +194,6 @@ class FanartCard extends StatelessWidget {
                   ? '文字作品'
                   : text.isNotEmpty
                   ? text
-                  : video
-                  ? '视频作品'
                   : '图片作品',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -150,46 +205,69 @@ class FanartCard extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            height: _bylineExtent(scaler),
-            child: Row(
+          _byline(context, members, more),
+        ],
+      ),
+    );
+  }
+
+  /// A hairline inside the art's edge, so white or very pale art still reads
+  /// as a picture on the page rather than dissolving into it.
+  Widget _outlined(BuildContext context, {required Widget cover}) =>
+      DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.onSurface.withValues(
+              alpha: .08,
+            ),
+          ),
+        ),
+        child: cover,
+      );
+
+  Widget _byline(BuildContext context, String members, VoidCallback more) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final scaler = MediaQuery.textScalerOf(context);
+    return SizedBox(
+      height: _bylineExtent(scaler),
+      child: Row(
+        children: [
+          ContentAvatar(
+            name: item.authorName,
+            image: item.authorAvatarUrl,
+            size: 20,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ContentAvatar(
-                  name: item.authorName,
-                  image: item.authorAvatarUrl,
-                  size: 20,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CreatorLink(
-                        mid: item.authorUid,
-                        child: Text(
-                          item.authorName.isEmpty ? '未知作者' : item.authorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (members.isNotEmpty)
-                        Text(
-                          members,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                    ],
+                CreatorLink(
+                  mid: item.authorUid,
+                  child: Text(
+                    item.authorName.isEmpty ? '未知作者' : item.authorName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurface,
+                    ),
                   ),
                 ),
-                MediaMoreButton(onPressed: more),
+                if (members.isNotEmpty)
+                  Text(
+                    members,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
               ],
             ),
           ),
+          MediaMoreButton(onPressed: more),
         ],
       ),
     );

@@ -80,11 +80,17 @@ void main() {
           expect(find.byType(Image), findsNothing);
         } else {
           final rect = tester.getSize(find.byType(MediaCover));
-          // Every work shares the stable portrait box, video works too,
-          // so a grid of mixed works keeps one extent.
+          // An image work has the stable portrait box; a video work keeps
+          // its whole 16:9 cover. Both fill the one extent a grid of mixed
+          // works shares (the pumped height, with no overflow above).
           expect(
             rect.width / rect.height,
-            closeTo(AppTokens.artworkRatio, .001),
+            closeTo(
+              type == FanartContentType.video
+                  ? FanartCard.videoRatio
+                  : AppTokens.artworkRatio,
+              .001,
+            ),
           );
           expect(
             find.text(type == FanartContentType.image ? '2 张' : '去 B 站看 ↗'),
