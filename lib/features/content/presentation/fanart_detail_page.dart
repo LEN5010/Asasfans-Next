@@ -290,6 +290,9 @@ class _DetailImage extends StatefulWidget {
 }
 
 class _DetailImageState extends State<_DetailImage> {
+  /// How far past the cap a picture must reach to count as long.
+  static const _longFactor = 1.4;
+
   ImageStream? _stream;
   late final _listener = ImageStreamListener((info, _) {
     final ratio = info.image.width / info.image.height;
@@ -327,8 +330,13 @@ class _DetailImageState extends State<_DetailImage> {
         _watch(provider);
         final cap = widget.cap;
         final ratio = _ratio;
+        // Only long art is cut: a picture that overshoots the cap by a
+        // little (an ordinary portrait) is shown whole rather than trimmed
+        // by a few pixels and called long.
         final capped =
-            cap != null && ratio != null && constraints.maxWidth / ratio > cap;
+            cap != null &&
+            ratio != null &&
+            constraints.maxWidth / ratio > cap * _longFactor;
         Widget image = Image(
           image: provider,
           fit: BoxFit.fitWidth,
