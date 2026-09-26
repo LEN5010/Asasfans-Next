@@ -142,6 +142,21 @@ void main() {
     expect(find.byType(FanartImageViewer), findsOneWidget);
   });
 
+  testVisual('an ordinary portrait is shown whole, not called long', (
+    tester,
+  ) async {
+    await pumpDiagnostic(tester);
+    await reveal(tester, tileOf('90000102'));
+    await tester.tap(tileOf('90000102'));
+    await settleVisual(tester);
+    // 900x1600 at 358 wide is 636 tall: past the 464 cap, but not long.
+    expect(find.text('看完整长图'), findsNothing);
+    final image = tester.getRect(find.byType(Image).first);
+    expect(image.height, greaterThan(600));
+    expect(await edgesIn(tester, image), {'left', 'right', 'top', 'bottom'});
+    await shoot(tester, 'diag-detail-portrait', view);
+  });
+
   testVisual('diagnostic grid at 320 with 2x text', (tester) async {
     final narrow = VisualView.narrow.scaled(2);
     await pumpDiagnostic(tester, v: narrow);

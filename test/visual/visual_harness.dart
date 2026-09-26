@@ -352,6 +352,11 @@ Widget visualRoot(Widget child) => RepaintBoundary(key: _root, child: child);
 /// debug variable, which must be unset before the test body ends.
 void testVisual(String description, WidgetTesterCallback body) =>
     testWidgets(description, (tester) async {
+      // A load an earlier test left unfinished fails once its client is
+      // gone; the shared cache would then serve that failure here.
+      PaintingBinding.instance.imageCache
+        ..clear()
+        ..clearLiveImages();
       debugNetworkImageHttpClientProvider = Visual.httpClient;
       try {
         await body(tester);
