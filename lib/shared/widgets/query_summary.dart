@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
 import 'app_controls.dart';
+import 'app_motion.dart';
 
 /// One applied condition and how to take it away.
 typedef AppliedCondition = ({String label, VoidCallback remove});
@@ -28,9 +30,19 @@ class QuerySummary extends StatelessWidget {
   final String clearTooltip;
   final EdgeInsets padding;
 
+  /// The line grows and folds with the conditions rather than jumping the
+  /// feed below it; reduced motion makes it immediate.
   @override
-  Widget build(BuildContext context) {
-    if (applied.isEmpty && status == null) return const SizedBox.shrink();
+  Widget build(BuildContext context) => AnimatedSize(
+    duration: appMotion(context, AppTokens.controlMotion),
+    curve: Curves.easeOutCubic,
+    alignment: Alignment.topCenter,
+    child: applied.isEmpty && status == null
+        ? const SizedBox(width: double.infinity)
+        : _line(context),
+  );
+
+  Widget _line(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: padding,
