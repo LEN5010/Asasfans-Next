@@ -30,54 +30,59 @@ class ChannelTabs<T> extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : AppTokens.controlMotion;
+    // Large text may need more than the width; the tabs then scroll rather
+    // than shrink or clip.
     return SizedBox(
       height: heightFor(MediaQuery.textScalerOf(context)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final value in values)
-            Semantics(
-              selected: value == selected,
-              button: true,
-              inMutuallyExclusiveGroup: true,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: value == selected ? null : () => onChanged(value),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedDefaultTextStyle(
-                        duration: duration,
-                        style: theme.textTheme.titleMedium!.copyWith(
-                          fontSize: 18,
-                          height: 1.3,
-                          fontWeight: value == selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: value == selected
-                              ? colors.onSurface
-                              : colors.onSurfaceVariant,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final value in values)
+              Semantics(
+                selected: value == selected,
+                button: true,
+                inMutuallyExclusiveGroup: true,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: value == selected ? null : () => onChanged(value),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedDefaultTextStyle(
+                          duration: duration,
+                          style: theme.textTheme.titleMedium!.copyWith(
+                            fontSize: 18,
+                            height: 1.3,
+                            fontWeight: value == selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: value == selected
+                                ? colors.onSurface
+                                : colors.onSurfaceVariant,
+                          ),
+                          child: Text(labelOf(value)),
                         ),
-                        child: Text(labelOf(value)),
-                      ),
-                      const SizedBox(height: 4),
-                      AnimatedContainer(
-                        duration: duration,
-                        width: value == selected ? 18 : 0,
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: colors.secondary,
-                          borderRadius: BorderRadius.circular(2),
+                        const SizedBox(height: 4),
+                        AnimatedContainer(
+                          duration: duration,
+                          width: value == selected ? 18 : 0,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: colors.secondary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

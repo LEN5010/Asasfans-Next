@@ -49,6 +49,20 @@ void main() {
     }
   }
 
+  // The in-between widths where the layout changes: 600 (gutter), 840 (the
+  // rail and Today's columns).
+  for (final page in pages.entries) {
+    for (final view in const [
+      VisualView('600', Size(600, 960), pixelRatio: 1),
+      VisualView.tablet,
+    ]) {
+      testVisual('${page.key} ${view.name}', (tester) async {
+        await pumpVisualApp(tester, view: view, location: page.value);
+        await shoot(tester, page.key, view);
+      });
+    }
+  }
+
   for (final view in [VisualView.phone, VisualView.phone.dark]) {
     testVisual('fanart detail ${view.name}', (tester) async {
       await pumpVisualApp(tester, view: view, location: '/content/fanart');

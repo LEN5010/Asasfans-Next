@@ -188,14 +188,11 @@ class _ChannelStrip extends StatelessWidget {
   const _ChannelStrip({required this.current});
   final ContentChannel current;
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: ChannelTabs<ContentChannel>(
-      values: ContentChannel.values,
-      labelOf: (value) => value.label,
-      selected: current,
-      onChanged: (value) => context.go('/content/${value.slug}'),
-    ),
+  Widget build(BuildContext context) => ChannelTabs<ContentChannel>(
+    values: ContentChannel.values,
+    labelOf: (value) => value.label,
+    selected: current,
+    onChanged: (value) => context.go('/content/${value.slug}'),
   );
 }
 
