@@ -24,6 +24,7 @@ import '../application/content_providers.dart';
 import '../application/fanart_feed_controller.dart' show FeedStatus;
 import '../domain/community_video_repository.dart';
 import 'feed_status_footer.dart';
+import '../../../shared/widgets/query_summary.dart';
 
 /// Live clips list, backed by the community video index.
 ///
@@ -306,64 +307,93 @@ class _FilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-    child: Row(
-      spacing: 8,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(
-              width: 240,
-              child: AppSegments<CommunityChannel>(
-                values: _kinds.keys.toList(),
-                selected: channel,
-                labelOf: (value) => _kinds[value]!,
-                onChanged: onChannel,
-              ),
-            ),
+        _controls(context),
+        // The kind shows in its segments; order and window are named here
+        // once they differ from the default, since the menu hides them.
+        QuerySummary(
+          padding: const EdgeInsets.only(top: 4),
+          onClear: () => onChanged(
+            query.copyWith(order: CommunityVideoOrder.newest, clearDays: true),
           ),
-        ),
-        MenuAnchor(
-          menuChildren: [
-            for (final entry in _orders.entries)
-              MenuItemButton(
-                onPressed: () => onChanged(query.copyWith(order: entry.key)),
-                leadingIcon: Icon(
-                  query.order == entry.key ? Icons.check : Icons.sort,
+          applied: [
+            if (query.order != CommunityVideoOrder.newest)
+              (
+                label: _orders[query.order]!,
+                remove: () => onChanged(
+                  query.copyWith(order: CommunityVideoOrder.newest),
                 ),
-                child: Text(entry.value),
               ),
-            const Divider(),
-            for (final entry in _windows.entries)
-              MenuItemButton(
-                onPressed: () => onChanged(
-                  entry.key == 0
-                      ? query.copyWith(clearDays: true)
-                      : query.copyWith(withinDays: entry.key),
-                ),
-                leadingIcon: Icon(
-                  (query.withinDays ?? 0) == entry.key
-                      ? Icons.check
-                      : Icons.date_range,
-                ),
-                child: Text(entry.value),
+            if (_windows[query.withinDays] case final label?)
+              (
+                label: label,
+                remove: () => onChanged(query.copyWith(clearDays: true)),
               ),
           ],
-          builder: (context, menu, _) => AppButton.icon(
-            tooltip: '筛选与排序',
-            selected:
-                query.order != CommunityVideoOrder.newest ||
-                query.withinDays != null,
-            icon: const Icon(Icons.tune),
-            onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-          ),
-        ),
-        AppButton.icon(
-          tooltip: '刷新',
-          onPressed: onRefresh,
-          icon: const Icon(Icons.refresh),
         ),
       ],
     ),
+  );
+
+  Widget _controls(BuildContext context) => Row(
+    spacing: 8,
+    children: [
+      Expanded(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 240,
+            child: AppSegments<CommunityChannel>(
+              values: _kinds.keys.toList(),
+              selected: channel,
+              labelOf: (value) => _kinds[value]!,
+              onChanged: onChannel,
+            ),
+          ),
+        ),
+      ),
+      MenuAnchor(
+        menuChildren: [
+          for (final entry in _orders.entries)
+            MenuItemButton(
+              onPressed: () => onChanged(query.copyWith(order: entry.key)),
+              leadingIcon: Icon(
+                query.order == entry.key ? Icons.check : Icons.sort,
+              ),
+              child: Text(entry.value),
+            ),
+          const Divider(),
+          for (final entry in _windows.entries)
+            MenuItemButton(
+              onPressed: () => onChanged(
+                entry.key == 0
+                    ? query.copyWith(clearDays: true)
+                    : query.copyWith(withinDays: entry.key),
+              ),
+              leadingIcon: Icon(
+                (query.withinDays ?? 0) == entry.key
+                    ? Icons.check
+                    : Icons.date_range,
+              ),
+              child: Text(entry.value),
+            ),
+        ],
+        builder: (context, menu, _) => AppButton.icon(
+          tooltip: '筛选与排序',
+          selected:
+              query.order != CommunityVideoOrder.newest ||
+              query.withinDays != null,
+          icon: const Icon(Icons.tune),
+          onPressed: () => menu.isOpen ? menu.close() : menu.open(),
+        ),
+      ),
+      AppButton.icon(
+        tooltip: '刷新',
+        onPressed: onRefresh,
+        icon: const Icon(Icons.refresh),
+      ),
+    ],
   );
 }

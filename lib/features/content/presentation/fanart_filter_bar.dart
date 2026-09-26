@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_motion.dart';
+import '../../../shared/widgets/query_summary.dart';
 
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
@@ -150,68 +151,48 @@ class FanartFilterBar extends StatelessWidget {
     FanartSort.favorites: '收藏最多',
   };
 
-  /// Applied conditions with the query each one's removal gives.
-  List<(String, FanartQuery)> _applied() => [
-    if (query.keyword.isNotEmpty)
-      ('“${query.keyword}”', query.copyWith(keyword: '')),
-    if (query.category != FanartCategory.all)
-      (query.category.wire, query.copyWith(category: FanartCategory.all)),
-    if (_types[query.contentType] case final label?)
-      (label, FanartFilterRules.contentType(query, FanartContentType.all)),
-    if (_sources[query.source] case final label?)
-      (label, FanartFilterRules.source(query, FanartSource.all)),
-    if (_kinds[query.kind] case final label?)
-      (label, query.copyWith(kind: FanartKind.fanart)),
-    if (_sorts[query.sort] case final label?)
-      (label, FanartFilterRules.sort(query, FanartSort.newest)),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final applied = _applied();
-    if (applied.isEmpty) return const SizedBox.shrink();
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 8, 0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Wrap(
-              spacing: 4,
-              runSpacing: 0,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (final (label, without) in applied)
-                  AppButton(
-                    tooltip: '移除“$label”',
-                    onPressed: () => onChanged(without),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(label),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.close,
-                          size: 14,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+    void set(FanartQuery next) => onChanged(next);
+    return QuerySummary(
+      clearTooltip: '重置筛选',
+      onClear: () =>
+          onChanged(FanartFilterRules.reset(query).copyWith(keyword: '')),
+      applied: [
+        if (query.keyword.isNotEmpty)
+          (
+            label: '“${query.keyword}”',
+            remove: () => set(query.copyWith(keyword: '')),
+          ),
+        if (query.category != FanartCategory.all)
+          (
+            label: query.category.wire,
+            remove: () => set(query.copyWith(category: FanartCategory.all)),
+          ),
+        if (_types[query.contentType] case final label?)
+          (
+            label: label,
+            remove: () => set(
+              FanartFilterRules.contentType(query, FanartContentType.all),
             ),
           ),
-          AppButton(
-            tooltip: '重置筛选',
-            onPressed: () =>
-                onChanged(FanartFilterRules.reset(query).copyWith(keyword: '')),
-            child: Text(
-              '清空',
-              style: TextStyle(color: theme.colorScheme.primary),
-            ),
+        if (_sources[query.source] case final label?)
+          (
+            label: label,
+            remove: () =>
+                set(FanartFilterRules.source(query, FanartSource.all)),
           ),
-        ],
-      ),
+        if (_kinds[query.kind] case final label?)
+          (
+            label: label,
+            remove: () => set(query.copyWith(kind: FanartKind.fanart)),
+          ),
+        if (_sorts[query.sort] case final label?)
+          (
+            label: label,
+            remove: () => set(FanartFilterRules.sort(query, FanartSort.newest)),
+          ),
+      ],
     );
   }
 }

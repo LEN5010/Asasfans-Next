@@ -10,6 +10,7 @@ import '../../../shared/widgets/feed_scroll_view.dart';
 import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/query_summary.dart';
 import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../content/presentation/content_images.dart';
 import '../../content/presentation/content_search_control.dart';
@@ -214,26 +215,47 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
                       ),
                     ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    [
-                      '${query.rating.label}作品',
-                      if (widget.total != null) '${widget.total} 部',
-                      if (query.characters.isNotEmpty)
-                        query.characters.map((value) => value.wire).join(' + '),
-                      query.sort.label,
-                    ].join(' · '),
-                    style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(height: 8),
+            QuerySummary(
+              padding: EdgeInsets.zero,
+              clearTooltip: '清除小说筛选',
+              status: widget.total == null ? null : '${widget.total} 部',
+              onClear: () => widget.onChanged(const NovelQuery()),
+              applied: [
+                if (query.keyword.isNotEmpty)
+                  (
+                    label: '“${query.keyword}”',
+                    remove: () => widget.onChanged(query.copyWith(keyword: '')),
                   ),
-                ),
-                if (query != const NovelQuery())
-                  AppButton.icon(
-                    tooltip: '清除小说筛选',
-                    icon: const Icon(Icons.close),
-                    onPressed: () => widget.onChanged(const NovelQuery()),
+                if (query.scope != NovelSearchScope.all)
+                  (
+                    label: '只搜${query.scope.label}',
+                    remove: () => widget.onChanged(
+                      query.copyWith(scope: NovelSearchScope.all),
+                    ),
+                  ),
+                if (query.rating != NovelRatingFilter.all)
+                  (
+                    label: query.rating.label,
+                    remove: () => widget.onChanged(
+                      query.copyWith(rating: NovelRatingFilter.all),
+                    ),
+                  ),
+                for (final character in query.characters)
+                  (
+                    label: character.wire,
+                    remove: () => widget.onChanged(
+                      query.copyWith(
+                        characters: query.characters.difference({character}),
+                      ),
+                    ),
+                  ),
+                if (query.sort != NovelSort.newest)
+                  (
+                    label: query.sort.label,
+                    remove: () => widget.onChanged(
+                      query.copyWith(sort: NovelSort.newest),
+                    ),
                   ),
               ],
             ),

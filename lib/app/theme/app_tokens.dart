@@ -37,8 +37,9 @@ abstract final class AppTokens {
   static double touchTarget(BuildContext context) =>
       touch(context) ? 48 : controlTarget(context);
 
-  /// Page side margin: 20 on phones, 24 once there is room.
-  static double gutter(double width) => width >= 600 ? 24 : 20;
+  /// Page side margin: 16 on phones, the same as the feeds' grids, and 24
+  /// once there is room.
+  static double gutter(double width) => width >= 600 ? 24 : 16;
 
   /// Space between sections of a page, and between items in a section.
   static const sectionGap = 28.0;
