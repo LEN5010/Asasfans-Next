@@ -41,3 +41,6 @@ Allow `dl.google.com`, or use a machine with the Android SDK. Then dispatch *Flu
 | 6 | `68fc475`…`b8c72b9` | U13–U16, U19 | `test` 0 (790) | Calendar, dynamics, novels, detail, 继续挑选 |
 | 7 | `686be5d`, `7f1f4c8`, `bb6dd00` | U21 | `analyze` 0; `format` 0; `test` 0 (853) | Stress matrix, input test, 90 final renders |
 | 8 | `760c27f`, `aa04831` | U20 (fold), U24 | all five checks 0 (`final-checks.txt`, 856 passed) | Review fixes; FINAL.md written; renders recaptured at `aa04831` |
+| 9 | `2d057dc`…`e54c139` | V2.1 R01–R08 (review package `design/experience-v2/review-546dbd0/`) | per package: failing test first, then affected suites; full `test` 0 (896) at `9597ab4` | Before-runs are in `v2.1/r01-r02-before.txt`, `r03-before.txt` and `r04-before.txt`. R04's race was reproduced only in a gated test |
+| 10 | `cdaae50`, `9473f4a` | V2.1 review fixes | read-only review: 4 should-fix and 8 minor findings; `analyze` 0; `dart format` 0; `test` 0 (904) | This session's earlier "format" runs called `tool/flutterw format`, which is not a command, so 15 files were unformatted until `9473f4a`, which ran `dart format` (whitespace only) |
+| 11 | `c3e7e3c`, `227aa75` | R09 | five checks 0 (`v2.1/final-checks.txt`, 904 passed) | 111 renders in `visual/v2.1` from `9473f4a`. No CI dispatched, no APK, no device |

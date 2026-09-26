@@ -2,9 +2,79 @@
 
 ```text
 Status: PARTIAL_BLOCKED
-Baseline → candidate: 7134a40 → aa04831 (branch claude/zen-babbage-ll6g3y), plus docs after it
+Baseline → candidate: 7134a40 → 227aa75 (branch claude/zen-babbage-ll6g3y)
+  V2 at aa04831; V2.1 follow-up (review package 546dbd0) at 2d057dc…227aa75
 User acceptance: pending (nothing here has been reviewed by the user)
 ```
+
+## V2.1: acting on the review of 546dbd0
+
+The review package is copied to `design/experience-v2/review-546dbd0/`. Direction A stays. For each work package, the failure it names was tested first; the before-runs are in `reports/experience-v2/v2.1/`.
+
+| Package | Result | Evidence |
+|---|---|---|
+| R01 detail origin | An image or text work opened into its detail now carries the list's channel, query and anchor to 打开原动态. Before, the stored return was Today, and a cold start landed on `/today` | `fanart_detail_origin_test`; before-run in `r01-r02-before.txt` |
+| R02 summary line | Chips are bounded and ellipsised, with the full value in the tooltip. More than three conditions fold to two plus "另 N 项". The clear buttons name their scope: 清除条件 keeps the members, while the empty state's 清除全部条件 clears them too. The overflow before was up to 3122 px | `query_summary_test` at 320/390 × 1x/2x |
+| R03 media | Video works keep their whole 16:9 cover, and every type still fills one extent. Cover boxes decode to fill their height (`CoverDecodeImage`, within the pixel budget, no probing downloads). The detail caps only long art (≥ 1.4× a 55% viewport cap) and offers 看完整长图 | `media_geometry_test` samples the edge bands in rendered pixels; before-run in `r03-before.txt` |
+| R04 继续挑选 | Each resume is one request id, cancelled only by its own id. Each feed's restore stops once a newer restore starts, or once the user applies a query or refreshes. The race was reproduced only in a gated test (the list jumped to 2870 px after the user chose a member), never in ordinary use | `restore_request_test`; before-run in `r04-before.txt` |
+| R05 pages | Creator targets are 48 dp bands as wide as the name. Video dates are compact, with the full date read out. VideoRow stacks when narrow. The calendar's type and member chips fold behind 筛选. 我的 leads with 收藏/稍后看, with 设置 by the title. The selected tab is a header. AppSegments has a 48 dp hit band | `touch_polish_test`; the 320 day cells stay 44 dp (declared exception; 周议程 is the large-target path) |
+| R06 (U18) | Filtered-empty and source-empty differ, each with a next step. A failed refresh says so at the top, over the old results. 更新 states its scope. Library lists say how things get there | `states_test`, `content_page_test` |
+| R07 (U20) | Tile ↔ detail Hero (off with reduced motion). A new condition arrives tinted, and focus goes back to the filter entry. Save success shows only after storage, and a refused write shows its error | `motion_test` (the reduced-motion check fails if the guard is removed) |
+| R08 evidence | Diagnostic art, a pixel sampler, system bars and keyboard in the harness, and geometry contracts for Today, 二创 and 我的 | A deliberate break fails (`r08-mutation.txt`). There are no pixel goldens: the CJK face is a system font, so goldens would be machine-dependent |
+| R09 delivery | Local checks at `227aa75`: all five 0, 904 passed (`v2.1/final-checks.txt`) | No CI, APK or device (below) |
+
+**Review.** A read-only reviewer covered `546dbd0..cdaae50` and reported four should-fix findings:
+- the detail listener's setState during build, and the image handle it never released;
+- the video tile's middle, and the blank byline space, opening the creator's page;
+- two 清除条件 buttons with different scopes;
+- the tint being cut short by feed rebuilds.
+
+All four are fixed in `9473f4a`, with tests. Of the eight minor findings, five are fixed: the 2 px video slack, the trivially passing keyboard test, the 设置 list-entry test, the updates text duplicated when empty, and the 320 calendar path. Three are noted, not changed:
+- the 继续挑选 fallback is a 1 s timer, not a navigation lifecycle (it can only withdraw its own request);
+- a 409 dataset restart during a restore ends that restore silently;
+- the selected channel tab is read as "heading, button".
+
+**Also found in this round:**
+- the first long-image cap trimmed ordinary portraits;
+- the visual harness shared a failed image load between tests;
+- `tool/flutterw format` is not a command, so earlier format runs had done nothing.
+
+All three are fixed.
+
+**Still device-only:**
+- real Liquid Glass (the glass segmented control keeps its own 40 dp height);
+- GPU cost and frame time;
+- TalkBack, OS input and system fonts;
+- real images, and the decode cost of `CoverDecodeImage`.
+
+**Remote steps, not run (no authorization):**
+- *Flutter Checks* on `claude/zen-babbage-ll6g3y` with `run_tests: true`;
+- *Flutter Development Validation* on the same branch;
+- *Flutter Performance Validation* at `7134a40` and at the final commit, with the isolated perf identity and `perf_signing=sdk-debug-key`, for arm64 and armv7, Release and Profile.
+
+Then the ACCEPTANCE §5 tasks and the §6 device protocol.
+
+**Rollback by stage.** Revert in reverse dependency order, never a single mid-stack commit alone:
+
+```text
+docs:  git revert 227aa75 c3e7e3c
+fixes: git revert 9473f4a cdaae50        (review fixes, then cap/harness)
+R08:   git revert e54c139                (contracts: tests only)
+R07:   git revert 9597ab4
+R06:   git revert 999829a
+R05:   git revert 56efedc
+R04:   git revert 6e5ccb1
+R03:   git revert 9881055
+R08a:  git revert a53ea3e                (harness; media_geometry_test depends on it)
+R02:   git revert aed99e0
+R01:   git revert 2d057dc
+```
+
+Stopping after any line leaves a consistent tree. To drop all of V2.1: `git revert --no-commit 2d057dc^..227aa75 && git commit`. The same applies to V2: revert `aa04831` first, then back to `909b4c1`. There are no schema, data or dependency changes in either round.
+
+---
+
+## V2 (as reported at aa04831)
 
 **Why PARTIAL_BLOCKED and not "only the device is missing".** The planned page and layout work is done, and the headless renders prove it. Two mainline tasks are not finished in code:
 - **U20:** the four motion relationships were not built. Only the summary line's fold was added.
@@ -95,7 +165,7 @@ The reviewer judged two changes weaker than before. Both were corrected in `aa04
 
 ## Rollback
 
-`git revert <commit>` for any feature commit above. Order does not matter, except that `aa04831` depends on the commits before it. No stored data changes, and the `/mine/settings` route is additive.
+Superseded by the staged rollback in the V2.1 section above: the V2 commits depend on one another (tokens → components → pages → tests), so revert them newest first.
 
 ## Next concrete actions
 
