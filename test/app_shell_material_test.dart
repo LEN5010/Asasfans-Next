@@ -180,10 +180,18 @@ void main() {
             matching: find.byType(Scrollable),
           )
           .first;
+      await tester.scrollUntilVisible(find.text('设置'), 200, scrollable: mine);
+      await tester.tap(find.text('设置'));
+      await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.textContaining('当前：'),
         200,
-        scrollable: mine,
+        scrollable: find
+            .descendant(
+              of: find.byType(SettingsPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       expect(find.text('当前：实底界面（流畅优先，不采样背景）'), findsOneWidget);
       await tester.ensureVisible(find.text('视觉优先'));

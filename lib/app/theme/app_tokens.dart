@@ -36,6 +36,19 @@ abstract final class AppTokens {
   /// The minimum hit area for a control (Android guidance: 48 × 48 dp).
   static double touchTarget(BuildContext context) =>
       touch(context) ? 48 : controlTarget(context);
+
+  /// Page side margin: 20 on phones, 24 once there is room.
+  static double gutter(double width) => width >= 600 ? 24 : 20;
+
+  /// Space between sections of a page, and between items in a section.
+  static const sectionGap = 28.0;
+  static const itemGap = 12.0;
+
+  /// Artwork tiles keep one stable portrait box: the model carries no image
+  /// dimensions, and a box that changed with each decode would move the grid.
+  static const artworkRatio = 4 / 5;
+  static const artworkRadius = 12.0;
+
   static const controlMotion = Duration(milliseconds: 220);
   static const pressMotion = Duration(milliseconds: 140);
   static const cardRadius = 14.0;

@@ -9,8 +9,8 @@ import 'sqlite_fixture.dart';
 import 'account_fixture.dart';
 
 /// Personal features share one disposable DB, never the application directory.
-List<Override> offlineLibrary() => [
-  offlineAccount(),
+List<Override> offlineLibrary({Override? account}) => [
+  account ?? offlineAccount(),
   localDatabaseProvider.overrideWith((ref) {
     final database = MemoryLocalDatabase();
     ref.onDispose(() => unawaited(database.close()));

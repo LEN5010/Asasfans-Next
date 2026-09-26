@@ -64,10 +64,19 @@ abstract final class AppTheme {
           onInverseSurface: dark ? AppTokens.textLight : AppTokens.textDark,
         );
     final base = ThemeData(useMaterial3: true, colorScheme: colors);
+    // Three heading levels, each with one job: a root page's own title
+    // (headlineSmall), a section within a page (titleLarge) and an item or
+    // compact bar title (titleMedium/titleSmall).
     final text = base.textTheme.copyWith(
+      headlineSmall: base.textTheme.headlineSmall!.copyWith(
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+      ),
       titleLarge: base.textTheme.titleLarge!.copyWith(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
+        fontSize: 19,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
       ),
       titleMedium: base.textTheme.titleMedium!.copyWith(
         fontSize: 15,

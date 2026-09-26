@@ -1,4 +1,5 @@
 import 'package:asasfans_next/app/theme/app_theme.dart';
+import 'package:asasfans_next/app/theme/app_tokens.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/features/content/domain/community_video_repository.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
@@ -79,7 +80,12 @@ void main() {
           expect(find.byType(Image), findsNothing);
         } else {
           final rect = tester.getSize(find.byType(MediaCover));
-          expect(rect.width / rect.height, closeTo(16 / 9, .001));
+          // Every work shares the stable portrait box, video works too,
+          // so a grid of mixed works keeps one extent.
+          expect(
+            rect.width / rect.height,
+            closeTo(AppTokens.artworkRatio, .001),
+          );
           expect(
             find.text(type == FanartContentType.image ? '2 张' : '去 B 站看 ↗'),
             findsOneWidget,

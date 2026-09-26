@@ -9,8 +9,9 @@ import '../../../shared/widgets/app_motion.dart';
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
 
-/// Members and categories stay in the open as two one-line chip strips; every
-/// tap applies at once. The remaining facets stay in the draft panel.
+/// Members stay in the open as one chip strip, the one condition people
+/// change most; every tap applies at once. Everything else lives in the
+/// draft panel and shows in [FanartFilterBar] once it is set.
 class FanartQuickFilters extends StatelessWidget {
   const FanartQuickFilters({
     required this.query,
@@ -21,50 +22,32 @@ class FanartQuickFilters extends StatelessWidget {
   final ValueChanged<FanartQuery> onChanged;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _strip([
-          _QuickChip(
-            label: '全部成员',
-            selected: query.characters.isEmpty,
-            onTap: () => onChanged(query.copyWith(characters: const {})),
-          ),
-          for (final character in FanartCharacter.values)
-            _QuickChip(
-              label: character.wire,
-              selected: query.characters.contains(character),
-              onTap: () => onChanged(
-                query.copyWith(
-                  characters: query.characters.contains(character)
-                      ? query.characters.difference({character})
-                      : {...query.characters, character},
-                ),
-              ),
-            ),
-        ]),
-        _strip([
-          for (final category in [
-            FanartCategory.all,
-            ...FanartCategory.values.where((v) => v != FanartCategory.all),
-          ])
-            _QuickChip(
-              label: category == FanartCategory.all ? '全部分类' : category.wire,
-              selected: query.category == category,
-              onTap: () => onChanged(query.copyWith(category: category)),
-            ),
-        ]),
-      ],
-    ),
-  );
-
-  // The inset lives inside the scroll view so chips scroll to the screen edge.
-  Widget _strip(List<Widget> chips) => SingleChildScrollView(
+  Widget build(BuildContext context) => SingleChildScrollView(
+    // The inset lives inside the scroll view so chips scroll to the edge.
     scrollDirection: Axis.horizontal,
     padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(spacing: 6, children: chips),
+    child: Row(
+      spacing: 6,
+      children: [
+        _QuickChip(
+          label: '全部成员',
+          selected: query.characters.isEmpty,
+          onTap: () => onChanged(query.copyWith(characters: const {})),
+        ),
+        for (final character in FanartCharacter.values)
+          _QuickChip(
+            label: character.wire,
+            selected: query.characters.contains(character),
+            onTap: () => onChanged(
+              query.copyWith(
+                characters: query.characters.contains(character)
+                    ? query.characters.difference({character})
+                    : {...query.characters, character},
+              ),
+            ),
+          ),
+      ],
+    ),
   );
 }
 
@@ -137,7 +120,10 @@ class _QuickChip extends StatelessWidget {
   }
 }
 
-/// Keyword and panel-only facets; members and categories show in their chips.
+/// What else is applied, in words: the keyword and each panel condition
+/// that differs from the default, each removable on its own, plus one way
+/// to clear them all. Members are not repeated; their strip shows them.
+/// Nothing is drawn while only defaults apply.
 class FanartFilterBar extends StatelessWidget {
   const FanartFilterBar({
     required this.query,
@@ -146,33 +132,83 @@ class FanartFilterBar extends StatelessWidget {
   });
   final FanartQuery query;
   final ValueChanged<FanartQuery> onChanged;
+
+  static const _types = {
+    FanartContentType.image: '图片',
+    FanartContentType.video: '视频',
+    FanartContentType.text: '文字',
+    FanartContentType.other: '其他类型',
+  };
+  static const _sources = {
+    FanartSource.bilibili: 'Bilibili',
+    FanartSource.douban: '豆瓣',
+  };
+  static const _kinds = {FanartKind.material: '物料', FanartKind.all: '全部内容'};
+  static const _sorts = {
+    FanartSort.oldest: '最早',
+    FanartSort.views: '播放最多',
+    FanartSort.favorites: '收藏最多',
+  };
+
+  /// Applied conditions with the query each one's removal gives.
+  List<(String, FanartQuery)> _applied() => [
+    if (query.keyword.isNotEmpty)
+      ('“${query.keyword}”', query.copyWith(keyword: '')),
+    if (query.category != FanartCategory.all)
+      (query.category.wire, query.copyWith(category: FanartCategory.all)),
+    if (_types[query.contentType] case final label?)
+      (label, FanartFilterRules.contentType(query, FanartContentType.all)),
+    if (_sources[query.source] case final label?)
+      (label, FanartFilterRules.source(query, FanartSource.all)),
+    if (_kinds[query.kind] case final label?)
+      (label, query.copyWith(kind: FanartKind.fanart)),
+    if (_sorts[query.sort] case final label?)
+      (label, FanartFilterRules.sort(query, FanartSort.newest)),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final count =
-        FanartFilterRules.count(query) -
-        query.characters.length -
-        (query.category == FanartCategory.all ? 0 : 1);
-    if (count == 0 && query.keyword.isEmpty) return const SizedBox.shrink();
+    final applied = _applied();
+    if (applied.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 2, 8, 0),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              [
-                if (query.keyword.isNotEmpty) '“${query.keyword}”',
-                if (count > 0) '$count 项筛选',
-              ].join(' · '),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
+            child: Wrap(
+              spacing: 4,
+              runSpacing: 0,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final (label, without) in applied)
+                  AppButton(
+                    tooltip: '移除“$label”',
+                    onPressed: () => onChanged(without),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(label),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.close,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
-          AppButton.icon(
+          AppButton(
             tooltip: '重置筛选',
-            icon: const Icon(Icons.close),
             onPressed: () =>
                 onChanged(FanartFilterRules.reset(query).copyWith(keyword: '')),
+            child: Text(
+              '清空',
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
           ),
         ],
       ),
