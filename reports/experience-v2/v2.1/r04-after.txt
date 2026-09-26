@@ -1,0 +1,4 @@
+# R04 after
+$ tool/flutterw test test/handoff/restore_request_test.dart test/handoff/continue_browsing_test.dart
+00:08 +12: All tests passed!
+exit 0
