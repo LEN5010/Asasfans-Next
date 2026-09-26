@@ -1,3 +1,5 @@
+import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/app_panel.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/application/rules_providers.dart';
@@ -51,14 +53,20 @@ class ContentActionsSheet extends ConsumerStatefulWidget {
 class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
   bool _busy = false;
   String? _error;
-  Future<void> _act(Future<void> Function() action) async {
+
+  /// What the last action did, said once it is stored and never before.
+  String? _done;
+
+  Future<void> _act(Future<void> Function() action, {String? done}) async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
+      _done = null;
     });
     try {
       await action();
+      if (mounted) setState(() => _done = done);
     } catch (error) {
       if (mounted) setState(() => _error = libraryError(error));
     } finally {
@@ -85,11 +93,39 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
           if (_error != null)
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
             ),
+          // The result where it happened: a short line that is read out,
+          // appearing only after the change is stored.
+          AnimatedSwitcher(
+            duration: appMotion(context, AppTokens.controlMotion),
+            child: _done == null
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    key: ValueKey(_done),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Semantics(
+                      liveRegion: true,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(_done!)),
+                        ],
+                      ),
+                    ),
+                  ),
+          ),
           Expanded(
             child: LibraryAsync(
               value: itemState,
@@ -112,6 +148,7 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                             ? null
                             : (value) => _act(
                                 () => repository.setLater(widget.item, value),
+                                done: value ? '已加入稍后看' : '已移出稍后看',
                               ),
                       ),
                     ),
@@ -197,6 +234,9 @@ class _ContentActionsSheetState extends ConsumerState<ContentActionsSheet> {
                             folder.id,
                             value ?? false,
                           ),
+                          done: (value ?? false)
+                              ? '已收藏到“${folder.name}”'
+                              : '已从“${folder.name}”移出',
                         ),
                 ),
               ),
