@@ -1,0 +1,1373 @@
+{
+  "baseline": "98e52c291f7aa94d8344f43ec6df0a9fd52cff27",
+  "head": "7134a40cb6579d9d5831f76a9859a6c2196855ef",
+  "method": "Original Dart source text embedded in the two downloaded Debug kernels; Git blob SHA1 computed from bytes. Selected files cross-checked with GitHub fetch_file. This is not a claim to have executed the app.",
+  "baseline_files": 166,
+  "head_files": 170,
+  "baseline_lines": 26312,
+  "head_lines": 27282,
+  "modified_files": 34,
+  "added_files": 4,
+  "files": [
+    {
+      "path": "lib/app/asasfans_app.dart",
+      "status": "modified",
+      "baseline_blob_sha": "0a9c7c9e95a67b05b4c1c56a793e5bee18c8d6df",
+      "head_blob_sha": "0358dee6a55b9ecc170ec4ec2f3dbc2879d2b005",
+      "head_lines": 55,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/asasfans_app.dart"
+    },
+    {
+      "path": "lib/app/glass_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e608ccdaab3d4dabd5a1392fb49fcba684fcf734",
+      "head_blob_sha": "e608ccdaab3d4dabd5a1392fb49fcba684fcf734",
+      "head_lines": 38,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/glass_providers.dart"
+    },
+    {
+      "path": "lib/app/providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "287157cc64ba66acf5ba28bb28d7b585ab8f5566",
+      "head_blob_sha": "287157cc64ba66acf5ba28bb28d7b585ab8f5566",
+      "head_lines": 47,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/providers.dart"
+    },
+    {
+      "path": "lib/app/router/app_router.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "64f95472b595ed5b92674b2e9644b581892d733f",
+      "head_blob_sha": "64f95472b595ed5b92674b2e9644b581892d733f",
+      "head_lines": 173,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/router/app_router.dart"
+    },
+    {
+      "path": "lib/app/router/app_shell.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2d3f5a2caf83307f801fe82b50a20866c5ef333e",
+      "head_blob_sha": "2d3f5a2caf83307f801fe82b50a20866c5ef333e",
+      "head_lines": 238,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/router/app_shell.dart"
+    },
+    {
+      "path": "lib/app/theme/app_theme.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "22d1a6c97ed87b3028901d8ec0bc7171e1180b57",
+      "head_blob_sha": "22d1a6c97ed87b3028901d8ec0bc7171e1180b57",
+      "head_lines": 218,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/theme/app_theme.dart"
+    },
+    {
+      "path": "lib/app/theme/app_tokens.dart",
+      "status": "modified",
+      "baseline_blob_sha": "a8115564be07db092b1b4935f5d066b064cc02f1",
+      "head_blob_sha": "b668214db6a5e2e7ec385c8dea7d59bd7513c33c",
+      "head_lines": 44,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/app/theme/app_tokens.dart"
+    },
+    {
+      "path": "lib/core/config/app_environment.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "76dc6e6f6ecba3efc538e748be8e4bc273fa9c4f",
+      "head_blob_sha": "76dc6e6f6ecba3efc538e748be8e4bc273fa9c4f",
+      "head_lines": 34,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/config/app_environment.dart"
+    },
+    {
+      "path": "lib/core/domain/bilibili_id.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5d7a080737b1be3522f178b22a2dfa44a3b8ea2d",
+      "head_blob_sha": "5d7a080737b1be3522f178b22a2dfa44a3b8ea2d",
+      "head_lines": 4,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/domain/bilibili_id.dart"
+    },
+    {
+      "path": "lib/core/domain/content_identity.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "36a57c27b428eb3bb2082dc1c13ef2614f1ea136",
+      "head_blob_sha": "36a57c27b428eb3bb2082dc1c13ef2614f1ea136",
+      "head_lines": 19,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/domain/content_identity.dart"
+    },
+    {
+      "path": "lib/core/domain/request_cancellation.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "b6b9c8390e7c6b6c772b2a0991865ced8117c7c5",
+      "head_blob_sha": "b6b9c8390e7c6b6c772b2a0991865ced8117c7c5",
+      "head_lines": 27,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/domain/request_cancellation.dart"
+    },
+    {
+      "path": "lib/core/domain/video_summary.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e5cf0bd6db74596da42bca2edf150c233a150d1e",
+      "head_blob_sha": "e5cf0bd6db74596da42bca2edf150c233a150d1e",
+      "head_lines": 46,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/domain/video_summary.dart"
+    },
+    {
+      "path": "lib/core/network/api_failure.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "8e9f278f144bf098070fe48c9b6bf0d5f66cdcca",
+      "head_blob_sha": "8e9f278f144bf098070fe48c9b6bf0d5f66cdcca",
+      "head_lines": 48,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/network/api_failure.dart"
+    },
+    {
+      "path": "lib/core/network/public_api_client.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "7c47aa7cab9e6a82076b1c9b9c6024dfa0b816a0",
+      "head_blob_sha": "7c47aa7cab9e6a82076b1c9b9c6024dfa0b816a0",
+      "head_lines": 120,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/network/public_api_client.dart"
+    },
+    {
+      "path": "lib/core/network/rate_limit_gate.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "7ad38656739fcac6a597be812ad4123dd1246cc6",
+      "head_blob_sha": "7ad38656739fcac6a597be812ad4123dd1246cc6",
+      "head_lines": 44,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/network/rate_limit_gate.dart"
+    },
+    {
+      "path": "lib/core/platform/external_link_service.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "23361ac6dd46f556ac6d7f24b7e096e75babc759",
+      "head_blob_sha": "23361ac6dd46f556ac6d7f24b7e096e75babc759",
+      "head_lines": 21,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/platform/external_link_service.dart"
+    },
+    {
+      "path": "lib/core/platform/return_entry_service.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "c6a2894f417f7064c239d299373e3a19431dd299",
+      "head_blob_sha": "c6a2894f417f7064c239d299373e3a19431dd299",
+      "head_lines": 183,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/platform/return_entry_service.dart"
+    },
+    {
+      "path": "lib/core/platform/transparency_preference.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "d35253c1dcce4ab4be242be6067914fed99cd3ca",
+      "head_blob_sha": "d35253c1dcce4ab4be242be6067914fed99cd3ca",
+      "head_lines": 80,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/platform/transparency_preference.dart"
+    },
+    {
+      "path": "lib/core/storage/channel_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "bb7e3f49dab993c47fae91531f7b4585b36e0a09",
+      "head_blob_sha": "bb7e3f49dab993c47fae91531f7b4585b36e0a09",
+      "head_lines": 31,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/channel_schema.dart"
+    },
+    {
+      "path": "lib/core/storage/handoff_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "ccac13510e2492c3c4798f3a918a433b4996b304",
+      "head_blob_sha": "ccac13510e2492c3c4798f3a918a433b4996b304",
+      "head_lines": 31,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/handoff_schema.dart"
+    },
+    {
+      "path": "lib/core/storage/library_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "db5a2f17ffdc148a696b7ab2e426d0fd88713c9b",
+      "head_blob_sha": "db5a2f17ffdc148a696b7ab2e426d0fd88713c9b",
+      "head_lines": 81,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/library_schema.dart"
+    },
+    {
+      "path": "lib/core/storage/local_database.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "0e43c833235914808199cd92cd5bd0ba3d2b870b",
+      "head_blob_sha": "0e43c833235914808199cd92cd5bd0ba3d2b870b",
+      "head_lines": 269,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/local_database.dart"
+    },
+    {
+      "path": "lib/core/storage/playback_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "c0251d6d31ec286623eaaeb5f99a781d0108f12b",
+      "head_blob_sha": "c0251d6d31ec286623eaaeb5f99a781d0108f12b",
+      "head_lines": 69,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/playback_schema.dart"
+    },
+    {
+      "path": "lib/core/storage/rules_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fa88ad229c65d93035547b68c83332b9d39ed93a",
+      "head_blob_sha": "fa88ad229c65d93035547b68c83332b9d39ed93a",
+      "head_lines": 22,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/rules_schema.dart"
+    },
+    {
+      "path": "lib/core/storage/storage_failure.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "ff8dcd6ce315680ddf27de20296c139d77b9ad87",
+      "head_blob_sha": "ff8dcd6ce315680ddf27de20296c139d77b9ad87",
+      "head_lines": 26,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/storage_failure.dart"
+    },
+    {
+      "path": "lib/core/storage/storage_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2d77d7e103e03ae372ed2583c8ddb84dff141d93",
+      "head_blob_sha": "2d77d7e103e03ae372ed2583c8ddb84dff141d93",
+      "head_lines": 19,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/storage_providers.dart"
+    },
+    {
+      "path": "lib/core/storage/subscription_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "3d7d09b62f8b8602b455a18f41b8535fe30b683f",
+      "head_blob_sha": "3d7d09b62f8b8602b455a18f41b8535fe30b683f",
+      "head_lines": 24,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/subscription_schema.dart"
+    },
+    {
+      "path": "lib/core/storage/updates_schema.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "017eb25cddf80c029f4485cb5889e4b7e44bfd16",
+      "head_blob_sha": "017eb25cddf80c029f4485cb5889e4b7e44bfd16",
+      "head_lines": 82,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/storage/updates_schema.dart"
+    },
+    {
+      "path": "lib/core/time/calendar_time.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "cc817b15d376c50e211f36e71e7e74863d47b0af",
+      "head_blob_sha": "cc817b15d376c50e211f36e71e7e74863d47b0af",
+      "head_lines": 60,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/time/calendar_time.dart"
+    },
+    {
+      "path": "lib/core/time/shanghai_date_provider.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "f22083f197fdf9452c67ce8fa08393f6cc4e9c44",
+      "head_blob_sha": "f22083f197fdf9452c67ce8fa08393f6cc4e9c44",
+      "head_lines": 56,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/core/time/shanghai_date_provider.dart"
+    },
+    {
+      "path": "lib/features/account/application/account_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "d9975bdd57cf9604b938827bb58d10c72eb49a9c",
+      "head_blob_sha": "d9975bdd57cf9604b938827bb58d10c72eb49a9c",
+      "head_lines": 88,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/account/application/account_controller.dart"
+    },
+    {
+      "path": "lib/features/account/application/account_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "746fa8014fd801897cfdfa92630caa0f2532c515",
+      "head_blob_sha": "746fa8014fd801897cfdfa92630caa0f2532c515",
+      "head_lines": 29,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/account/application/account_providers.dart"
+    },
+    {
+      "path": "lib/features/account/data/platform_login_cookies.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "f66495ae1f1259ee4d8cba04aa9f5ae00ca4d140",
+      "head_blob_sha": "f66495ae1f1259ee4d8cba04aa9f5ae00ca4d140",
+      "head_lines": 33,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/account/data/platform_login_cookies.dart"
+    },
+    {
+      "path": "lib/features/account/data/secure_bili_vault.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5a67cd3ffc3791d5d18601ca57592d4fd836817d",
+      "head_blob_sha": "5a67cd3ffc3791d5d18601ca57592d4fd836817d",
+      "head_lines": 103,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/account/data/secure_bili_vault.dart"
+    },
+    {
+      "path": "lib/features/account/domain/bili_account.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "91d12224cf12fa4ef01f2df17341aa1a1d78feef",
+      "head_blob_sha": "91d12224cf12fa4ef01f2df17341aa1a1d78feef",
+      "head_lines": 29,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/account/domain/bili_account.dart"
+    },
+    {
+      "path": "lib/features/account/presentation/local_login_cleanup_tile.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "06f66d74b6ad0f89763d58e45a376ed61dee5432",
+      "head_blob_sha": "06f66d74b6ad0f89763d58e45a376ed61dee5432",
+      "head_lines": 44,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/account/presentation/local_login_cleanup_tile.dart"
+    },
+    {
+      "path": "lib/features/backup/application/backup_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "cb65a645865beea42b92c903039a0f8df9eb75e1",
+      "head_blob_sha": "cb65a645865beea42b92c903039a0f8df9eb75e1",
+      "head_lines": 27,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/backup/application/backup_providers.dart"
+    },
+    {
+      "path": "lib/features/backup/data/backup_codec.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2da6e9b699701ef3916c99fe0e30bbc46cbee469",
+      "head_blob_sha": "2da6e9b699701ef3916c99fe0e30bbc46cbee469",
+      "head_lines": 593,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/backup/data/backup_codec.dart"
+    },
+    {
+      "path": "lib/features/backup/data/backup_files.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "1ae56e79040ffad65c70237e30e75723dbfed239",
+      "head_blob_sha": "1ae56e79040ffad65c70237e30e75723dbfed239",
+      "head_lines": 125,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/backup/data/backup_files.dart"
+    },
+    {
+      "path": "lib/features/backup/data/sqlite_backup_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "39804d8058101143fd0fb3b5585dff6bece12d4b",
+      "head_blob_sha": "39804d8058101143fd0fb3b5585dff6bece12d4b",
+      "head_lines": 117,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/backup/data/sqlite_backup_repository.dart"
+    },
+    {
+      "path": "lib/features/backup/domain/personal_backup.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "26ac547a8400e298c38f5e0a0ce568c6f034612b",
+      "head_blob_sha": "26ac547a8400e298c38f5e0a0ce568c6f034612b",
+      "head_lines": 35,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/backup/domain/personal_backup.dart"
+    },
+    {
+      "path": "lib/features/backup/presentation/backup_page.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "a901c40c21f7f4161d697ec89cc21aa4547c1517",
+      "head_blob_sha": "a901c40c21f7f4161d697ec89cc21aa4547c1517",
+      "head_lines": 212,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/backup/presentation/backup_page.dart"
+    },
+    {
+      "path": "lib/features/calendar/application/calendar_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "c3403c9ea7d1560847e493298710686addb657c3",
+      "head_blob_sha": "c3403c9ea7d1560847e493298710686addb657c3",
+      "head_lines": 126,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/application/calendar_providers.dart"
+    },
+    {
+      "path": "lib/features/calendar/data/calendar_cache_store.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "36cacc84e378fe6a92b5105196c3f814ca8a60ef",
+      "head_blob_sha": "36cacc84e378fe6a92b5105196c3f814ca8a60ef",
+      "head_lines": 102,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/data/calendar_cache_store.dart"
+    },
+    {
+      "path": "lib/features/calendar/data/ics_calendar_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "333590ca15c5a7b491438cd1bea10e9b88729727",
+      "head_blob_sha": "333590ca15c5a7b491438cd1bea10e9b88729727",
+      "head_lines": 257,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/data/ics_calendar_repository.dart"
+    },
+    {
+      "path": "lib/features/calendar/data/ics_parser.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "90aa7ff0b7dd84782842ac1e45d616c25f1e45aa",
+      "head_blob_sha": "90aa7ff0b7dd84782842ac1e45d616c25f1e45aa",
+      "head_lines": 336,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/data/ics_parser.dart"
+    },
+    {
+      "path": "lib/features/calendar/domain/calendar_agenda.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "99d96753c9605f3cd288507b35c81b9b70ba4a5c",
+      "head_blob_sha": "99d96753c9605f3cd288507b35c81b9b70ba4a5c",
+      "head_lines": 92,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/domain/calendar_agenda.dart"
+    },
+    {
+      "path": "lib/features/calendar/domain/calendar_event.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fa29478aed5c6b269a393c14927670548f3d457a",
+      "head_blob_sha": "fa29478aed5c6b269a393c14927670548f3d457a",
+      "head_lines": 116,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/domain/calendar_event.dart"
+    },
+    {
+      "path": "lib/features/calendar/domain/event_classifier.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "18849ef1679e4847ad4c967ee97f1058d82ae9b1",
+      "head_blob_sha": "18849ef1679e4847ad4c967ee97f1058d82ae9b1",
+      "head_lines": 76,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/domain/event_classifier.dart"
+    },
+    {
+      "path": "lib/features/calendar/presentation/calendar_event_widgets.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "65544c58cf183fd1b12ec0d7f214fbd7407cde64",
+      "head_blob_sha": "65544c58cf183fd1b12ec0d7f214fbd7407cde64",
+      "head_lines": 440,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/presentation/calendar_event_widgets.dart"
+    },
+    {
+      "path": "lib/features/calendar/presentation/calendar_page.dart",
+      "status": "modified",
+      "baseline_blob_sha": "83cc5596e66d7dde29ecf3ef9c5d82bc5bdce324",
+      "head_blob_sha": "511fc543a4f27bf0c5f85d2878a451dc9d361ecd",
+      "head_lines": 678,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/calendar/presentation/calendar_page.dart"
+    },
+    {
+      "path": "lib/features/content/application/community_feed_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "48f664b3c31f439eb9a63f3ed3fea9447bb3603d",
+      "head_blob_sha": "48f664b3c31f439eb9a63f3ed3fea9447bb3603d",
+      "head_lines": 233,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/community_feed_controller.dart"
+    },
+    {
+      "path": "lib/features/content/application/community_video_pager.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "53729f77285e1d302f9bc3b8f6d3ad8da5147639",
+      "head_blob_sha": "53729f77285e1d302f9bc3b8f6d3ad8da5147639",
+      "head_lines": 179,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/community_video_pager.dart"
+    },
+    {
+      "path": "lib/features/content/application/content_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "f0cc8179b0663b83edea20525ce1f5cfd41f6c6e",
+      "head_blob_sha": "f0cc8179b0663b83edea20525ce1f5cfd41f6c6e",
+      "head_lines": 164,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/content_providers.dart"
+    },
+    {
+      "path": "lib/features/content/application/dynamic_feed_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "26aa2ea9322dd2d5b0fc62aaa8f08134ccd0f5a9",
+      "head_blob_sha": "26aa2ea9322dd2d5b0fc62aaa8f08134ccd0f5a9",
+      "head_lines": 199,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/dynamic_feed_controller.dart"
+    },
+    {
+      "path": "lib/features/content/application/fanart_feed_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "ab3ab94f22dac00361e2c6dbf6d7e3e4b6271f55",
+      "head_blob_sha": "ab3ab94f22dac00361e2c6dbf6d7e3e4b6271f55",
+      "head_lines": 263,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/fanart_feed_controller.dart"
+    },
+    {
+      "path": "lib/features/content/application/fanart_filter_rules.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "c8c8125fddf5c65cea2cca92694ec4626844ae78",
+      "head_blob_sha": "c8c8125fddf5c65cea2cca92694ec4626844ae78",
+      "head_lines": 42,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/fanart_filter_rules.dart"
+    },
+    {
+      "path": "lib/features/content/application/feed_progress.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "0a2760970f6f736153a4e0e2ca70ae5635a9f41e",
+      "head_blob_sha": "0a2760970f6f736153a4e0e2ca70ae5635a9f41e",
+      "head_lines": 32,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/application/feed_progress.dart"
+    },
+    {
+      "path": "lib/features/content/data/community_video_source.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "b683ce1d1abb2647b1bf4d98036efdfa33cef433",
+      "head_blob_sha": "b683ce1d1abb2647b1bf4d98036efdfa33cef433",
+      "head_lines": 247,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/data/community_video_source.dart"
+    },
+    {
+      "path": "lib/features/content/data/dynamic_fanart_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "0ca73dc68d6f4cd13ee015f8ee98768aa00c333e",
+      "head_blob_sha": "0ca73dc68d6f4cd13ee015f8ee98768aa00c333e",
+      "head_lines": 214,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/data/dynamic_fanart_repository.dart"
+    },
+    {
+      "path": "lib/features/content/data/dynamic_post_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "8c88a6766870d3a1a0f8f15216aac6862b13804b",
+      "head_blob_sha": "8c88a6766870d3a1a0f8f15216aac6862b13804b",
+      "head_lines": 260,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/data/dynamic_post_repository.dart"
+    },
+    {
+      "path": "lib/features/content/domain/community_video_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5ab0a2a6597a55ef5c965bc904f315fd0954830d",
+      "head_blob_sha": "5ab0a2a6597a55ef5c965bc904f315fd0954830d",
+      "head_lines": 131,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/domain/community_video_repository.dart"
+    },
+    {
+      "path": "lib/features/content/domain/dynamic_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "d42adf3304f1d33f55ff4e285db3b9fa0556556e",
+      "head_blob_sha": "d42adf3304f1d33f55ff4e285db3b9fa0556556e",
+      "head_lines": 226,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/domain/dynamic_repository.dart"
+    },
+    {
+      "path": "lib/features/content/domain/fanart_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "72f67eb6cbf33af5c645a78fdf62001dd6f1149a",
+      "head_blob_sha": "72f67eb6cbf33af5c645a78fdf62001dd6f1149a",
+      "head_lines": 194,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/domain/fanart_repository.dart"
+    },
+    {
+      "path": "lib/features/content/domain/saved_channel.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e3a0a2d9505d54a6cfa2bc70abfc6dfd1c6e9ead",
+      "head_blob_sha": "e3a0a2d9505d54a6cfa2bc70abfc6dfd1c6e9ead",
+      "head_lines": 131,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/domain/saved_channel.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/community_feed_view.dart",
+      "status": "modified",
+      "baseline_blob_sha": "9d42fb94a14e75568a20bf4cd93ae977d545a76d",
+      "head_blob_sha": "f46a485719cbc101bb1cee603c745a5bd1045c2f",
+      "head_lines": 369,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/community_feed_view.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/content_images.dart",
+      "status": "modified",
+      "baseline_blob_sha": "bda5ee8ce3f2f7363ee8684920fcad4e9101712b",
+      "head_blob_sha": "ab738b9861357011f55ea53b929daf56515fc6cb",
+      "head_lines": 183,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/content_images.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/content_page.dart",
+      "status": "modified",
+      "baseline_blob_sha": "8ace19a6b35492fd106db71a7796b3828a189436",
+      "head_blob_sha": "aac5cdb0ce9788ff942b5872606b95242a7a4ee7",
+      "head_lines": 598,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/content_page.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/content_search_control.dart",
+      "status": "modified",
+      "baseline_blob_sha": "be3745bef0d58bb3e297684e279c74d8d7b26e6f",
+      "head_blob_sha": "7e6740ee54e77aa81042106e7a14ca93e0cd3eeb",
+      "head_lines": 190,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/content_search_control.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/dynamic_card.dart",
+      "status": "modified",
+      "baseline_blob_sha": "4556165b504945f677bbcc9bd17a7d3a7deee366",
+      "head_blob_sha": "843095fbce33fa24589dda92ca1739068eacdf21",
+      "head_lines": 583,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/dynamic_card.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/dynamic_feed_view.dart",
+      "status": "modified",
+      "baseline_blob_sha": "63d09795473c738c7267596f67dbefd55467012e",
+      "head_blob_sha": "5a1e548baa82de963ab5adfefe941723ac239585",
+      "head_lines": 671,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/dynamic_feed_view.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/dynamic_rich_text.dart",
+      "status": "modified",
+      "baseline_blob_sha": "e3f6a23df51bfd09eeede11ed73d2ccb3efb0e51",
+      "head_blob_sha": "2e4d526dbfdfaa620c9cda68341bd92d61468a4a",
+      "head_lines": 108,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/dynamic_rich_text.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_card.dart",
+      "status": "modified",
+      "baseline_blob_sha": "f0019bd4af8682ea012337a66e551ed8cbb5bbdb",
+      "head_blob_sha": "773eec63033817e8d302ac60656dbd49a37f7a98",
+      "head_lines": 179,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/fanart_card.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_detail_page.dart",
+      "status": "modified",
+      "baseline_blob_sha": "372f7a2af0b720cc4a3fb5b195c74b46196766af",
+      "head_blob_sha": "435b5e0560b01a7e096b6f07604e59863ca20aec",
+      "head_lines": 314,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/fanart_detail_page.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_filter_bar.dart",
+      "status": "modified",
+      "baseline_blob_sha": "7ac9db5bff2d7b702a2384899d5e9e4619a02325",
+      "head_blob_sha": "c581df3cb59853c05d94185c873f8a0bd0daa637",
+      "head_lines": 379,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/fanart_filter_bar.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_image_viewer.dart",
+      "status": "modified",
+      "baseline_blob_sha": "dfa5e4355b3d3789a0813a72606b67aef1f6b820",
+      "head_blob_sha": "20aab24eef76ef6faa2c06c943fba2513661a057",
+      "head_lines": 259,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/fanart_image_viewer.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/feed_status_footer.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "443a43e15caacbcdf9bb42972e807a32d9c7a3ca",
+      "head_blob_sha": "443a43e15caacbcdf9bb42972e807a32d9c7a3ca",
+      "head_lines": 58,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/feed_status_footer.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/saved_channel_bar.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "deefde2d31b36ec3384a10246f3ffabe06837e24",
+      "head_blob_sha": "deefde2d31b36ec3384a10246f3ffabe06837e24",
+      "head_lines": 177,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/saved_channel_bar.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/video_card.dart",
+      "status": "modified",
+      "baseline_blob_sha": "9a4941a4ce7ba88a41eaee9a0700fc18a4269e6e",
+      "head_blob_sha": "b4bef6cf39d197bae4d10b68040016202890ed8c",
+      "head_lines": 167,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/content/presentation/video_card.dart"
+    },
+    {
+      "path": "lib/features/creator/presentation/creator_link.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "9558105e6a0d25808be2e5f1c6def9656e79532d",
+      "head_blob_sha": "9558105e6a0d25808be2e5f1c6def9656e79532d",
+      "head_lines": 39,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/creator/presentation/creator_link.dart"
+    },
+    {
+      "path": "lib/features/handoff/application/handoff_coordinator.dart",
+      "status": "modified",
+      "baseline_blob_sha": "f5205a767c610a7af6cca400b856378ccbb20403",
+      "head_blob_sha": "cd301b47485c8e64b002dbce4b1f797c2e442359",
+      "head_lines": 219,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/application/handoff_coordinator.dart"
+    },
+    {
+      "path": "lib/features/handoff/application/handoff_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "4d09cd78e28d0d49c95aad328809b32f0c7adf09",
+      "head_blob_sha": "4d09cd78e28d0d49c95aad328809b32f0c7adf09",
+      "head_lines": 33,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/application/handoff_providers.dart"
+    },
+    {
+      "path": "lib/features/handoff/application/return_entry_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "a40535a57aa4893eb324128d2067bf800330c830",
+      "head_blob_sha": "a40535a57aa4893eb324128d2067bf800330c830",
+      "head_lines": 196,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/application/return_entry_controller.dart"
+    },
+    {
+      "path": "lib/features/handoff/data/sqlite_return_store.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fcec42c8b7d496d945d8a62e665fe070ed1f77ed",
+      "head_blob_sha": "fcec42c8b7d496d945d8a62e665fe070ed1f77ed",
+      "head_lines": 159,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/data/sqlite_return_store.dart"
+    },
+    {
+      "path": "lib/features/handoff/domain/return_context.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fe45110a2ddf176d7bd273f6db748519ec639d1b",
+      "head_blob_sha": "fe45110a2ddf176d7bd273f6db748519ec639d1b",
+      "head_lines": 132,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/domain/return_context.dart"
+    },
+    {
+      "path": "lib/features/handoff/domain/return_session.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "ffc8e2e5e42e16f9b05e5f512305805af7fd250f",
+      "head_blob_sha": "ffc8e2e5e42e16f9b05e5f512305805af7fd250f",
+      "head_lines": 88,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/domain/return_session.dart"
+    },
+    {
+      "path": "lib/features/handoff/presentation/anchor_restore.dart",
+      "status": "added",
+      "baseline_blob_sha": null,
+      "head_blob_sha": "d3e9fcc9ccfb88c25f709a3e1a4333a88ec07150",
+      "head_lines": 128,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/presentation/anchor_restore.dart"
+    },
+    {
+      "path": "lib/features/handoff/presentation/return_entry_tile.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e34c65009e8351cd16b3606cf7a26664c0955390",
+      "head_blob_sha": "e34c65009e8351cd16b3606cf7a26664c0955390",
+      "head_lines": 81,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/presentation/return_entry_tile.dart"
+    },
+    {
+      "path": "lib/features/handoff/presentation/return_restorer.dart",
+      "status": "modified",
+      "baseline_blob_sha": "7c75afbfd2353c7ad7d9b1c8eef96605007ca38b",
+      "head_blob_sha": "a09bb0ebe5a48607514697f03b8f7a54a523d043",
+      "head_lines": 157,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/presentation/return_restorer.dart"
+    },
+    {
+      "path": "lib/features/handoff/presentation/watch_on_bilibili.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "66d22395601d490fd693a1156215e0443ab294f9",
+      "head_blob_sha": "66d22395601d490fd693a1156215e0443ab294f9",
+      "head_lines": 64,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/handoff/presentation/watch_on_bilibili.dart"
+    },
+    {
+      "path": "lib/features/library/application/content_snapshots.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "7cec5f8534d63f25c080e4b4ea1253b6b0bee453",
+      "head_blob_sha": "7cec5f8534d63f25c080e4b4ea1253b6b0bee453",
+      "head_lines": 54,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/application/content_snapshots.dart"
+    },
+    {
+      "path": "lib/features/library/application/library_pager.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "ba878a7b372a3a218502cbf9896be682f7dfff9b",
+      "head_blob_sha": "ba878a7b372a3a218502cbf9896be682f7dfff9b",
+      "head_lines": 126,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/application/library_pager.dart"
+    },
+    {
+      "path": "lib/features/library/application/library_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "413e43631b19a03ed399b12fbba0ab67ad05f5ec",
+      "head_blob_sha": "413e43631b19a03ed399b12fbba0ab67ad05f5ec",
+      "head_lines": 141,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/application/library_providers.dart"
+    },
+    {
+      "path": "lib/features/library/data/library_codec.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "68cc901dd21437ee1b37f521c57d53670cd8c3fe",
+      "head_blob_sha": "68cc901dd21437ee1b37f521c57d53670cd8c3fe",
+      "head_lines": 227,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/data/library_codec.dart"
+    },
+    {
+      "path": "lib/features/library/data/sqlite_library_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "dae17062b4dafb0715de4ee6366315e836776a9c",
+      "head_blob_sha": "dae17062b4dafb0715de4ee6366315e836776a9c",
+      "head_lines": 968,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/data/sqlite_library_repository.dart"
+    },
+    {
+      "path": "lib/features/library/domain/library_models.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e4fb57899baf820642c0247567853595cb5d0d1b",
+      "head_blob_sha": "e4fb57899baf820642c0247567853595cb5d0d1b",
+      "head_lines": 226,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/domain/library_models.dart"
+    },
+    {
+      "path": "lib/features/library/domain/library_page.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "4e89ab5293c2f166d070b3ca4077d1c2a99878cc",
+      "head_blob_sha": "4e89ab5293c2f166d070b3ca4077d1c2a99878cc",
+      "head_lines": 56,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/domain/library_page.dart"
+    },
+    {
+      "path": "lib/features/library/domain/library_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "afce8cf9e9fce956241b542df5dee07b9dc1125b",
+      "head_blob_sha": "afce8cf9e9fce956241b542df5dee07b9dc1125b",
+      "head_lines": 121,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/domain/library_repository.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/calendar_follow_button.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "c95efbfaecafa2835a4885983641cd375da65c64",
+      "head_blob_sha": "c95efbfaecafa2835a4885983641cd375da65c64",
+      "head_lines": 84,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/calendar_follow_button.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/calendar_follows.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "ce9a70040b04352f77ff9db18a7928196363f4c2",
+      "head_blob_sha": "ce9a70040b04352f77ff9db18a7928196363f4c2",
+      "head_lines": 104,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/calendar_follows.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/content_actions.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5347e5c021e6550a0d96c6eb7d144a1a3cdf0671",
+      "head_blob_sha": "5347e5c021e6550a0d96c6eb7d144a1a3cdf0671",
+      "head_lines": 209,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/content_actions.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/history_recorder.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "bfc2ec8170dca5d344d36615553c1d210fe28bb0",
+      "head_blob_sha": "bfc2ec8170dca5d344d36615553c1d210fe28bb0",
+      "head_lines": 75,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/history_recorder.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/library_common.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "7b460910d7c1027e39e07cc14a632e990fdca90d",
+      "head_blob_sha": "7b460910d7c1027e39e07cc14a632e990fdca90d",
+      "head_lines": 205,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/library_common.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/library_paged_list.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "36da4e6212436bbc395d46d571f4601fa0ffc637",
+      "head_blob_sha": "36da4e6212436bbc395d46d571f4601fa0ffc637",
+      "head_lines": 112,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/library_paged_list.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/library_pages.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "4447a7e4c9351e8dea7e4be89f46fef60caca39f",
+      "head_blob_sha": "4447a7e4c9351e8dea7e4be89f46fef60caca39f",
+      "head_lines": 514,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/library_pages.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/playback_pages.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "c33fd662b739b366b0f07bb3a4f6f9ba7e63fd32",
+      "head_blob_sha": "c33fd662b739b366b0f07bb3a4f6f9ba7e63fd32",
+      "head_lines": 256,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/playback_pages.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/saved_content_page.dart",
+      "status": "modified",
+      "baseline_blob_sha": "d7eb18bd06d79bef880b19fedf5a449c04860f0f",
+      "head_blob_sha": "f8b06b67d8d0b00f35aac264b9ab69960f6f84a9",
+      "head_lines": 118,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/library/presentation/saved_content_page.dart"
+    },
+    {
+      "path": "lib/features/mine/presentation/mine_page.dart",
+      "status": "modified",
+      "baseline_blob_sha": "f7bd07661c92f653ad4b361e39a9ed6b5a3f1df7",
+      "head_blob_sha": "e3ab172245451f264d1559a8fde328b687ac6bb1",
+      "head_lines": 322,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/mine/presentation/mine_page.dart"
+    },
+    {
+      "path": "lib/features/novels/application/novel_feed_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2e76591b899e425b1b4f6087932a941a81097dad",
+      "head_blob_sha": "2e76591b899e425b1b4f6087932a941a81097dad",
+      "head_lines": 194,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/application/novel_feed_controller.dart"
+    },
+    {
+      "path": "lib/features/novels/application/novel_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "b23111017c4761eafd830711c7365cf68b7c230d",
+      "head_blob_sha": "b23111017c4761eafd830711c7365cf68b7c230d",
+      "head_lines": 39,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/application/novel_providers.dart"
+    },
+    {
+      "path": "lib/features/novels/data/dynamic_novel_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "45636a10b990b8c20e63a0801e23afb1f95c2d4e",
+      "head_blob_sha": "45636a10b990b8c20e63a0801e23afb1f95c2d4e",
+      "head_lines": 247,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/data/dynamic_novel_repository.dart"
+    },
+    {
+      "path": "lib/features/novels/data/novel_html.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "225541555f9f572f491fe1270491d96710dd3200",
+      "head_blob_sha": "225541555f9f572f491fe1270491d96710dd3200",
+      "head_lines": 228,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/data/novel_html.dart"
+    },
+    {
+      "path": "lib/features/novels/domain/novel_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "9c107f0056a98a69ee6f8e24e95b9db82e813f84",
+      "head_blob_sha": "9c107f0056a98a69ee6f8e24e95b9db82e813f84",
+      "head_lines": 297,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/domain/novel_repository.dart"
+    },
+    {
+      "path": "lib/features/novels/presentation/novel_feed_view.dart",
+      "status": "modified",
+      "baseline_blob_sha": "6471fc13fce2b17be1d668b75ce647dd63a3776a",
+      "head_blob_sha": "ec9735b55afe4e14cc7da8eb1ab44cc7b6c5c7ec",
+      "head_lines": 541,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/presentation/novel_feed_view.dart"
+    },
+    {
+      "path": "lib/features/novels/presentation/novel_reader_page.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5828afb688478e247bfcbf7f767ac48e9ec98f58",
+      "head_blob_sha": "5828afb688478e247bfcbf7f767ac48e9ec98f58",
+      "head_lines": 430,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/novels/presentation/novel_reader_page.dart"
+    },
+    {
+      "path": "lib/features/preferences/application/preferences_controller.dart",
+      "status": "modified",
+      "baseline_blob_sha": "1cd720426d77c15c243bd688253b890f6527e496",
+      "head_blob_sha": "2eae28ed45548288ea489f2b6aa272ac53076d4f",
+      "head_lines": 133,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/preferences/application/preferences_controller.dart"
+    },
+    {
+      "path": "lib/features/preferences/data/sqlite_preferences_repository.dart",
+      "status": "modified",
+      "baseline_blob_sha": "2f824e8190e3f4a6e504bdc9bfd9e3454395c6be",
+      "head_blob_sha": "4726b1c95a5d08f7e862fd248a7210b078c9c6cb",
+      "head_lines": 95,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/preferences/data/sqlite_preferences_repository.dart"
+    },
+    {
+      "path": "lib/features/preferences/domain/app_preferences.dart",
+      "status": "modified",
+      "baseline_blob_sha": "6fd3909b32b004a44d7e3da3750926084635e2b0",
+      "head_blob_sha": "4925e58fa0ad01e8e36b82411d95f44775fadffa",
+      "head_lines": 82,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/preferences/domain/app_preferences.dart"
+    },
+    {
+      "path": "lib/features/preferences/presentation/preferences_controls.dart",
+      "status": "modified",
+      "baseline_blob_sha": "1ae0cc30038402208de815592b6647ec3504b869",
+      "head_blob_sha": "5cc1caea9eae9e0c51bc0ac2dc6b55cf23089882",
+      "head_lines": 147,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/preferences/presentation/preferences_controls.dart"
+    },
+    {
+      "path": "lib/features/rules/application/feed_visibility.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fd12f8da009d05a75b6b267a6a13ee22e0bcef07",
+      "head_blob_sha": "fd12f8da009d05a75b6b267a6a13ee22e0bcef07",
+      "head_lines": 132,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/application/feed_visibility.dart"
+    },
+    {
+      "path": "lib/features/rules/application/rules_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "9a9f271c34e2fb4a741a984942f4e1562e7906d8",
+      "head_blob_sha": "9a9f271c34e2fb4a741a984942f4e1562e7906d8",
+      "head_lines": 163,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/application/rules_controller.dart"
+    },
+    {
+      "path": "lib/features/rules/application/rules_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "837aeb1eca2c28cee54f70921995f357252779d8",
+      "head_blob_sha": "837aeb1eca2c28cee54f70921995f357252779d8",
+      "head_lines": 33,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/application/rules_providers.dart"
+    },
+    {
+      "path": "lib/features/rules/application/visible_random.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "4446dced47313c0a5d10039124991434a1ff67d6",
+      "head_blob_sha": "4446dced47313c0a5d10039124991434a1ff67d6",
+      "head_lines": 50,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/application/visible_random.dart"
+    },
+    {
+      "path": "lib/features/rules/data/rules_codec.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "28132cbcca75ad17ac71c96fb4cd84ed400af4c7",
+      "head_blob_sha": "28132cbcca75ad17ac71c96fb4cd84ed400af4c7",
+      "head_lines": 61,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/data/rules_codec.dart"
+    },
+    {
+      "path": "lib/features/rules/data/sqlite_rules_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "06233042fe08c3271121fa78c9111ab5bd103872",
+      "head_blob_sha": "06233042fe08c3271121fa78c9111ab5bd103872",
+      "head_lines": 232,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/data/sqlite_rules_repository.dart"
+    },
+    {
+      "path": "lib/features/rules/domain/content_rules.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "864026388443d561c55d678022cb22d94d1d02f0",
+      "head_blob_sha": "864026388443d561c55d678022cb22d94d1d02f0",
+      "head_lines": 234,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/domain/content_rules.dart"
+    },
+    {
+      "path": "lib/features/rules/domain/rules_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "d196e896e6c84cab3a0c33711124e543eb2900a6",
+      "head_blob_sha": "d196e896e6c84cab3a0c33711124e543eb2900a6",
+      "head_lines": 13,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/domain/rules_repository.dart"
+    },
+    {
+      "path": "lib/features/rules/presentation/blocking_actions.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "a4614d6f4c9e1205d518e2bf6df256053150a1fc",
+      "head_blob_sha": "a4614d6f4c9e1205d518e2bf6df256053150a1fc",
+      "head_lines": 163,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/presentation/blocking_actions.dart"
+    },
+    {
+      "path": "lib/features/rules/presentation/rule_common.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "cf28074f22a4463ce16ffd608f5fc4f9bfee49b4",
+      "head_blob_sha": "cf28074f22a4463ce16ffd608f5fc4f9bfee49b4",
+      "head_lines": 58,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/presentation/rule_common.dart"
+    },
+    {
+      "path": "lib/features/rules/presentation/rule_editor.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "220640661fc5d7b349cada03af099139789b7d57",
+      "head_blob_sha": "220640661fc5d7b349cada03af099139789b7d57",
+      "head_lines": 207,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/presentation/rule_editor.dart"
+    },
+    {
+      "path": "lib/features/rules/presentation/rule_filter_scope.dart",
+      "status": "modified",
+      "baseline_blob_sha": "3aa9b46661937c4b8f655e65133b943e8cd08632",
+      "head_blob_sha": "2f604f8a40d4df1b4d62cf396c111cd3da8eb52a",
+      "head_lines": 180,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/presentation/rule_filter_scope.dart"
+    },
+    {
+      "path": "lib/features/rules/presentation/rules_page.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5ffee784b306d3bf2405adb47fbe4cb6607ad1f9",
+      "head_blob_sha": "5ffee784b306d3bf2405adb47fbe4cb6607ad1f9",
+      "head_lines": 249,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/rules/presentation/rules_page.dart"
+    },
+    {
+      "path": "lib/features/today/application/today_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "18547b201bdc06644e78b11bcc121a565d2de86d",
+      "head_blob_sha": "18547b201bdc06644e78b11bcc121a565d2de86d",
+      "head_lines": 131,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/today/application/today_providers.dart"
+    },
+    {
+      "path": "lib/features/today/presentation/on_this_day_section.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2d631c3efe181d92dfa46a881b79b30c9d58499e",
+      "head_blob_sha": "2d631c3efe181d92dfa46a881b79b30c9d58499e",
+      "head_lines": 244,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/today/presentation/on_this_day_section.dart"
+    },
+    {
+      "path": "lib/features/today/presentation/today_page.dart",
+      "status": "modified",
+      "baseline_blob_sha": "0642cbf39fd792f365c3489b0a4f676f4e903754",
+      "head_blob_sha": "e88a2cdf71ba120ca6a631e33356db75a83b6f73",
+      "head_lines": 544,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/today/presentation/today_page.dart"
+    },
+    {
+      "path": "lib/features/tools/domain/community_tool.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "dde4478763ffb2fc739e6addb0a735d1113cc0b8",
+      "head_blob_sha": "dde4478763ffb2fc739e6addb0a735d1113cc0b8",
+      "head_lines": 86,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/tools/domain/community_tool.dart"
+    },
+    {
+      "path": "lib/features/tools/presentation/tools_sheet.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "8284115210159cb523fc6a63d030aa4a4c6f53b0",
+      "head_blob_sha": "8284115210159cb523fc6a63d030aa4a4c6f53b0",
+      "head_lines": 228,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/tools/presentation/tools_sheet.dart"
+    },
+    {
+      "path": "lib/features/updates/application/update_collector.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "4da5f77076559dde61b71037e76303945b83406f",
+      "head_blob_sha": "4da5f77076559dde61b71037e76303945b83406f",
+      "head_lines": 86,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/application/update_collector.dart"
+    },
+    {
+      "path": "lib/features/updates/application/update_controller.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "5b622b4a45c4b9fdc386df6740c965e2c65daf7c",
+      "head_blob_sha": "5b622b4a45c4b9fdc386df6740c965e2c65daf7c",
+      "head_lines": 80,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/application/update_controller.dart"
+    },
+    {
+      "path": "lib/features/updates/application/update_providers.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "3b5ec273ec786a6af7ca95ecd04bcf0e159a8abd",
+      "head_blob_sha": "3b5ec273ec786a6af7ca95ecd04bcf0e159a8abd",
+      "head_lines": 70,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/application/update_providers.dart"
+    },
+    {
+      "path": "lib/features/updates/data/sqlite_update_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "8f3007ee0e2919bd4256ed3fcebf8c8d7b89bd7e",
+      "head_blob_sha": "8f3007ee0e2919bd4256ed3fcebf8c8d7b89bd7e",
+      "head_lines": 336,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/data/sqlite_update_repository.dart"
+    },
+    {
+      "path": "lib/features/updates/domain/update_event.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "73eef06d92508cafd420c9be1e848a726a5f55f8",
+      "head_blob_sha": "73eef06d92508cafd420c9be1e848a726a5f55f8",
+      "head_lines": 188,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/domain/update_event.dart"
+    },
+    {
+      "path": "lib/features/updates/domain/update_repository.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e0cdd3943272c917ed3ef8995f00b17321aa7706",
+      "head_blob_sha": "e0cdd3943272c917ed3ef8995f00b17321aa7706",
+      "head_lines": 56,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/domain/update_repository.dart"
+    },
+    {
+      "path": "lib/features/updates/presentation/update_card.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "01daaeaeaf8ba67457e2d07bb94df5194da092d3",
+      "head_blob_sha": "01daaeaeaf8ba67457e2d07bb94df5194da092d3",
+      "head_lines": 234,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/presentation/update_card.dart"
+    },
+    {
+      "path": "lib/features/updates/presentation/updates_bell_button.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "1f6ae09cd7ec338b43928a4a3f6bdc7dfcb8b3a2",
+      "head_blob_sha": "1f6ae09cd7ec338b43928a4a3f6bdc7dfcb8b3a2",
+      "head_lines": 29,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/presentation/updates_bell_button.dart"
+    },
+    {
+      "path": "lib/features/updates/presentation/updates_page.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "65fb7f3969ac5bb6d489f57ccb83740ccbd8ca1a",
+      "head_blob_sha": "65fb7f3969ac5bb6d489f57ccb83740ccbd8ca1a",
+      "head_lines": 123,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/features/updates/presentation/updates_page.dart"
+    },
+    {
+      "path": "lib/main.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "7f133282108735b6d38ddd82b1dfa30cee0532c7",
+      "head_blob_sha": "7f133282108735b6d38ddd82b1dfa30cee0532c7",
+      "head_lines": 25,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/main.dart"
+    },
+    {
+      "path": "lib/shared/theme/app_icons.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e18a62eefee0b32ad7cae1d957416ef24516fda8",
+      "head_blob_sha": "e18a62eefee0b32ad7cae1d957416ef24516fda8",
+      "head_lines": 20,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/theme/app_icons.dart"
+    },
+    {
+      "path": "lib/shared/widgets/app_backdrop.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "6f9297ff17068ac16ac1dc6def9d07d4783cfee6",
+      "head_blob_sha": "6f9297ff17068ac16ac1dc6def9d07d4783cfee6",
+      "head_lines": 13,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/app_backdrop.dart"
+    },
+    {
+      "path": "lib/shared/widgets/app_controls.dart",
+      "status": "modified",
+      "baseline_blob_sha": "6ee59c2e15d20b7b063be2ab8e4412ae1dde1bba",
+      "head_blob_sha": "fa8e9668d7d1eb93af550d78cd8b9bd397e33c3d",
+      "head_lines": 367,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/app_controls.dart"
+    },
+    {
+      "path": "lib/shared/widgets/app_motion.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fb61eee1a434708b290a743771e0098cd173a434",
+      "head_blob_sha": "fb61eee1a434708b290a743771e0098cd173a434",
+      "head_lines": 37,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/app_motion.dart"
+    },
+    {
+      "path": "lib/shared/widgets/app_page_bar.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2f85fd0c83aabde6d735b1bbd0f73f96ba808aab",
+      "head_blob_sha": "2f85fd0c83aabde6d735b1bbd0f73f96ba808aab",
+      "head_lines": 242,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/app_page_bar.dart"
+    },
+    {
+      "path": "lib/shared/widgets/app_panel.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "fb9fea4aeebcc8d0b2e2dcc9a4e8bc0376754ef3",
+      "head_blob_sha": "fb9fea4aeebcc8d0b2e2dcc9a4e8bc0376754ef3",
+      "head_lines": 105,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/app_panel.dart"
+    },
+    {
+      "path": "lib/shared/widgets/auto_fill_viewport.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "8be1a1db2c48bfdf7a5c4883d4f21b85f65a2ab9",
+      "head_blob_sha": "8be1a1db2c48bfdf7a5c4883d4f21b85f65a2ab9",
+      "head_lines": 123,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/auto_fill_viewport.dart"
+    },
+    {
+      "path": "lib/shared/widgets/feed_offset_memory.dart",
+      "status": "added",
+      "baseline_blob_sha": null,
+      "head_blob_sha": "f26f07b4dafb6917fb10bef34ef8ef4f510bdf6b",
+      "head_lines": 92,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/feed_offset_memory.dart"
+    },
+    {
+      "path": "lib/shared/widgets/feed_scroll_view.dart",
+      "status": "modified",
+      "baseline_blob_sha": "06e8948b825c34c7004303a53e4e1417b34e7317",
+      "head_blob_sha": "b8286404da8fd42696d964f7c6d6db1368f36655",
+      "head_lines": 162,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/feed_scroll_view.dart"
+    },
+    {
+      "path": "lib/shared/widgets/glass/app_glass_navigation.dart",
+      "status": "modified",
+      "baseline_blob_sha": "f227dac2edb1b2378e39f151257c061f3a49cb30",
+      "head_blob_sha": "8b407490f4869b621a4d84c85bbfda1f3e2e2658",
+      "head_lines": 459,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/glass/app_glass_navigation.dart"
+    },
+    {
+      "path": "lib/shared/widgets/glass/app_glass_scope.dart",
+      "status": "modified",
+      "baseline_blob_sha": "9dde2ebbd14f145f658b4b3aefdb1a8cf4eec356",
+      "head_blob_sha": "8eb70635d4ec623161c587110e586d54e67934a8",
+      "head_lines": 155,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/glass/app_glass_scope.dart"
+    },
+    {
+      "path": "lib/shared/widgets/glass/app_glass_style.dart",
+      "status": "modified",
+      "baseline_blob_sha": "ef47ff4ff3f93c45ec7fea1a2c8377911fac936d",
+      "head_blob_sha": "b404a0c93394eda740ccbcedf4b3e4f0512dfb0e",
+      "head_lines": 48,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/glass/app_glass_style.dart"
+    },
+    {
+      "path": "lib/shared/widgets/glass/app_glass_surface.dart",
+      "status": "modified",
+      "baseline_blob_sha": "62beb9ddcbd2315c7b3650661a2f129f01c12602",
+      "head_blob_sha": "32d71a4520d05ab289821c192907277184825b2e",
+      "head_lines": 86,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/glass/app_glass_surface.dart"
+    },
+    {
+      "path": "lib/shared/widgets/glass/glass_policy.dart",
+      "status": "modified",
+      "baseline_blob_sha": "91fac45eae32cb21790f28157217853baef59fd8",
+      "head_blob_sha": "9dbdf2b9692834d6340dbc0ceaf8108bb20c55c4",
+      "head_lines": 96,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/glass/glass_policy.dart"
+    },
+    {
+      "path": "lib/shared/widgets/glass/glass_runtime.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "f19dd9295601540f5629564db49df987ac0bc29e",
+      "head_blob_sha": "f19dd9295601540f5629564db49df987ac0bc29e",
+      "head_lines": 90,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/glass/glass_runtime.dart"
+    },
+    {
+      "path": "lib/shared/widgets/horizontal_choices.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "0128ad6ab74bcc295e092aa8b28235ee830ca4bf",
+      "head_blob_sha": "0128ad6ab74bcc295e092aa8b28235ee830ca4bf",
+      "head_lines": 63,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/horizontal_choices.dart"
+    },
+    {
+      "path": "lib/shared/widgets/media_card_surface.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "db41cba41d1e4351e6ddc1cca01526db03994b3f",
+      "head_blob_sha": "db41cba41d1e4351e6ddc1cca01526db03994b3f",
+      "head_lines": 90,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/media_card_surface.dart"
+    },
+    {
+      "path": "lib/shared/widgets/media_cover.dart",
+      "status": "modified",
+      "baseline_blob_sha": "47dea3ccdedc9af34ece99e0ead7326bbd969070",
+      "head_blob_sha": "c3b2432e308f419210cf7bd8cd9d0cfb9cd4e87d",
+      "head_lines": 129,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/media_cover.dart"
+    },
+    {
+      "path": "lib/shared/widgets/media_grid_delegate.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "32866325f4927899b149c5c86eb0640ea4a26703",
+      "head_blob_sha": "32866325f4927899b149c5c86eb0640ea4a26703",
+      "head_lines": 145,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/media_grid_delegate.dart"
+    },
+    {
+      "path": "lib/shared/widgets/media_image_policy.dart",
+      "status": "added",
+      "baseline_blob_sha": null,
+      "head_blob_sha": "6f639aa32b31b7b61cc01fb957341d384b824930",
+      "head_lines": 98,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/media_image_policy.dart"
+    },
+    {
+      "path": "lib/shared/widgets/resume_when_visible.dart",
+      "status": "added",
+      "baseline_blob_sha": null,
+      "head_blob_sha": "f4b1d7305e307e2cc205b1b356229935063e5ed3",
+      "head_lines": 59,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/resume_when_visible.dart"
+    },
+    {
+      "path": "lib/shared/widgets/retry_button.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "2f8d2a8d482628391ae77f46eb89c20563efb795",
+      "head_blob_sha": "2f8d2a8d482628391ae77f46eb89c20563efb795",
+      "head_lines": 67,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/retry_button.dart"
+    },
+    {
+      "path": "lib/shared/widgets/sliver_content_masonry.dart",
+      "status": "unchanged",
+      "baseline_blob_sha": "e7a4ef558ccb60ce5b9229089e1f41fdb24e91ad",
+      "head_blob_sha": "e7a4ef558ccb60ce5b9229089e1f41fdb24e91ad",
+      "head_lines": 37,
+      "source_url": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/lib/shared/widgets/sliver_content_masonry.dart"
+    }
+  ]
+}

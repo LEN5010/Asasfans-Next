@@ -1,0 +1,66 @@
+{
+  "review_baseline": "7134a40cb6579d9d5831f76a9859a6c2196855ef",
+  "files": [
+    {
+      "path": "ACCEPTANCE.md",
+      "bytes": 8115,
+      "sha256": "619dfd5193329ea52eb7057099ddd6acecf375abdd7d5184f062b3a3d7ccd5a5"
+    },
+    {
+      "path": "GOAL_PROMPT.md",
+      "bytes": 4385,
+      "sha256": "3d309906f8272a227ea808b327a6308589822e52197a93ad45e046358d9c35aa"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 20100,
+      "sha256": "cd6a2478e509f401741f8b09b3ca7c096234c9d28485efa372a63d357075b8a7"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2846,
+      "sha256": "9cdeb3ed3d0d9ec40ebc6390b030e21253276a99e68f6b5a43f64552e094dbe6"
+    },
+    {
+      "path": "REFERENCES.md",
+      "bytes": 7744,
+      "sha256": "094c4f8f808fdf850ff0d71fdaef2addac8ee17beafb60aee57bb98f0899ead7"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 11485,
+      "sha256": "5554df22c9a10dfc3248d5199238edcee30ec20a4545980fd4f394eae8429ec0"
+    },
+    {
+      "path": "TASKS.md",
+      "bytes": 27845,
+      "sha256": "f3c03a0f2ed3caa1eb8b476e78fbe1555d1976cccce34b12dc3162914446f9a1"
+    },
+    {
+      "path": "evidence/apk-comparison.json",
+      "bytes": 46531,
+      "sha256": "5ab5fbb03c6c10a2a9c3984aedbcbd8361e751f1d3391385126addd532e7a3d1"
+    },
+    {
+      "path": "evidence/ci-observations.json",
+      "bytes": 1628,
+      "sha256": "119d199bed5cbe96b2f804df7a3e27e781fa075769ab32da49add7c6d750e73d"
+    },
+    {
+      "path": "evidence/old-task-crosswalk.json",
+      "bytes": 8050,
+      "sha256": "bfc5cb94b59bebeba4d790165bdd739078636caccb588b848bacd02dd2e3c0fe"
+    },
+    {
+      "path": "evidence/source-comparison.json",
+      "bytes": 73044,
+      "sha256": "8241947b696cedbf73d9e4627ae167ec82f137dda321e670a666a0b75d703be7"
+    },
+    {
+      "path": "tasks.json",
+      "bytes": 37608,
+      "sha256": "9ab1808ec2fe5696c5ab431cbce450600d0b035eded29ff12702dc7b524cf72f"
+    }
+  ],
+  "note": "Manifest excludes itself."
+}

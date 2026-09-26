@@ -1,0 +1,1510 @@
+{
+  "note": "Raw APK sizes, not the surrounding GitHub artifact ZIP. Both artifacts use the existing Android debug development workflow. Baseline artifact differs from plan baseline only by README.",
+  "delta_bytes": 44312,
+  "apks": [
+    {
+      "name": "baseline",
+      "commit": "ae4227b3931303efbab5e03a23dbcdeb0a34c9c5",
+      "artifact_id": 10779953235,
+      "bytes": 166921660,
+      "MB_decimal": 166.92166,
+      "MiB": 159.18889999389648,
+      "sha256": "c211b83da10136cf95f815c1be350d69ca83eaaa457f751b1a4ed953c9b67ae1",
+      "mode": "debug",
+      "entries": [
+        {
+          "name": "META-INF/com/android/build/gradle/app-metadata.properties",
+          "stored_bytes": 52,
+          "uncompressed_bytes": 57
+        },
+        {
+          "name": "classes.dex",
+          "stored_bytes": 4186024,
+          "uncompressed_bytes": 11072920
+        },
+        {
+          "name": "classes10.dex",
+          "stored_bytes": 14547,
+          "uncompressed_bytes": 29444
+        },
+        {
+          "name": "classes2.dex",
+          "stored_bytes": 22409,
+          "uncompressed_bytes": 49732
+        },
+        {
+          "name": "classes3.dex",
+          "stored_bytes": 11167,
+          "uncompressed_bytes": 22380
+        },
+        {
+          "name": "classes4.dex",
+          "stored_bytes": 12090,
+          "uncompressed_bytes": 26796
+        },
+        {
+          "name": "classes5.dex",
+          "stored_bytes": 6129,
+          "uncompressed_bytes": 14920
+        },
+        {
+          "name": "classes6.dex",
+          "stored_bytes": 7834,
+          "uncompressed_bytes": 17396
+        },
+        {
+          "name": "classes7.dex",
+          "stored_bytes": 7928,
+          "uncompressed_bytes": 16392
+        },
+        {
+          "name": "classes8.dex",
+          "stored_bytes": 58486,
+          "uncompressed_bytes": 198248
+        },
+        {
+          "name": "classes9.dex",
+          "stored_bytes": 13405,
+          "uncompressed_bytes": 41132
+        },
+        {
+          "name": "lib/arm64-v8a/libVkLayer_khronos_validation.so",
+          "stored_bytes": 15240080,
+          "uncompressed_bytes": 15240080
+        },
+        {
+          "name": "lib/arm64-v8a/libflutter.so",
+          "stored_bytes": 38828704,
+          "uncompressed_bytes": 38828704
+        },
+        {
+          "name": "lib/arm64-v8a/libsqlite3.so",
+          "stored_bytes": 1499728,
+          "uncompressed_bytes": 1499728
+        },
+        {
+          "name": "lib/armeabi-v7a/libflutter.so",
+          "stored_bytes": 33150308,
+          "uncompressed_bytes": 33150308
+        },
+        {
+          "name": "lib/armeabi-v7a/libsqlite3.so",
+          "stored_bytes": 1503400,
+          "uncompressed_bytes": 1503400
+        },
+        {
+          "name": "lib/x86_64/libflutter.so",
+          "stored_bytes": 40083280,
+          "uncompressed_bytes": 40083280
+        },
+        {
+          "name": "lib/x86_64/libsqlite3.so",
+          "stored_bytes": 1553624,
+          "uncompressed_bytes": 1553624
+        },
+        {
+          "name": "assets/flutter_assets/AssetManifest.bin",
+          "stored_bytes": 276,
+          "uncompressed_bytes": 1164
+        },
+        {
+          "name": "assets/flutter_assets/FontManifest.json",
+          "stored_bytes": 69,
+          "uncompressed_bytes": 82
+        },
+        {
+          "name": "assets/flutter_assets/LICENSE",
+          "stored_bytes": 7801,
+          "uncompressed_bytes": 18431
+        },
+        {
+          "name": "assets/flutter_assets/NOTICES.Z",
+          "stored_bytes": 109139,
+          "uncompressed_bytes": 110920
+        },
+        {
+          "name": "assets/flutter_assets/NativeAssetsManifest.json",
+          "stored_bytes": 47,
+          "uncompressed_bytes": 45
+        },
+        {
+          "name": "assets/flutter_assets/assets/brand/asasfans.png",
+          "stored_bytes": 24894,
+          "uncompressed_bytes": 24894
+        },
+        {
+          "name": "assets/flutter_assets/assets/brand/asasfans_mark.png",
+          "stored_bytes": 16505,
+          "uncompressed_bytes": 16505
+        },
+        {
+          "name": "assets/flutter_assets/assets/stickers/goodnight.png",
+          "stored_bytes": 38002,
+          "uncompressed_bytes": 38002
+        },
+        {
+          "name": "assets/flutter_assets/assets/stickers/lift.png",
+          "stored_bytes": 41015,
+          "uncompressed_bytes": 41015
+        },
+        {
+          "name": "assets/flutter_assets/assets/stickers/meal.png",
+          "stored_bytes": 40734,
+          "uncompressed_bytes": 40734
+        },
+        {
+          "name": "assets/flutter_assets/fonts/MaterialIcons-Regular.otf",
+          "stored_bytes": 593046,
+          "uncompressed_bytes": 1645184
+        },
+        {
+          "name": "assets/flutter_assets/isolate_snapshot_data",
+          "stored_bytes": 4405748,
+          "uncompressed_bytes": 11647016
+        },
+        {
+          "name": "assets/flutter_assets/kernel_blob.bin",
+          "stored_bytes": 24924746,
+          "uncompressed_bytes": 75458104
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/interactive_indicator.frag",
+          "stored_bytes": 9086,
+          "uncompressed_bytes": 33552
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/lightweight_glass.frag",
+          "stored_bytes": 13360,
+          "uncompressed_bytes": 53776
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_final_render.frag",
+          "stored_bytes": 14472,
+          "uncompressed_bytes": 58800
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_geometry_blended.frag",
+          "stored_bytes": 235409,
+          "uncompressed_bytes": 968856
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/progressive_blur.frag",
+          "stored_bytes": 4237,
+          "uncompressed_bytes": 14392
+        },
+        {
+          "name": "assets/flutter_assets/shaders/ink_sparkle.frag",
+          "stored_bytes": 6183,
+          "uncompressed_bytes": 21856
+        },
+        {
+          "name": "assets/flutter_assets/shaders/stretch_effect.frag",
+          "stored_bytes": 4255,
+          "uncompressed_bytes": 17616
+        },
+        {
+          "name": "assets/flutter_assets/third_party/LoveIwara-LICENSE",
+          "stored_bytes": 634,
+          "uncompressed_bytes": 1064
+        },
+        {
+          "name": "assets/flutter_assets/vm_snapshot_data",
+          "stored_bytes": 2,
+          "uncompressed_bytes": 0
+        },
+        {
+          "name": "AndroidManifest.xml",
+          "stored_bytes": 2810,
+          "uncompressed_bytes": 9880
+        },
+        {
+          "name": "res/anim-v21/fragment_fast_out_extra_slow_in.xml",
+          "stored_bytes": 218,
+          "uncompressed_bytes": 364
+        },
+        {
+          "name": "res/animator/fragment_close_enter.xml",
+          "stored_bytes": 395,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/animator/fragment_close_exit.xml",
+          "stored_bytes": 395,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/animator/fragment_fade_enter.xml",
+          "stored_bytes": 265,
+          "uncompressed_bytes": 452
+        },
+        {
+          "name": "res/animator/fragment_fade_exit.xml",
+          "stored_bytes": 265,
+          "uncompressed_bytes": 452
+        },
+        {
+          "name": "res/animator/fragment_open_enter.xml",
+          "stored_bytes": 388,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/animator/fragment_open_exit.xml",
+          "stored_bytes": 392,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/drawable-hdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 3111,
+          "uncompressed_bytes": 3111
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_low_normal.9.png",
+          "stored_bytes": 212,
+          "uncompressed_bytes": 212
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png",
+          "stored_bytes": 225,
+          "uncompressed_bytes": 225
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_normal.9.png",
+          "stored_bytes": 212,
+          "uncompressed_bytes": 212
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png",
+          "stored_bytes": 225,
+          "uncompressed_bytes": 225
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_oversize_large_icon_bg.png",
+          "stored_bytes": 909,
+          "uncompressed_bytes": 909
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png",
+          "stored_bytes": 107,
+          "uncompressed_bytes": 107
+        },
+        {
+          "name": "res/drawable-mdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 2077,
+          "uncompressed_bytes": 2077
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_low_normal.9.png",
+          "stored_bytes": 215,
+          "uncompressed_bytes": 215
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png",
+          "stored_bytes": 223,
+          "uncompressed_bytes": 223
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_normal.9.png",
+          "stored_bytes": 215,
+          "uncompressed_bytes": 215
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png",
+          "stored_bytes": 223,
+          "uncompressed_bytes": 223
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png",
+          "stored_bytes": 98,
+          "uncompressed_bytes": 98
+        },
+        {
+          "name": "res/drawable-v21/launch_background.xml",
+          "stored_bytes": 185,
+          "uncompressed_bytes": 344
+        },
+        {
+          "name": "res/drawable-v21/notification_action_background.xml",
+          "stored_bytes": 467,
+          "uncompressed_bytes": 1180
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 4178,
+          "uncompressed_bytes": 4178
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png",
+          "stored_bytes": 221,
+          "uncompressed_bytes": 221
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png",
+          "stored_bytes": 252,
+          "uncompressed_bytes": 252
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_normal.9.png",
+          "stored_bytes": 221,
+          "uncompressed_bytes": 221
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png",
+          "stored_bytes": 247,
+          "uncompressed_bytes": 247
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png",
+          "stored_bytes": 138,
+          "uncompressed_bytes": 138
+        },
+        {
+          "name": "res/drawable-xxhdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 6532,
+          "uncompressed_bytes": 6532
+        },
+        {
+          "name": "res/drawable-xxxhdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 9040,
+          "uncompressed_bytes": 9040
+        },
+        {
+          "name": "res/drawable/ic_call_answer.xml",
+          "stored_bytes": 663,
+          "uncompressed_bytes": 1356
+        },
+        {
+          "name": "res/drawable/ic_call_answer_low.xml",
+          "stored_bytes": 644,
+          "uncompressed_bytes": 1320
+        },
+        {
+          "name": "res/drawable/ic_call_answer_video.xml",
+          "stored_bytes": 421,
+          "uncompressed_bytes": 772
+        },
+        {
+          "name": "res/drawable/ic_call_answer_video_low.xml",
+          "stored_bytes": 401,
+          "uncompressed_bytes": 736
+        },
+        {
+          "name": "res/drawable/ic_call_decline.xml",
+          "stored_bytes": 734,
+          "uncompressed_bytes": 1528
+        },
+        {
+          "name": "res/drawable/ic_call_decline_low.xml",
+          "stored_bytes": 712,
+          "uncompressed_bytes": 1492
+        },
+        {
+          "name": "res/drawable/ic_launcher_monochrome.xml",
+          "stored_bytes": 718,
+          "uncompressed_bytes": 1568
+        },
+        {
+          "name": "res/drawable/notification_bg.xml",
+          "stored_bytes": 252,
+          "uncompressed_bytes": 532
+        },
+        {
+          "name": "res/drawable/notification_bg_low.xml",
+          "stored_bytes": 252,
+          "uncompressed_bytes": 532
+        },
+        {
+          "name": "res/drawable/notification_icon_background.xml",
+          "stored_bytes": 185,
+          "uncompressed_bytes": 372
+        },
+        {
+          "name": "res/drawable/notification_tile_bg.xml",
+          "stored_bytes": 172,
+          "uncompressed_bytes": 304
+        },
+        {
+          "name": "res/drawable/return_entry_ball.xml",
+          "stored_bytes": 239,
+          "uncompressed_bytes": 500
+        },
+        {
+          "name": "res/layout-v21/notification_action.xml",
+          "stored_bytes": 485,
+          "uncompressed_bytes": 1052
+        },
+        {
+          "name": "res/layout-v21/notification_action_tombstone.xml",
+          "stored_bytes": 536,
+          "uncompressed_bytes": 1228
+        },
+        {
+          "name": "res/layout-v21/notification_template_custom_big.xml",
+          "stored_bytes": 786,
+          "uncompressed_bytes": 2456
+        },
+        {
+          "name": "res/layout-v21/notification_template_icon_group.xml",
+          "stored_bytes": 418,
+          "uncompressed_bytes": 988
+        },
+        {
+          "name": "res/layout/browser_actions_context_menu_page.xml",
+          "stored_bytes": 693,
+          "uncompressed_bytes": 1660
+        },
+        {
+          "name": "res/layout/browser_actions_context_menu_row.xml",
+          "stored_bytes": 554,
+          "uncompressed_bytes": 1212
+        },
+        {
+          "name": "res/layout/custom_dialog.xml",
+          "stored_bytes": 310,
+          "uncompressed_bytes": 612
+        },
+        {
+          "name": "res/layout/ime_base_split_test_activity.xml",
+          "stored_bytes": 201,
+          "uncompressed_bytes": 364
+        },
+        {
+          "name": "res/layout/ime_secondary_split_test_activity.xml",
+          "stored_bytes": 417,
+          "uncompressed_bytes": 876
+        },
+        {
+          "name": "res/layout/notification_template_part_chronometer.xml",
+          "stored_bytes": 259,
+          "uncompressed_bytes": 440
+        },
+        {
+          "name": "res/layout/notification_template_part_time.xml",
+          "stored_bytes": 260,
+          "uncompressed_bytes": 440
+        },
+        {
+          "name": "res/mipmap-anydpi-v26/ic_launcher.xml",
+          "stored_bytes": 221,
+          "uncompressed_bytes": 448
+        },
+        {
+          "name": "res/mipmap-anydpi-v33/ic_launcher.xml",
+          "stored_bytes": 242,
+          "uncompressed_bytes": 548
+        },
+        {
+          "name": "res/mipmap-hdpi-v4/ic_launcher.png",
+          "stored_bytes": 1903,
+          "uncompressed_bytes": 1903
+        },
+        {
+          "name": "res/mipmap-mdpi-v4/ic_launcher.png",
+          "stored_bytes": 1270,
+          "uncompressed_bytes": 1270
+        },
+        {
+          "name": "res/mipmap-xhdpi-v4/ic_launcher.png",
+          "stored_bytes": 2525,
+          "uncompressed_bytes": 2525
+        },
+        {
+          "name": "res/mipmap-xxhdpi-v4/ic_launcher.png",
+          "stored_bytes": 3816,
+          "uncompressed_bytes": 3816
+        },
+        {
+          "name": "res/mipmap-xxxhdpi-v4/ic_launcher.png",
+          "stored_bytes": 5106,
+          "uncompressed_bytes": 5106
+        },
+        {
+          "name": "res/xml/flutter_share_file_paths.xml",
+          "stored_bytes": 204,
+          "uncompressed_bytes": 396
+        },
+        {
+          "name": "res/xml/image_share_filepaths.xml",
+          "stored_bytes": 163,
+          "uncompressed_bytes": 308
+        },
+        {
+          "name": "resources.arsc",
+          "stored_bytes": 81000,
+          "uncompressed_bytes": 81000
+        },
+        {
+          "name": "DebugProbesKt.bin",
+          "stored_bytes": 782,
+          "uncompressed_bytes": 1738
+        },
+        {
+          "name": "META-INF/androidx.activity_activity.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.annotation_annotation-experimental.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.arch.core_core-runtime.version",
+          "stored_bytes": 61,
+          "uncompressed_bytes": 67
+        },
+        {
+          "name": "META-INF/androidx.browser_browser.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.core_core-ktx.version",
+          "stored_bytes": 7,
+          "uncompressed_bytes": 7
+        },
+        {
+          "name": "META-INF/androidx.core_core-viewtree.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.core_core.version",
+          "stored_bytes": 7,
+          "uncompressed_bytes": 7
+        },
+        {
+          "name": "META-INF/androidx.customview_customview.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.exifinterface_exifinterface.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.fragment_fragment.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.interpolator_interpolator.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-livedata-core-ktx.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-livedata-core.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-livedata.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-process.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-runtime.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-viewmodel-savedstate.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-viewmodel.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.loader_loader.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.profileinstaller_profileinstaller.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.savedstate_savedstate.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.security_security-crypto.version",
+          "stored_bytes": 14,
+          "uncompressed_bytes": 14
+        },
+        {
+          "name": "META-INF/androidx.startup_startup-runtime.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.tracing_tracing.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.versionedparcelable_versionedparcelable.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.viewpager_viewpager.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.webkit_webkit.version",
+          "stored_bytes": 7,
+          "uncompressed_bytes": 7
+        },
+        {
+          "name": "META-INF/androidx.window.extensions.core_core.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.window_window-java.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.window_window.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx/annotation/annotation/LICENSE.txt",
+          "stored_bytes": 3563,
+          "uncompressed_bytes": 10175
+        },
+        {
+          "name": "META-INF/kotlinx_coroutines_android.version",
+          "stored_bytes": 5,
+          "uncompressed_bytes": 5
+        },
+        {
+          "name": "META-INF/kotlinx_coroutines_core.version",
+          "stored_bytes": 5,
+          "uncompressed_bytes": 5
+        },
+        {
+          "name": "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler",
+          "stored_bytes": 50,
+          "uncompressed_bytes": 54
+        },
+        {
+          "name": "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory",
+          "stored_bytes": 49,
+          "uncompressed_bytes": 52
+        },
+        {
+          "name": "kotlin/annotation/annotation.kotlin_builtins",
+          "stored_bytes": 533,
+          "uncompressed_bytes": 1006
+        },
+        {
+          "name": "kotlin/collections/collections.kotlin_builtins",
+          "stored_bytes": 1834,
+          "uncompressed_bytes": 8308
+        },
+        {
+          "name": "kotlin/concurrent/atomics/atomics.kotlin_builtins",
+          "stored_bytes": 1082,
+          "uncompressed_bytes": 2674
+        },
+        {
+          "name": "kotlin/coroutines/coroutines.kotlin_builtins",
+          "stored_bytes": 116,
+          "uncompressed_bytes": 137
+        },
+        {
+          "name": "kotlin/internal/internal.kotlin_builtins",
+          "stored_bytes": 357,
+          "uncompressed_bytes": 590
+        },
+        {
+          "name": "kotlin/kotlin.kotlin_builtins",
+          "stored_bytes": 5342,
+          "uncompressed_bytes": 29399
+        },
+        {
+          "name": "kotlin/ranges/ranges.kotlin_builtins",
+          "stored_bytes": 1354,
+          "uncompressed_bytes": 4184
+        },
+        {
+          "name": "kotlin/reflect/reflect.kotlin_builtins",
+          "stored_bytes": 1435,
+          "uncompressed_bytes": 4827
+        }
+      ]
+    },
+    {
+      "name": "current",
+      "commit": "7134a40cb6579d9d5831f76a9859a6c2196855ef",
+      "artifact_id": 10900738789,
+      "bytes": 166965972,
+      "MB_decimal": 166.965972,
+      "MiB": 159.23115921020508,
+      "sha256": "576aea779524a820a02b5e5e4da283981b6c1b4af1e75c95c92b44098e2caee4",
+      "mode": "debug",
+      "entries": [
+        {
+          "name": "META-INF/com/android/build/gradle/app-metadata.properties",
+          "stored_bytes": 52,
+          "uncompressed_bytes": 57
+        },
+        {
+          "name": "classes.dex",
+          "stored_bytes": 4186024,
+          "uncompressed_bytes": 11072920
+        },
+        {
+          "name": "classes10.dex",
+          "stored_bytes": 14547,
+          "uncompressed_bytes": 29444
+        },
+        {
+          "name": "classes2.dex",
+          "stored_bytes": 22409,
+          "uncompressed_bytes": 49732
+        },
+        {
+          "name": "classes3.dex",
+          "stored_bytes": 11167,
+          "uncompressed_bytes": 22380
+        },
+        {
+          "name": "classes4.dex",
+          "stored_bytes": 12090,
+          "uncompressed_bytes": 26796
+        },
+        {
+          "name": "classes5.dex",
+          "stored_bytes": 6129,
+          "uncompressed_bytes": 14920
+        },
+        {
+          "name": "classes6.dex",
+          "stored_bytes": 7834,
+          "uncompressed_bytes": 17396
+        },
+        {
+          "name": "classes7.dex",
+          "stored_bytes": 7928,
+          "uncompressed_bytes": 16392
+        },
+        {
+          "name": "classes8.dex",
+          "stored_bytes": 58486,
+          "uncompressed_bytes": 198248
+        },
+        {
+          "name": "classes9.dex",
+          "stored_bytes": 13405,
+          "uncompressed_bytes": 41132
+        },
+        {
+          "name": "lib/arm64-v8a/libVkLayer_khronos_validation.so",
+          "stored_bytes": 15240080,
+          "uncompressed_bytes": 15240080
+        },
+        {
+          "name": "lib/arm64-v8a/libflutter.so",
+          "stored_bytes": 38828704,
+          "uncompressed_bytes": 38828704
+        },
+        {
+          "name": "lib/arm64-v8a/libsqlite3.so",
+          "stored_bytes": 1499728,
+          "uncompressed_bytes": 1499728
+        },
+        {
+          "name": "lib/armeabi-v7a/libflutter.so",
+          "stored_bytes": 33150308,
+          "uncompressed_bytes": 33150308
+        },
+        {
+          "name": "lib/armeabi-v7a/libsqlite3.so",
+          "stored_bytes": 1503400,
+          "uncompressed_bytes": 1503400
+        },
+        {
+          "name": "lib/x86_64/libflutter.so",
+          "stored_bytes": 40083280,
+          "uncompressed_bytes": 40083280
+        },
+        {
+          "name": "lib/x86_64/libsqlite3.so",
+          "stored_bytes": 1553624,
+          "uncompressed_bytes": 1553624
+        },
+        {
+          "name": "assets/flutter_assets/AssetManifest.bin",
+          "stored_bytes": 276,
+          "uncompressed_bytes": 1164
+        },
+        {
+          "name": "assets/flutter_assets/FontManifest.json",
+          "stored_bytes": 69,
+          "uncompressed_bytes": 82
+        },
+        {
+          "name": "assets/flutter_assets/LICENSE",
+          "stored_bytes": 7801,
+          "uncompressed_bytes": 18431
+        },
+        {
+          "name": "assets/flutter_assets/NOTICES.Z",
+          "stored_bytes": 109139,
+          "uncompressed_bytes": 110920
+        },
+        {
+          "name": "assets/flutter_assets/NativeAssetsManifest.json",
+          "stored_bytes": 47,
+          "uncompressed_bytes": 45
+        },
+        {
+          "name": "assets/flutter_assets/assets/brand/asasfans.png",
+          "stored_bytes": 24894,
+          "uncompressed_bytes": 24894
+        },
+        {
+          "name": "assets/flutter_assets/assets/brand/asasfans_mark.png",
+          "stored_bytes": 16505,
+          "uncompressed_bytes": 16505
+        },
+        {
+          "name": "assets/flutter_assets/assets/stickers/goodnight.png",
+          "stored_bytes": 38002,
+          "uncompressed_bytes": 38002
+        },
+        {
+          "name": "assets/flutter_assets/assets/stickers/lift.png",
+          "stored_bytes": 41015,
+          "uncompressed_bytes": 41015
+        },
+        {
+          "name": "assets/flutter_assets/assets/stickers/meal.png",
+          "stored_bytes": 40734,
+          "uncompressed_bytes": 40734
+        },
+        {
+          "name": "assets/flutter_assets/fonts/MaterialIcons-Regular.otf",
+          "stored_bytes": 593046,
+          "uncompressed_bytes": 1645184
+        },
+        {
+          "name": "assets/flutter_assets/isolate_snapshot_data",
+          "stored_bytes": 4405748,
+          "uncompressed_bytes": 11647016
+        },
+        {
+          "name": "assets/flutter_assets/kernel_blob.bin",
+          "stored_bytes": 24969060,
+          "uncompressed_bytes": 75546512
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/interactive_indicator.frag",
+          "stored_bytes": 9086,
+          "uncompressed_bytes": 33552
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/lightweight_glass.frag",
+          "stored_bytes": 13360,
+          "uncompressed_bytes": 53776
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_final_render.frag",
+          "stored_bytes": 14472,
+          "uncompressed_bytes": 58800
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_geometry_blended.frag",
+          "stored_bytes": 235409,
+          "uncompressed_bytes": 968856
+        },
+        {
+          "name": "assets/flutter_assets/packages/liquid_glass_widgets/shaders/progressive_blur.frag",
+          "stored_bytes": 4237,
+          "uncompressed_bytes": 14392
+        },
+        {
+          "name": "assets/flutter_assets/shaders/ink_sparkle.frag",
+          "stored_bytes": 6183,
+          "uncompressed_bytes": 21856
+        },
+        {
+          "name": "assets/flutter_assets/shaders/stretch_effect.frag",
+          "stored_bytes": 4255,
+          "uncompressed_bytes": 17616
+        },
+        {
+          "name": "assets/flutter_assets/third_party/LoveIwara-LICENSE",
+          "stored_bytes": 634,
+          "uncompressed_bytes": 1064
+        },
+        {
+          "name": "assets/flutter_assets/vm_snapshot_data",
+          "stored_bytes": 2,
+          "uncompressed_bytes": 0
+        },
+        {
+          "name": "AndroidManifest.xml",
+          "stored_bytes": 2810,
+          "uncompressed_bytes": 9880
+        },
+        {
+          "name": "res/anim-v21/fragment_fast_out_extra_slow_in.xml",
+          "stored_bytes": 218,
+          "uncompressed_bytes": 364
+        },
+        {
+          "name": "res/animator/fragment_close_enter.xml",
+          "stored_bytes": 395,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/animator/fragment_close_exit.xml",
+          "stored_bytes": 395,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/animator/fragment_fade_enter.xml",
+          "stored_bytes": 265,
+          "uncompressed_bytes": 452
+        },
+        {
+          "name": "res/animator/fragment_fade_exit.xml",
+          "stored_bytes": 265,
+          "uncompressed_bytes": 452
+        },
+        {
+          "name": "res/animator/fragment_open_enter.xml",
+          "stored_bytes": 388,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/animator/fragment_open_exit.xml",
+          "stored_bytes": 392,
+          "uncompressed_bytes": 1128
+        },
+        {
+          "name": "res/drawable-hdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 3111,
+          "uncompressed_bytes": 3111
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_low_normal.9.png",
+          "stored_bytes": 212,
+          "uncompressed_bytes": 212
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png",
+          "stored_bytes": 225,
+          "uncompressed_bytes": 225
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_normal.9.png",
+          "stored_bytes": 212,
+          "uncompressed_bytes": 212
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png",
+          "stored_bytes": 225,
+          "uncompressed_bytes": 225
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notification_oversize_large_icon_bg.png",
+          "stored_bytes": 909,
+          "uncompressed_bytes": 909
+        },
+        {
+          "name": "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png",
+          "stored_bytes": 107,
+          "uncompressed_bytes": 107
+        },
+        {
+          "name": "res/drawable-mdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 2077,
+          "uncompressed_bytes": 2077
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_low_normal.9.png",
+          "stored_bytes": 215,
+          "uncompressed_bytes": 215
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png",
+          "stored_bytes": 223,
+          "uncompressed_bytes": 223
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_normal.9.png",
+          "stored_bytes": 215,
+          "uncompressed_bytes": 215
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png",
+          "stored_bytes": 223,
+          "uncompressed_bytes": 223
+        },
+        {
+          "name": "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png",
+          "stored_bytes": 98,
+          "uncompressed_bytes": 98
+        },
+        {
+          "name": "res/drawable-v21/launch_background.xml",
+          "stored_bytes": 185,
+          "uncompressed_bytes": 344
+        },
+        {
+          "name": "res/drawable-v21/notification_action_background.xml",
+          "stored_bytes": 467,
+          "uncompressed_bytes": 1180
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 4178,
+          "uncompressed_bytes": 4178
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png",
+          "stored_bytes": 221,
+          "uncompressed_bytes": 221
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png",
+          "stored_bytes": 252,
+          "uncompressed_bytes": 252
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_normal.9.png",
+          "stored_bytes": 221,
+          "uncompressed_bytes": 221
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png",
+          "stored_bytes": 247,
+          "uncompressed_bytes": 247
+        },
+        {
+          "name": "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png",
+          "stored_bytes": 138,
+          "uncompressed_bytes": 138
+        },
+        {
+          "name": "res/drawable-xxhdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 6532,
+          "uncompressed_bytes": 6532
+        },
+        {
+          "name": "res/drawable-xxxhdpi-v4/ic_launcher_foreground.png",
+          "stored_bytes": 9040,
+          "uncompressed_bytes": 9040
+        },
+        {
+          "name": "res/drawable/ic_call_answer.xml",
+          "stored_bytes": 663,
+          "uncompressed_bytes": 1356
+        },
+        {
+          "name": "res/drawable/ic_call_answer_low.xml",
+          "stored_bytes": 644,
+          "uncompressed_bytes": 1320
+        },
+        {
+          "name": "res/drawable/ic_call_answer_video.xml",
+          "stored_bytes": 421,
+          "uncompressed_bytes": 772
+        },
+        {
+          "name": "res/drawable/ic_call_answer_video_low.xml",
+          "stored_bytes": 401,
+          "uncompressed_bytes": 736
+        },
+        {
+          "name": "res/drawable/ic_call_decline.xml",
+          "stored_bytes": 734,
+          "uncompressed_bytes": 1528
+        },
+        {
+          "name": "res/drawable/ic_call_decline_low.xml",
+          "stored_bytes": 712,
+          "uncompressed_bytes": 1492
+        },
+        {
+          "name": "res/drawable/ic_launcher_monochrome.xml",
+          "stored_bytes": 718,
+          "uncompressed_bytes": 1568
+        },
+        {
+          "name": "res/drawable/notification_bg.xml",
+          "stored_bytes": 252,
+          "uncompressed_bytes": 532
+        },
+        {
+          "name": "res/drawable/notification_bg_low.xml",
+          "stored_bytes": 252,
+          "uncompressed_bytes": 532
+        },
+        {
+          "name": "res/drawable/notification_icon_background.xml",
+          "stored_bytes": 185,
+          "uncompressed_bytes": 372
+        },
+        {
+          "name": "res/drawable/notification_tile_bg.xml",
+          "stored_bytes": 172,
+          "uncompressed_bytes": 304
+        },
+        {
+          "name": "res/drawable/return_entry_ball.xml",
+          "stored_bytes": 239,
+          "uncompressed_bytes": 500
+        },
+        {
+          "name": "res/layout-v21/notification_action.xml",
+          "stored_bytes": 485,
+          "uncompressed_bytes": 1052
+        },
+        {
+          "name": "res/layout-v21/notification_action_tombstone.xml",
+          "stored_bytes": 536,
+          "uncompressed_bytes": 1228
+        },
+        {
+          "name": "res/layout-v21/notification_template_custom_big.xml",
+          "stored_bytes": 786,
+          "uncompressed_bytes": 2456
+        },
+        {
+          "name": "res/layout-v21/notification_template_icon_group.xml",
+          "stored_bytes": 418,
+          "uncompressed_bytes": 988
+        },
+        {
+          "name": "res/layout/browser_actions_context_menu_page.xml",
+          "stored_bytes": 693,
+          "uncompressed_bytes": 1660
+        },
+        {
+          "name": "res/layout/browser_actions_context_menu_row.xml",
+          "stored_bytes": 554,
+          "uncompressed_bytes": 1212
+        },
+        {
+          "name": "res/layout/custom_dialog.xml",
+          "stored_bytes": 310,
+          "uncompressed_bytes": 612
+        },
+        {
+          "name": "res/layout/ime_base_split_test_activity.xml",
+          "stored_bytes": 201,
+          "uncompressed_bytes": 364
+        },
+        {
+          "name": "res/layout/ime_secondary_split_test_activity.xml",
+          "stored_bytes": 417,
+          "uncompressed_bytes": 876
+        },
+        {
+          "name": "res/layout/notification_template_part_chronometer.xml",
+          "stored_bytes": 259,
+          "uncompressed_bytes": 440
+        },
+        {
+          "name": "res/layout/notification_template_part_time.xml",
+          "stored_bytes": 260,
+          "uncompressed_bytes": 440
+        },
+        {
+          "name": "res/mipmap-anydpi-v26/ic_launcher.xml",
+          "stored_bytes": 221,
+          "uncompressed_bytes": 448
+        },
+        {
+          "name": "res/mipmap-anydpi-v33/ic_launcher.xml",
+          "stored_bytes": 242,
+          "uncompressed_bytes": 548
+        },
+        {
+          "name": "res/mipmap-hdpi-v4/ic_launcher.png",
+          "stored_bytes": 1903,
+          "uncompressed_bytes": 1903
+        },
+        {
+          "name": "res/mipmap-mdpi-v4/ic_launcher.png",
+          "stored_bytes": 1270,
+          "uncompressed_bytes": 1270
+        },
+        {
+          "name": "res/mipmap-xhdpi-v4/ic_launcher.png",
+          "stored_bytes": 2525,
+          "uncompressed_bytes": 2525
+        },
+        {
+          "name": "res/mipmap-xxhdpi-v4/ic_launcher.png",
+          "stored_bytes": 3816,
+          "uncompressed_bytes": 3816
+        },
+        {
+          "name": "res/mipmap-xxxhdpi-v4/ic_launcher.png",
+          "stored_bytes": 5106,
+          "uncompressed_bytes": 5106
+        },
+        {
+          "name": "res/xml/flutter_share_file_paths.xml",
+          "stored_bytes": 204,
+          "uncompressed_bytes": 396
+        },
+        {
+          "name": "res/xml/image_share_filepaths.xml",
+          "stored_bytes": 163,
+          "uncompressed_bytes": 308
+        },
+        {
+          "name": "resources.arsc",
+          "stored_bytes": 81000,
+          "uncompressed_bytes": 81000
+        },
+        {
+          "name": "DebugProbesKt.bin",
+          "stored_bytes": 782,
+          "uncompressed_bytes": 1738
+        },
+        {
+          "name": "META-INF/androidx.activity_activity.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.annotation_annotation-experimental.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.arch.core_core-runtime.version",
+          "stored_bytes": 61,
+          "uncompressed_bytes": 67
+        },
+        {
+          "name": "META-INF/androidx.browser_browser.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.core_core-ktx.version",
+          "stored_bytes": 7,
+          "uncompressed_bytes": 7
+        },
+        {
+          "name": "META-INF/androidx.core_core-viewtree.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.core_core.version",
+          "stored_bytes": 7,
+          "uncompressed_bytes": 7
+        },
+        {
+          "name": "META-INF/androidx.customview_customview.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.exifinterface_exifinterface.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.fragment_fragment.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.interpolator_interpolator.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-livedata-core-ktx.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-livedata-core.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-livedata.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-process.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-runtime.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-viewmodel-savedstate.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.lifecycle_lifecycle-viewmodel.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.loader_loader.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.profileinstaller_profileinstaller.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.savedstate_savedstate.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.security_security-crypto.version",
+          "stored_bytes": 14,
+          "uncompressed_bytes": 14
+        },
+        {
+          "name": "META-INF/androidx.startup_startup-runtime.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.tracing_tracing.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.versionedparcelable_versionedparcelable.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.viewpager_viewpager.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.webkit_webkit.version",
+          "stored_bytes": 7,
+          "uncompressed_bytes": 7
+        },
+        {
+          "name": "META-INF/androidx.window.extensions.core_core.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.window_window-java.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx.window_window.version",
+          "stored_bytes": 6,
+          "uncompressed_bytes": 6
+        },
+        {
+          "name": "META-INF/androidx/annotation/annotation/LICENSE.txt",
+          "stored_bytes": 3563,
+          "uncompressed_bytes": 10175
+        },
+        {
+          "name": "META-INF/kotlinx_coroutines_android.version",
+          "stored_bytes": 5,
+          "uncompressed_bytes": 5
+        },
+        {
+          "name": "META-INF/kotlinx_coroutines_core.version",
+          "stored_bytes": 5,
+          "uncompressed_bytes": 5
+        },
+        {
+          "name": "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler",
+          "stored_bytes": 50,
+          "uncompressed_bytes": 54
+        },
+        {
+          "name": "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory",
+          "stored_bytes": 49,
+          "uncompressed_bytes": 52
+        },
+        {
+          "name": "kotlin/annotation/annotation.kotlin_builtins",
+          "stored_bytes": 533,
+          "uncompressed_bytes": 1006
+        },
+        {
+          "name": "kotlin/collections/collections.kotlin_builtins",
+          "stored_bytes": 1834,
+          "uncompressed_bytes": 8308
+        },
+        {
+          "name": "kotlin/concurrent/atomics/atomics.kotlin_builtins",
+          "stored_bytes": 1082,
+          "uncompressed_bytes": 2674
+        },
+        {
+          "name": "kotlin/coroutines/coroutines.kotlin_builtins",
+          "stored_bytes": 116,
+          "uncompressed_bytes": 137
+        },
+        {
+          "name": "kotlin/internal/internal.kotlin_builtins",
+          "stored_bytes": 357,
+          "uncompressed_bytes": 590
+        },
+        {
+          "name": "kotlin/kotlin.kotlin_builtins",
+          "stored_bytes": 5342,
+          "uncompressed_bytes": 29399
+        },
+        {
+          "name": "kotlin/ranges/ranges.kotlin_builtins",
+          "stored_bytes": 1354,
+          "uncompressed_bytes": 4184
+        },
+        {
+          "name": "kotlin/reflect/reflect.kotlin_builtins",
+          "stored_bytes": 1435,
+          "uncompressed_bytes": 4827
+        }
+      ]
+    }
+  ]
+}
