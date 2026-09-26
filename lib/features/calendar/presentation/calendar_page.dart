@@ -578,7 +578,7 @@ class _Agenda extends StatelessWidget {
           style: SegmentedButton.styleFrom(
             visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            textStyle: const TextStyle(
+            textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

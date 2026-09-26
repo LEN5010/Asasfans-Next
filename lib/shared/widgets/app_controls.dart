@@ -83,7 +83,8 @@ class AppButton extends StatelessWidget {
             ? Theme.of(context).inputDecorationTheme.fillColor
             : Colors.transparent,
         disabledForegroundColor: colors.onSurface.withValues(alpha: .38),
-        textStyle: const TextStyle(
+        // From the theme, so labels keep its typeface and fallbacks.
+        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
           fontSize: 13.5,
           height: 1.3,
           fontWeight: FontWeight.w500,
