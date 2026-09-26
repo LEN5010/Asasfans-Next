@@ -159,11 +159,11 @@
     "6屏成组对照、设计决策表、选择/拒绝原因；所有原型标记prototype而非当前APP截图。"
    ],
    "definition_of_done": "只保留一个主方向进入U06，不将三个方向平均混合，也不未经评审就全站改组件。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
+    "code": "test/visual/directions_test.dart 12 scenes pass",
+    "layout": "visual/directions: 12 PNG (A/B/C x Today/Fanart x light/dark) + gray/dark sheets; first fanart item A 194 / B 206 / C 62 vs baseline 224",
+    "design": "DIRECTIONS.md: internal choice A (not user-approved)",
     "device": null
    },
    "accepted_by_user": "pending"
