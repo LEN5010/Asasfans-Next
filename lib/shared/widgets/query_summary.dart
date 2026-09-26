@@ -104,30 +104,30 @@ class _QuerySummaryState extends State<QuerySummary> {
                     key: ValueKey(condition.label),
                     fresh: _fresh.contains(condition.label),
                     child: AppButton(
-                    tooltip: '移除“${condition.label}”',
-                    onPressed: condition.remove,
-                    // A keyword can be any length: the chip never outgrows
-                    // the line, and the whole value stays in its tooltip.
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            condition.label,
-                            maxLines: 1,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis,
+                      tooltip: '移除“${condition.label}”',
+                      onPressed: condition.remove,
+                      // A keyword can be any length: the chip never outgrows
+                      // the line, and the whole value stays in its tooltip.
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              condition.label,
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.close,
-                          size: 14,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.close,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   ),
                 if (folds)
                   AppButton(
@@ -156,9 +156,12 @@ class _QuerySummaryState extends State<QuerySummary> {
 }
 
 /// A condition that just arrived starts tinted and settles to the plain
-/// line; one that was already there is drawn plain. Reduced motion shows it
-/// plain at once, since the words say the same.
-class _Arrival extends StatelessWidget {
+/// line; one that was already there is drawn plain. The tint runs once from
+/// the moment the chip arrives, whatever rebuilds the feed makes meanwhile,
+/// and the chip's widget structure never changes (a focused chip keeps its
+/// focus). Reduced motion shows it plain at once, since the words say the
+/// same.
+class _Arrival extends StatefulWidget {
   const _Arrival({required this.fresh, required this.child, super.key});
   final bool fresh;
   final Widget child;
@@ -166,17 +169,62 @@ class _Arrival extends StatelessWidget {
   static const duration = Duration(milliseconds: 900);
 
   @override
+  State<_Arrival> createState() => _ArrivalState();
+}
+
+class _ArrivalState extends State<_Arrival>
+    with SingleTickerProviderStateMixin {
+  late final _tint = AnimationController(
+    vsync: this,
+    duration: _Arrival.duration,
+    value: 0,
+  );
+  bool _pending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pending = widget.fresh;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_pending) {
+      _pending = false;
+      if (!MediaQuery.disableAnimationsOf(context)) _tint.reverse(from: 1);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_Arrival oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only a new arrival starts it again; a rebuild that no longer calls
+    // the chip fresh lets a running tint finish.
+    if (widget.fresh &&
+        !oldWidget.fresh &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _tint.reverse(from: 1);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tint.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!fresh || MediaQuery.disableAnimationsOf(context)) return child;
     final tint = Theme.of(context).colorScheme.primaryContainer;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 1, end: 0),
-      duration: duration,
-      curve: Curves.easeOut,
-      child: child,
-      builder: (context, value, child) => DecoratedBox(
+    return AnimatedBuilder(
+      animation: _tint,
+      child: widget.child,
+      builder: (context, child) => DecoratedBox(
         decoration: BoxDecoration(
-          color: tint.withValues(alpha: value * .9),
+          color: tint.withValues(
+            alpha: Curves.easeOut.transform(_tint.value) * .9,
+          ),
           borderRadius: BorderRadius.circular(10),
         ),
         child: child,

@@ -74,7 +74,10 @@ void main() {
         Visual.edgeRight,
       ))
         'right',
-      if (frame.near(Offset(rect.center.dx, rect.top + inset.dy), Visual.edgeTop))
+      if (frame.near(
+        Offset(rect.center.dx, rect.top + inset.dy),
+        Visual.edgeTop,
+      ))
         'top',
       if (frame.near(
         Offset(rect.center.dx, rect.bottom - inset.dy),
@@ -140,6 +143,20 @@ void main() {
     await tester.tap(find.text('看完整长图'));
     await settleVisual(tester);
     expect(find.byType(FanartImageViewer), findsOneWidget);
+
+    // Back to the grid, and the same work again: its preview is cached now,
+    // so the ratio arrives during the build; still capped, and no error.
+    await tester.tap(find.byTooltip('返回').last);
+    await settleVisual(tester);
+    await tester.tap(find.byTooltip('返回').last);
+    await settleVisual(tester);
+    expect(find.byType(FanartDetailPage), findsNothing);
+    await tester.tap(tileOf('90000103'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await settleVisual(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text('看完整长图'), findsOneWidget);
   });
 
   testVisual('an ordinary portrait is shown whole, not called long', (

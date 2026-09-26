@@ -115,7 +115,10 @@ void main() {
             await tester.tap(chip);
           }
           expect(removed, [longChinese, unbroken]);
-          expect(tester.getRect(find.text('清空')).right, lessThanOrEqualTo(width));
+          expect(
+            tester.getRect(find.text('清空')).right,
+            lessThanOrEqualTo(width),
+          );
         });
       }
     }

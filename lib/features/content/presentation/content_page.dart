@@ -594,6 +594,9 @@ class _FanartGrid extends ConsumerWidget {
             FeedStatus.endOfList => FeedMessage.empty(
               noun: '二创',
               filtered: state.query != const FanartQuery(),
+              // Unlike the summary's 清除条件, this also clears the members:
+              // the label says so.
+              clearLabel: '清除全部条件',
               onClear: onClear,
               onRefresh: onRefresh,
             ),

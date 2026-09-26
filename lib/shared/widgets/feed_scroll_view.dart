@@ -125,12 +125,13 @@ class FeedMessage extends StatelessWidget {
     required bool filtered,
     required VoidCallback onClear,
     required VoidCallback onRefresh,
+    String clearLabel = '清除条件',
   }) => filtered
       ? FeedMessage(
           icon: Icons.search_off_outlined,
           text: '没有符合条件的$noun',
           detail: '换个条件，或清除条件看全部$noun',
-          actionLabel: '清除条件',
+          actionLabel: clearLabel,
           onAction: onClear,
         )
       : FeedMessage(

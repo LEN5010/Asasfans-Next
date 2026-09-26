@@ -294,9 +294,19 @@ class _DetailImageState extends State<_DetailImage> {
   static const _longFactor = 1.4;
 
   ImageStream? _stream;
-  late final _listener = ImageStreamListener((info, _) {
+  late final _listener = ImageStreamListener((info, synchronous) {
     final ratio = info.image.width / info.image.height;
-    if (mounted && ratio != _ratio) setState(() => _ratio = ratio);
+    // The listener holds its own handle to the image; only the ratio is
+    // kept, so the handle is released at once.
+    info.dispose();
+    if (!mounted || ratio == _ratio) return;
+    // A cached preview answers during this widget's own build (from
+    // _watch): the ratio is then simply read by that build.
+    if (synchronous) {
+      _ratio = ratio;
+    } else {
+      setState(() => _ratio = ratio);
+    }
   }, onError: (_, _) {});
 
   /// Width over height, once the preview has decoded.

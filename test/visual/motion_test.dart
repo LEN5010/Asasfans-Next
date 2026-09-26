@@ -52,10 +52,7 @@ void main() {
     await openFirstImageWork(tester);
     // Mid-flight the tile's art has left the grid for the flight overlay.
     expect(
-      find.descendant(
-        of: heroTile().first,
-        matching: find.byType(MediaCover),
-      ),
+      find.descendant(of: heroTile().first, matching: find.byType(MediaCover)),
       findsNothing,
     );
     await shoot(tester, 'motion-detail-mid', view);
@@ -66,18 +63,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 120));
     expect(
-      find.descendant(
-        of: heroTile().first,
-        matching: find.byType(MediaCover),
-      ),
+      find.descendant(of: heroTile().first, matching: find.byType(MediaCover)),
       findsNothing,
     );
     await settleVisual(tester);
     expect(
-      find.descendant(
-        of: heroTile().first,
-        matching: find.byType(MediaCover),
-      ),
+      find.descendant(of: heroTile().first, matching: find.byType(MediaCover)),
       findsOneWidget,
     );
   });
@@ -144,6 +135,13 @@ void main() {
 
     expect(tint().a, greaterThan(0));
     await shoot(tester, 'motion-filter-applied', view);
+    // The first page of the new query lands meanwhile, rebuilding the line;
+    // the tint carries on rather than snapping off.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tint().a, greaterThan(0));
     await settleVisual(tester);
     // It settles to the plain line.
     expect(tint().a, 0);

@@ -118,10 +118,7 @@ class ContinueBrowsingRow extends ConsumerWidget {
                 // if it is). Should it never be built, the request is
                 // withdrawn rather than kept for a later visit; the id means
                 // this can only ever withdraw this request.
-                Timer(
-                  _claimWindow,
-                  () => handoff.cancelBrowseRestore(request),
-                );
+                Timer(_claimWindow, () => handoff.cancelBrowseRestore(request));
               },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
