@@ -93,4 +93,51 @@ void main() {
     // Never below a readable floor, even in a tiny window.
     expect(narrow.width, MediaImagePolicy.unknownWidth);
   });
+
+  test('a cover box decodes enough to fill its height, never more', () {
+    // A 1600x900 landscape picture in a 175x219 portrait box at 3x
+    // (bucketed 640x800): filling the height needs 1422 px of width, not
+    // the 640 a width-only decode would give and then stretch.
+    expect(CoverDecodeImage.targetSize(1600, 900, 640, 800), (
+      width: 1422,
+      height: 800,
+    ));
+    // A portrait picture is bound by the width as before.
+    expect(CoverDecodeImage.targetSize(900, 1600, 640, 800), (
+      width: 640,
+      height: 1138,
+    ));
+    // Never above the source...
+    expect(CoverDecodeImage.targetSize(300, 200, 640, 800), (
+      width: 300,
+      height: 200,
+    ));
+    // ...and never over the pixel budget, whatever the ratio.
+    final strip = CoverDecodeImage.targetSize(2000, 60000, 2048, 2048);
+    expect(
+      strip.width * strip.height,
+      lessThanOrEqualTo(MediaImagePolicy.maxPixels),
+    );
+  });
+
+  test('a preview with a height asks the CDN for the longer side', () {
+    final provider = MediaImagePolicy.preview(
+      Uri.parse('https://i0.hdslb.com/bfs/new_dyn/a.png'),
+      logicalWidth: 175,
+      logicalHeight: 219,
+      devicePixelRatio: 3,
+    );
+    expect(provider, isA<CoverDecodeImage>());
+    final cover = provider as CoverDecodeImage;
+    expect(
+      (cover.imageProvider as NetworkImage).url,
+      'https://i0.hdslb.com/bfs/new_dyn/a.png@800w.webp',
+    );
+    expect((cover.width, cover.height), (640, 800));
+    // Two boxes in the same buckets share one cache key.
+    expect(
+      CoverDecodeKey('a', cover.width, cover.height),
+      CoverDecodeKey('a', 640, 800),
+    );
+  });
 }

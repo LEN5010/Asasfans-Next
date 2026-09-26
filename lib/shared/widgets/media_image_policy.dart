@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 
@@ -57,12 +58,36 @@ abstract final class MediaImagePolicy {
 
   /// A thumbnail or card image: a CDN preview at the bucket width, decoded
   /// no larger than that bucket.
+  ///
+  /// A box drawn with [BoxFit.cover] passes its [logicalHeight] too. The
+  /// image is then decoded to cover the whole box, once its own size is
+  /// known, instead of to the box width: a landscape picture in a portrait
+  /// box would otherwise be decoded narrow and stretched up, blurred. The
+  /// CDN copy is asked for at the box's longer side, which covers squares and
+  /// portraits exactly and wide art most of the way, without guessing a
+  /// ratio the list does not know.
   static ImageProvider preview(
     Uri uri, {
     required double logicalWidth,
     required double devicePixelRatio,
+    double? logicalHeight,
   }) {
     final width = decodeWidth(logicalWidth, devicePixelRatio);
+    if (logicalHeight != null &&
+        logicalHeight.isFinite &&
+        logicalHeight > 0 &&
+        logicalWidth.isFinite &&
+        logicalWidth > 0) {
+      final height = decodeWidth(logicalHeight, devicePixelRatio);
+      return CoverDecodeImage(
+        NetworkImage(
+          displayImageUri(uri, width: math.max(width, height)).toString(),
+        ),
+        // Buckets on both sides, so near-identical boxes share one entry.
+        width: width,
+        height: height,
+      );
+    }
     return ResizeImage(
       NetworkImage(displayImageUri(uri, width: width).toString()),
       width: width,
@@ -95,4 +120,87 @@ abstract final class MediaImagePolicy {
       policy: ResizeImagePolicy.fit,
     );
   }
+}
+
+/// Decodes an image just large enough to cover a [width] x [height] pixel
+/// box, keeping its ratio: never larger than the source, and never over
+/// [MediaImagePolicy.maxPixels].
+@immutable
+class CoverDecodeImage extends ImageProvider<CoverDecodeKey> {
+  const CoverDecodeImage(
+    this.imageProvider, {
+    required this.width,
+    required this.height,
+  });
+  final ImageProvider imageProvider;
+  final int width;
+  final int height;
+
+  /// The decoded size for a source of [sourceWidth] x [sourceHeight].
+  static ({int width, int height}) targetSize(
+    int sourceWidth,
+    int sourceHeight,
+    int boxWidth,
+    int boxHeight,
+  ) {
+    var scale = math.min(
+      1.0,
+      math.max(boxWidth / sourceWidth, boxHeight / sourceHeight),
+    );
+    final pixels = sourceWidth * sourceHeight * scale * scale;
+    if (pixels > MediaImagePolicy.maxPixels) {
+      // Rounded down, so the budget holds exactly.
+      scale *= math.sqrt(MediaImagePolicy.maxPixels / pixels);
+      return (
+        width: math.max(1, (sourceWidth * scale).floor()),
+        height: math.max(1, (sourceHeight * scale).floor()),
+      );
+    }
+    return (
+      width: math.max(1, (sourceWidth * scale).round()),
+      height: math.max(1, (sourceHeight * scale).round()),
+    );
+  }
+
+  @override
+  Future<CoverDecodeKey> obtainKey(ImageConfiguration configuration) =>
+      imageProvider
+          .obtainKey(configuration)
+          .then((key) => CoverDecodeKey(key, width, height));
+
+  @override
+  ImageStreamCompleter loadImage(
+    CoverDecodeKey key,
+    ImageDecoderCallback decode,
+  ) {
+    Future<ui.Codec> decodeCovering(
+      ui.ImmutableBuffer buffer, {
+      ui.TargetImageSizeCallback? getTargetSize,
+    }) => decode(
+      buffer,
+      getTargetSize: (sourceWidth, sourceHeight) {
+        final size = targetSize(sourceWidth, sourceHeight, width, height);
+        return ui.TargetImageSize(width: size.width, height: size.height);
+      },
+    );
+    return imageProvider.loadImage(key.source, decodeCovering);
+  }
+}
+
+@immutable
+class CoverDecodeKey {
+  const CoverDecodeKey(this.source, this.width, this.height);
+  final Object source;
+  final int width;
+  final int height;
+
+  @override
+  bool operator ==(Object other) =>
+      other is CoverDecodeKey &&
+      other.source == source &&
+      other.width == width &&
+      other.height == height;
+
+  @override
+  int get hashCode => Object.hash(source, width, height);
 }

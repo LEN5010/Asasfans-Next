@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../rules/application/feed_visibility.dart';
@@ -123,6 +125,7 @@ class FanartDetailPage extends ConsumerWidget {
                 ),
               _MetaRow(item: item),
             ];
+            final oneColumn = constraints.maxWidth < 1000;
             final images = <Widget>[
               for (var index = 0; index < item.images.length; index++)
                 Padding(
@@ -130,6 +133,11 @@ class FanartDetailPage extends ConsumerWidget {
                   child: _DetailImage(
                     item: item,
                     index: index,
+                    // The first image leads the page, so it may not push the
+                    // author and the words far down.
+                    cap: oneColumn && index == 0
+                        ? math.max(240, constraints.maxHeight * .55)
+                        : null,
                     onTap: () =>
                         Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute<void>(
@@ -249,59 +257,144 @@ class _AuthorRow extends ConsumerWidget {
 
 /// Long vertical artwork is common here, so the image keeps its aspect ratio
 /// instead of being cropped into a fixed box.
-class _DetailImage extends StatelessWidget {
+///
+/// With a [cap] (the first image of a one-column detail) a picture taller
+/// than the cap shows its top as a preview and says so, with a way to the
+/// whole of it; the author and the words then stay near the first screen.
+/// The ratio comes from the preview the page decodes anyway, never from an
+/// extra download.
+class _DetailImage extends StatefulWidget {
   const _DetailImage({
     required this.item,
     required this.index,
     required this.onTap,
+    this.cap,
   });
 
   final FanartItem item;
   final int index;
   final VoidCallback onTap;
+  final double? cap;
+
+  @override
+  State<_DetailImage> createState() => _DetailImageState();
+}
+
+class _DetailImageState extends State<_DetailImage> {
+  ImageStream? _stream;
+  late final _listener = ImageStreamListener((info, _) {
+    final ratio = info.image.width / info.image.height;
+    if (mounted && ratio != _ratio) setState(() => _ratio = ratio);
+  }, onError: (_, _) {});
+
+  /// Width over height, once the preview has decoded.
+  double? _ratio;
+
+  @override
+  void dispose() {
+    _stream?.removeListener(_listener);
+    super.dispose();
+  }
+
+  void _watch(ImageProvider provider) {
+    if (widget.cap == null) return;
+    final stream = provider.resolve(createLocalImageConfiguration(context));
+    if (stream.key == _stream?.key) return;
+    _stream?.removeListener(_listener);
+    _stream = stream..addListener(_listener);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+    return LayoutBuilder(
+      builder: (context, constraints) {
         // A preview sized to the column; tapping opens the original.
-        child: LayoutBuilder(
-          builder: (context, constraints) => Image(
-            image: MediaImagePolicy.preview(
-              item.images[index],
-              logicalWidth: constraints.maxWidth,
-              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-            ),
-            fit: BoxFit.fitWidth,
-            width: double.infinity,
-            errorBuilder: (context, error, stack) => Container(
-              height: 160,
-              color: theme.colorScheme.surfaceContainerHighest,
-              alignment: Alignment.center,
-              child: Text(
-                '图片加载失败',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                ),
+        final provider = MediaImagePolicy.preview(
+          widget.item.images[widget.index],
+          logicalWidth: constraints.maxWidth,
+          devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+        );
+        _watch(provider);
+        final cap = widget.cap;
+        final ratio = _ratio;
+        final capped =
+            cap != null && ratio != null && constraints.maxWidth / ratio > cap;
+        Widget image = Image(
+          image: provider,
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          width: double.infinity,
+          height: capped ? cap : null,
+          errorBuilder: (context, error, stack) => Container(
+            height: 160,
+            color: theme.colorScheme.surfaceContainerHighest,
+            alignment: Alignment.center,
+            child: Text(
+              '图片加载失败',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
               ),
             ),
-            loadingBuilder: (context, child, progress) => progress == null
-                ? child
-                : Container(
-                    height: 160,
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    alignment: Alignment.center,
-                    child: const SizedBox.square(
-                      dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          loadingBuilder: (context, child, progress) => progress == null
+              ? child
+              : Container(
+                  height: 160,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  alignment: Alignment.center,
+                  child: const SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+        );
+        if (capped) {
+          image = Stack(
+            children: [
+              image,
+              // The cut is said, not hidden: a fade and a way to the rest.
+              Positioned.fill(
+                top: cap * .7,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          theme.colorScheme.surface.withValues(alpha: 0),
+                          theme.colorScheme.surface.withValues(alpha: .85),
+                        ],
+                      ),
                     ),
                   ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 8,
+                child: Center(
+                  child: AppButton.withIcon(
+                    filled: true,
+                    onPressed: widget.onTap,
+                    icon: const Icon(Icons.unfold_more, size: 18),
+                    label: const Text('看完整长图'),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+            child: image,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

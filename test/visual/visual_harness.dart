@@ -182,6 +182,7 @@ abstract final class Visual {
           ui.ParagraphBuilder(
               ui.ParagraphStyle(
                 textAlign: TextAlign.center,
+                fontFamily: 'Roboto',
                 fontSize: size.shortestSide * .06,
               ),
             )
