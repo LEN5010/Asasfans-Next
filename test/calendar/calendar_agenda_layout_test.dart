@@ -171,9 +171,19 @@ void main() {
       ], selected: DateTime.utc(2026, 9, 30)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('十月安排'), findsNothing);
+    // The day itself holds only its own event; the next one is listed
+    // separately under 之后, not as part of the selected day.
+    expect(
+      tester.getTopLeft(find.text('十月安排')).dy,
+      greaterThan(tester.getTopLeft(find.text('之后')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('九月安排')).dy,
+      lessThan(tester.getTopLeft(find.text('之后')).dy),
+    );
     await tester.tap(find.text('周议程'));
     await tester.pumpAndSettle();
+    expect(find.text('之后'), findsNothing);
     expect(find.text('九月安排'), findsOneWidget);
     expect(find.text('十月安排'), findsOneWidget);
     expect(find.text('9 月 28 日 — 10 月 4 日'), findsOneWidget);
@@ -255,8 +265,10 @@ void main() {
     await tester.tap(find.byTooltip('展开月历'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    // At this size the day/week switch folds into one button that names
+    // the current mode; either way the agenda control stays reachable.
     await tester.scrollUntilVisible(
-      find.text('周议程'),
+      find.text('当天'),
       160,
       scrollable: find
           .descendant(
