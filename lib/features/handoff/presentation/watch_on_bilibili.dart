@@ -7,7 +7,7 @@ import '../../library/presentation/library_common.dart';
 import '../application/handoff_coordinator.dart';
 import '../domain/return_context.dart';
 
-/// Where the user was picking from when they chose to watch something.
+/// Where the user was picking from when they chose to watch or open something.
 ///
 /// Passed down rather than read from the router: the same card appears on Today,
 /// a channel and a creator page, and each has a different place to come back to.
