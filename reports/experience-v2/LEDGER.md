@@ -1,0 +1,36 @@
+# Experience V2 — execution ledger
+
+Plan package: `design/experience-v2/` (copied verbatim from `Asasfans-Experience-V2-Plan.zip`; `tasks.json` is the live task ledger, updated with `set_task.py`). The package's `MANIFEST.json` hashes describe the files as received; `tasks.json` has changed since, by design.
+
+## Environment
+
+| Item | Value |
+|---|---|
+| Review baseline | `7134a40cb6579d9d5831f76a9859a6c2196855ef` (origin/main; the merged session-01 work) |
+| Branch | `claude/zen-babbage-ll6g3y`, reset onto origin/main at the start of this session because its earlier PR history was already merged |
+| Flutter / Dart | 3.47.3 / 3.13.3, via `tool/flutterw` with `ASASFANS_FLUTTER_SDK=/home/user/sdk/flutter` (SHA-verified download) |
+| Android SDK | **unavailable**: `dl.google.com` is denied by this environment's network policy. No APK, AOT or device work is possible here |
+| Devices / desktop hosts | none |
+| Screenshot renderer | `flutter_tester` software raster, Solid material only (shader filters unsupported there) |
+| Fonts for screenshots | `/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc` (system font, loaded at test time as Roboto/serif/monospace; not copied into the repo or app), MaterialIcons from the SDK |
+| Review aid | Pillow 12.3.0 (pip, scratch use only) for contact sheets; not a project dependency |
+
+## Corrections to the session-01 record (U01)
+
+The original `reports/optimization/` files are kept as written. What they got wrong or left stale:
+
+1. **Builds did happen.** [Flutter Development Validation run 36226439271](https://github.com/LEN5010/Asasfans-Next/actions/runs/36226439271) (workflow_dispatch, 2026-09-26 07:19–07:24 UTC, head `7134a40`) concluded `success`. It covers Android Debug, iOS Debug (unsigned), macOS Profile and Windows Profile. "No build evidence" in FINAL.md is out of date. These are development builds, not perf AOT, release or device evidence.
+2. **CI did not run the tests.** [Flutter Checks run 36226437173](https://github.com/LEN5010/Asasfans-Next/actions/runs/36226437173) passed format and analyze. Its test step is gated on the `run_tests` input (default `false`, `.github/workflows/flutter-checks.yml:7`) and was skipped. The "709 passed" figure is a local session report, not an independent CI result.
+3. **B0 is not pristine 98e52c2.** The perf identity commit (`f89abb5` on the old branch, `bc0b7bd` on main) comes after the test re-alignment and two small fixes (text-only fanart tap, empty Today). A B0 built there measures 98e52c2 plus those fixes. A clean B0 would need a separate worktree at 98e52c2 with only the Gradle perf change applied. Neither was built. For V2 the plan compares `7134a40` AOT with the new-UI AOT (PLAN §2A). That comparison is also still unbuilt.
+4. **The APK size did not change.** The two debug APKs in the review evidence differ by +44,312 bytes (166,921,660 → 166,965,972). No size improvement was claimed, and none should be.
+5. **T15 is partial, not verified.** Only touch-target helpers were delivered, without the typography, density and hierarchy work the task asked for. T16, T23 and T24 were not started. The old `FINAL.md` status, PARTIAL_BLOCKED, stands.
+
+## Hand-off for the performance validation (unchanged, still pending)
+
+Allow `dl.google.com`, or use a machine with the Android SDK. Then dispatch *Flutter Performance Validation* at `7134a40` and at the final V2 commit with `perf_signing=sdk-debug-key`. Install `asasfans.next.perf` on the target phones and run the device scenarios from `design/experience-v2/ACCEPTANCE.md` §6. Nothing in this ledger triggers CI, signs or publishes anything.
+
+## Checkpoints
+
+| # | Commit | Tasks | Commands and exit codes | Notes |
+|---|---|---|---|---|
+| 1 | `909b4c1` | U02 harness | `analyze` 0; `format --set-exit-if-changed` 0; `test test/content test/shared test/calendar` 0 (278 passed); `test test/visual/current_pages_test.dart` 0 (35 passed) | Harness, fixture, capture script. The button and quick-chip label styles now derive from the theme. Before this, the tester rendered those labels as tofu because they had no font family |

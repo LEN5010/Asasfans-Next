@@ -67,3 +67,7 @@ Every change is a separate commit on top of 98e52c2; `git revert <commit>` undoe
 ## Next concrete action
 
 Allow `dl.google.com` in the environment's network settings (or run on a machine with the Android SDK). Then dispatch *Flutter Performance Validation* twice, at `f89abb5` (B0) and at the latest commit (B1), with `sdk-debug-key`. Install `asasfans.next.perf` on the target old phone and run VALIDATION.md scenarios S1–S8.
+
+## Later corrections
+
+Superseded in part by `reports/experience-v2/LEDGER.md` ("Corrections to the session-01 record"). Four development builds did succeed in CI at `7134a40`; CI skipped the tests; B0 includes early fixes; T15 is partial.

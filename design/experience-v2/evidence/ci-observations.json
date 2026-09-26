@@ -1,0 +1,54 @@
+{
+  "head": "7134a40cb6579d9d5831f76a9859a6c2196855ef",
+  "observed_at_date": "2026-09-26",
+  "timezone": "UTC",
+  "source": "GitHub connector: workflow runs, jobs, artifact metadata, checks job log",
+  "development": {
+    "run_id": 36226439271,
+    "url": "https://github.com/LEN5010/Asasfans-Next/actions/runs/36226439271",
+    "started_at": "2026-09-26T07:19:45Z",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "platform": "Android",
+        "build_mode": "debug",
+        "job_id": 108361292248,
+        "conclusion": "success"
+      },
+      {
+        "platform": "iOS",
+        "build_mode": "debug; no codesign",
+        "job_id": 108361292346,
+        "conclusion": "success"
+      },
+      {
+        "platform": "macOS",
+        "build_mode": "profile",
+        "job_id": 108361292348,
+        "conclusion": "success"
+      },
+      {
+        "platform": "Windows",
+        "build_mode": "profile",
+        "job_id": 108361292330,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "checks": {
+    "run_id": 36226437173,
+    "job_id": 108361283838,
+    "url": "https://github.com/LEN5010/Asasfans-Next/actions/runs/36226437173",
+    "conclusion": "success",
+    "format": "passed, 286 files, zero changed",
+    "analyze": "passed; no issues",
+    "test_step": "skipped; optional run_tests input"
+  },
+  "test_claim_in_repository": "709 passing tests reported by FINAL.md/LEDGER.md; not independently rerun in this review",
+  "not_observed": [
+    "Android perf AOT artifact for B0/B1",
+    "real-device frame/PSS traces",
+    "real-renderer screenshot set",
+    "interactive platform input smoke"
+  ]
+}

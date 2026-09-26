@@ -1,0 +1,198 @@
+{
+  "status_source": "https://github.com/LEN5010/Asasfans-Next/blob/7134a40cb6579d9d5831f76a9859a6c2196855ef/reports/optimization/tasks-status.json",
+  "note": "Reported status is not independently certified completion; review qualifies individual acceptance scope.",
+  "tasks": [
+    {
+      "id": "T01",
+      "reported_status": "verified",
+      "observed": "范围与基线已有记录",
+      "review_action": "保持；加上新 HEAD、CI 与 capability matrix。"
+    },
+    {
+      "id": "T02",
+      "reported_status": "verified",
+      "observed": "原报告声称检查和709测试通过；当前CI验证format/analyze，测试被跳过",
+      "review_action": "重新跑受影响测试及阶段全测；不把CI绿等同709用例独立复核。"
+    },
+    {
+      "id": "T03",
+      "reported_status": "in_progress",
+      "observed": "只有部分host测量；设备场景和integration scaffold不足",
+      "review_action": "拆开 headless布局场景与设备性能场景，两者都落实脚本入口。"
+    },
+    {
+      "id": "T04",
+      "reported_status": "blocked_external",
+      "observed": "perf身份与workflow有实现；当前成功的是开发构建",
+      "review_action": "补真实perf产物、签名/manifest检查及正式无钥匙拒绝测试。"
+    },
+    {
+      "id": "T05",
+      "reported_status": "blocked_external",
+      "observed": "未提供Android AOT B0/B1",
+      "review_action": "选择并记录可比基线；f89abb5之前已有小型修复，不能称完全原样98e52c2。"
+    },
+    {
+      "id": "T06",
+      "reported_status": "blocked_external",
+      "observed": "尚无AOT依赖成本归因",
+      "review_action": "保留依赖；用真实AOT包审计，不再拿debug ZIP大小比较。"
+    },
+    {
+      "id": "T07",
+      "reported_status": "in_progress",
+      "observed": "Solid/standard/premium策略已做；自动目前是平台预设而非帧时自适应",
+      "review_action": "代码方向可保留；按真实渲染器验证，并保持稳定scope。"
+    },
+    {
+      "id": "T08",
+      "reported_status": "verified",
+      "observed": "统一分桶预览/解码策略已实现",
+      "review_action": "结构性接受；解码柔化、总内存和大字图像清晰度待视觉/设备验证。"
+    },
+    {
+      "id": "T09",
+      "reported_status": "in_progress",
+      "observed": "详情预览与viewer16MP上限已做",
+      "review_action": "极长图可读性与退出内存尚不能宣称达标；16MP不是应用内存总上限。"
+    },
+    {
+      "id": "T10",
+      "reported_status": "verified",
+      "observed": "二创/视频/动态identity恢复、冷查询与有界追页已做",
+      "review_action": "保留实现；新布局后复核实际可见矩形、遮挡、删项与取消。"
+    },
+    {
+      "id": "T11",
+      "reported_status": "verified",
+      "observed": "仅当前和最近频道mounted；controller继续保留必要内容",
+      "review_action": "接受结构改进；未证明PSS下降或长场景没有积累。"
+    },
+    {
+      "id": "T12",
+      "reported_status": "verified",
+      "observed": "固定视频网格与规则投影复用有实现",
+      "review_action": "保持；不可将相同几何的性能改造写成视频UI重设计。"
+    },
+    {
+      "id": "T13",
+      "reported_status": "verified",
+      "observed": "host SQL测量支持暂不引入worker",
+      "review_action": "接受不做复杂化的决定；不外推为老机实测。"
+    },
+    {
+      "id": "T14",
+      "reported_status": "verified",
+      "observed": "可见性恢复与根偏好select已有改造",
+      "review_action": "保持；真机隐藏页面请求数、跨日与生命周期仍需场景证据。"
+    },
+    {
+      "id": "T15",
+      "reported_status": "verified",
+      "observed": "新增touch helper；主题整体不变；部分segments仍40dp",
+      "review_action": "按完整合同应改为部分完成：缺全局层级、组件展示与所有热区检查。"
+    },
+    {
+      "id": "T16",
+      "reported_status": "not_started",
+      "observed": "router、shell与页面栏原文本未变",
+      "review_action": "属于本轮新体验主线；只改呈现，不破坏已稳定导航状态。"
+    },
+    {
+      "id": "T17",
+      "reported_status": "in_progress",
+      "observed": "搜索旁筛选、all-hidden提示已有；全量条件摘要未统一",
+      "review_action": "保留已有草稿/应用/取消与部分摘要，不重造查询控制器。"
+    },
+    {
+      "id": "T18",
+      "reported_status": "in_progress",
+      "observed": "低档保底和部分语义已有，未有完整光学/a11y走查",
+      "review_action": "布局先headless；光学另分档验证。"
+    },
+    {
+      "id": "T19",
+      "reported_status": "in_progress",
+      "observed": "手机模块排序改变；无继续挑选与根页新构图",
+      "review_action": "不是完整今日重设计，纳入U11/U19。"
+    },
+    {
+      "id": "T20",
+      "reported_status": "in_progress",
+      "observed": "性能网格和返回改进，卡片信息结构大体原样",
+      "review_action": "纳入新的媒体呈现与外跳语义验收。"
+    },
+    {
+      "id": "T21",
+      "reported_status": "in_progress",
+      "observed": "修了文字卡点击/图片策略/返回；封面仍固定16:9或4:3",
+      "review_action": "作品陈列本体未重做，不能把masonry命名等同自然比例画廊。"
+    },
+    {
+      "id": "T22",
+      "reported_status": "in_progress",
+      "observed": "查询返回和状态提示改变",
+      "review_action": "阅读排版、引用层级与多图构图需单独交付。"
+    },
+    {
+      "id": "T23",
+      "reported_status": "not_started",
+      "observed": "现有lazy reader未改",
+      "review_action": "不是性能故障，但新排版和阅读工具栏任务尚未实施。"
+    },
+    {
+      "id": "T24",
+      "reported_status": "not_started",
+      "observed": "日历仅生命周期改动，布局未重做",
+      "review_action": "新增日期条/议程联动，不更换ICS/domain。"
+    },
+    {
+      "id": "T25",
+      "reported_status": "in_progress",
+      "observed": "性能偏好与工具入口有增量",
+      "review_action": "Mine仍嵌入全部PreferencesControls；资料/设置的信息架构未分离。"
+    },
+    {
+      "id": "T26",
+      "reported_status": "in_progress",
+      "observed": "工具文字入口已加",
+      "review_action": "用途分组、真实更新语义、关闭后焦点尚须验证。"
+    },
+    {
+      "id": "T27",
+      "reported_status": "blocked_external",
+      "observed": "Dart恢复改善；原生系统闭环待设备",
+      "review_action": "保留轻量返回服务，系统权限和进程重建待真机。"
+    },
+    {
+      "id": "T28",
+      "reported_status": "blocked_external",
+      "observed": "报告已经滞后：同HEAD四平台开发构建成功",
+      "review_action": "更新为构建已验证、运行/输入待验证；不是全平台体验验收通过。"
+    },
+    {
+      "id": "T29",
+      "reported_status": "in_progress",
+      "observed": "报告有检查；最新CI测试被跳过",
+      "review_action": "追加完整测试和perf签名检查，保留真实退出码。"
+    },
+    {
+      "id": "T30",
+      "reported_status": "blocked_external",
+      "observed": "没有真实截图集；将整个视觉任务归因无设备过宽",
+      "review_action": "Solid widget截图可先做；真实玻璃截图仍需匹配renderer。"
+    },
+    {
+      "id": "T31",
+      "reported_status": "blocked_external",
+      "observed": "没有同设备AOT性能闭环",
+      "review_action": "继续未验证；debug包约166.97MB，不代表优化后Release大小。"
+    },
+    {
+      "id": "T32",
+      "reported_status": "in_progress",
+      "observed": "报告诚实标注PARTIAL_BLOCKED但证据已部分过时",
+      "review_action": "更新证据，维持部分完成判断，不错误改成仅待真机。"
+    }
+  ]
+}
