@@ -192,12 +192,12 @@
     "三屏可交互路径、同fixture前后图、至少筛选/返回/收藏三段实际交互记录，或明确标记尚未执行的设备部分。"
    ],
    "definition_of_done": "去掉玻璃与色彩后仍能分辨新布局和优先级；主要动作无需猜图标；不依靠新增后端。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
-    "device": null
+    "code": "03c47db; flutter test 763 passed (exit 0); analyze 0; sample_flows_test covers filter/detail-back/save",
+    "layout": "visual/sample (42 PNG + manifest), before-after-gray.png; fanart first item 175 (baseline 224)",
+    "design": "SAMPLE.md internal round 1; 7 findings fixed, 2 carried",
+    "device": "not run (no device)"
    },
    "accepted_by_user": "pending"
   },
