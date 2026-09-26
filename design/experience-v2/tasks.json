@@ -225,11 +225,11 @@
     "Token映射、组件展示截图、触摸边缘与焦点测试。"
    ],
    "definition_of_done": "Token反映信息语义；不是只增加touch helper就认为排版/密度设计已完成。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
+    "code": "71b4d26+; tokens in app_theme/app_tokens; components_test 5 scenes",
+    "layout": "visual/components (5 PNG)",
+    "design": "SYSTEM.md",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -258,11 +258,11 @@
     "320/390/600/840/1280截图、键盘/返回/深链/切窗测试；边缘遮挡对照。"
    ],
    "definition_of_done": "每页真实内容不被顶部和底栏遮住，角色与层级不混，低档与高档布局相同。",
-   "status": "not_started",
+   "status": "in_progress",
    "evidence": {
-    "code": null,
-    "layout": null,
-    "design": null,
+    "code": "root headings, header/inset contract; shell unchanged",
+    "layout": "320/390/600/840/1280 renders in visual/sample (final capture pending)",
+    "design": "SYSTEM.md §U08; calendar root header pending U16",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -291,11 +291,11 @@
     "各频道有/无查询与多条件截图；草稿取消/应用/快速响应乱序/组合输入测试。"
    ],
    "definition_of_done": "查询更省空间且完全保留能力；没有可输入但后端不支持的假搜索。",
-   "status": "not_started",
+   "status": "verified",
    "evidence": {
-    "code": null,
+    "code": "QuerySummary in 4 channels; query_summary_test, sample_flows_test",
     "layout": null,
-    "design": null,
+    "design": "SYSTEM.md §U09",
     "device": null
    },
    "accepted_by_user": "pending"
@@ -324,11 +324,11 @@
     "五类展示对比、无图/缺字段/极长标题fixture、共享动作与边缘点击回归。"
    ],
    "definition_of_done": "视觉有类型差异，代码仍共享必要逻辑；没有为新设计失去图片预算、懒构建或来源入口。",
-   "status": "not_started",
+   "status": "in_progress",
    "evidence": {
-    "code": null,
+    "code": "FanartCard, VideoCard, VideoRow, CalendarAgendaRow, MediaActionRegion",
     "layout": null,
-    "design": null,
+    "design": "reading families pending U14/U15",
     "device": null
    },
    "accepted_by_user": "pending"
