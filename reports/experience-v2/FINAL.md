@@ -54,6 +54,8 @@ All three are fixed.
 
 Then the ACCEPTANCE §5 tasks and the §6 device protocol.
 
+**Why still PARTIAL_BLOCKED.** Every code, page and local-layout item is done. But no build of this candidate exists (U22: no Android SDK here), so this cannot be called "device only", and there is no device run (U23).
+
 **Rollback by stage.** Revert in reverse dependency order, never a single mid-stack commit alone:
 
 ```text
@@ -70,7 +72,7 @@ R02:   git revert aed99e0
 R01:   git revert 2d057dc
 ```
 
-Stopping after any line leaves a consistent tree. To drop all of V2.1: `git revert --no-commit 2d057dc^..227aa75 && git commit`. The same applies to V2: revert `aa04831` first, then back to `909b4c1`. There are no schema, data or dependency changes in either round.
+Checked in a scratch worktree: applied in this order, every stage reverted without conflict and analyzed clean. Stopped after the R07 line, the full suite passed (891). With all lines applied, `lib`, `test` and `tool` match `546dbd0` byte for byte. Revert the docs commit that records this (the one after `227aa75`) together with the docs line. To drop all of V2.1: `git revert --no-commit 2d057dc^..227aa75 && git commit`. The same applies to V2: revert `aa04831` first, then back to `909b4c1`. There are no schema, data or dependency changes in either round.
 
 ---
 
