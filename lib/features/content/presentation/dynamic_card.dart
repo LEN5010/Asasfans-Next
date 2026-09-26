@@ -72,11 +72,13 @@ class DynamicCard extends ConsumerWidget {
       ruleSubject: RuleSubjects.dynamic(post),
     );
     final original = post.forwardedFrom;
-    return MediaCardSurface(
+    // A reading entry, not a card: who and when, the words, then what it
+    // quotes. The feed separates entries with a rule instead of frames.
+    return MediaActionRegion(
       // Prose is selectable; only explicit media/source controls leave the app.
       onMore: actions,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
@@ -90,16 +92,25 @@ class DynamicCard extends ConsumerWidget {
               sourceUrl: post.sourceUrl,
               publishedAt: post.publishedAt,
               onOpen: open,
+              style: theme.textTheme.bodyLarge?.copyWith(height: 1.65),
             ),
             if (original != null) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              // The quoted post: an inset block with a rule on its leading
+              // edge, so a repost never reads as the member's own words.
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(12),
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border(
+                    left: BorderSide(
+                      color: theme.colorScheme.secondary,
+                      width: 3,
+                    ),
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -143,18 +154,15 @@ class DynamicCard extends ConsumerWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             Wrap(
               spacing: 14,
-              runSpacing: 8,
+              runSpacing: 4,
+              alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text('赞 ${post.likeCount}', style: theme.textTheme.bodySmall),
                 Text(
-                  '评论 ${post.commentCount}',
-                  style: theme.textTheme.bodySmall,
-                ),
-                Text(
+                  '赞 ${post.likeCount} · 评论 ${post.commentCount} · '
                   '转发 ${post.forwardCount}',
                   style: theme.textTheme.bodySmall,
                 ),
@@ -346,6 +354,7 @@ class DynamicBody extends StatelessWidget {
     this.sourceUrl,
     this.publishedAt,
     this.maxLines,
+    this.style,
   });
   final String text;
   final List<Uri> images;
@@ -354,6 +363,7 @@ class DynamicBody extends StatelessWidget {
   final Uri? sourceUrl;
   final DateTime? publishedAt;
   final int? maxLines;
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
@@ -382,7 +392,12 @@ class DynamicBody extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (text.isNotEmpty)
-          DynamicRichText(text: text, media: media, maxLines: maxLines),
+          DynamicRichText(
+            text: text,
+            media: media,
+            maxLines: maxLines,
+            style: style,
+          ),
         if (photos.isNotEmpty)
           Padding(
             padding: EdgeInsets.only(top: text.isEmpty ? 0 : 12),
