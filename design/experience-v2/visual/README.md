@@ -29,3 +29,11 @@ Measured first-item top on a 390 × 844 phone (logical px from the window top, `
 | `directions/` | U05 prototypes (provenance `prototype`), plus `directions-gray.png` and `directions-dark.png` |
 | `sample/` | U06 at `03c47db`: every page after the direction-A sample, plus the flow steps (`flow-*`) and the settings page |
 | `before-after-gray.png` | Baseline vs sample in grayscale: Today, 二创, 我的 |
+| `final/` | U07–U24 at `aa04831` (90 renders); kept as the record of that commit |
+| `v2.1/` | V2.1 follow-up at `9473f4a` (111 renders): every page, the flows, the stress matrix, and the new `diag-*` (edge-banded art), `state-*` (U18), `motion-*` (U20), `*-end`/`*-keyboard` (system bars and keyboard) scenes. PNGs are losslessly re-compressed |
+| `v2.1-overview.png` | Six pages at `9473f4a` |
+| `v2.1-vs-aa04831.png` | 二创, 日历 and 我的: `aa04831` then `9473f4a`, in pairs |
+| `v2.1-diagnostics.png` | Edge-banded art in the grid and the detail (long strip capped, portrait whole), the stale and filtered-empty states, and the arrival tint |
+
+Diagnostic art is drawn by the harness (`Visual._diagnostic`): red left, blue right, green top and yellow bottom bands, plus edge labels. `media_geometry_test` samples those bands in the rendered pixels in ordinary test runs, so a crop that loses an edge fails a test. A written PNG on its own proves nothing about regressions. The geometry and pixel checks are `media_geometry_test`, `touch_polish_test`, `layout_contract_test` and `motion_test`. No PNG is compared against an approved golden: the CJK face is a system font loaded at test time, so pixel goldens would depend on the machine.
+

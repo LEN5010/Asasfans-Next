@@ -1,0 +1,2164 @@
+[
+  {
+    "file": "calendar-folded_320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar-folded",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar-folded_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar-folded",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar-week-agenda_320.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar-week-agenda",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "diag-detail-portrait_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "diag-detail-portrait",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "diag-detail-strip_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "diag-detail-strip",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "diag-grid_320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "diag-grid",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "diag-grid_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "diag-grid",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-detail_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart-detail",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-detail_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart-detail",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-empty_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart-empty",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-end_390-bars.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart-end",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-failed_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart-failed",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 175.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_320.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 175.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_390-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 175.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-continue-1-today_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-continue-1-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-continue-2-restored_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-continue-2-restored",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-detail-1-open_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-detail-1-open",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-detail-2-back_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-detail-2-back",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-detail-3-mine-recent_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-detail-3-mine-recent",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-filter-1-draft_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-filter-1-draft",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-filter-2-applied_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-filter-2-applied",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "flow-save-1-later-on_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "flow-save-1-later-on",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "input-focus-tile_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "input-focus-tile",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine-end_390-bars.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine-end",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine-library_320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine-library",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "motion-detail-mid_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "motion-detail-mid",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "motion-filter-applied_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "motion-filter-applied",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "motion-save-done_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "motion-save-done",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novel-reader_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novel-reader",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novel-reader_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novel-reader",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 159.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 159.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 159.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "rules_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "rules",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "rules_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "rules",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "rules_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "rules",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "settings_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "settings",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "settings_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "settings",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "settings_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "settings",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "settings_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "settings",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "state-filtered-empty_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "state-filtered-empty",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "state-history-empty_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "state-history-empty",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "state-stale_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "state-stale",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "state-tail-failed_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "state-tail-failed",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "state-updates-empty_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "state-updates-empty",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today-end_390-bars.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today-end",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today-no-events_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today-no-events",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today-stale_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today-stale",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today-video-stacked_320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today-video-stacked",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_320.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_390-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "tools-search-keyboard_390-bars-kb.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "tools-search-keyboard",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "keyboard_logical": 300.0,
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "tools_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "tools",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "updates_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "updates",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "updates_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "updates",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "updates_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "updates",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_1280.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_320.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_390-dark.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_390-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_390.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_600.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_840.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_stress-320-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      640.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_stress-600-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      900.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_stress-840-x2.0.png",
+    "commit": "9473f4a47fad8f06d4cbad222dfa08f924cce669",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  }
+]
