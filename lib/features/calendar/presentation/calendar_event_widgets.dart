@@ -108,6 +108,12 @@ class CalendarAgendaRow extends StatelessWidget {
         : label;
     final muted = event.isCancelled;
     final scale = MediaQuery.textScalerOf(context).scale(1);
+    // Large text: the state moves under the title, which keeps the width.
+    final stacked = scale >= 1.6;
+    final stateStyle = theme.textTheme.labelMedium?.copyWith(
+      color: muted ? colors.error : colors.primary,
+      fontWeight: FontWeight.w600,
+    );
     return Semantics(
       button: true,
       child: InkWell(
@@ -185,19 +191,15 @@ class CalendarAgendaRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall,
                         ),
+                      if (stacked) Text(state, style: stateStyle),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Text(
-                    state,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: muted ? colors.error : colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                if (!stacked)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(state, style: stateStyle),
                   ),
-                ),
               ],
             ),
           ),

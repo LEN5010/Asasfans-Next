@@ -26,17 +26,22 @@ class RootHeading extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Space-separated parts ("9月26日 星期六") wrap between each
-              // other at large sizes, never inside one.
-              Semantics(
-                header: true,
-                label: title,
-                excludeSemantics: true,
-                child: Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final part in title.split(' '))
-                      Text(part, style: theme.textTheme.headlineSmall),
-                  ],
+              // other at large sizes, never inside one. The title is already
+              // display size, so it grows less than body text does (as large
+              // titles do on the platforms); everything else scales fully.
+              MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.4,
+                child: Semantics(
+                  header: true,
+                  label: title,
+                  excludeSemantics: true,
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final part in title.split(' '))
+                        Text(part, style: theme.textTheme.headlineSmall),
+                    ],
+                  ),
                 ),
               ),
               if (subtitle != null) ...[
@@ -89,7 +94,17 @@ class SectionHeading extends StatelessWidget {
             ),
           ),
           ...trailing,
-          if (action != null && onAction != null)
+          // At very large text the link keeps its target but not its words,
+          // so the section title is not squeezed into a column.
+          if (action != null &&
+              onAction != null &&
+              MediaQuery.textScalerOf(context).scale(1) >= 1.6)
+            AppButton.icon(
+              tooltip: action,
+              onPressed: onAction,
+              icon: Icon(Icons.chevron_right, color: theme.colorScheme.primary),
+            )
+          else if (action != null && onAction != null)
             AppButton(
               onPressed: onAction,
               child: Row(
