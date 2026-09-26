@@ -27,12 +27,13 @@ class FeedStatusFooter extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      FeedStatus.failed ||
-      FeedStatus.appendFailed ||
-      FeedStatus.stalled => Column(
+      // A failed refresh is said at the top of the list (FeedStaleNotice).
+      FeedStatus.appendFailed || FeedStatus.stalled => Column(
         children: [
           Text(
-            '${status == FeedStatus.failed ? '刷新失败，' : ''}${failure?.message ?? '加载失败'}',
+            status == FeedStatus.stalled
+                ? '后面没有新的内容了，可以刷新后再试'
+                : '加载更多失败：${failure?.message ?? '请重试'}',
             style: Theme.of(context).textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),

@@ -182,7 +182,15 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
           child: _buildBody(
             state.copyWith(items: visible.items),
             visible.userHidden.length,
-            [filters, RuleStatusBar(visibility: visible)],
+            [
+              filters,
+              if (state.status == FeedStatus.failed && visible.items.isNotEmpty)
+                FeedStaleNotice(
+                  failure: state.failure,
+                  onRetry: _controller.refresh,
+                ),
+              RuleStatusBar(visibility: visible),
+            ],
           ),
         ),
       );
@@ -206,9 +214,11 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
             ),
             FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
               FeedAllHiddenMessage(count: hidden),
-            FeedStatus.endOfList => const FeedMessage(
-              icon: Icons.search_off_outlined,
-              text: '没有符合条件的动态',
+            FeedStatus.endOfList => FeedMessage.empty(
+              noun: '动态',
+              filtered: state.query != const DynamicQuery(),
+              onClear: () => _applyQuery(const DynamicQuery()),
+              onRefresh: _controller.refresh,
             ),
             _ => null,
           };

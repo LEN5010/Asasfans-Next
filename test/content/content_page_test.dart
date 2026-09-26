@@ -16,6 +16,7 @@ import 'package:asasfans_next/features/content/presentation/content_search_contr
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/shared/widgets/app_page_bar.dart';
+import 'package:asasfans_next/shared/widgets/feed_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -263,7 +264,7 @@ void main() {
       final repository = _EmptyFirstRepository();
       await tester.pumpWidget(_app(repository));
       await tester.pumpAndSettle();
-      expect(find.text('没有符合条件的内容'), findsNothing);
+      expect(find.text('这里暂时还没有二创'), findsNothing);
       expect(find.text('作品 visible'), findsOneWidget);
       expect(repository.requests, 2);
     },
@@ -283,7 +284,14 @@ void main() {
           .refresh();
       await tester.pumpAndSettle();
       expect(find.text('作品 kept'), findsOneWidget);
-      expect(find.text('刷新失败，网络连接失败'), findsOneWidget);
+      // Said at the top, over the kept cards, with the reason and a retry.
+      final notice = find.textContaining('刷新失败，下面是上次加载的内容');
+      expect(notice, findsOneWidget);
+      expect(find.textContaining('网络连接失败'), findsOneWidget);
+      expect(
+        tester.getTopLeft(notice).dy,
+        lessThan(tester.getTopLeft(find.text('作品 kept')).dy),
+      );
       expect(find.widgetWithText(AppButton, '重试'), findsOneWidget);
     },
   );
@@ -327,7 +335,28 @@ void main() {
     await tester.pumpWidget(_app(_StubRepository(pages: 1, pageSize: 0)));
     await tester.pumpAndSettle();
 
-    expect(find.text('没有符合条件的内容'), findsOneWidget);
+    // Nothing applied: the source simply has nothing, and a refresh is the
+    // next step.
+    expect(find.text('这里暂时还没有二创'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, '刷新'), findsOneWidget);
+
+    // With a condition applied, the same emptiness names the condition as
+    // the cause and clears it in one tap.
+    final feed = ProviderScope.containerOf(
+      tester.element(find.byType(ContentPage)),
+    ).read(fanartFeedControllerProvider(ContentChannel.fanart));
+    await feed.applyQuery(const FanartQuery(category: FanartCategory.handwriting));
+    await tester.pumpAndSettle();
+    expect(find.text('没有符合条件的二创'), findsOneWidget);
+    // The empty state's own button (the summary line has one too).
+    await tester.tap(
+      find.descendant(
+        of: find.byType(FeedMessage),
+        matching: find.widgetWithText(AppButton, '清除条件'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(feed.state.query, const FanartQuery());
   });
 
   testWidgets('a first page failure offers a retry that recovers', (

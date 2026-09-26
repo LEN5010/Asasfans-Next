@@ -47,6 +47,7 @@ class CollectionsPage extends ConsumerWidget {
           state: folders,
           pager: ref.read(libraryFoldersProvider.notifier),
           empty: '还没有收藏夹',
+          emptyHint: '在作品或视频上长按，选择“收藏”',
           itemBuilder: (context, folder) {
             return ListTile(
               leading: const Icon(Icons.folder_outlined),
@@ -172,6 +173,7 @@ class _WatchLaterPageState extends ConsumerState<WatchLaterPage> {
           state: records,
           pager: ref.read(provider.notifier),
           empty: _pendingOnly ? '没有待处理的内容' : '稍后看里还没有内容',
+          emptyHint: _pendingOnly ? null : '在作品或视频上长按，打开“稍后看”',
           removeLabel: '移出稍后看',
           onRemove: (entry) => libraryAction(
             context,
@@ -253,6 +255,7 @@ class _LibraryHistoryPageState extends ConsumerState<LibraryHistoryPage> {
           state: records,
           pager: ref.read(provider.notifier),
           empty: '暂无记录',
+          emptyHint: '打开过的作品、去 B 站看过的内容会记在这里，只存在这台设备上',
           removeLabel: '删除这条记录',
           onRemove: (entry) => libraryAction(
             context,
@@ -279,12 +282,14 @@ class LibraryRecordList extends StatelessWidget {
     required this.onRemove,
     this.onDone,
     this.header,
+    this.emptyHint,
     super.key,
   });
   final Widget? header;
   final LibraryListState<LibraryRecord> state;
   final LibraryPager<LibraryRecord> pager;
   final String empty;
+  final String? emptyHint;
   final String removeLabel;
   final void Function(LibraryRecord) onRemove;
   final void Function(LibraryRecord)? onDone;
@@ -294,6 +299,7 @@ class LibraryRecordList extends StatelessWidget {
       state: state,
       pager: pager,
       empty: empty,
+      emptyHint: emptyHint,
       header: header,
       itemBuilder: (context, entry) {
         final item = entry.item;

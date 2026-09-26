@@ -26,6 +26,10 @@ class UpdatesPage extends ConsumerStatefulWidget {
 class _UpdatesPageState extends ConsumerState<UpdatesPage> {
   UpdateFilter _filter = UpdateFilter.inbox;
 
+  /// The two things the app records, and the limit on when.
+  static const _scope = '关注的日程改期或取消、订阅的 UP 主发了新视频，'
+      '会在应用运行时被记在这里；应用没有运行时不会收到';
+
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(updateControllerProvider);
@@ -52,6 +56,7 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
             UpdateFilter.unread => '没有未读更新',
             UpdateFilter.archived => '没有归档的更新',
           },
+          emptyHint: _filter == UpdateFilter.inbox ? _scope : null,
           header: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -76,6 +81,16 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
                   selected: {_filter},
                   onSelectionChanged: (value) =>
                       setState(() => _filter = value.first),
+                ),
+              ),
+              // What this inbox is, in one quiet line: nothing here is a
+              // system notification, and nothing arrives while the app is
+              // not running.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+                child: Text(
+                  '由应用运行时检查得到，不是系统推送',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
               const UpdateStatusBanner(),
