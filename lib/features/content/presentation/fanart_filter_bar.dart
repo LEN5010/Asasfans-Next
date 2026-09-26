@@ -117,7 +117,7 @@ class _QuickChip extends StatelessWidget {
                   child: AnimatedDefaultTextStyle(
                     duration: duration,
                     curve: Curves.easeOutCubic,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
                       fontSize: 13,
                       height: 1.3,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
