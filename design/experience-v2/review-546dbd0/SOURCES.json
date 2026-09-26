@@ -1,0 +1,153 @@
+{
+  "repository": "LEN5010/Asasfans-Next",
+  "baseline": "7134a40cb6579d9d5831f76a9859a6c2196855ef",
+  "candidate": "546dbd046f221e6ab1b9ef2f51b1b20ee30fed76",
+  "code_and_report_sources": [
+    {
+      "path": "reports/experience-v2/FINAL.md",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/reports/experience-v2/FINAL.md"
+    },
+    {
+      "path": "reports/experience-v2/final-checks.txt",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/reports/experience-v2/final-checks.txt"
+    },
+    {
+      "path": "design/experience-v2/SAMPLE.md",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/design/experience-v2/SAMPLE.md"
+    },
+    {
+      "path": "lib/features/content/presentation/content_page.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/content/presentation/content_page.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_detail_page.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/content/presentation/fanart_detail_page.dart"
+    },
+    {
+      "path": "lib/features/library/presentation/library_common.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/library/presentation/library_common.dart"
+    },
+    {
+      "path": "lib/features/handoff/application/handoff_coordinator.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/handoff/application/handoff_coordinator.dart"
+    },
+    {
+      "path": "lib/features/handoff/presentation/return_restorer.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/handoff/presentation/return_restorer.dart"
+    },
+    {
+      "path": "lib/features/handoff/presentation/continue_browsing.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/handoff/presentation/continue_browsing.dart"
+    },
+    {
+      "path": "lib/shared/widgets/query_summary.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/shared/widgets/query_summary.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_filter_bar.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/content/presentation/fanart_filter_bar.dart"
+    },
+    {
+      "path": "lib/shared/widgets/app_controls.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/shared/widgets/app_controls.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/fanart_card.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/content/presentation/fanart_card.dart"
+    },
+    {
+      "path": "lib/shared/widgets/media_image_policy.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/shared/widgets/media_image_policy.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/video_card.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/content/presentation/video_card.dart"
+    },
+    {
+      "path": "lib/features/creator/presentation/creator_link.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/creator/presentation/creator_link.dart"
+    },
+    {
+      "path": "lib/features/calendar/presentation/calendar_page.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/calendar/presentation/calendar_page.dart"
+    },
+    {
+      "path": "lib/features/mine/presentation/mine_page.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/mine/presentation/mine_page.dart"
+    },
+    {
+      "path": "lib/app/theme/app_theme.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/app/theme/app_theme.dart"
+    },
+    {
+      "path": "lib/app/theme/app_tokens.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/app/theme/app_tokens.dart"
+    },
+    {
+      "path": "lib/features/content/presentation/dynamic_feed_view.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/lib/features/content/presentation/dynamic_feed_view.dart"
+    },
+    {
+      "path": "test/handoff/continue_browsing_test.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/test/handoff/continue_browsing_test.dart"
+    },
+    {
+      "path": "test/shared/query_summary_test.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/test/shared/query_summary_test.dart"
+    },
+    {
+      "path": "test/visual/visual_harness.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/test/visual/visual_harness.dart"
+    },
+    {
+      "path": "test/visual/current_pages_test.dart",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/test/visual/current_pages_test.dart"
+    },
+    {
+      "path": ".github/workflows/flutter-checks.yml",
+      "url": "https://github.com/LEN5010/Asasfans-Next/blob/546dbd046f221e6ab1b9ef2f51b1b20ee30fed76/.github/workflows/flutter-checks.yml"
+    }
+  ],
+  "repository_metadata": [
+    "https://api.github.com/repos/LEN5010/Asasfans-Next/branches?per_page=100",
+    "https://api.github.com/repos/LEN5010/Asasfans-Next/actions/runs?branch=claude%2Fzen-babbage-ll6g3y&per_page=5",
+    "https://github.com/LEN5010/Asasfans-Next/compare/7134a40cb6579d9d5831f76a9859a6c2196855ef...546dbd046f221e6ab1b9ef2f51b1b20ee30fed76"
+  ],
+  "official_references": [
+    {
+      "title": "Apple: Meet Liquid Glass",
+      "url": "https://developer.apple.com/videos/play/wwdc2025/219/",
+      "used_for": "control/navigation layer, avoid nested glass, behavior and optical verification separated"
+    },
+    {
+      "title": "Flutter Row",
+      "url": "https://api.flutter.dev/flutter/widgets/Row-class.html",
+      "used_for": "non-flex children horizontal constraints and overflow"
+    },
+    {
+      "title": "Flutter BoxFit",
+      "url": "https://api.flutter.dev/flutter/painting/BoxFit.html",
+      "used_for": "cover versus contain behavior"
+    },
+    {
+      "title": "Flutter ResizeImage",
+      "url": "https://api.flutter.dev/flutter/painting/ResizeImage-class.html",
+      "used_for": "decode resizing and detail trade-offs"
+    },
+    {
+      "title": "Android accessibility",
+      "url": "https://developer.android.com/guide/topics/ui/accessibility/apps",
+      "used_for": "48dp touch targets and contrast"
+    },
+    {
+      "title": "Flutter matchesGoldenFile",
+      "url": "https://api.flutter.dev/flutter/flutter_test/matchesGoldenFile.html",
+      "used_for": "capture is not automatically pixel comparison"
+    },
+    {
+      "title": "Flutter performance profiling",
+      "url": "https://docs.flutter.dev/perf/ui-performance",
+      "used_for": "device/profile mode performance verification"
+    }
+  ]
+}

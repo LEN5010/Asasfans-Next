@@ -1,0 +1,34 @@
+{
+  "files": [
+    {
+      "name": "CLAUDE_CONTINUE.md",
+      "bytes": 3009,
+      "sha256": "ad86fce1a05aff4a8d252025958aa6d2d0856ca6308bc797881d436128851912"
+    },
+    {
+      "name": "EVIDENCE.json",
+      "bytes": 2908,
+      "sha256": "272793176da4735cebbf84e9cb15f0737f1f59b4b5cb30c81aa4c5f5dee48615"
+    },
+    {
+      "name": "FOLLOWUP_TASKS.md",
+      "bytes": 10028,
+      "sha256": "5079233bf99f7abf96903c4887f23b66bdf30a95c656af3b42fbc341f60470d3"
+    },
+    {
+      "name": "README.md",
+      "bytes": 649,
+      "sha256": "c497ff1cd492a422c0c0c0f0c44139ae9ab921a6e63f10aa4fca18c0e32863e1"
+    },
+    {
+      "name": "REVIEW.md",
+      "bytes": 17749,
+      "sha256": "43e00b853b9fae98acd36b2c9bcbbda96271684f556b7f0828cfe9b12c6b2697"
+    },
+    {
+      "name": "SOURCES.json",
+      "bytes": 7707,
+      "sha256": "db2711494e48341f740badce172f7556d0ab931f27adacbe155b2478b73222a3"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_controls.dart';
 
 import '../../handoff/domain/return_context.dart';
+import '../../handoff/presentation/watch_on_bilibili.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -44,10 +45,19 @@ void openFanart(
     );
     return;
   }
-  Navigator.of(
-    context,
-    rootNavigator: true,
-  ).push(MaterialPageRoute<void>(builder: (_) => FanartDetailPage(item: item)));
+  // The detail page is a stop on the way, not a new origin: a trip out from
+  // it returns to the list the work was picked from.
+  final origin = WatchOrigin(
+    target: returnTo,
+    channel: channel,
+    query: query,
+    anchorOf: anchor == null ? null : () => anchor,
+  );
+  Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute<void>(
+      builder: (_) => FanartDetailPage(item: item, origin: origin),
+    ),
+  );
 }
 
 /// Reading view for one fanart post.
@@ -56,9 +66,16 @@ void openFanart(
 /// detail costs no extra request against the shared rate limit and returning
 /// keeps the list exactly where it was.
 class FanartDetailPage extends ConsumerWidget {
-  const FanartDetailPage({required this.item, super.key});
+  const FanartDetailPage({
+    required this.item,
+    this.origin = WatchOrigin.today,
+    super.key,
+  });
 
   final FanartItem item;
+
+  /// Where the work was picked from, handed on to any trip out of the page.
+  final WatchOrigin origin;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,6 +101,10 @@ class FanartDetailPage extends ConsumerWidget {
                   ref,
                   ContentSnapshots.fanart(item),
                   url: item.sourceUrl,
+                  returnTo: origin.target,
+                  channel: origin.channel,
+                  query: origin.query,
+                  anchor: origin.anchorOf?.call(),
                 ),
               ),
           ],
