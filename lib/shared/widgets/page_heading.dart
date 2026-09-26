@@ -25,9 +25,19 @@ class RootHeading extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Space-separated parts ("9月26日 星期六") wrap between each
+              // other at large sizes, never inside one.
               Semantics(
                 header: true,
-                child: Text(title, style: theme.textTheme.headlineSmall),
+                label: title,
+                excludeSemantics: true,
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final part in title.split(' '))
+                      Text(part, style: theme.textTheme.headlineSmall),
+                  ],
+                ),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
