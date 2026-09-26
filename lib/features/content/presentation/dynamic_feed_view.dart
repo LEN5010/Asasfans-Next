@@ -32,10 +32,6 @@ import '../domain/dynamic_repository.dart';
 import 'feed_status_footer.dart';
 
 /// Historical dynamics list with keyword search and auto-append.
-/// The widest a dynamic's text runs, in logical px: about 40 Chinese
-/// characters at the reading size.
-const readingWidth = 720.0;
-
 class DynamicFeedView extends ConsumerStatefulWidget {
   const DynamicFeedView({super.key});
 
@@ -132,7 +128,9 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
       // The controls sit over the reading column they filter.
       final filters = Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: readingWidth + 32),
+          constraints: const BoxConstraints(
+            maxWidth: AppTokens.readingWidth + 32,
+          ),
           child: _DynamicFilterBar(query: state.query, onChanged: _applyQuery),
         ),
       );
@@ -196,9 +194,15 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
         SliverLayoutBuilder(
           builder: (context, constraints) => SliverPadding(
             padding: EdgeInsets.fromLTRB(
-              math.max(16, (constraints.crossAxisExtent - readingWidth) / 2),
+              math.max(
+                16,
+                (constraints.crossAxisExtent - AppTokens.readingWidth) / 2,
+              ),
               0,
-              math.max(16, (constraints.crossAxisExtent - readingWidth) / 2),
+              math.max(
+                16,
+                (constraints.crossAxisExtent - AppTokens.readingWidth) / 2,
+              ),
               0,
             ),
             sliver: SliverList.separated(

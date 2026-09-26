@@ -50,6 +50,10 @@ abstract final class AppTokens {
   static const artworkRatio = 4 / 5;
   static const artworkRadius = 12.0;
 
+  /// The widest a line of reading text runs: about 40 Chinese characters
+  /// at the reading size. Wider windows centre the column.
+  static const readingWidth = 720.0;
+
   static const controlMotion = Duration(milliseconds: 220);
   static const pressMotion = Duration(milliseconds: 140);
   static const cardRadius = 14.0;
