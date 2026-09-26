@@ -4,6 +4,8 @@ import '../../../shared/widgets/app_controls.dart';
 import '../../../app/theme/app_theme.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
+import '../../../shared/widgets/page_heading.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/horizontal_choices.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -144,25 +146,26 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
       filtered: _filter != CalendarFilter.all || _members.isNotEmpty,
       onRetry: () => _refresh(month),
     );
+    final heading = RootHeading(
+      title: '日历',
+      subtitle: '今天 ${CalendarAgenda.date(today)}',
+      actions: [
+        AppButton.icon(
+          tooltip: '回到今天',
+          onPressed: _today,
+          icon: const Icon(Icons.today_outlined),
+        ),
+        AppButton.icon(
+          tooltip: '刷新',
+          onPressed: _refreshing ? null : () => _refresh(month),
+          icon: const Icon(Icons.refresh),
+        ),
+      ],
+    );
+    final top = MediaQuery.paddingOf(context).top + 16;
     return Scaffold(
-      extendBodyBehindAppBar: true,
       // The shell's backdrop shows through the main pages.
       backgroundColor: Colors.transparent,
-      appBar: AppPageBar(
-        title: const Text('日历'),
-        actions: [
-          AppButton.icon(
-            tooltip: '回到今天',
-            onPressed: _today,
-            icon: const Icon(Icons.today_outlined),
-          ),
-          AppButton.icon(
-            tooltip: '刷新',
-            onPressed: _refreshing ? null : () => _refresh(month),
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= 880) {
@@ -173,8 +176,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                   width: (constraints.maxWidth * .32).clamp(300, 340),
                   child: ListView(
                     key: const ValueKey('calendar-sidebar'),
-                    padding: pageInsets(context, horizontal: 12, top: 0),
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      top,
+                      12,
+                      MediaQuery.paddingOf(context).bottom + 24,
+                    ),
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12, bottom: 12),
+                        child: heading,
+                      ),
                       monthHeader(),
                       _MonthGrid(
                         month: month,
@@ -189,14 +201,34 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                   ),
                 ),
                 const VerticalDivider(width: 1),
-                Expanded(child: agenda(scrollable: true)),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: agenda(scrollable: true),
+                    ),
+                  ),
+                ),
               ],
             );
           }
           return ListView(
             key: const ValueKey('calendar-compact'),
-            padding: pageInsets(context, horizontal: 0, top: 0),
+            padding: EdgeInsets.fromLTRB(
+              0,
+              top,
+              0,
+              MediaQuery.paddingOf(context).bottom + 24,
+            ),
             children: [
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTokens.gutter(constraints.maxWidth),
+                ),
+                child: heading,
+              ),
+              const SizedBox(height: 12),
               monthHeader(collapsible: true),
               if (_monthExpanded)
                 _MonthGrid(
@@ -255,7 +287,7 @@ class _MonthHeader extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: Theme.of(
               context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         AppButton.icon(
@@ -573,32 +605,25 @@ class _Agenda extends StatelessWidget {
     final children = <Widget>[
       Align(
         alignment: Alignment.centerLeft,
-        child: SegmentedButton<bool>(
-          showSelectedIcon: false,
-          style: SegmentedButton.styleFrom(
-            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 240),
+          child: AppSegments<bool>(
+            values: const [false, true],
+            labelOf: (value) => value ? '周议程' : '当天',
+            selected: week,
+            onChanged: onWeek,
           ),
-          segments: const [
-            ButtonSegment(value: false, label: Text('当天')),
-            ButtonSegment(value: true, label: Text('周议程')),
-          ],
-          selected: {week},
-          onSelectionChanged: (values) => onWeek(values.single),
         ),
       ),
-      const SizedBox(height: 8),
-      Text(
-        week
-            ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
-            : CalendarAgenda.date(day),
-        style: Theme.of(
-          context,
-        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      const SizedBox(height: 12),
+      Semantics(
+        header: true,
+        child: Text(
+          week
+              ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
+              : CalendarAgenda.date(day),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
       ),
       const SizedBox(height: 8),
       snapshot.when(
@@ -646,20 +671,51 @@ class _Agenda extends StatelessWidget {
               )) ...[
                 if (week)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 6),
+                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 2),
                     child: Text(
                       CalendarAgenda.date(entry.key),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(fontSize: 13),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
+                // Quiet lines: a day with several events reads as a
+                // schedule, not a stack of coloured banners.
                 for (final event in entry.value)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: CalendarEventTile(event: event, day: entry.key),
-                  ),
+                  CalendarAgendaRow(event: event),
               ],
+              // A single day also says what comes next, from what is
+              // already loaded, so the next event is never a hunt.
+              if (!week)
+                ...() {
+                  final later =
+                      events
+                          .where(
+                            (event) =>
+                                !event.isCancelled &&
+                                !CalendarTime.dayOf(
+                                  event.start,
+                                  allDay: event.allDay,
+                                ).isBefore(until),
+                          )
+                          .toList()
+                        ..sort((a, b) => a.start.compareTo(b.start));
+                  return [
+                    if (later.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 2),
+                        child: Text(
+                          '之后',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ),
+                    for (final event in later.take(3))
+                      CalendarAgendaRow(event: event, showDay: true),
+                  ];
+                }(),
             ],
           );
         },
@@ -667,7 +723,7 @@ class _Agenda extends StatelessWidget {
     ];
     return ListView(
       padding: scrollable
-          ? pageInsets(context, top: 8)
+          ? pageInsets(context, top: 16)
           : const EdgeInsets.fromLTRB(16, 8, 16, 0),
       shrinkWrap: !scrollable,
       primary: false,
