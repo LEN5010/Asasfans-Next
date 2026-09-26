@@ -531,11 +531,17 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
             state: state.copyWith(items: visible.items),
             header: [
               filters,
+              if (state.status == FeedStatus.failed && visible.items.isNotEmpty)
+                FeedStaleNotice(
+                  failure: state.failure,
+                  onRetry: _controller.refresh,
+                ),
               RuleStatusBar(visibility: visible),
             ],
             controller: _scrollController,
             onRetryAppend: _controller.loadMore,
             onRefresh: _controller.refresh,
+            onClear: () => _applyQuery(const FanartQuery()),
           ),
         ),
       );
@@ -552,9 +558,13 @@ class _FanartGrid extends ConsumerWidget {
     required this.controller,
     required this.onRetryAppend,
     required this.onRefresh,
+    required this.onClear,
   });
 
   final ValueChanged<List<FanartItem>> onBuilt;
+
+  /// Back to the channel's defaults, from the empty state.
+  final VoidCallback onClear;
 
   /// Loaded items the user's rules hide.
   final int hidden;
@@ -581,9 +591,11 @@ class _FanartGrid extends ConsumerWidget {
             ),
             FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
               FeedAllHiddenMessage(count: hidden),
-            FeedStatus.endOfList => const FeedMessage(
-              icon: Icons.search_off_outlined,
-              text: '没有符合条件的内容',
+            FeedStatus.endOfList => FeedMessage.empty(
+              noun: '二创',
+              filtered: state.query != const FanartQuery(),
+              onClear: onClear,
+              onRefresh: onRefresh,
             ),
             _ => null,
           };

@@ -197,7 +197,15 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
           child: _buildBody(
             state.copyWith(videos: visible.items),
             visible.userHidden.length,
-            [order, RuleStatusBar(visibility: visible)],
+            [
+              order,
+              if (state.status == FeedStatus.failed && visible.items.isNotEmpty)
+                FeedStaleNotice(
+                  failure: state.failure,
+                  onRetry: _controller.refresh,
+                ),
+              RuleStatusBar(visibility: visible),
+            ],
           ),
         ),
       );
@@ -225,9 +233,18 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
             ),
             FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
               FeedAllHiddenMessage(count: hidden),
-            FeedStatus.endOfList => FeedMessage(
-              icon: Icons.search_off_outlined,
-              text: '没有符合条件的$noun',
+            FeedStatus.endOfList => FeedMessage.empty(
+              noun: noun,
+              filtered:
+                  state.query.order != CommunityVideoOrder.newest ||
+                  state.query.withinDays != null,
+              onClear: () => _applyQuery(
+                state.query.copyWith(
+                  order: CommunityVideoOrder.newest,
+                  clearDays: true,
+                ),
+              ),
+              onRefresh: _controller.refresh,
             ),
             _ => null,
           };

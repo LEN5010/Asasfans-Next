@@ -96,18 +96,50 @@ class _FeedScrollViewState extends State<FeedScrollView>
 }
 
 /// A centered feed state; failures carry the cooldown-aware retry action.
+/// Any other state that has a next step names it with [actionLabel].
 class FeedMessage extends StatelessWidget {
   const FeedMessage({
     required this.icon,
     required this.text,
+    this.detail,
     this.failure,
     this.onRetry,
+    this.actionLabel,
+    this.onAction,
     super.key,
   });
   final IconData icon;
   final String text;
+
+  /// A quieter second line: why, or what to try.
+  final String? detail;
   final ApiFailure? failure;
   final VoidCallback? onRetry;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  /// The empty state of a list query: nothing matching what is applied says
+  /// so and offers to clear it; nothing at all offers a refresh.
+  factory FeedMessage.empty({
+    required String noun,
+    required bool filtered,
+    required VoidCallback onClear,
+    required VoidCallback onRefresh,
+  }) => filtered
+      ? FeedMessage(
+          icon: Icons.search_off_outlined,
+          text: '没有符合条件的$noun',
+          detail: '换个条件，或清除条件看全部$noun',
+          actionLabel: '清除条件',
+          onAction: onClear,
+        )
+      : FeedMessage(
+          icon: Icons.inbox_outlined,
+          text: '这里暂时还没有$noun',
+          detail: '来源还没有返回内容，稍后可以再刷新',
+          actionLabel: '刷新',
+          onAction: onRefresh,
+        );
 
   @override
   Widget build(BuildContext context) => Center(
@@ -119,9 +151,20 @@ class FeedMessage extends StatelessWidget {
           Icon(icon, size: 44, color: Theme.of(context).colorScheme.outline),
           const SizedBox(height: 12),
           Text(text, textAlign: TextAlign.center),
+          if (detail != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              detail!,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           if (onRetry != null) ...[
             const SizedBox(height: 16),
             RetryButton(failure: failure, onRetry: onRetry, filled: true),
+          ] else if (onAction != null && actionLabel != null) ...[
+            const SizedBox(height: 16),
+            AppButton(onPressed: onAction, child: Text(actionLabel!)),
           ],
         ],
       ),
@@ -159,4 +202,53 @@ class FeedAllHiddenMessage extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// A refresh failed while earlier results are still on screen. Said at the
+/// top, where the reader is, rather than only at the end of the list: what
+/// is shown is the last successful load, and a retry is one tap.
+class FeedStaleNotice extends StatelessWidget {
+  const FeedStaleNotice({
+    required this.failure,
+    required this.onRetry,
+    super.key,
+  });
+  final ApiFailure? failure;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Semantics(
+        liveRegion: true,
+        child: Material(
+          color: theme.colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '刷新失败，下面是上次加载的内容'
+                    '${failure == null ? '' : '（${failure!.message}）'}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+                RetryButton(failure: failure, onRetry: onRetry),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

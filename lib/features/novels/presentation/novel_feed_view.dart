@@ -81,9 +81,11 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView>
             FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
               child: CircularProgressIndicator(),
             ),
-            FeedStatus.endOfList => const FeedMessage(
-              icon: Icons.search_off_outlined,
-              text: '没有符合条件的小说',
+            FeedStatus.endOfList => FeedMessage.empty(
+              noun: '小说',
+              filtered: state.query != const NovelQuery(),
+              onClear: () => _applyQuery(const NovelQuery()),
+              onRefresh: _controller.refresh,
             ),
             _ => null,
           };
@@ -92,6 +94,11 @@ class _NovelFeedViewState extends ConsumerState<NovelFeedView>
       controller: _scrollController,
       onRefresh: _controller.refresh,
       header: [
+        if (state.status == FeedStatus.failed && state.items.isNotEmpty)
+          FeedStaleNotice(
+            failure: state.failure,
+            onRetry: _controller.refresh,
+          ),
         // The controls sit over the reading list they filter.
         Center(
           child: ConstrainedBox(

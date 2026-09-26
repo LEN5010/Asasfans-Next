@@ -14,11 +14,15 @@ class LibraryPagedList<T> extends StatefulWidget {
     required this.empty,
     required this.itemBuilder,
     this.header,
+    this.emptyHint,
     super.key,
   });
   final LibraryListState<T> state;
   final LibraryPager<T> pager;
   final String empty;
+
+  /// How something gets here, said under [empty].
+  final String? emptyHint;
   final Widget Function(BuildContext, T) itemBuilder;
   final Widget? header;
   @override
@@ -92,12 +96,23 @@ class _LibraryPagedListState<T> extends State<LibraryPagedList<T>> {
                               ),
                             ],
                           )
+                        : state.items.isEmpty
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(widget.empty, textAlign: TextAlign.center),
+                              if (widget.emptyHint != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.emptyHint!,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ],
+                          )
                         : Text(
-                            state.items.isEmpty
-                                ? widget.empty
-                                : state.next == null
-                                ? '已显示全部'
-                                : '',
+                            state.next == null ? '已显示全部' : '',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                   ),
