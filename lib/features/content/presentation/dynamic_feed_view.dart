@@ -76,6 +76,9 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
     super.dispose();
   }
 
+  /// Bumped by each restore that starts; an older one then stops.
+  var _restoreSerial = 0;
+
   /// Identities in display order, as last built.
   List<ContentIdentity> _visible = const [];
 
@@ -84,16 +87,26 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
         .read(handoffCoordinatorProvider)
         .listRestoreFor(ContentChannel.dynamics.slug);
     if (!mounted || pending == null) return;
+    // One restore at a time, and only while the user has not moved on: a
+    // newer restore, or a query or refresh of their own, ends this one.
+    final serial = ++_restoreSerial;
+    var generation = _controller.generation;
+    bool current() =>
+        mounted &&
+        serial == _restoreSerial &&
+        _controller.generation == generation;
     if (pending.query case final values?) {
-      await _controller.applyQuery(
+      final applying = _controller.applyQuery(
         ChannelSpec(
           version: ChannelSpec.currentVersion,
           values: values,
         ).toDynamic(),
       );
+      generation = _controller.generation;
+      await applying;
     }
     final anchor = pending.anchor;
-    if (anchor == null || !mounted) return;
+    if (anchor == null || !current()) return;
     await waitForFirstPage(
       _controller,
       () =>
@@ -109,8 +122,8 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
         () => _controller.state.status == FeedStatus.appending,
       );
       await WidgetsBinding.instance.endOfFrame;
-      if (!mounted ||
-          _visible.contains(anchor.identity) ||
+      if (!current()) return;
+      if (_visible.contains(anchor.identity) ||
           _controller.state.status != FeedStatus.ready) {
         break;
       }
@@ -118,7 +131,7 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
     }
     await WidgetsBinding.instance.endOfFrame;
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
+    if (!mounted || !current()) return;
     // The return decides the position now, not a remembered offset.
     cancelOffsetSettle();
     final result = await restoreAnchor(

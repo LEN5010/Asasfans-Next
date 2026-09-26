@@ -385,19 +385,29 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
         .read(handoffCoordinatorProvider)
         .listRestoreFor(widget.channel.slug);
     if (!mounted || pending == null) return;
+    // One restore at a time, and only while the user has not moved on: a
+    // newer restore, or a query or refresh of their own, ends this one.
+    final serial = ++_restoreSerial;
+    var generation = _controller.generation;
+    bool current() =>
+        mounted &&
+        serial == _restoreSerial &&
+        _controller.generation == generation;
     final values = pending.query;
     if (values != null) {
       // A cold return arrives with the channel chosen but the filters at their
       // defaults, so re-apply what the user had actually committed.
-      await _controller.applyQuery(
+      final applying = _controller.applyQuery(
         ChannelSpec(
           version: ChannelSpec.currentVersion,
           values: values,
         ).toFanart(),
       );
+      generation = _controller.generation;
+      await applying;
     }
     final anchor = pending.anchor;
-    if (anchor == null) return;
+    if (anchor == null || !current()) return;
     await waitForFirstPage(
       _controller,
       () =>
@@ -415,8 +425,8 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
         () => _controller.state.status == FeedStatus.appending,
       );
       await WidgetsBinding.instance.endOfFrame;
-      if (!mounted ||
-          _visible.contains(anchor.identity) ||
+      if (!current()) return;
+      if (_visible.contains(anchor.identity) ||
           _controller.state.status != FeedStatus.ready ||
           _controller.state.nextCursor == null) {
         break;
@@ -427,7 +437,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
     // Restore against the restored list's layout, not the loading
     // placeholder's zero scroll extent.
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
+    if (!mounted || !current()) return;
     // The return decides the position now, not a remembered offset.
     cancelOffsetSettle();
     final result = await restoreAnchor(
@@ -442,6 +452,9 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
       )?.showSnackBar(const SnackBar(content: Text('原位置已不在列表中，已回到相近位置')));
     }
   }
+
+  /// Bumped by each restore that starts; an older one then stops.
+  var _restoreSerial = 0;
 
   /// Identities in display order, as last built (rules may hide or reorder).
   List<ContentIdentity> _visible = const [];

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -85,6 +87,10 @@ List<String> describeBrowse(BrowseSnapshot snapshot) {
 class ContinueBrowsingRow extends ConsumerWidget {
   const ContinueBrowsingRow({super.key});
 
+  /// How long a request waits for its feed to be built: a fallback only,
+  /// since a feed claims on its first frame.
+  static const _claimWindow = Duration(seconds: 1);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final handoff = ref.watch(handoffCoordinatorProvider);
@@ -104,15 +110,18 @@ class ContinueBrowsingRow extends ConsumerWidget {
             borderRadius: BorderRadius.circular(14),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: () async {
-                handoff.resumeBrowsing();
+              onTap: () {
+                final request = handoff.resumeBrowsing();
+                if (request == null) return;
                 context.go(route);
-                // The feed claims the restore on the frame it is built; one
-                // left unclaimed after that is dropped, never kept for later.
-                for (var frame = 0; frame < 3; frame++) {
-                  await WidgetsBinding.instance.endOfFrame;
-                }
-                handoff.dropBrowseRestore();
+                // The feed claims the request when it is built (or at once,
+                // if it is). Should it never be built, the request is
+                // withdrawn rather than kept for a later visit; the id means
+                // this can only ever withdraw this request.
+                Timer(
+                  _claimWindow,
+                  () => handoff.cancelBrowseRestore(request),
+                );
               },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),

@@ -244,9 +244,7 @@ void main() {
   test('an unclaimed resume is dropped, not kept for a later visit', () async {
     final coordinator = HandoffCoordinator(_Links(), store);
     await tripFrom(coordinator);
-    coordinator
-      ..resumeBrowsing()
-      ..dropBrowseRestore();
+    coordinator.cancelBrowseRestore(coordinator.resumeBrowsing()!);
     expect(coordinator.hasBrowseRestoreFor('fanart'), isFalse);
     // What a feed now gets is the trip's own pending return session, not a
     // left-over 继续挑选.

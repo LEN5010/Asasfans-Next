@@ -1,0 +1,8 @@
+# R04 before the feed guard (coordinator request ids already in place)
+$ tool/flutterw test test/handoff/restore_request_test.dart
+Expected: <0>
+  Actual: <2870.375>
+00:04 +4 -1: a query the user commits during a restore wins [E]
+00:04 +4 -1: Some tests failed.
+exit 1
+Reproduced only in this controlled test (a gated second page); not observed in ordinary use.

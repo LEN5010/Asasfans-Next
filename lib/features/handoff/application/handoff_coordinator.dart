@@ -240,14 +240,16 @@ class HandoffCoordinator extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Asks the snapshot's channel feed to rebuild its query and anchor once.
-  /// Listeners (a mounted feed) react at once; a feed built later picks it
-  /// up through [listRestoreFor].
-  void resumeBrowsing() {
+  /// Asks the snapshot's channel feed to rebuild its query and anchor once,
+  /// and returns the id of that request (null with no snapshot). Listeners
+  /// (a mounted feed) claim it at once; a feed built later claims it through
+  /// [listRestoreFor]. A newer request replaces an unclaimed older one.
+  int? resumeBrowsing() {
     final snapshot = _browsing;
-    if (snapshot == null) return;
+    if (snapshot == null) return null;
+    final request = ++_browseSerial;
     _browseRestore = ReturnContext(
-      sessionId: 'browse-${++_browseSerial}',
+      sessionId: 'browse-$request',
       target: ReturnTarget.contentChannel,
       createdAt: snapshot.at,
       channel: snapshot.channel,
@@ -255,11 +257,15 @@ class HandoffCoordinator extends ChangeNotifier {
       anchor: snapshot.anchor,
     );
     notifyListeners();
+    return request;
   }
 
-  /// Drops a 继续挑选 restore no feed claimed, so it cannot surface later
-  /// on an unrelated visit to that channel.
-  void dropBrowseRestore() => _browseRestore = null;
+  /// Withdraws [request] if no feed claimed it, so it cannot surface later on
+  /// an unrelated visit to that channel. Only that request: a newer one, or
+  /// one already claimed, is left alone.
+  void cancelBrowseRestore(int request) {
+    if (_browseRestore?.sessionId == 'browse-$request') _browseRestore = null;
+  }
 
   /// Whether a 继续挑选 restore is waiting for [channel].
   bool hasBrowseRestoreFor(String channel) =>
