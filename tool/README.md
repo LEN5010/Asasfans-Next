@@ -24,7 +24,7 @@ ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/flutterw --dart format --langua
 - `brand/generate_icons.cjs`：从原 A 路径生成四端资产，仅在确需改图标时使用。
 - `preview/`：现有隔离内存数据入口。仅用户明确要求离线演示时使用，不作为开发闸门，不自动运行。
 
-不保留独立玻璃 probe、折射对照和基准工具。正式组件直接服务真实页面；材质效果由用户在最终开发包验收。参考适配许可见 `third_party/README.md`。
+不保留独立玻璃 probe 和折射对照工具。正式组件直接服务真实页面；材质效果由用户在最终开发包验收。参考适配许可见 `third_party/README.md`。
 
 ## 性能测量包（asasfans.next.perf）
 
@@ -44,3 +44,13 @@ python3 tool/audit_apk.py build/app/outputs/flutter-apk/app-arm64-v8a-release.ap
 Android profile 构建只作为测量用途：不带 `-Pasasfans.perf=true` 会直接失败，避免产出以 debug key 签名的 `asasfans.next`。
 
 `audit_apk.py` 只读统计 APK 内各项的存储字节（不是安装占用），不证明签名或 debuggable；这两项用 `aapt2 dump badging` 与 `apksigner verify --print-certs` 检查。CI 入口是手动触发的 `Flutter Performance Validation` 工作流，只上传构建证据，不发布。
+
+## macOS Profile 对照（tool/perf）
+
+`tool/perf/main.dart` 是一个只在 Profile 构建里运行的入口：真实 AsasfansApp，内存数据库，离线 fixture（`tool/perf/perf_fixture.dart`：384 条混合二创，含 1000×30000 长图，图片由 CPU 生成 PNG 离线提供）。它按固定顺序注入滚轮和点击：进入二创 → 滚动 60 秒 → 打开长图详情和完整长图 → 返回 → 四频道与四主栏往返。同一进程先跑冷缓存一遍，再跑暖缓存一遍，按阶段输出 UI/raster 帧时的 P50/P95/P99、超预算比例、ImageCache 和 RSS，以及实际绘制图片的解码尺寸。
+
+```sh
+ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/perf/run_macos.sh <label> <out-dir> [smooth|auto|visual] [滚动秒数]
+```
+
+脚本构建 Profile，直接启动可执行文件并用 `footprint` 每 2 秒采样宿主内存。它不读个人数据、不联网。运行时会在屏幕上开一个 800×600 的窗口，期间不要操作鼠标、不要跑其他重负载。每次只改一个因子，结果写进 `reports/`，不要把 Mac 结果外推到 Android。
