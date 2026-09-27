@@ -199,8 +199,9 @@ class _AgendaRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final cancelled = status == '已取消';
-    return SizedBox(
-      height: 56,
+    // At least a row's height; the time and day grow it with the font.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
       child: Row(
         children: [
           SizedBox(
