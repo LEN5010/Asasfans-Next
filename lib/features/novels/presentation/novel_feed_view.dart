@@ -472,6 +472,8 @@ class _NovelCard extends ConsumerWidget {
     // then a few lines of the text itself. No cover is invented.
     return MediaActionRegion(
       onTap: () => openNovel(context, item),
+      // A tall reading entry: it answers to a press without shrinking.
+      pressScale: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
@@ -485,7 +487,10 @@ class _NovelCard extends ConsumerWidget {
                     item.title.isEmpty ? '无题' : item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
+                    // An entry's title, a step below the page's own headings.
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 if (item.isR18) ...[
@@ -505,10 +510,19 @@ class _NovelCard extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall,
             ),
+            // Who it is about, as a quiet line: the reader page keeps the
+            // tags; a list does not repeat a coloured block on every entry.
             if (item.characters.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: NovelCharacterTags(characters: item.characters),
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  item.characters.map((c) => c.wire).join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
               ),
             const SizedBox(height: 10),
             if (item.isR18)
@@ -540,20 +554,31 @@ class _NovelCard extends ConsumerWidget {
                 style: serif,
               ),
             ],
-            Align(
-              alignment: Alignment.centerRight,
-              child: AppButton(
-                onPressed: item.isR18 && item.sourceUrl != null
-                    ? () => openNovelSource(context, ref, item.sourceUrl!)
-                    : () => openNovel(context, item),
+            // The whole entry opens the novel; saying so once is enough.
+            // Only the original post, a different place, is its own button.
+            if (item.isR18 && item.sourceUrl != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: AppButton(
+                  onPressed: () =>
+                      openNovelSource(context, ref, item.sourceUrl!),
+                  child: Text(
+                    '查看原帖 ↗',
+                    style: TextStyle(color: colors.primary),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  item.isR18
-                      ? (item.sourceUrl == null ? '作品信息' : '查看原帖 ↗')
-                      : '阅读全文',
-                  style: TextStyle(color: colors.primary),
+                  item.isR18 ? '作品信息 ›' : '阅读全文 ›',
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colors.primary,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

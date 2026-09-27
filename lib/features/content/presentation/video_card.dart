@@ -43,9 +43,14 @@ class VideoCard extends ConsumerWidget {
       width / (16 / 9) +
       _gap +
       _titleExtent(scaler) +
-      2 +
-      _metaExtent(scaler) +
+      (inlineMeta(width, scaler) ? 0 : 2 + _metaExtent(scaler)) +
       _bylineExtent(scaler);
+
+  /// A card wide enough for the numbers to follow the maker's name on one
+  /// line: title, then one line of who, how many and when. A phone's
+  /// narrow card keeps them on a line of their own.
+  static bool inlineMeta(double width, TextScaler scaler) =>
+      width - MediaMoreButton.reserve >= scaler.scale(12) * 16;
 
   static const _gap = 8.0;
   static double _titleExtent(TextScaler scaler) =>
@@ -59,12 +64,37 @@ class VideoCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scaler = MediaQuery.textScalerOf(context);
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _card(context, ref, inlineMeta(constraints.maxWidth, scaler)),
+    );
+  }
+
+  Widget _card(BuildContext context, WidgetRef ref, bool inline) {
     final theme = Theme.of(context);
     final scaler = MediaQuery.textScalerOf(context);
     void more() => showContentActions(
       context,
       ContentSnapshots.video(video),
       ruleSubject: RuleSubjects.video(video),
+    );
+    final maker = CreatorLink(
+      mid: video.creatorId,
+      minHeight: _bylineExtent(scaler),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Text(
+          video.creatorName.isEmpty ? '未知作者' : video.creatorName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 12,
+            height: 1.35,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
     );
     // No frame: the cover and the words are the card, as with works.
     return MediaActionRegion(
@@ -103,44 +133,32 @@ class VideoCard extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: SizedBox(
-              height: _metaExtent(scaler),
-              child: VideoMeta(video: video),
+          if (!inline) ...[
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: SizedBox(
+                height: _metaExtent(scaler),
+                child: VideoMeta(video: video),
+              ),
             ),
-          ),
+          ],
           SizedBox(
             height: _bylineExtent(scaler),
             child: Row(
               children: [
-                // The link is the name's width; the rest of the line
-                // still opens the video.
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: CreatorLink(
-                      mid: video.creatorId,
-                      minHeight: _bylineExtent(scaler),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: Text(
-                          video.creatorName.isEmpty
-                              ? '未知作者'
-                              : video.creatorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 12,
-                            height: 1.35,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ),
+                // The link is the name's width; the rest of the line (and
+                // the numbers after the name) still opens the video.
+                if (inline) ...[
+                  // The name takes at most half the line; the numbers
+                  // follow it and give way first.
+                  Flexible(child: maker),
+                  const SizedBox(width: 6),
+                  Expanded(child: VideoMeta(video: video)),
+                ] else
+                  Expanded(
+                    child: Align(alignment: Alignment.centerLeft, child: maker),
                   ),
-                ),
                 MediaMoreButton(onPressed: more),
               ],
             ),
