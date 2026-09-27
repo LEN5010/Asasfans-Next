@@ -1,0 +1,514 @@
+{
+ "label": "r5-solid-tabs-covers-budget-rep2",
+ "commit": "1577302",
+ "fixture": "perf-fixture-1",
+ "image_generation_ms": 1686,
+ "image_bytes": {
+  "video": 59688,
+  "portrait": 152605,
+  "landscape": 182060,
+  "square": 177103,
+  "long": 4825681,
+  "avatar": 4210
+ },
+ "environment": {
+  "build_mode": "profile",
+  "os": "Version 26.6.2 (Build 25G83)",
+  "cpus": 8,
+  "logical_size": [
+   800.0,
+   600.0
+  ],
+  "device_pixel_ratio": 2.0,
+  "refresh_rate": 60.0,
+  "platform_brightness": "light",
+  "text_scale": 1.0,
+  "shader_filters_supported": true,
+  "glass_preference": "smooth",
+  "glass_tier_effective": "solid",
+  "glass_fallback": "userChoice",
+  "image_cache_limits": {
+   "entries": 1000,
+   "bytes": 104857600
+  }
+ },
+ "phases": [
+  {
+   "name": "cold/enter-fanart",
+   "wall_ms": 507,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "first_tile_ms": 2,
+   "first_image_ms": 3,
+   "frames": {
+    "count": 22,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 0.288,
+     "p95": 10.589,
+     "p99": 21.133,
+     "max": 21.133,
+     "over_budget_ratio": 0.045454545454545456
+    },
+    "raster": {
+     "p50": 0.496,
+     "p95": 3.849,
+     "p99": 38.476,
+     "max": 38.476,
+     "over_budget_ratio": 0.045454545454545456
+    },
+    "total_span": {
+     "p50": 1.029,
+     "p95": 47.718,
+     "p99": 60.522,
+     "max": 60.522,
+     "over_budget_ratio": 0.09090909090909091
+    }
+   },
+   "memory": {
+    "rss_mb": 203.34375,
+    "max_rss_mb": 325.28125,
+    "image_cache_entries": 20,
+    "image_cache_mb": 26.18719482421875,
+    "live_images": 11,
+    "pending_images": 0,
+    "painted_images": 24,
+    "painted_decoded_mpx": 6.856112
+   }
+  },
+  {
+   "name": "cold/scroll",
+   "wall_ms": 60535,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "scrolled_from": 0.0,
+   "scrolled_to": 30646.0,
+   "tiles_built": 12,
+   "frames": {
+    "count": 3362,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 2.175,
+     "p95": 5.304,
+     "p99": 8.331,
+     "max": 12.881,
+     "over_budget_ratio": 0.0
+    },
+    "raster": {
+     "p50": 0.721,
+     "p95": 1.879,
+     "p99": 2.181,
+     "max": 5.191,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 3.203,
+     "p95": 7.535,
+     "p99": 9.789,
+     "max": 20.676,
+     "over_budget_ratio": 0.000297441998810232
+    }
+   },
+   "memory": {
+    "rss_mb": 182.5625,
+    "max_rss_mb": 339.296875,
+    "image_cache_entries": 42,
+    "image_cache_mb": 99.98379516601562,
+    "live_images": 18,
+    "pending_images": 0,
+    "painted_images": 35,
+    "painted_decoded_mpx": 10.72436
+   }
+  },
+  {
+   "name": "cold/long-image",
+   "wall_ms": 5402,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "tile_images": [
+    {
+     "decoded": [
+      264,
+      7931
+     ],
+     "px": 2093784,
+     "box": [
+      245,
+      307
+     ]
+    },
+    {
+     "decoded": [
+      64,
+      64
+     ],
+     "px": 4096,
+     "box": [
+      20,
+      20
+     ]
+    }
+   ],
+   "tap_to_detail_image_ms": 554,
+   "detail_images": [
+    {
+     "decoded": [
+      273,
+      8192
+     ],
+     "px": 2236416,
+     "box": [
+      748,
+      330
+     ]
+    }
+   ],
+   "tap_to_viewer_image_ms": 198,
+   "viewer_images": [
+    {
+     "decoded": [
+      349,
+      10485
+     ],
+     "px": 3659265,
+     "box": [
+      18,
+      544
+     ]
+    }
+   ],
+   "frames": {
+    "count": 122,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 0.426,
+     "p95": 1.045,
+     "p99": 4.264,
+     "max": 4.506,
+     "over_budget_ratio": 0.0
+    },
+    "raster": {
+     "p50": 1.034,
+     "p95": 2.664,
+     "p99": 6.122,
+     "max": 8.067,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 1.911,
+     "p95": 5.172,
+     "p99": 9.283,
+     "max": 9.448,
+     "over_budget_ratio": 0.0
+    }
+   },
+   "memory": {
+    "rss_mb": 193.015625,
+    "max_rss_mb": 390.34375,
+    "image_cache_entries": 29,
+    "image_cache_mb": 95.80801773071289,
+    "live_images": 18,
+    "pending_images": 0,
+    "painted_images": 35,
+    "painted_decoded_mpx": 10.72436
+   }
+  },
+  {
+   "name": "cold/channels-and-tabs",
+   "wall_ms": 10138,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "offset_before_detail": 30646.0,
+   "offset_after_detail": 30646.0,
+   "offset_after_round_trip": 30646.0,
+   "frames": {
+    "count": 112,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 2.082,
+     "p95": 24.541,
+     "p99": 52.171,
+     "max": 58.617,
+     "over_budget_ratio": 0.07142857142857142
+    },
+    "raster": {
+     "p50": 0.876,
+     "p95": 3.264,
+     "p99": 4.616,
+     "max": 4.968,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 3.8,
+     "p95": 43.238,
+     "p99": 55.041,
+     "max": 60.11,
+     "over_budget_ratio": 0.11607142857142858
+    }
+   },
+   "memory": {
+    "rss_mb": 217.4375,
+    "max_rss_mb": 390.34375,
+    "image_cache_entries": 43,
+    "image_cache_mb": 95.56607055664062,
+    "live_images": 18,
+    "pending_images": 0,
+    "painted_images": 36,
+    "painted_decoded_mpx": 12.69044
+   }
+  },
+  {
+   "name": "warm/enter-fanart",
+   "wall_ms": 517,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "first_tile_ms": 6,
+   "first_image_ms": 8,
+   "frames": {
+    "count": 13,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 1.581,
+     "p95": 7.445,
+     "p99": 7.445,
+     "max": 7.445,
+     "over_budget_ratio": 0.0
+    },
+    "raster": {
+     "p50": 1.859,
+     "p95": 14.094,
+     "p99": 14.094,
+     "max": 14.094,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 4.168,
+     "p95": 22.423,
+     "p99": 22.423,
+     "max": 22.423,
+     "over_budget_ratio": 0.07692307692307693
+    }
+   },
+   "memory": {
+    "rss_mb": 217.75,
+    "max_rss_mb": 390.34375,
+    "image_cache_entries": 46,
+    "image_cache_mb": 94.25421142578125,
+    "live_images": 11,
+    "pending_images": 0,
+    "painted_images": 25,
+    "painted_decoded_mpx": 8.822192
+   }
+  },
+  {
+   "name": "warm/scroll",
+   "wall_ms": 60538,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "scrolled_from": 0.0,
+   "scrolled_to": 30436.0,
+   "tiles_built": 9,
+   "frames": {
+    "count": 3458,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 2.175,
+     "p95": 5.344,
+     "p99": 13.174,
+     "max": 20.573,
+     "over_budget_ratio": 0.002313475997686524
+    },
+    "raster": {
+     "p50": 0.726,
+     "p95": 1.756,
+     "p99": 2.125,
+     "max": 5.925,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 3.183,
+     "p95": 7.479,
+     "p99": 14.51,
+     "max": 21.874,
+     "over_budget_ratio": 0.004916136495083863
+    }
+   },
+   "memory": {
+    "rss_mb": 219.859375,
+    "max_rss_mb": 390.34375,
+    "image_cache_entries": 40,
+    "image_cache_mb": 97.64932250976562,
+    "live_images": 16,
+    "pending_images": 0,
+    "painted_images": 31,
+    "painted_decoded_mpx": 12.066184
+   }
+  },
+  {
+   "name": "warm/long-image",
+   "wall_ms": 5744,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "tile_images": [
+    {
+     "decoded": [
+      264,
+      7931
+     ],
+     "px": 2093784,
+     "box": [
+      245,
+      307
+     ]
+    },
+    {
+     "decoded": [
+      64,
+      64
+     ],
+     "px": 4096,
+     "box": [
+      20,
+      20
+     ]
+    }
+   ],
+   "tap_to_detail_image_ms": 566,
+   "detail_images": [
+    {
+     "decoded": [
+      273,
+      8192
+     ],
+     "px": 2236416,
+     "box": [
+      748,
+      330
+     ]
+    }
+   ],
+   "tap_to_viewer_image_ms": 193,
+   "viewer_images": [
+    {
+     "decoded": [
+      349,
+      10485
+     ],
+     "px": 3659265,
+     "box": [
+      18,
+      544
+     ]
+    }
+   ],
+   "frames": {
+    "count": 141,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 0.44,
+     "p95": 4.492,
+     "p99": 14.901,
+     "max": 20.709,
+     "over_budget_ratio": 0.0070921985815602835
+    },
+    "raster": {
+     "p50": 0.98,
+     "p95": 2.079,
+     "p99": 3.581,
+     "max": 6.312,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 1.983,
+     "p95": 7.157,
+     "p99": 15.964,
+     "max": 22.268,
+     "over_budget_ratio": 0.0070921985815602835
+    }
+   },
+   "memory": {
+    "rss_mb": 223.140625,
+    "max_rss_mb": 475.21875,
+    "image_cache_entries": 27,
+    "image_cache_mb": 99.41104507446289,
+    "live_images": 18,
+    "pending_images": 0,
+    "painted_images": 36,
+    "painted_decoded_mpx": 12.69044
+   }
+  },
+  {
+   "name": "warm/channels-and-tabs",
+   "wall_ms": 10131,
+   "lifecycle": [
+    "resumed"
+   ],
+   "valid": true,
+   "glass_tier_effective": "solid",
+   "offset_before_detail": 30660.0,
+   "offset_after_detail": 30660.0,
+   "offset_after_round_trip": 30660.0,
+   "frames": {
+    "count": 112,
+    "budget_ms": 16.666666666666668,
+    "ui_build": {
+     "p50": 2.02,
+     "p95": 17.41,
+     "p99": 53.065,
+     "max": 53.512,
+     "over_budget_ratio": 0.05357142857142857
+    },
+    "raster": {
+     "p50": 0.647,
+     "p95": 2.332,
+     "p99": 3.417,
+     "max": 4.133,
+     "over_budget_ratio": 0.0
+    },
+    "total_span": {
+     "p50": 3.248,
+     "p95": 27.287,
+     "p99": 54.234,
+     "max": 57.312,
+     "over_budget_ratio": 0.08928571428571429
+    }
+   },
+   "memory": {
+    "rss_mb": 222.453125,
+    "max_rss_mb": 475.21875,
+    "image_cache_entries": 43,
+    "image_cache_mb": 95.56607055664062,
+    "live_images": 18,
+    "pending_images": 0,
+    "painted_images": 36,
+    "painted_decoded_mpx": 12.69044
+   }
+  }
+ ],
+ "host_footprint_mb": {
+  "samples": 80,
+  "max_sampled": 562.0,
+  "peak_reported": 780.0
+ }
+}

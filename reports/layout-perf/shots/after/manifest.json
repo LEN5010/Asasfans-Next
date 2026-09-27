@@ -1,0 +1,2933 @@
+[
+  {
+    "file": "calendar_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "calendar_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "calendar",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "dynamics_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "dynamics",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-detail_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart-detail",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-detail_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart-detail",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-empty_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart-empty",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart-failed_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart-failed",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 175.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_320.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 175.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_390-x2.0.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 175.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "fanart_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "journey-30th-back_390-bars.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "journey-30th-back",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "journey-30th-cold_390-bars.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "journey-30th-cold",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "journey-30th-resize_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "journey-30th-resize",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "journey-30th-resize_390-bars.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "journey-30th-resize",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "journey-30th-resize_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "journey-30th-resize",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "journey-last-above-dock_390-bars.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "journey-last-above-dock",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "safe_area_logical": [
+      47.0,
+      34.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "mine_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "mine",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novel-reader_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novel-reader",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novel-reader_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novel-reader",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 159.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 159.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 159.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "novels_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "novels",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_1280-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            175.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            175.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            175.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            175.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            175.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            391.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            391.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            407.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            175.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            175.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            175.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            175.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            175.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            391.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            391.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            407.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_320-x2.0.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            216.4,
+            288.0,
+            279.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            16.0,
+            511.4,
+            288.0,
+            477.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            175.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            175.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            364.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            483.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            16.0,
+            614.3125,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            201.0,
+            791.5,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            16.0,
+            803.625,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_390-x1.6.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.6,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            196.0,
+            358.0,
+            296.375
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            16.0,
+            508.375,
+            358.0,
+            542.5
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            175.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            175.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            364.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            483.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            16.0,
+            614.3125,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            201.0,
+            791.5,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            16.0,
+            803.625,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-fanart_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-fanart",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            175.0,
+            164.0,
+            168.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            300.0,
+            175.0,
+            164.0,
+            281.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            476.0,
+            175.0,
+            164.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            652.0,
+            175.0,
+            164.0,
+            281.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            124.0,
+            359.25,
+            164.0,
+            168.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            476.0,
+            425.0,
+            164.0,
+            301.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            300.0,
+            472.0,
+            164.0,
+            281.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            652.0,
+            472.0,
+            164.0,
+            301.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-dynamic-hover_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-dynamic-hover",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-focus_1280-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-focus",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-focus_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-focus",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-hover-maker_1280-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-hover-maker",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-hover-maker_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-hover-maker",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-hover-tile_1280-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-hover-tile",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-hover-tile_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-hover-tile",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-idle_1280-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-idle",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-idle_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-idle",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-state-novel-hover_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-state-novel-hover",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-events0_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-events0",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            256.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            256.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            256.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            256.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            256.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            472.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            472.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            488.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-events0_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-events0",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            256.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            256.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            445.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            564.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-events1_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-events1",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            272.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            272.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            272.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            272.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            272.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            488.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            488.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            504.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-events1_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-events1",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            272.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            272.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            461.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            580.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-events4_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-events4",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            376.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            376.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            376.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            376.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            376.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            592.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            592.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            608.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-events4_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-events4",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            376.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            376.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            565.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            684.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-off_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-off",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {}
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today-off_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today-off",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {}
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_1280-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            328.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            328.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            328.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            328.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            328.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            544.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            544.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            560.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            328.0,
+            213.60000000000002,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            353.6,
+            328.0,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            583.2,
+            328.0,
+            213.60000000000002,
+            212.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            812.8,
+            328.0,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            1042.4,
+            328.0,
+            213.5999999999999,
+            196.14999999999998
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            124.0,
+            544.15,
+            213.60000000000002,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            1042.4,
+            544.15,
+            213.5999999999999,
+            343.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            583.2,
+            560.0,
+            213.60000000000002,
+            363.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_320-x2.0.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            216.4,
+            288.0,
+            279.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            16.0,
+            511.4,
+            288.0,
+            477.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            328.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            328.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            517.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            636.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_390-x1.6.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.6,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            196.0,
+            358.0,
+            296.375
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            16.0,
+            508.375,
+            358.0,
+            542.5
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            16.0,
+            328.0,
+            173.0,
+            173.3125
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            201.0,
+            328.0,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            16.0,
+            517.3125,
+            173.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            201.0,
+            636.25,
+            173.0,
+            292.25
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "review-today_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "review-today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "tiles": {
+        "960001": {
+          "type": "video",
+          "rect": [
+            124.0,
+            328.0,
+            164.0,
+            168.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960002": {
+          "type": "image",
+          "rect": [
+            300.0,
+            328.0,
+            164.0,
+            281.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960003": {
+          "type": "text",
+          "rect": [
+            476.0,
+            328.0,
+            164.0,
+            234.0
+          ],
+          "title_to_byline": 14.0
+        },
+        "960004": {
+          "type": "image",
+          "rect": [
+            652.0,
+            328.0,
+            164.0,
+            281.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960005": {
+          "type": "video",
+          "rect": [
+            124.0,
+            512.25,
+            164.0,
+            168.25
+          ],
+          "title_to_byline": 0.0
+        },
+        "960006": {
+          "type": "image",
+          "rect": [
+            476.0,
+            578.0,
+            164.0,
+            301.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960007": {
+          "type": "image",
+          "rect": [
+            300.0,
+            625.0,
+            164.0,
+            281.0
+          ],
+          "title_to_byline": 0.0
+        },
+        "960008": {
+          "type": "image",
+          "rect": [
+            652.0,
+            625.0,
+            164.0,
+            301.0
+          ],
+          "title_to_byline": 0.0
+        }
+      }
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today-no-events_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today-no-events",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today-stale_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today-stale",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_320.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_390-x2.0.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "today_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "today",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_1280.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      1280.0,
+      800.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_320.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      320.0,
+      693.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_390-dark.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "dark",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_390-x2.0.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 2.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_390.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      390.0,
+      844.0
+    ],
+    "device_pixel_ratio": 2.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "measurements": {
+      "first_item_top": 135.0
+    },
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_600.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      600.0,
+      960.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  },
+  {
+    "file": "videos_840.png",
+    "commit": "9bed307e79940f4d9962af356880475695b42af3",
+    "scenario": "videos",
+    "fixture_revision": "v2-fixture-4",
+    "viewport_logical": [
+      840.0,
+      1000.0
+    ],
+    "device_pixel_ratio": 1.0,
+    "text_scale": 1.0,
+    "brightness": "light",
+    "material": "solid",
+    "renderer": "headless-flutter-test (flutter_tester software raster)",
+    "font_environment": "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/86ba2c91f017a3749571a82f2c6d890ac7ffb2fb.asset/AssetData/PingFang.ttc as Roboto/serif/monospace (Latin too); MaterialIcons from SDK",
+    "provenance": "actual-widget-render",
+    "reviewer": "internal-review",
+    "notes": "not evidence of Impeller optics, GPU cost or real-device frame time"
+  }
+]
