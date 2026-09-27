@@ -336,6 +336,7 @@ class _DetailImageState extends State<_DetailImage> {
           widget.item.images[widget.index],
           logicalWidth: constraints.maxWidth,
           devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+          detail: true,
         );
         _watch(provider);
         final cap = widget.cap;

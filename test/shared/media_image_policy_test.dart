@@ -116,8 +116,43 @@ void main() {
     final strip = CoverDecodeImage.targetSize(2000, 60000, 2048, 2048);
     expect(
       strip.width * strip.height,
+      lessThanOrEqualTo(MediaImagePolicy.thumbnailPixels),
+    );
+    expect(strip.height, lessThanOrEqualTo(MediaImagePolicy.thumbnailEdge));
+    // A detail showing the one image has the larger budget.
+    final detail = CoverDecodeImage.targetSize(
+      2000,
+      60000,
+      2048,
+      2048,
+      maxPixels: MediaImagePolicy.maxPixels,
+      maxEdge: MediaImagePolicy.maxPixels,
+    );
+    expect(
+      detail.width * detail.height,
       lessThanOrEqualTo(MediaImagePolicy.maxPixels),
     );
+    expect(detail.height, greaterThan(strip.height));
+  });
+
+  test('a long strip in a list decodes within the thumbnail budget', () {
+    // A 1000x30000 strip in a 175 dp column at 3x: the tile would otherwise
+    // decode 640 x 19200, the whole strip at the tile's width.
+    final strip = Uri.parse('https://i0.hdslb.com/bfs/new_dyn/long.png');
+    final (_, tile) = unwrap(
+      MediaImagePolicy.preview(strip, logicalWidth: 175, devicePixelRatio: 3),
+    );
+    expect(tile.width, 640);
+    expect(tile.height, MediaImagePolicy.thumbnailPixels ~/ 640);
+    final (_, detail) = unwrap(
+      MediaImagePolicy.preview(
+        strip,
+        logicalWidth: 175,
+        devicePixelRatio: 3,
+        detail: true,
+      ),
+    );
+    expect(detail.height, MediaImagePolicy.maxPixels ~/ 640);
   });
 
   test('a preview with a height asks the CDN for the longer side', () {

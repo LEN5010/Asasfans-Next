@@ -39,9 +39,18 @@ abstract final class MediaImagePolicy {
   /// memory rather than screen resolution is the limit.
   static const maxEdge = 2560;
 
-  /// Decoded pixels allowed for one image (about 64 MB as RGBA). A very long
-  /// image is decoded narrower instead of into a texture most GPUs refuse.
+  /// Decoded pixels allowed for one image opened on its own: a detail's
+  /// preview or the full viewer (about 64 MB as RGBA). A very long image is
+  /// decoded narrower instead of into a texture most GPUs refuse.
   static const maxPixels = 16 * 1024 * 1024;
+
+  /// What one thumbnail in a list may decode to (about 8 MB as RGBA), and its
+  /// longest edge. A feed holds dozens at once; a long strip cropped to a
+  /// tile would otherwise decode the whole strip at the tile's width, as the
+  /// viewer does. Past this a strip's tile is softer, and the whole strip is
+  /// one tap away in the detail.
+  static const thumbnailPixels = 2 * 1024 * 1024;
+  static const thumbnailEdge = 8192;
 
   /// Smallest bucket that covers [logicalWidth] at [devicePixelRatio].
   static int decodeWidth(double logicalWidth, double devicePixelRatio) {
@@ -57,7 +66,8 @@ abstract final class MediaImagePolicy {
   }
 
   /// A thumbnail or card image: a CDN preview at the bucket width, decoded
-  /// no larger than that bucket.
+  /// no larger than that bucket, and within the thumbnail budget unless a
+  /// page showing one image asks for [maxPixels] ([detail]).
   ///
   /// A box drawn with [BoxFit.cover] passes its [logicalHeight] too. The
   /// image is then decoded to cover the whole box, once its own size is
@@ -71,7 +81,12 @@ abstract final class MediaImagePolicy {
     required double logicalWidth,
     required double devicePixelRatio,
     double? logicalHeight,
+    bool detail = false,
   }) {
+    final pixels = detail ? maxPixels : thumbnailPixels;
+    // Only thumbnails bound their longest edge; a detail's height is bound
+    // by its pixel budget alone, as before.
+    final edge = detail ? pixels : thumbnailEdge;
     final width = decodeWidth(logicalWidth, devicePixelRatio);
     if (logicalHeight != null &&
         logicalHeight.isFinite &&
@@ -86,13 +101,15 @@ abstract final class MediaImagePolicy {
         // Buckets on both sides, so near-identical boxes share one entry.
         width: width,
         height: height,
+        maxPixels: pixels,
+        maxEdge: edge,
       );
     }
     return ResizeImage(
       NetworkImage(displayImageUri(uri, width: width).toString()),
       width: width,
       policy: ResizeImagePolicy.fit,
-      height: maxPixels ~/ width,
+      height: math.min(edge, pixels ~/ width),
     );
   }
 
@@ -123,34 +140,41 @@ abstract final class MediaImagePolicy {
 }
 
 /// Decodes an image just large enough to cover a [width] x [height] pixel
-/// box, keeping its ratio: never larger than the source, and never over
-/// [MediaImagePolicy.maxPixels].
+/// box, keeping its ratio: never larger than the source, never over
+/// [maxPixels], and no edge over [maxEdge].
 @immutable
 class CoverDecodeImage extends ImageProvider<CoverDecodeKey> {
   const CoverDecodeImage(
     this.imageProvider, {
     required this.width,
     required this.height,
+    this.maxPixels = MediaImagePolicy.thumbnailPixels,
+    this.maxEdge = MediaImagePolicy.thumbnailEdge,
   });
   final ImageProvider imageProvider;
   final int width;
   final int height;
+  final int maxPixels;
+  final int maxEdge;
 
   /// The decoded size for a source of [sourceWidth] x [sourceHeight].
   static ({int width, int height}) targetSize(
     int sourceWidth,
     int sourceHeight,
     int boxWidth,
-    int boxHeight,
-  ) {
+    int boxHeight, {
+    int maxPixels = MediaImagePolicy.thumbnailPixels,
+    int maxEdge = MediaImagePolicy.thumbnailEdge,
+  }) {
     var scale = math.min(
       1.0,
       math.max(boxWidth / sourceWidth, boxHeight / sourceHeight),
     );
+    scale = math.min(scale, maxEdge / math.max(sourceWidth, sourceHeight));
     final pixels = sourceWidth * sourceHeight * scale * scale;
-    if (pixels > MediaImagePolicy.maxPixels) {
+    if (pixels > maxPixels) {
       // Rounded down, so the budget holds exactly.
-      scale *= math.sqrt(MediaImagePolicy.maxPixels / pixels);
+      scale *= math.sqrt(maxPixels / pixels);
       return (
         width: math.max(1, (sourceWidth * scale).floor()),
         height: math.max(1, (sourceHeight * scale).floor()),
@@ -166,7 +190,9 @@ class CoverDecodeImage extends ImageProvider<CoverDecodeKey> {
   Future<CoverDecodeKey> obtainKey(ImageConfiguration configuration) =>
       imageProvider
           .obtainKey(configuration)
-          .then((key) => CoverDecodeKey(key, width, height));
+          .then(
+            (key) => CoverDecodeKey(key, width, height, maxPixels, maxEdge),
+          );
 
   @override
   ImageStreamCompleter loadImage(
@@ -179,7 +205,14 @@ class CoverDecodeImage extends ImageProvider<CoverDecodeKey> {
     }) => decode(
       buffer,
       getTargetSize: (sourceWidth, sourceHeight) {
-        final size = targetSize(sourceWidth, sourceHeight, width, height);
+        final size = targetSize(
+          sourceWidth,
+          sourceHeight,
+          width,
+          height,
+          maxPixels: maxPixels,
+          maxEdge: maxEdge,
+        );
         return ui.TargetImageSize(width: size.width, height: size.height);
       },
     );
@@ -189,18 +222,28 @@ class CoverDecodeImage extends ImageProvider<CoverDecodeKey> {
 
 @immutable
 class CoverDecodeKey {
-  const CoverDecodeKey(this.source, this.width, this.height);
+  const CoverDecodeKey(
+    this.source,
+    this.width,
+    this.height, [
+    this.maxPixels = MediaImagePolicy.thumbnailPixels,
+    this.maxEdge = MediaImagePolicy.thumbnailEdge,
+  ]);
   final Object source;
   final int width;
   final int height;
+  final int maxPixels;
+  final int maxEdge;
 
   @override
   bool operator ==(Object other) =>
       other is CoverDecodeKey &&
       other.source == source &&
       other.width == width &&
-      other.height == height;
+      other.height == height &&
+      other.maxPixels == maxPixels &&
+      other.maxEdge == maxEdge;
 
   @override
-  int get hashCode => Object.hash(source, width, height);
+  int get hashCode => Object.hash(source, width, height, maxPixels, maxEdge);
 }
