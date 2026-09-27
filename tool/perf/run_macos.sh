@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One Profile run of tool/perf/main.dart on this Mac.
 #
-#   tool/perf/run_macos.sh <label> <out-dir> [smooth|auto|visual] [scroll-seconds]
+#   tool/perf/run_macos.sh <label> <out-dir> [smooth|auto|visual] [scroll-seconds] [run|shots]
 #
 # Builds the perf entry in profile mode, starts the executable directly (so
 # its PID is known), samples the host's own view of its memory every two
@@ -14,6 +14,7 @@ label="${1:?usage: run_macos.sh <label> <out-dir> [glass] [seconds]}"
 out="${2:?usage: run_macos.sh <label> <out-dir> [glass] [seconds]}"
 glass="${3:-auto}"
 seconds="${4:-60}"
+mode="${5:-run}"
 commit="$(git rev-parse --short HEAD)"
 git diff --quiet HEAD -- lib tool/perf || commit="$commit+dirty"
 mkdir -p "$out"
@@ -24,6 +25,7 @@ tool/flutterw build macos --profile --no-pub -t tool/perf/main.dart \
   --dart-define=ASASFANS_PERF_LABEL="$label" \
   --dart-define=ASASFANS_PERF_COMMIT="$commit" \
   --dart-define=ASASFANS_PERF_SCROLL_SECONDS="$seconds" \
+  --dart-define=ASASFANS_PERF_MODE="$mode" \
   >"$out/$label.build.log" 2>&1
 
 bundle="build/macos/Build/Products/Profile/Asasfans Next.app"
@@ -43,6 +45,14 @@ while kill -0 "$pid" 2>/dev/null; do
 done
 wait "$pid" || true
 grep -o 'PERF_RESULT .*' "$out/$label.log" | sed 's/^PERF_RESULT //' >"$out/$label.json"
+if [ "$mode" = shots ]; then
+  # The sandboxed app writes into its container's temporary directory.
+  shots="$HOME/Library/Containers/dev.asasfans.next/Data/tmp/asasfans_shots_$label"
+  mkdir -p "$out/$label"
+  mv "$shots"/*.png "$out/$label/"
+  rmdir "$shots"
+  exit 0
+fi
 python3 - "$out/$label.json" "$out/$label.footprint.txt" <<'PY'
 import json, re, sys
 data = json.load(open(sys.argv[1]))

@@ -50,7 +50,10 @@ Android profile 构建只作为测量用途：不带 `-Pasasfans.perf=true` 会�
 `tool/perf/main.dart` 是一个只在 Profile 构建里运行的入口：真实 AsasfansApp，内存数据库，离线 fixture（`tool/perf/perf_fixture.dart`：384 条混合二创，含 1000×30000 长图，图片由 CPU 生成 PNG 离线提供）。它按固定顺序注入滚轮和点击：进入二创 → 滚动 60 秒 → 打开长图详情和完整长图 → 返回 → 四频道与四主栏往返。同一进程先跑冷缓存一遍，再跑暖缓存一遍，按阶段输出 UI/raster 帧时的 P50/P95/P99、超预算比例、ImageCache 和 RSS，以及实际绘制图片的解码尺寸。
 
 ```sh
-ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/perf/run_macos.sh <label> <out-dir> [smooth|auto|visual] [滚动秒数]
+ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/perf/run_macos.sh <label> <out-dir> [smooth|auto|visual] [滚动秒数] [run|shots]
+python3 tool/perf/compare.py <out-dir> > <out-dir>/COMPARISON.md
 ```
+
+第五个参数 `shots` 不测帧时，改为在同一份 fixture 上用真实渲染器截图：今日和二创各一张，浅色和深色，分别为静止、指针悬停在第一个作品上、键盘焦点在第一个作品上。PNG 移到 `<out-dir>/<label>/`；`<label>.json` 记录窗口逻辑尺寸、像素比和实际玻璃档位，截图像素不等于逻辑尺寸。窗口大小取 macOS 记住的窗口（首次为 800×600），脚本不改窗口大小，窄屏和宽屏对照用 `tool/visual_capture.sh`。`compare.py` 把同一目录下的多次运行并排列表，每次运行单独一行，不取平均。
 
 脚本构建 Profile，直接启动可执行文件并用 `footprint` 每 2 秒采样宿主内存。它不读个人数据、不联网。运行时会在屏幕上开一个 800×600 的窗口，期间不要操作鼠标、不要跑其他重负载。每次只改一个因子，结果写进 `reports/`，不要把 Mac 结果外推到 Android。

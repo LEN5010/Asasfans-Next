@@ -19,6 +19,7 @@ import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_image_viewer.dart';
 import 'package:asasfans_next/features/novels/application/novel_providers.dart';
+import 'package:asasfans_next/features/preferences/application/preferences_controller.dart';
 import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_scope.dart';
 import 'package:flutter/foundation.dart';
@@ -43,6 +44,9 @@ import 'perf_fixture.dart';
 ///   ASASFANS_PERF_LABEL   name of the run
 ///   ASASFANS_PERF_COMMIT  the source commit being measured
 ///   ASASFANS_PERF_SCROLL_SECONDS  length of the scroll phase (default 60)
+///   ASASFANS_PERF_MODE    run (default) | shots: instead of measuring, write
+///                         real-renderer PNGs of Today and 二创, light and
+///                         dark, at rest, under the pointer and under focus
 const _glass = String.fromEnvironment(
   'ASASFANS_PERF_GLASS',
   defaultValue: 'auto',
@@ -55,6 +59,7 @@ const _commit = String.fromEnvironment(
   'ASASFANS_PERF_COMMIT',
   defaultValue: 'unknown',
 );
+const _mode = String.fromEnvironment('ASASFANS_PERF_MODE', defaultValue: 'run');
 const _scrollSeconds = int.fromEnvironment(
   'ASASFANS_PERF_SCROLL_SECONDS',
   defaultValue: 60,
@@ -94,10 +99,15 @@ Future<void> main() async {
         novelRepositoryProvider.overrideWithValue(FixtureNovels()),
         calendarRepositoryProvider.overrideWithValue(FixtureCalendar()),
       ],
-      child: const AsasfansApp(),
+      // Only the shots need a boundary to read back; a measured run keeps
+      // the app's own layer tree.
+      child: _mode == 'shots'
+          ? RepaintBoundary(key: _shotRoot, child: const AsasfansApp())
+          : const AsasfansApp(),
     ),
   );
-  final result = await _Run(generation.elapsedMilliseconds, images).run();
+  final run = _Run(generation.elapsedMilliseconds, images);
+  final result = _mode == 'shots' ? await run.shots() : await run.run();
   final json = jsonEncode(result);
   // ignore: avoid_print
   print('PERF_RESULT $json');
@@ -106,6 +116,8 @@ Future<void> main() async {
   ).writeAsStringSync(json);
   exit(0);
 }
+
+final _shotRoot = GlobalKey();
 
 class _NoLinks implements ExternalLinkService {
   const _NoLinks();
@@ -295,6 +307,102 @@ class _Run with WidgetsBindingObserver {
     });
     // The warm pass starts from the top of the same, already loaded feed.
     _feedPosition()?.jumpTo(0);
+  }
+
+  /// Real-renderer PNGs: what Impeller draws on this Mac, glass included,
+  /// at the window's own logical size and pixel ratio.
+  Future<Map<String, Object?>> shots() async {
+    await _until(() => _find<AppGlassScope>().isNotEmpty);
+    await _until(() => _binding.lifecycleState == AppLifecycleState.resumed);
+    await _wait(3000);
+    final env = _environment();
+    final dir = Directory('${Directory.systemTemp.path}/asasfans_shots_$_label')
+      ..createSync(recursive: true);
+    final container = ProviderScope.containerOf(_find<AsasfansApp>().first);
+    final router = container.read(appRouterProvider);
+    final written = <Map<String, Object?>>[];
+    Future<void> shoot(String name) async {
+      await _wait(600);
+      final boundary =
+          _shotRoot.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
+      final view = _binding.platformDispatcher.views.first;
+      final image = await boundary.toImage(pixelRatio: view.devicePixelRatio);
+      final png = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      File('${dir.path}/$name.png').writeAsBytesSync(png!.buffer.asUint8List());
+      final context = _find<Scaffold>().first;
+      written.add({
+        'file': '$name.png',
+        'glass_tier_effective': AppGlassScope.of(context).tier.name,
+        'lifecycle': _binding.lifecycleState?.name,
+        'brightness': Theme.of(context).brightness.name,
+      });
+    }
+
+    _binding.handlePointerEvent(
+      const PointerAddedEvent(device: _device, kind: PointerDeviceKind.mouse),
+    );
+    for (final appearance in [AppAppearance.light, AppAppearance.dark]) {
+      await container
+          .read(preferencesControllerProvider.notifier)
+          .setAppearance(appearance);
+      for (final (page, location) in [
+        ('today', '/today'),
+        ('fanart', '/content/fanart'),
+      ]) {
+        router.go(location);
+        await _wait(2500);
+        final tag = '${page}_${appearance.name}';
+        await shoot('${tag}_idle');
+        final tile = _find<FanartCard>()
+            .map(_rect)
+            .whereType<Rect>()
+            .where((r) => r.top > 60)
+            .firstOrNull;
+        if (tile != null) {
+          _binding.handlePointerEvent(
+            PointerHoverEvent(
+              device: _device,
+              kind: PointerDeviceKind.mouse,
+              position: tile.center,
+            ),
+          );
+          await shoot('${tag}_hover');
+          _binding.handlePointerEvent(
+            const PointerHoverEvent(
+              device: _device,
+              kind: PointerDeviceKind.mouse,
+              position: Offset(1, 1),
+            ),
+          );
+        }
+        // Keyboard focus, as Tab would move it, until it reaches a work.
+        for (var i = 0; i < 60; i++) {
+          FocusManager.instance.primaryFocus?.nextFocus();
+          await _binding.endOfFrame;
+          var inTile = false;
+          FocusManager.instance.primaryFocus?.context?.visitAncestorElements((
+            e,
+          ) {
+            inTile = e.widget is FanartCard;
+            return !inTile;
+          });
+          if (inTile) break;
+        }
+        await shoot('${tag}_focus');
+        FocusManager.instance.primaryFocus?.unfocus();
+      }
+    }
+    return {
+      'label': _label,
+      'commit': _commit,
+      'mode': 'shots',
+      'fixture': perfFixtureRevision,
+      'environment': env,
+      'dir': dir.path,
+      'shots': written,
+    };
   }
 
   Future<void> _phase(
