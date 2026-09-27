@@ -1,0 +1,144 @@
+1790514260
+Asasfans Next [66506]: 64-bit    Footprint: 69 MB (16384 bytes per page)
+    phys_footprint: 69 MB
+    phys_footprint_peak: 122 MB
+1790514262
+Asasfans Next [66506]: 64-bit    Footprint: 159 MB (16384 bytes per page)
+    phys_footprint: 159 MB
+    phys_footprint_peak: 387 MB
+1790514264
+Asasfans Next [66506]: 64-bit    Footprint: 217 MB (16384 bytes per page)
+    phys_footprint: 217 MB
+    phys_footprint_peak: 387 MB
+1790514266
+Asasfans Next [66506]: 64-bit    Footprint: 332 MB (16384 bytes per page)
+    phys_footprint: 332 MB
+    phys_footprint_peak: 470 MB
+1790514268
+Asasfans Next [66506]: 64-bit    Footprint: 396 MB (16384 bytes per page)
+    phys_footprint: 396 MB
+    phys_footprint_peak: 515 MB
+1790514270
+Asasfans Next [66506]: 64-bit    Footprint: 488 MB (16384 bytes per page)
+    phys_footprint: 489 MB
+    phys_footprint_peak: 592 MB
+1790514272
+Asasfans Next [66506]: 64-bit    Footprint: 480 MB (16384 bytes per page)
+    phys_footprint: 480 MB
+    phys_footprint_peak: 611 MB
+1790514274
+Asasfans Next [66506]: 64-bit    Footprint: 579 MB (16384 bytes per page)
+    phys_footprint: 579 MB
+    phys_footprint_peak: 622 MB
+1790514276
+Asasfans Next [66506]: 64-bit    Footprint: 499 MB (16384 bytes per page)
+    phys_footprint: 499 MB
+    phys_footprint_peak: 633 MB
+1790514278
+Asasfans Next [66506]: 64-bit    Footprint: 496 MB (16384 bytes per page)
+    phys_footprint: 496 MB
+    phys_footprint_peak: 633 MB
+1790514280
+Asasfans Next [66506]: 64-bit    Footprint: 491 MB (16384 bytes per page)
+    phys_footprint: 491 MB
+    phys_footprint_peak: 633 MB
+1790514282
+Asasfans Next [66506]: 64-bit    Footprint: 547 MB (16384 bytes per page)
+    phys_footprint: 547 MB
+    phys_footprint_peak: 647 MB
+1790514284
+Asasfans Next [66506]: 64-bit    Footprint: 484 MB (16384 bytes per page)
+    phys_footprint: 484 MB
+    phys_footprint_peak: 647 MB
+1790514286
+Asasfans Next [66506]: 64-bit    Footprint: 579 MB (16384 bytes per page)
+    phys_footprint: 578 MB
+    phys_footprint_peak: 852 MB
+1790514288
+Asasfans Next [66506]: 64-bit    Footprint: 500 MB (16384 bytes per page)
+    phys_footprint: 500 MB
+    phys_footprint_peak: 852 MB
+1790514291
+Asasfans Next [66506]: 64-bit    Footprint: 534 MB (16384 bytes per page)
+    phys_footprint: 534 MB
+    phys_footprint_peak: 852 MB
+1790514293
+Asasfans Next [66506]: 64-bit    Footprint: 588 MB (16384 bytes per page)
+    phys_footprint: 586 MB
+    phys_footprint_peak: 948 MB
+1790514295
+Asasfans Next [66506]: 64-bit    Footprint: 547 MB (16384 bytes per page)
+    phys_footprint: 547 MB
+    phys_footprint_peak: 948 MB
+1790514297
+Asasfans Next [66506]: 64-bit    Footprint: 532 MB (16384 bytes per page)
+    phys_footprint: 532 MB
+    phys_footprint_peak: 948 MB
+1790514299
+Asasfans Next [66506]: 64-bit    Footprint: 543 MB (16384 bytes per page)
+    phys_footprint: 543 MB
+    phys_footprint_peak: 948 MB
+1790514301
+Asasfans Next [66506]: 64-bit    Footprint: 525 MB (16384 bytes per page)
+    phys_footprint: 525 MB
+    phys_footprint_peak: 948 MB
+1790514303
+Asasfans Next [66506]: 64-bit    Footprint: 551 MB (16384 bytes per page)
+    phys_footprint: 551 MB
+    phys_footprint_peak: 948 MB
+1790514305
+Asasfans Next [66506]: 64-bit    Footprint: 556 MB (16384 bytes per page)
+    phys_footprint: 556 MB
+    phys_footprint_peak: 948 MB
+1790514307
+Asasfans Next [66506]: 64-bit    Footprint: 579 MB (16384 bytes per page)
+    phys_footprint: 579 MB
+    phys_footprint_peak: 948 MB
+1790514309
+Asasfans Next [66506]: 64-bit    Footprint: 588 MB (16384 bytes per page)
+    phys_footprint: 592 MB
+    phys_footprint_peak: 948 MB
+1790514311
+Asasfans Next [66506]: 64-bit    Footprint: 599 MB (16384 bytes per page)
+    phys_footprint: 598 MB
+    phys_footprint_peak: 948 MB
+1790514314
+Asasfans Next [66506]: 64-bit    Footprint: 538 MB (16384 bytes per page)
+    phys_footprint: 538 MB
+    phys_footprint_peak: 948 MB
+1790514316
+Asasfans Next [66506]: 64-bit    Footprint: 525 MB (16384 bytes per page)
+    phys_footprint: 525 MB
+    phys_footprint_peak: 948 MB
+1790514318
+Asasfans Next [66506]: 64-bit    Footprint: 901 MB (16384 bytes per page)
+    phys_footprint: 901 MB
+    phys_footprint_peak: 948 MB
+1790514320
+Asasfans Next [66506]: 64-bit    Footprint: 553 MB (16384 bytes per page)
+    phys_footprint: 554 MB
+    phys_footprint_peak: 952 MB
+1790514322
+Asasfans Next [66506]: 64-bit    Footprint: 683 MB (16384 bytes per page)
+    phys_footprint: 683 MB
+    phys_footprint_peak: 952 MB
+1790514324
+Asasfans Next [66506]: 64-bit    Footprint: 581 MB (16384 bytes per page)
+    phys_footprint: 581 MB
+    phys_footprint_peak: 1003 MB
+1790514326
+Asasfans Next [66506]: 64-bit    Footprint: 530 MB (16384 bytes per page)
+    phys_footprint: 530 MB
+    phys_footprint_peak: 1003 MB
+1790514328
+Asasfans Next [66506]: 64-bit    Footprint: 585 MB (16384 bytes per page)
+    phys_footprint: 585 MB
+    phys_footprint_peak: 1013 MB
+1790514330
+Asasfans Next [66506]: 64-bit    Footprint: 603 MB (16384 bytes per page)
+    phys_footprint: 603 MB
+    phys_footprint_peak: 1013 MB
+1790514332
+Asasfans Next [66506]: 64-bit    Footprint: 575 MB (16384 bytes per page)
+    phys_footprint: 576 MB
+    phys_footprint_peak: 1013 MB

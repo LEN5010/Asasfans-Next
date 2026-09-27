@@ -1,7 +1,7 @@
 [
   {
     "file": "glass-premium-fanart_1280-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -20,7 +20,7 @@
   },
   {
     "file": "glass-premium-fanart_1280.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -39,7 +39,7 @@
   },
   {
     "file": "glass-premium-fanart_390-bars-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -62,7 +62,7 @@
   },
   {
     "file": "glass-premium-fanart_390-bars.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -85,7 +85,7 @@
   },
   {
     "file": "glass-premium-today_1280-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -104,7 +104,7 @@
   },
   {
     "file": "glass-premium-today_1280.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -123,7 +123,7 @@
   },
   {
     "file": "glass-premium-today_390-bars-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -146,7 +146,7 @@
   },
   {
     "file": "glass-premium-today_390-bars.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-premium-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -169,7 +169,7 @@
   },
   {
     "file": "glass-solid-fanart_1280-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -188,7 +188,7 @@
   },
   {
     "file": "glass-solid-fanart_1280.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -207,7 +207,7 @@
   },
   {
     "file": "glass-solid-fanart_390-bars-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -230,7 +230,7 @@
   },
   {
     "file": "glass-solid-fanart_390-bars.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -253,7 +253,7 @@
   },
   {
     "file": "glass-solid-today_1280-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -272,7 +272,7 @@
   },
   {
     "file": "glass-solid-today_1280.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -291,7 +291,7 @@
   },
   {
     "file": "glass-solid-today_390-bars-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -314,7 +314,7 @@
   },
   {
     "file": "glass-solid-today_390-bars.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-solid-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -337,7 +337,7 @@
   },
   {
     "file": "glass-standard-fanart_1280-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -356,7 +356,7 @@
   },
   {
     "file": "glass-standard-fanart_1280.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -375,7 +375,7 @@
   },
   {
     "file": "glass-standard-fanart_390-bars-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -398,7 +398,7 @@
   },
   {
     "file": "glass-standard-fanart_390-bars.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-fanart",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -421,7 +421,7 @@
   },
   {
     "file": "glass-standard-today_1280-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -440,7 +440,7 @@
   },
   {
     "file": "glass-standard-today_1280.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -459,7 +459,7 @@
   },
   {
     "file": "glass-standard-today_390-bars-dark.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
@@ -482,7 +482,7 @@
   },
   {
     "file": "glass-standard-today_390-bars.png",
-    "commit": "c56e2d4e926d6c22eb426d1a42cd4795a4c42e23",
+    "commit": "7b08f8b6df36605db6b7d9d9cb042aa790148517",
     "scenario": "glass-standard-today",
     "fixture_revision": "v2-fixture-4",
     "viewport_logical": [
