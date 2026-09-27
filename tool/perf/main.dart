@@ -237,8 +237,9 @@ class _Run with WidgetsBindingObserver {
       }
       if (strip == null) return {'error': 'no long strip on screen'};
       beforeDetail = _feedPosition()?.pixels;
+      final tileImages = _decodedSizes([strip.tile]);
       final clock = Stopwatch()..start();
-      await _tapAt(strip);
+      await _tapAt(strip.at);
       await _until(() => _find<FanartDetailPage>().isNotEmpty);
       await _until(() => _decoded(under: _find<FanartDetailPage>()).isNotEmpty);
       final detail = clock.elapsedMilliseconds;
@@ -263,6 +264,7 @@ class _Run with WidgetsBindingObserver {
       await _wait(900);
       afterDetail = _feedPosition()?.pixels;
       return {
+        'tile_images': tileImages,
         'tap_to_detail_image_ms': detail,
         'detail_images': detailImages,
         'tap_to_viewer_image_ms': viewer,
@@ -402,7 +404,7 @@ class _Run with WidgetsBindingObserver {
 
   /// A long strip's tile whose cover top is in the clear part of the
   /// window, and the point on its cover to tap.
-  Offset? _longTile() {
+  ({Element tile, Offset at})? _longTile() {
     final view = _binding.platformDispatcher.views.first;
     final height = view.physicalSize.height / view.devicePixelRatio;
     for (final element in _find<FanartCard>()) {
@@ -412,7 +414,7 @@ class _Run with WidgetsBindingObserver {
       }
       final rect = _rect(element);
       if (rect != null && rect.top > 60 && rect.top < height - 200) {
-        return Offset(rect.center.dx, rect.top + 40);
+        return (tile: element, at: Offset(rect.center.dx, rect.top + 40));
       }
     }
     return null;
