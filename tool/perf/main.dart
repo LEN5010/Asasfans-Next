@@ -44,6 +44,7 @@ import 'perf_fixture.dart';
 ///   ASASFANS_PERF_LABEL   name of the run
 ///   ASASFANS_PERF_COMMIT  the source commit being measured
 ///   ASASFANS_PERF_SCROLL_SECONDS  length of the scroll phase (default 60)
+///   ASASFANS_PERF_FORCE_RESUMED  true when the screen is locked; see below
 ///   ASASFANS_PERF_MODE    run (default) | shots: instead of measuring, write
 ///                         real-renderer PNGs of Today and 二创, light and
 ///                         dark, at rest, under the pointer and under focus
@@ -60,6 +61,12 @@ const _commit = String.fromEnvironment(
   defaultValue: 'unknown',
 );
 const _mode = String.fromEnvironment('ASASFANS_PERF_MODE', defaultValue: 'run');
+
+/// A locked screen keeps the window from the front, and a window that is not
+/// resumed gets no frames. With this set the run declares itself resumed so
+/// the app draws in its window anyway. Such runs compare builds with each
+/// other under the same condition, never with a run in front.
+const _forceResumed = bool.fromEnvironment('ASASFANS_PERF_FORCE_RESUMED');
 const _scrollSeconds = int.fromEnvironment(
   'ASASFANS_PERF_SCROLL_SECONDS',
   defaultValue: 60,
@@ -150,6 +157,7 @@ class _Run with WidgetsBindingObserver {
     // The glass runtime loads after the first usable frame; let it settle.
     await _until(() => _find<AppGlassScope>().isNotEmpty);
     // The script brings the window to the front; wait for it.
+    _resumeIfForced();
     await _until(() => _binding.lifecycleState == AppLifecycleState.resumed);
     await _wait(3000);
     final env = _environment();
@@ -170,6 +178,13 @@ class _Run with WidgetsBindingObserver {
       'environment': env,
       'phases': _phases,
     };
+  }
+
+  void _resumeIfForced() {
+    if (!_forceResumed) return;
+    // The same call the engine's lifecycle message ends in.
+    // ignore: invalid_use_of_protected_member
+    _binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   }
 
   Map<String, Object?> _environment() {
@@ -195,6 +210,7 @@ class _Run with WidgetsBindingObserver {
       'text_scale': _binding.platformDispatcher.textScaleFactor,
       // Shader image filters exist only on Impeller.
       'shader_filters_supported': ui.ImageFilter.isShaderFilterSupported,
+      'lifecycle_forced': _forceResumed,
       'glass_preference': _glass,
       'glass_tier_effective': policy.tier.name,
       'glass_fallback': policy.fallback.name,
@@ -313,6 +329,7 @@ class _Run with WidgetsBindingObserver {
   /// at the window's own logical size and pixel ratio.
   Future<Map<String, Object?>> shots() async {
     await _until(() => _find<AppGlassScope>().isNotEmpty);
+    _resumeIfForced();
     await _until(() => _binding.lifecycleState == AppLifecycleState.resumed);
     await _wait(3000);
     final env = _environment();

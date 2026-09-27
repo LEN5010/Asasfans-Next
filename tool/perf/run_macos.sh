@@ -26,6 +26,7 @@ tool/flutterw build macos --profile --no-pub -t tool/perf/main.dart \
   --dart-define=ASASFANS_PERF_COMMIT="$commit" \
   --dart-define=ASASFANS_PERF_SCROLL_SECONDS="$seconds" \
   --dart-define=ASASFANS_PERF_MODE="$mode" \
+  --dart-define=ASASFANS_PERF_FORCE_RESUMED="${ASASFANS_PERF_FORCE_RESUMED:-false}" \
   >"$out/$label.build.log" 2>&1
 
 bundle="build/macos/Build/Products/Profile/Asasfans Next.app"
