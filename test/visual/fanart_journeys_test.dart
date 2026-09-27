@@ -315,6 +315,7 @@ void main() {
     }
     final last = _feed().last.identity.value;
     expectClear(tester, phone, last);
+    await shoot(tester, 'journey-last-above-dock', phone);
     // Hit-tested, not only measured: the dock is not over it.
     await tester.tap(
       find.descendant(of: tileOf(last), matching: find.byType(MediaMoreButton)),
@@ -324,7 +325,6 @@ void main() {
       find.byWidgetPredicate((w) => w is AppSwitch && w.label == '稍后看'),
       findsOneWidget,
     );
-    await shoot(tester, 'journey-last-above-dock', phone);
   });
 
   testVisual('keyboard focus in the feed is never under the dock', (
