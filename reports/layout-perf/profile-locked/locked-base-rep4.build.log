@@ -1,0 +1,5 @@
+The following plugins do not support Swift Package Manager for macos:
+  - flutter_secure_storage_macos
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Building macOS application...                                   
+✓ Built build/macos/Build/Products/Profile/Asasfans Next.app (81.3MB)
