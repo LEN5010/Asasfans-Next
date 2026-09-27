@@ -1,8 +1,16 @@
 #include "flutter_window.h"
 
+#include <dwmapi.h>
+#include <flutter/standard_method_codec.h>
+
 #include <optional>
+#include <string>
 
 #include "flutter/generated_plugin_registrant.h"
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -27,6 +35,33 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  // Same channel as macOS: "light" or "dark" as the app chose, anything
+  // else hands the title bar back to the system.
+  appearance_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(),
+          "asasfans.next/window_appearance",
+          &flutter::StandardMethodCodec::GetInstance());
+  appearance_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        const auto* value = std::get_if<std::string>(call.arguments());
+        if (call.method_name() != "set" || value == nullptr) {
+          result->NotImplemented();
+          return;
+        }
+        if (*value == "light") {
+          dark_override_ = false;
+        } else if (*value == "dark") {
+          dark_override_ = true;
+        } else {
+          dark_override_.reset();
+        }
+        ApplyAppearance();
+        result->Success();
+      });
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -40,6 +75,8 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  // The channel talks through the engine; release it first.
+  appearance_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -67,5 +104,26 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       break;
   }
 
-  return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+  const LRESULT result =
+      Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+  // A system theme change resets the frame to the system's; an explicit
+  // choice in the app wins again.
+  if (message == WM_DWMCOLORIZATIONCOLORCHANGED && dark_override_) {
+    ApplyAppearance();
+  }
+  return result;
+}
+
+void FlutterWindow::ApplyAppearance() {
+  HWND window = GetHandle();
+  if (window == nullptr) {
+    return;
+  }
+  if (!dark_override_) {
+    UpdateTheme(window);
+    return;
+  }
+  BOOL dark = *dark_override_ ? TRUE : FALSE;
+  DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark,
+                        sizeof(dark));
 }
