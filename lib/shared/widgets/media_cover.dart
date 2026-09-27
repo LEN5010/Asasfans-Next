@@ -53,6 +53,8 @@ class MediaCover extends StatelessWidget {
           // cropped cover needs enough pixels to fill the height too.
           LayoutBuilder(
             builder: (context, constraints) => Image(
+              // Another picture in this place starts over from the tone.
+              key: ValueKey(image),
               image: MediaImagePolicy.preview(
                 image!,
                 logicalWidth: constraints.maxWidth,
@@ -64,28 +66,17 @@ class MediaCover extends StatelessWidget {
               fit: fit,
               alignment: alignment,
               errorBuilder: (_, _, _) => _fallback(context),
-              // A network cover cross-fades from the loading tone; a cached
-              // one appears at once.
-              frameBuilder: (_, child, frame, synchronous) => synchronous
-                  ? child
-                  : AnimatedSwitcher(
-                      duration: appMotion(context, AppTokens.controlMotion),
-                      layoutBuilder: (current, previous) => Stack(
-                        fit: StackFit.expand,
-                        children: [...previous, ?current],
-                      ),
-                      child: frame == null
-                          ? ColoredBox(
-                              key: const ValueKey(false),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                            )
-                          : KeyedSubtree(
-                              key: const ValueKey(true),
-                              child: child,
-                            ),
-                    ),
+              // The same picture resized across a decode size keeps the
+              // old decode until the new one is ready, instead of flashing
+              // the tone.
+              gaplessPlayback: true,
+              // A network cover fades in over the loading tone once; a
+              // cached one appears at once.
+              frameBuilder: (_, child, frame, synchronous) => _Reveal(
+                shown: synchronous || frame != null,
+                instant: synchronous,
+                child: child,
+              ),
             ),
           )
         else
@@ -133,6 +124,68 @@ class MediaCover extends StatelessWidget {
         color: Theme.of(context).colorScheme.outline,
         size: 30,
       ),
+    ),
+  );
+}
+
+/// The loading tone until the first frame, then the image fading in over
+/// it, once: later source changes (a resize crossing a decode size) keep
+/// what is shown. One child only: an outgoing copy of the image would hold
+/// a picture its Image has already released.
+class _Reveal extends StatefulWidget {
+  const _Reveal({
+    required this.shown,
+    required this.instant,
+    required this.child,
+  });
+  final bool shown;
+  final bool instant;
+  final Widget child;
+  @override
+  State<_Reveal> createState() => _RevealState();
+}
+
+class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
+  late final _fade = AnimationController(
+    vsync: this,
+    value: widget.instant ? 1 : 0,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fade.duration = appMotion(context, AppTokens.controlMotion);
+    if (widget.shown) _fade.forward();
+  }
+
+  @override
+  void didUpdateWidget(_Reveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.shown) _fade.forward();
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _fade,
+    child: widget.child,
+    builder: (context, child) => Stack(
+      fit: StackFit.expand,
+      children: [
+        if (_fade.value < 1)
+          Opacity(
+            opacity: 1 - _fade.value,
+            child: ColoredBox(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+          ),
+        Opacity(opacity: _fade.value, child: child),
+      ],
     ),
   );
 }
