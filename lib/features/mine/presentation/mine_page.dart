@@ -54,88 +54,125 @@ class MinePage extends ConsumerWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final gutter = AppTokens.gutter(constraints.maxWidth);
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 880),
-              child: ListView(
-                padding: EdgeInsets.fromLTRB(
-                  gutter,
-                  MediaQuery.paddingOf(context).top + 16,
-                  gutter,
-                  MediaQuery.paddingOf(context).bottom + 24,
-                ),
-                children: [
-                  RootHeading(
-                    title: '我的',
-                    subtitle: '收藏、记录和本地资料，都保存在这台设备上',
-                    actions: [
-                      AppButton.icon(
-                        tooltip: '设置',
-                        onPressed: () => context.go('/mine/settings'),
-                        icon: const Icon(Icons.settings_outlined),
-                      ),
-                    ],
-                  ),
-                  // Only while an earlier build's sign-in is still here.
-                  if (hasLocalLogin) ...const [
-                    SizedBox(height: AppTokens.sectionGap),
-                    _Group(title: '账号', children: [LocalLoginCleanupTile()]),
-                  ],
-                  const SizedBox(height: AppTokens.sectionGap - 8),
-                  const SectionHeading(title: '我的内容'),
-                  const SizedBox(height: 4),
-                  _LibraryGrid(
-                    entries: _library,
-                    onOpen: (path) => context.go('/mine/$path'),
-                  ),
-                  const _RecentSection(),
-                  const SizedBox(height: AppTokens.sectionGap),
-                  _Group(
-                    title: '管理',
-                    children: links(const [
-                      ('订阅管理', 'subscriptions', Icons.person_add_alt),
-                      (
-                        '关注日程',
-                        'calendar-follows',
-                        Icons.event_available_outlined,
-                      ),
-                      ('内容规则', 'rules', Icons.filter_alt_outlined),
-                      ('备份与恢复', 'backup', Icons.backup_outlined),
-                    ]),
-                  ),
-                  const SizedBox(height: AppTokens.sectionGap),
-                  _Group(
-                    title: '应用',
-                    children: [
-                      ...links(const [('设置', 'settings', Icons.tune)]),
-                      // A text way into the tools, beside the floating button.
-                      _Link(
-                        label: '工具与相关站点',
-                        icon: Icons.handyman_outlined,
-                        onTap: () => showToolsSheet(context),
-                      ),
-                      ...links(const [
-                        ('作者与致谢', 'credits', Icons.people_outline),
-                      ]),
-                      _Link(
-                        label: '关于',
-                        icon: Icons.info_outline,
-                        onTap: () => showLicensePage(
-                          context: context,
-                          applicationName: 'Asasfans Next',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+          // The page starts where every page starts. What it holds keeps
+          // readable widths: the library at most [_libraryWidth], each
+          // group at most [_groupWidth], the two groups side by side once
+          // both fit.
+          final width = constraints.maxWidth - gutter * 2;
+          final paired = width >= _groupWidth * 1.4 + AppTokens.sectionGap;
+          final manage = _Group(
+            title: '管理',
+            children: links(const [
+              ('订阅管理', 'subscriptions', Icons.person_add_alt),
+              ('关注日程', 'calendar-follows', Icons.event_available_outlined),
+              ('内容规则', 'rules', Icons.filter_alt_outlined),
+              ('备份与恢复', 'backup', Icons.backup_outlined),
+            ]),
+          );
+          final app = _Group(
+            title: '应用',
+            children: [
+              ...links(const [('设置', 'settings', Icons.tune)]),
+              // A text way into the tools, beside the floating button.
+              _Link(
+                label: '工具与相关站点',
+                icon: Icons.handyman_outlined,
+                onTap: () => showToolsSheet(context),
               ),
+              ...links(const [('作者与致谢', 'credits', Icons.people_outline)]),
+              _Link(
+                label: '关于',
+                icon: Icons.info_outline,
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'Asasfans Next',
+                ),
+              ),
+            ],
+          );
+          Widget bounded(double max, Widget child) => Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: max),
+              child: child,
             ),
+          );
+          return ListView(
+            padding: EdgeInsets.fromLTRB(
+              gutter,
+              MediaQuery.paddingOf(context).top + 16,
+              gutter,
+              MediaQuery.paddingOf(context).bottom + 24,
+            ),
+            children: [
+              bounded(
+                AppTokens.pageWidth,
+                RootHeading(
+                  title: '我的',
+                  subtitle: '收藏、记录和本地资料，都保存在这台设备上',
+                  actions: [
+                    AppButton.icon(
+                      tooltip: '设置',
+                      onPressed: () => context.go('/mine/settings'),
+                      icon: const Icon(Icons.settings_outlined),
+                    ),
+                  ],
+                ),
+              ),
+              // Only while an earlier build's sign-in is still here.
+              if (hasLocalLogin) ...[
+                const SizedBox(height: AppTokens.sectionGap),
+                bounded(
+                  _groupWidth,
+                  const _Group(
+                    title: '账号',
+                    children: [LocalLoginCleanupTile()],
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppTokens.sectionGap - 8),
+              bounded(
+                _libraryWidth,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SectionHeading(title: '我的内容'),
+                    const SizedBox(height: 4),
+                    _LibraryGrid(
+                      entries: _library,
+                      onOpen: (path) => context.go('/mine/$path'),
+                    ),
+                  ],
+                ),
+              ),
+              bounded(AppTokens.pageWidth, const _RecentSection()),
+              const SizedBox(height: AppTokens.sectionGap),
+              if (paired)
+                bounded(
+                  _groupWidth * 2 + AppTokens.sectionGap,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: manage),
+                      const SizedBox(width: AppTokens.sectionGap),
+                      Expanded(child: app),
+                    ],
+                  ),
+                )
+              else ...[
+                bounded(_groupWidth, manage),
+                const SizedBox(height: AppTokens.sectionGap),
+                bounded(_groupWidth, app),
+              ],
+            ],
           );
         },
       ),
     );
   }
+
+  static const _libraryWidth = 880.0;
+  static const _groupWidth = 520.0;
 }
 
 /// The library as tiles: each a place of my own, reached in one tap. The

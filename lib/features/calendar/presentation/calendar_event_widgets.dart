@@ -108,8 +108,6 @@ class CalendarAgendaRow extends StatelessWidget {
         : label;
     final muted = event.isCancelled;
     final scale = MediaQuery.textScalerOf(context).scale(1);
-    // Large text: the state moves under the title, which keeps the width.
-    final stacked = scale >= 1.6;
     final stateStyle = theme.textTheme.labelMedium?.copyWith(
       color: muted ? colors.error : colors.primary,
       fontWeight: FontWeight.w600,
@@ -184,22 +182,25 @@ class CalendarAgendaRow extends StatelessWidget {
                           color: muted ? colors.onSurfaceVariant : null,
                         ),
                       ),
-                      if (subtitle.isNotEmpty)
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      if (stacked) Text(state, style: stateStyle),
+                      // What kind of event, beside what it is about: the
+                      // state never sits apart at the far end of the line.
+                      Row(
+                        children: [
+                          if (state.isNotEmpty) Text(state, style: stateStyle),
+                          if (subtitle.isNotEmpty)
+                            Flexible(
+                              child: Text(
+                                state.isEmpty ? subtitle : ' · $subtitle',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                if (!stacked)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Text(state, style: stateStyle),
-                  ),
               ],
             ),
           ),

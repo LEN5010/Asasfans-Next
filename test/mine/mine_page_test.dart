@@ -71,9 +71,8 @@ void main() {
     expect(find.byType(PreferencesControls), findsOneWidget);
   });
 
-  testWidgets('wide windows keep one centred column and a real about page', (
-    tester,
-  ) async {
+  testWidgets('wide windows start at the page edge, groups side by side, and '
+      'a real about page', (tester) async {
     tester.view
       ..physicalSize = const Size(1280, 900)
       ..devicePixelRatio = 1;
@@ -85,8 +84,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // Not stretched: the page reads as a column. 收藏 and 稍后看 lead side
-    // by side; the other four share one row below them.
+    // The page starts at the gutter every root page shares, not centred.
+    expect(tester.getTopLeft(find.text('我的')).dx, closeTo(24, 1));
+    // 收藏 and 稍后看 lead side by side; the other four share one row below
+    // them, and the library keeps a bounded width.
     final saved = tester.getRect(find.text('收藏'));
     final later = tester.getRect(find.text('稍后看'));
     final history = tester.getRect(find.text('历史记录'));
@@ -95,6 +96,13 @@ void main() {
     expect(history.top, updates.top);
     expect(history.top, greaterThan(saved.bottom));
     expect(updates.right - saved.left, lessThan(900));
+    // 管理 and 应用 are two bounded groups side by side, not rows as long as
+    // the window.
+    final manage = tester.getRect(find.text('管理'));
+    final app = tester.getRect(find.text('应用'));
+    expect(manage.top, app.top);
+    expect(app.left, greaterThan(manage.right));
+    expect(tester.getRect(find.text('备份与恢复')).left, lessThan(app.left - 200));
     await tester.scrollUntilVisible(find.text('关于'), 180);
     // The page is longer now; bring the row fully into view before the tap.
     await tester.ensureVisible(find.text('关于'));

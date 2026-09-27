@@ -212,8 +212,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                 Expanded(
                   child: Align(
                     alignment: Alignment.topLeft,
+                    // A reading column: an event's time, title and kind
+                    // stay together however wide the window.
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 760),
+                      constraints: const BoxConstraints(maxWidth: 640),
                       child: agenda(scrollable: true),
                     ),
                   ),
