@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 void main() {
-  test('chrome keeps a legible tint and package optical defaults', () {
+  test('chrome keeps legible tint and optics, without boost or glare', () {
     const defaults = LiquidGlassSettings();
     for (final brightness in Brightness.values) {
       final settings = AppGlassStyle.settings(brightness);
@@ -21,8 +21,11 @@ void main() {
       expect(settings.chromaticAberration, defaults.chromaticAberration);
       expect(
         settings.glassColor.a,
-        closeTo(brightness == Brightness.dark ? .24 : .35, .001),
+        closeTo(brightness == Brightness.dark ? .40 : .50, .001),
       );
+      // The backdrop is not made more saturated, and the rim glows less.
+      expect(settings.saturation, 1.0);
+      expect(settings.glowIntensity, lessThan(defaults.glowIntensity));
     }
   });
 
