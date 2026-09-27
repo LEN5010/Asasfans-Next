@@ -99,11 +99,14 @@ Future<AnchorRestore> restoreAnchor({
   return (element: match, built: built);
 }
 
-/// The first item still in view at the top of [controller]'s viewport,
-/// below the [clearTop] that bars cover, and how far its top sits below the
-/// viewport's top: what a width change should keep in place. Read from the
-/// current layout, so call it before the new width is laid out, and outside
-/// a build.
+/// The item the reader is on in [controller]'s viewport, and how far its
+/// top sits below the viewport's top: what a width change should keep in
+/// place. That is the item across a reading line 40% down the part below
+/// [clearTop] (the leftmost, when columns share the line), or else the one
+/// nearest to it. The top edge is a poor choice: a work mostly scrolled
+/// away up there keeps its place while the one being read moves off.
+/// Read from the current layout, so call it before the new width is laid
+/// out, and outside a build.
 ({ContentIdentity identity, double top})? visibleAnchor(
   BuildContext scope,
   ScrollController controller, {
@@ -113,17 +116,28 @@ Future<AnchorRestore> restoreAnchor({
   final viewport = _viewportRect(controller);
   if (viewport == null) return null;
   final floor = viewport.top + clearTop;
+  final line = floor + (viewport.bottom - floor) * .4;
   ({ContentIdentity identity, double top})? best;
+  var bestScore = (double.infinity, double.infinity);
   void visit(Element element) {
     final key = element.widget.key;
     if (key is ValueKey<ContentIdentity>) {
       final box = element.renderObject;
       if (box is RenderBox && box.attached && box.hasSize) {
-        final top = box.localToGlobal(Offset.zero).dy;
-        final relative = top - viewport.top;
-        if (top + box.size.height > floor &&
-            (best == null || relative < best!.top)) {
-          best = (identity: key.value, top: relative);
+        final origin = box.localToGlobal(Offset.zero);
+        final bottom = origin.dy + box.size.height;
+        if (bottom > floor && origin.dy < viewport.bottom) {
+          final distance = origin.dy > line
+              ? origin.dy - line
+              : bottom < line
+              ? line - bottom
+              : 0.0;
+          final score = (distance, origin.dx);
+          if (score.$1 < bestScore.$1 ||
+              (score.$1 == bestScore.$1 && score.$2 < bestScore.$2)) {
+            bestScore = score;
+            best = (identity: key.value, top: origin.dy - viewport.top);
+          }
         }
       }
       return;
