@@ -2,9 +2,9 @@
 
 - 目标文件：`CLAUDE_GOAL.md` 与 `PLAN.md`（2026-09-26 审阅稿）。
 - 基线：`main@5149575`。前后对照用的 `2a91d3a` 与它在 `lib/`、`test/`、`macos/`、`android/`、`ios/` 上完全相同，只多了 `tool/perf`。
-- 最后一个代码提交：`c56e2d4`，已推送到 `origin/main`（普通推送，未强推）。之后的提交只含报告。
-- 验收包：`docs/flutter/验收包/Asasfans Next.app`，构建自 `c56e2d4`。
-- 开发 CI：Flutter Development Validation，run [36319499703](https://github.com/LEN5010/Asasfans-Next/actions/runs/36319499703)，结果见第 3 节。
+- 最后一个代码提交：`fdce00f`，已推送到 `origin/main`（普通推送，未强推）。之后的提交只含报告。
+- 验收包：`docs/flutter/验收包/Asasfans Next.app`，构建自 `fdce00f`。
+- 开发 CI：Flutter Development Validation，run [36319499703](https://github.com/LEN5010/Asasfans-Next/actions/runs/36319499703)（`c56e2d4`）与 [36320050840](https://github.com/LEN5010/Asasfans-Next/actions/runs/36320050840)（`fdce00f`），四端都成功，见第 3 节。
 - 用户验收：尚未进行。PLAN 规定内部通过不能代写，本报告不填 `accepted_by_user`，只能由用户填写。
 
 ## 1. 运行环境
@@ -40,6 +40,7 @@
 | 测试截图 | `54eb868`、`9bed307` | `fanart_journeys_test.dart`、`two_pages_test.dart` | 最后一项截图改在打开面板之前；补拍动态正文与小说的悬停 |
 | 旧失败清零 | `2c09680` | `test/visual/directions/direction_a.dart` | 示意原型的议程行写死 56 高，本机字体需要 62，在 390 宽溢出 6 px；改为最小 56、随字体长高。全量测试的两条失败因此消失 |
 | L09 各档同功能 | `5aa68c3` | `glass_tiers_test.dart`、`visual_harness.dart`、`visual_capture.sh` | 二创与今日在 solid/standard/premium × 手机/宽屏 × 浅/深下做同一组操作：实际绘制档位、切到今日再切回且列表位置不变、更多菜单、提示条在导航上方、键盘焦点不进导航。普通模式与 Impeller 模式各 12 条全部通过 |
+| Windows 标题栏跟随 | `fdce00f` | `windows/runner/flutter_window.{h,cpp}`、`win32_window.h`、`window_appearance.dart`、`test/core/window_appearance_test.dart` | 与 macOS 同一个 channel：浅/深设置 `DWMWA_USE_IMMERSIVE_DARK_MODE`，跟随系统时交还 `UpdateTheme`；系统主题变化后重新套用显式选择。Dart 测试钉住只在 macOS/Windows 发送、发送的值、宿主无桥接时不报错。CI Windows 作业编译通过；Windows 上的实际效果没有机器验证 |
 | L09 玻璃调校 | `c56e2d4` | `app_glass_style.dart`、`glass_reference_integration_test.dart` | 去掉玻璃库默认的 1.5 倍背景饱和度，光晕 0.75 → 0.4，tint 浅 0.35 → 0.50、深 0.24 → 0.40；厚度、模糊、折射、色散保持库默认。数据见第 4.2 节 |
 
 ## 3. 实际命令与退出码
@@ -63,13 +64,18 @@
 | `tool/flutterw build macos --profile --no-pub`（`c56e2d4`） | 0 | `Asasfans Next.app` 81.2 MB |
 | `codesign --verify --deep --strict docs/flutter/验收包/Asasfans Next.app` | 0 | 开发签名，Team 5WR2PV685M |
 | `git push origin main` | 0 | `5149575..c56e2d4` |
-| `gh workflow run flutter-development-validation.yml --ref main` | 0 | run 36319499703 on `c56e2d4`：success。android（`build apk --debug`）、ios（`build ios --debug --no-codesign`）、macos（`build macos --profile`）、windows（`build windows --profile`）四个作业都成功；产物 android 84.3 MB、ios 41.8 MB、macos 29.5 MB、windows 17.5 MB（压缩后），只做开发构建，不发布 |
+| `gh workflow run flutter-development-validation.yml --ref main`（第一次） | 0 | run 36319499703 on `c56e2d4`：success。android（`build apk --debug`）、ios（`build ios --debug --no-codesign`）、macos（`build macos --profile`）、windows（`build windows --profile`）四个作业都成功；产物 android 84.3 MB、ios 41.8 MB、macos 29.5 MB、windows 17.5 MB（压缩后），只做开发构建，不发布 |
+| `tool/flutterw test --no-pub test/core/window_appearance_test.dart`（`fdce00f`） | 0 | 2 通过 |
+| `tool/flutterw analyze --no-pub`（`fdce00f`） | 0 | No issues found |
+| `tool/flutterw build macos --profile --no-pub`（`fdce00f`） | 0 | 81.2 MB，替换验收包，`codesign --verify` 通过 |
+| `git push origin main` | 0 | `c093afe..fdce00f` |
+| `gh workflow run flutter-development-validation.yml --ref main`（第二次） | 0 | run 36320050840 on `fdce00f`：success，四个作业都成功；windows 产物 17,469,423 → 17,485,250 字节，新 runner 代码已编入 |
 
-验收包二进制 SHA-256（`c56e2d4`）：
+验收包二进制 SHA-256（`fdce00f`）：
 
 ```
 1992b88b27870c4a84d4e580fb353cc671dd529c2d12f4619b8756feb15a3289  MacOS/Asasfans Next
-b998862ba9b300f52918844381ce6829372374a753d6c5978f887902b4d45e4d  Frameworks/App.framework/Versions/A/App
+3b0a83ae7bf513ebb009c87584cf22f25dd160d49a7f2f904a0def78c58a0413  Frameworks/App.framework/Versions/A/App
 ```
 
 ## 4. 性能与光学
@@ -159,7 +165,7 @@ solid 的彩度主要来自选中项的粉色底块，不是背景。调校前 s
 4. **窗口缩放的帧时**：计划场景里的缩放窗口一步没有进 Profile 脚本；缩放后回到原项只在无头测试里验证。
 5. **Android 真机**：安装需要单独授权，没有做。
 6. **长条漫详情预览**：详情解码 273×8192，偏糊；源站是否支持服务端裁剪需要探测线上接口，未获授权，没有验证。
-7. **Windows 标题栏主题同步**：PLAN 5.4 只要求 macOS 窗口，这里没做；这台 Mac 也无法构建或验证 Windows 原生代码。Windows 模板本身跟随系统主题，应用内选择和系统主题不同时标题栏会不一致。
+7. **Windows 标题栏的实际效果**：已实现（`fdce00f`），CI 编译通过；没有 Windows 机器，运行时切换浅/深是否即时重绘标题栏没有验证。
 8. **侧栏宽度分档**：PLAN 第 4 节说表中阈值是候选值，允许简化成两档，不要强造第三种模式。现有两档（<840 底栏，≥840 侧栏）保持不变；目标文件要求两屏样板经用户审阅后再推广，这一项留待审阅后决定。
 9. **频道/主栏往返阶段的慢帧**来源未定位（4.1 第 5 条）。
 10. **用户验收**：需要用户打开验收包并给出结论；`accepted_by_user` 只能由用户填写。
@@ -169,19 +175,20 @@ solid 的彩度主要来自选中项的粉色底块，不是背景。调校前 s
 从新到旧逐个 `git revert`，互相依赖的必须按这个顺序：
 
 1. 本报告的提交（只含 `reports/`）
-2. `c56e2d4`：玻璃调校；独立，可单独回滚（同时回滚它改的钉值测试）
-3. `5aa68c3`：三档对照测试与 Impeller 截图；只改测试和工具
-4. `2c09680`：示意原型议程行；只改测试
-5. `58e1f9b`：上一版报告
-6. `9bed307`、`54eb868`：只改测试
-7. `78bc16a`：导航与焦点遮挡；独立
-8. `999f073`：测量工具；独立
-9. `b53b3cb`：视频与小说；依赖 `71f2b35` 的 `pressScale`，须先于它回滚
-10. `71f2b35`：悬停、焦点、窗口外观
-11. `de374bc`：图片预算；独立，可单独回滚
-12. `256b902`：日历与我的；用到 `299540b` 新增的 `AppTokens.pageWidth`，须先于它回滚
-13. `299540b`：今日；用到 `0a1471b` 给 `SliverContentMasonry` 加的 `rows`/`maxColumns`
-14. `0a1471b`：二创；它的缩放旅程依赖 `98e2ec0`
-15. `98e2ec0`：封面淡入
+2. `fdce00f`：Windows 标题栏；改的是 `71f2b35` 建立的桥接，可单独回滚
+3. `c56e2d4`：玻璃调校；独立，可单独回滚（同时回滚它改的钉值测试）
+4. `5aa68c3`：三档对照测试与 Impeller 截图；只改测试和工具
+5. `2c09680`：示意原型议程行；只改测试
+6. `58e1f9b`：上一版报告
+7. `9bed307`、`54eb868`：只改测试
+8. `78bc16a`：导航与焦点遮挡；独立
+9. `999f073`：测量工具；独立
+10. `b53b3cb`：视频与小说；依赖 `71f2b35` 的 `pressScale`，须先于它回滚
+11. `71f2b35`：悬停、焦点、窗口外观
+12. `de374bc`：图片预算；独立，可单独回滚
+13. `256b902`：日历与我的；用到 `299540b` 新增的 `AppTokens.pageWidth`，须先于它回滚
+14. `299540b`：今日；用到 `0a1471b` 给 `SliverContentMasonry` 加的 `rows`/`maxColumns`
+15. `0a1471b`：二创；它的缩放旅程依赖 `98e2ec0`
+16. `98e2ec0`：封面淡入
 
 代码已推送，回滚用新的 revert 提交，不改写历史。验收包回滚：旧包已被替换，需要从回滚后的提交重新构建。
