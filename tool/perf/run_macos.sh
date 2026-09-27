@@ -26,9 +26,13 @@ tool/flutterw build macos --profile --no-pub -t tool/perf/main.dart \
   --dart-define=ASASFANS_PERF_SCROLL_SECONDS="$seconds" \
   >"$out/$label.build.log" 2>&1
 
-app="build/macos/Build/Products/Profile/Asasfans Next.app/Contents/MacOS/Asasfans Next"
-"$app" >"$out/$label.log" 2>&1 &
+bundle="build/macos/Build/Products/Profile/Asasfans Next.app"
+"$bundle/Contents/MacOS/Asasfans Next" >"$out/$label.log" 2>&1 &
 pid=$!
+# Started from a shell, the window may open behind others; bring the running
+# instance to the front (the app waits until it is resumed).
+sleep 2
+open "$bundle" || true
 : >"$out/$label.footprint.txt"
 while kill -0 "$pid" 2>/dev/null; do
   {

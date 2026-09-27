@@ -113,7 +113,7 @@ class _NoLinks implements ExternalLinkService {
   Future<bool> open(Uri uri) async => false;
 }
 
-class _Run {
+class _Run with WidgetsBindingObserver {
   _Run(this.imageGenerationMs, this.images);
   final int imageGenerationMs;
   final Map<String, Uint8List> images;
@@ -123,10 +123,22 @@ class _Run {
   static const _device = 7001;
   var _pointer = 0;
 
+  /// Lifecycle states seen during the current phase. A window that is not
+  /// frontmost and visible gets few or no frames, and its glass falls back
+  /// to solid: such a phase is marked, never counted as a result.
+  final _states = <String>{};
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) =>
+      _states.add(state.name);
+
   Future<Map<String, Object?>> run() async {
     _binding.addTimingsCallback(_frames.addAll);
+    _binding.addObserver(this);
     // The glass runtime loads after the first usable frame; let it settle.
     await _until(() => _find<AppGlassScope>().isNotEmpty);
+    // The script brings the window to the front; wait for it.
+    await _until(() => _binding.lifecycleState == AppLifecycleState.resumed);
     await _wait(3000);
     final env = _environment();
     _binding.handlePointerEvent(
@@ -226,7 +238,7 @@ class _Run {
       if (strip == null) return {'error': 'no long strip on screen'};
       beforeDetail = _feedPosition()?.pixels;
       final clock = Stopwatch()..start();
-      await _tap(strip);
+      await _tapAt(strip);
       await _until(() => _find<FanartDetailPage>().isNotEmpty);
       await _until(() => _decoded(under: _find<FanartDetailPage>()).isNotEmpty);
       final detail = clock.elapsedMilliseconds;
@@ -237,7 +249,7 @@ class _Run {
       List<Object?> viewerImages = const [];
       if (whole != null) {
         clock.reset();
-        await _tap(whole);
+        await _tapAt(_rect(whole)!.center);
         await _until(
           () => _decoded(under: _find<FanartImageViewer>()).isNotEmpty,
         );
@@ -289,15 +301,24 @@ class _Run {
   ) async {
     await _wait(500);
     _frames.clear();
+    _states
+      ..clear()
+      ..add(_binding.lifecycleState?.name ?? 'unknown');
     final clock = Stopwatch()..start();
     final notes = await body();
     // Frames still in flight belong to this phase; timings arrive within
     // 100 ms in profile mode.
     await _wait(500);
     final frames = List.of(_frames);
+    final context = _find<Scaffold>().firstOrNull;
     _phases.add({
       'name': name,
       'wall_ms': clock.elapsedMilliseconds,
+      'lifecycle': _states.toList(),
+      'valid': _states.length == 1 && _states.single == 'resumed',
+      'glass_tier_effective': context == null
+          ? null
+          : AppGlassScope.of(context).tier.name,
       ...notes,
       'frames': _stats(frames),
       'memory': _memory(),
@@ -379,18 +400,19 @@ class _Run {
   Element? _text(String value) =>
       _find<Text>().where((e) => (e.widget as Text).data == value).firstOrNull;
 
-  Element? _longTile() {
-    final height =
-        _binding.platformDispatcher.views.first.physicalSize.height /
-        _binding.platformDispatcher.views.first.devicePixelRatio;
+  /// A long strip's tile whose cover top is in the clear part of the
+  /// window, and the point on its cover to tap.
+  Offset? _longTile() {
+    final view = _binding.platformDispatcher.views.first;
+    final height = view.physicalSize.height / view.devicePixelRatio;
     for (final element in _find<FanartCard>()) {
       final card = element.widget as FanartCard;
       if (!card.item.images.any((uri) => uri.path.contains('/long/'))) {
         continue;
       }
       final rect = _rect(element);
-      if (rect != null && rect.top > 80 && rect.bottom < height - 100) {
-        return element;
+      if (rect != null && rect.top > 60 && rect.top < height - 200) {
+        return Offset(rect.center.dx, rect.top + 40);
       }
     }
     return null;
@@ -451,9 +473,7 @@ class _Run {
 
   // ---- input and time ----
 
-  Future<void> _tap(Element element) async {
-    final rect = _rect(element)!;
-    final at = rect.center;
+  Future<void> _tapAt(Offset at) async {
     final pointer = ++_pointer;
     _binding.handlePointerEvent(
       PointerDownEvent(
