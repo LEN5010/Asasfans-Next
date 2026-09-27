@@ -99,6 +99,86 @@ Future<AnchorRestore> restoreAnchor({
   return (element: match, built: built);
 }
 
+/// The first item still in view at the top of [controller]'s viewport,
+/// below the [clearTop] that bars cover, and how far its top sits below the
+/// viewport's top: what a width change should keep in place. Read from the
+/// current layout, so call it before the new width is laid out, and outside
+/// a build.
+({ContentIdentity identity, double top})? visibleAnchor(
+  BuildContext scope,
+  ScrollController controller, {
+  double clearTop = 0,
+}) {
+  if (!controller.hasClients || controller.offset <= 0) return null;
+  final viewport = _viewportRect(controller);
+  if (viewport == null) return null;
+  final floor = viewport.top + clearTop;
+  ({ContentIdentity identity, double top})? best;
+  void visit(Element element) {
+    final key = element.widget.key;
+    if (key is ValueKey<ContentIdentity>) {
+      final box = element.renderObject;
+      if (box is RenderBox && box.attached && box.hasSize) {
+        final top = box.localToGlobal(Offset.zero).dy;
+        final relative = top - viewport.top;
+        if (top + box.size.height > floor &&
+            (best == null || relative < best!.top)) {
+          best = (identity: key.value, top: relative);
+        }
+      }
+      return;
+    }
+    element.visitChildren(visit);
+  }
+
+  scope.visitChildElements(visit);
+  return best;
+}
+
+/// Puts [anchor]'s item back at the same distance from the viewport's top
+/// after a relayout, walking to it first if it is no longer built.
+Future<void> keepVisibleAnchor({
+  required BuildContext scope,
+  required ScrollController controller,
+  required ({ContentIdentity identity, double top}) anchor,
+  required List<ContentIdentity> order,
+}) async {
+  await WidgetsBinding.instance.endOfFrame;
+  for (var walked = false; ; walked = true) {
+    if (!scope.mounted || !controller.hasClients) return;
+    final viewport = _viewportRect(controller);
+    final found = _find(scope, anchor.identity, const {}).element;
+    final box = found?.renderObject;
+    if (viewport != null && box is RenderBox && box.attached) {
+      final top = box.localToGlobal(Offset.zero).dy - viewport.top;
+      final position = controller.position;
+      controller.jumpTo(
+        (position.pixels + top - anchor.top).clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
+        ),
+      );
+      return;
+    }
+    if (walked) return;
+    final restored = await restoreAnchor(
+      scope: scope,
+      controller: controller,
+      anchor: ReturnAnchor(identity: anchor.identity),
+      order: order,
+    );
+    if (restored != AnchorRestore.exact) return;
+    await WidgetsBinding.instance.endOfFrame;
+  }
+}
+
+Rect? _viewportRect(ScrollController controller) {
+  final box = controller.position.context.notificationContext
+      ?.findRenderObject();
+  if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+  return box.localToGlobal(Offset.zero) & box.size;
+}
+
 /// How many further pages a cold return may fetch to reach its anchor.
 const restorePageBudget = 3;
 

@@ -251,14 +251,15 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
     return LayoutBuilder(
       builder: (context, constraints) {
         final scaler = MediaQuery.textScalerOf(context);
+        // The width the grid is actually laid out in, inside the page gutter.
+        final available =
+            constraints.maxWidth -
+            2 * extraInset(MediaQuery.sizeOf(context).width);
         final columns = MediaGridDelegate.columnsFor(
-          constraints.maxWidth,
+          available,
           textScale: scaler.scale(1),
         );
-        final width = MediaGridDelegate.cellWidth(
-          constraints.maxWidth,
-          columns,
-        );
+        final width = MediaGridDelegate.cellWidth(available, columns);
         return FeedScrollView(
           storageKey: PageStorageKey('community-${widget.channel.name}'),
           controller: _scrollController,
@@ -274,12 +275,8 @@ class _CommunityFeedViewState extends ConsumerState<CommunityFeedView>
                 // rebuilt and compared for every loaded video.
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
-                  mainAxisSpacing: MediaGridDelegate.spacingFor(
-                    constraints.maxWidth,
-                  ),
-                  crossAxisSpacing: MediaGridDelegate.spacingFor(
-                    constraints.maxWidth,
-                  ),
+                  mainAxisSpacing: MediaGridDelegate.spacingFor(available),
+                  crossAxisSpacing: MediaGridDelegate.spacingFor(available),
                   mainAxisExtent: VideoCard.extentForWidth(width, scaler),
                 ),
                 itemCount: state.videos.length,

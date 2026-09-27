@@ -3,6 +3,7 @@ import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_image_viewer.dart';
+import 'package:asasfans_next/shared/widgets/media_card_surface.dart';
 import 'package:asasfans_next/shared/widgets/media_cover.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,15 +97,51 @@ void main() {
     await shoot(tester, 'diag-grid', view);
   });
 
-  testVisual('every tile in a row keeps one extent, whatever its type', (
+  testVisual('each tile ends with its own content; a video pads nothing', (
     tester,
   ) async {
     await pumpDiagnostic(tester);
-    final heights = {
-      for (final element in find.byType(FanartCard).evaluate())
-        tester.getSize(find.byWidget(element.widget)).height,
-    };
-    expect(heights, hasLength(1));
+    Rect byline(String id) => tester.getRect(
+      find
+          .ancestor(
+            of: find.descendant(
+              of: tileOf(id),
+              matching: find.byType(MediaMoreButton),
+            ),
+            matching: find.byType(SizedBox),
+          )
+          .first,
+    );
+    // The video's maker sits right under its words: no band of space where
+    // a portrait box would have been.
+    final video = diagnosticFanart.first;
+    final title = tester.getRect(
+      find.descendant(
+        of: tileOf(video.identity.value),
+        matching: find.text(video.text),
+      ),
+    );
+    expect(byline('90000101').top - title.bottom, closeTo(0, 1));
+    // Every tile ends at its byline, whatever its neighbours hold.
+    final tiles = find.byType(FanartCard).evaluate().toList();
+    for (final element in tiles) {
+      final id = (element.widget as FanartCard).item.identity.value;
+      expect(
+        tester.getRect(tileOf(id)).bottom,
+        closeTo(byline(id).bottom, 1),
+        reason: id,
+      );
+    }
+    // A masonry: heights differ by type, and no two tiles overlap.
+    final rects = [
+      for (final e in tiles) tester.getRect(find.byWidget(e.widget)),
+    ];
+    expect({for (final r in rects) r.height.round()}.length, greaterThan(1));
+    for (var i = 0; i < rects.length; i++) {
+      for (var j = i + 1; j < rects.length; j++) {
+        expect(rects[i].overlaps(rects[j]), isFalse);
+      }
+    }
     expect(tester.takeException(), isNull);
   });
 

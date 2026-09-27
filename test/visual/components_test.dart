@@ -78,7 +78,7 @@ void main() {
           LayoutBuilder(
             builder: (context, constraints) {
               final width = (constraints.maxWidth - 12) / 2;
-              final scaler = MediaQuery.textScalerOf(context);
+              // Each tile as tall as its own content.
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 12,
@@ -86,7 +86,6 @@ void main() {
                   for (final item in [fixtureFanart[0], fixtureFanart[2]])
                     SizedBox(
                       width: width,
-                      height: FanartCard.extentFor(item, width, scaler),
                       child: FanartCard(item: item, onTap: () {}),
                     ),
                 ],

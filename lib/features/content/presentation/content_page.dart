@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show FlutterView;
 
 import '../../rules/application/rules_providers.dart';
 import '../../rules/application/visible_random.dart';
@@ -20,6 +21,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
+import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/application/handoff_coordinator.dart';
 import '../../handoff/domain/return_context.dart';
@@ -339,7 +341,7 @@ class _FanartFeed extends ConsumerStatefulWidget {
 }
 
 class _FanartFeedState extends ConsumerState<_FanartFeed>
-    with FeedOffsetMemory {
+    with FeedOffsetMemory, WidgetsBindingObserver {
   @override
   String get offsetStorageId => 'feed-offset-fanart-${widget.channel.slug}';
 
@@ -359,6 +361,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
       unawaited(_restoreReturn());
     });
     _handoff.addListener(_onHandoff);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   late final HandoffCoordinator _handoff = ref.read(handoffCoordinatorProvider);
@@ -373,7 +376,65 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
   @override
   void dispose() {
     _handoff.removeListener(_onHandoff);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// A width change reflows the masonry: the work at the top of the view
+  /// stays there, instead of whatever lands at the old offset. The anchor
+  /// holds until the list is scrolled, so a window made wide and narrow
+  /// again comes back to where it was. The window reports its new size
+  /// before the frame that lays it out, so the anchor is read from the
+  /// layout the user was looking at.
+  late FlutterView _view;
+  late double _width;
+  double _clearTop = 0;
+  ({ContentIdentity identity, double top})? _widthAnchor;
+  double? _widthAnchorOffset;
+  Future<void>? _widthRestore;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _view = View.of(context);
+    _width = _view.physicalSize.width / _view.devicePixelRatio;
+  }
+
+  @override
+  void didChangeMetrics() {
+    final width = _view.physicalSize.width / _view.devicePixelRatio;
+    if (width == _width || !mounted) return;
+    _width = width;
+    _widthRestore ??= _keepWidthAnchor().whenComplete(
+      () => _widthRestore = null,
+    );
+  }
+
+  /// One walk at a time: two walks would scroll against each other. A width
+  /// that changes again during the walk gets one more pass.
+  Future<void> _keepWidthAnchor() async {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.offset != _widthAnchorOffset) {
+      _widthAnchor = visibleAnchor(
+        context,
+        _scrollController,
+        clearTop: _clearTop,
+      );
+    }
+    final anchor = _widthAnchor;
+    if (anchor == null) return;
+    double width;
+    do {
+      width = _width;
+      await keepVisibleAnchor(
+        scope: context,
+        controller: _scrollController,
+        anchor: anchor,
+        order: _visible,
+      );
+      if (!mounted || !_scrollController.hasClients) return;
+      _widthAnchorOffset = _scrollController.offset;
+    } while (width != _width);
   }
 
   /// Re-applies the query and position a return session stored for this channel.
@@ -467,7 +528,12 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) {
+    _clearTop = MediaQuery.paddingOf(context).top;
+    return _feed(context);
+  }
+
+  Widget _feed(BuildContext context) => ListenableBuilder(
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
@@ -611,64 +677,37 @@ class _FanartGrid extends ConsumerWidget {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverLayoutBuilder(
-            builder: (context, constraints) {
-              if (state.items.isEmpty) {
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              }
-              final width = constraints.crossAxisExtent;
-              final scaler = MediaQuery.textScalerOf(context);
-              final gap = width >= 760 ? 16.0 : 12.0;
-              // One stable extent per width: tiles share the portrait box
-              // and caption lines, so the grid never shifts as art loads.
-              final minimum =
-                  (width >= 760 ? 200.0 : 136.0) *
-                  scaler.scale(1).clamp(1.0, 1.6);
-              final columns = ((width + gap) / (minimum + gap)).floor().clamp(
-                1,
-                6,
-              );
-              final cell = (width - gap * (columns - 1)) / columns;
-              return SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: gap,
-                  mainAxisSpacing: gap + 4,
-                  mainAxisExtent: FanartCard.extentFor(
-                    state.items.first,
-                    cell,
-                    scaler,
-                  ),
+          // Each work as tall as its own content: a video's words follow its
+          // cover, a text work ends with its excerpt. Built lazily, measured
+          // as they come.
+          sliver: SliverContentMasonry(
+            itemCount: state.items.length,
+            itemBuilder: (context, index) {
+              final item = state.items[index];
+              return FanartCard(
+                key: ValueKey(item.identity),
+                item: item,
+                heroTag: fanartHeroTag(item),
+                onLongPress: () => showContentActions(
+                  context,
+                  ContentSnapshots.fanart(item),
+                  ruleSubject: RuleSubjects.fanart(item),
                 ),
-                itemCount: state.items.length,
-                itemBuilder: (context, index) {
-                  final item = state.items[index];
-                  return FanartCard(
-                    key: ValueKey(item.identity),
-                    item: item,
-                    heroTag: fanartHeroTag(item),
-                    onLongPress: () => showContentActions(
-                      context,
-                      ContentSnapshots.fanart(item),
-                      ruleSubject: RuleSubjects.fanart(item),
-                    ),
-                    // A root route or an external open keeps the branch's
-                    // scroll position and loaded pages.
-                    onTap: () => openFanart(
-                      context,
-                      ref,
-                      item,
-                      returnTo: ReturnTarget.contentChannel,
-                      channel: ContentChannel.fanart.slug,
-                      query: ChannelSpec.ofFanart(state.query).values,
-                      anchor: ReturnAnchor(
-                        identity: item.identity,
-                        offset: controller.offset,
-                      ),
-                      heroTag: fanartHeroTag(item),
-                    ),
-                  );
-                },
+                // A root route or an external open keeps the branch's
+                // scroll position and loaded pages.
+                onTap: () => openFanart(
+                  context,
+                  ref,
+                  item,
+                  returnTo: ReturnTarget.contentChannel,
+                  channel: ContentChannel.fanart.slug,
+                  query: ChannelSpec.ofFanart(state.query).values,
+                  anchor: ReturnAnchor(
+                    identity: item.identity,
+                    offset: controller.offset,
+                  ),
+                  heroTag: fanartHeroTag(item),
+                ),
               );
             },
           ),

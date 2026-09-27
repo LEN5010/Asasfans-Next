@@ -12,12 +12,13 @@ import '../../library/presentation/content_actions.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../domain/fanart_repository.dart';
 
-/// A work tile with no card frame. An image work is its art in a stable
-/// portrait box, then its words, then who made it. A text work shows its
-/// words in the same box instead of a fabricated cover. A video work keeps
-/// its whole 16:9 cover and lets its words take the height the cover leaves.
-/// Every tile, whatever its type, fills the same extent for a given width
-/// ([extentFor]) by construction, so grids stay fixed and returns land.
+/// A work tile with no card frame, as tall as its own content. An image
+/// work is its art in a stable portrait box (the model carries no image
+/// sizes), then its words, then who made it. A video work keeps its whole
+/// 16:9 cover and its words follow straight after. A text work is a bounded
+/// excerpt, not a fabricated cover. Types share the actions and the byline,
+/// not a total height: a grid of them is a masonry, and nothing is padded
+/// to match a neighbour of another type.
 /// The shared tag between a work's tile and its detail page.
 Object fanartHeroTag(FanartItem item) => ('fanart-art', item.identity);
 
@@ -42,24 +43,14 @@ class FanartCard extends StatelessWidget {
       item.contentType == FanartContentType.text ||
       (item.images.isEmpty && item.contentType != FanartContentType.video);
 
-  static double extentFor(FanartItem item, double width, TextScaler scaler) =>
-      width / AppTokens.artworkRatio + captionExtent(scaler);
-
   /// Video covers are shown whole: a landscape frame cropped into the
   /// portrait box would keep less than half its width.
   static const videoRatio = 16 / 9;
 
-  /// The words block of a video tile: what the portrait box and the title
-  /// would take, less the 16:9 cover.
-  static double videoWordsExtent(double width, TextScaler scaler) =>
-      width / AppTokens.artworkRatio -
-      width / videoRatio +
-      _titleExtent(scaler);
+  /// Lines a text work's excerpt may run to in a tile; the rest is in the
+  /// detail.
+  static const excerptLines = 7;
 
-  static double captionExtent(TextScaler scaler) =>
-      8 + _titleExtent(scaler) + _bylineExtent(scaler);
-  static double _titleExtent(TextScaler scaler) =>
-      MediaCardMetrics.line(scaler, 14, 1.4) * 2;
   static double _bylineExtent(TextScaler scaler) =>
       math.max(48, MediaCardMetrics.line(scaler, 12, 1.35) * 2 + 4);
 
@@ -67,10 +58,9 @@ class FanartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final scaler = MediaQuery.textScalerOf(context);
     final textOnly = isText(item);
     final text = item.text.trim();
-    final video = item.contentType == FanartContentType.video;
+    final video = item.contentType == FanartContentType.video && !textOnly;
     void more() {
       if (onLongPress != null) {
         onLongPress!();
@@ -84,53 +74,59 @@ class FanartCard extends StatelessWidget {
     }
 
     final members = item.characterTags.map((tag) => tag.wire).join(' · ');
-    if (video && !textOnly) {
-      return MediaActionRegion(
-        onTap: onTap,
-        onMore: more,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final words = videoWordsExtent(constraints.maxWidth, scaler);
-            final line = MediaCardMetrics.line(scaler, 14, 1.4);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
-                  child: _outlined(
-                    context,
-                    cover: MediaCover(
-                      image: item.images.firstOrNull,
-                      aspectRatio: videoRatio,
-                      video: true,
-                      badge: '去 B 站看 ↗',
-                    ),
+    final Widget preview;
+    if (textOnly) {
+      final style = theme.textTheme.bodyMedium?.copyWith(height: 1.6);
+      preview = ColoredBox(
+        color: colors.surfaceContainerHigh,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ExcludeSemantics(
+                child: Text(
+                  '“',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: colors.primary,
+                    height: 1,
                   ),
                 ),
-                const SizedBox(height: 8),
-                // The words take what the shorter cover frees, and the
-                // byline sits at the tile's foot, level with its row's
-                // neighbours: the middle of the tile stays the work's own.
-                SizedBox(
-                  height: words,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      text.isNotEmpty ? text : '视频作品',
-                      maxLines: math.max(1, (words / line).floor()),
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        height: 1.4,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
+              ),
+              // A bounded excerpt, ending on an ellipsis; the box is as
+              // tall as the words, never a portrait frame to fill.
+              DynamicRichText(
+                text: text.isNotEmpty ? text : '文字作品',
+                maxLines: excerptLines,
+                selectable: false,
+                style: style,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      preview = _hero(
+        context,
+        _outlined(
+          context,
+          cover: video
+              ? MediaCover(
+                  image: item.images.firstOrNull,
+                  aspectRatio: videoRatio,
+                  video: true,
+                  badge: '去 B 站看 ↗',
+                )
+              : MediaCover(
+                  image: item.images.firstOrNull,
+                  aspectRatio: AppTokens.artworkRatio,
+                  // A tile shows a crop; the detail shows the whole image.
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  badge: item.images.length > 1
+                      ? '${item.images.length} 张'
+                      : null,
                 ),
-                _byline(context, members, more),
-              ],
-            );
-          },
         ),
       );
     }
@@ -138,92 +134,32 @@ class FanartCard extends StatelessWidget {
       onTap: onTap,
       onMore: more,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
-            child: textOnly
-                ? AspectRatio(
-                    aspectRatio: AppTokens.artworkRatio,
-                    child: ColoredBox(
-                      color: colors.surfaceContainerHigh,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ExcludeSemantics(
-                              child: Text(
-                                '“',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  color: colors.primary,
-                                  height: 1,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              // As many whole lines as the box holds, so the
-                              // excerpt ends on an ellipsis, never a cut line.
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final style = theme.textTheme.bodyMedium
-                                      ?.copyWith(height: 1.6);
-                                  final line =
-                                      scaler.scale(style?.fontSize ?? 14) * 1.6;
-                                  return DynamicRichText(
-                                    text: text,
-                                    maxLines: math.max(
-                                      1,
-                                      (constraints.maxHeight / line).floor(),
-                                    ),
-                                    selectable: false,
-                                    style: style,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                : _hero(
-                    context,
-                    _outlined(
-                      context,
-                      cover: MediaCover(
-                        image: item.images.firstOrNull,
-                        aspectRatio: AppTokens.artworkRatio,
-                        // A tile shows a crop; the detail shows the whole
-                        // image.
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        badge: item.images.length > 1
-                            ? '${item.images.length} 张'
-                            : null,
-                      ),
-                    ),
-                  ),
+            child: preview,
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: _titleExtent(scaler),
-            child: Text(
-              textOnly
-                  ? '文字作品'
-                  : text.isNotEmpty
+          if (!textOnly) ...[
+            const SizedBox(height: 8),
+            // At most two lines, and only the lines it has: the byline
+            // follows the words, whatever the cover above them.
+            Text(
+              text.isNotEmpty
                   ? text
+                  : video
+                  ? '视频作品'
                   : '图片作品',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 14,
                 height: 1.4,
-                fontWeight: textOnly ? FontWeight.w400 : FontWeight.w500,
-                color: textOnly ? colors.onSurfaceVariant : null,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
+          ],
           _byline(context, members, more),
         ],
       ),

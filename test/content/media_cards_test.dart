@@ -5,6 +5,7 @@ import 'package:asasfans_next/features/content/domain/community_video_repository
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/video_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
+import 'package:asasfans_next/shared/widgets/media_card_surface.dart';
 import 'package:asasfans_next/shared/widgets/media_cover.dart';
 import 'package:asasfans_next/shared/widgets/media_image_policy.dart';
 import 'package:flutter/material.dart';
@@ -55,19 +56,16 @@ void main() {
           images: type == FanartContentType.text ? [] : [uri, uri],
         );
         final scaler = TextScaler.linear(scale);
-        final height = FanartCard.extentFor(item, 240, scaler);
         await tester.pumpWidget(
           MaterialApp(
             theme: AppTheme.light,
             home: MediaQuery(
               data: MediaQueryData(textScaler: scaler),
               child: Scaffold(
-                body: Center(
-                  child: SizedBox(
-                    width: 240,
-                    height: height,
-                    child: FanartCard(item: item),
-                  ),
+                body: Align(
+                  alignment: Alignment.topCenter,
+                  // Width only: a tile is as tall as its own content.
+                  child: SizedBox(width: 240, child: FanartCard(item: item)),
                 ),
               ),
             ),
@@ -75,14 +73,36 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
+        final tile = tester.getSize(find.byType(FanartCard)).height;
+        final byline = tester
+            .getSize(
+              find
+                  .ancestor(
+                    of: find.byType(MediaMoreButton),
+                    matching: find.byType(SizedBox),
+                  )
+                  .first,
+            )
+            .height;
         if (type == FanartContentType.text) {
           expect(find.byType(MediaCover), findsNothing);
           expect(find.byType(Image), findsNothing);
+          // The excerpt box, then the byline: nothing pads it to a cover.
+          final excerpt = tester
+              .getSize(
+                find
+                    .descendant(
+                      of: find.byType(FanartCard),
+                      matching: find.byType(ClipRRect),
+                    )
+                    .first,
+              )
+              .height;
+          expect(tile, closeTo(excerpt + byline, 1));
         } else {
           final rect = tester.getSize(find.byType(MediaCover));
           // An image work has the stable portrait box; a video work keeps
-          // its whole 16:9 cover. Both fill the one extent a grid of mixed
-          // works shares (the pumped height, with no overflow above).
+          // its whole 16:9 cover.
           expect(
             rect.width / rect.height,
             closeTo(
@@ -96,6 +116,10 @@ void main() {
             find.text(type == FanartContentType.image ? '2 张' : '去 B 站看 ↗'),
             findsOneWidget,
           );
+          // Cover, gap, the title's own lines, then the byline: a video's
+          // maker follows its words, not a portrait tile's height.
+          final title = tester.getSize(find.text(item.text)).height;
+          expect(tile, closeTo(rect.height + 8 + title + byline, 1));
         }
       });
     }

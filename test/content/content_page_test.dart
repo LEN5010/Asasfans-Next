@@ -19,6 +19,7 @@ import 'package:asasfans_next/shared/widgets/app_page_bar.dart';
 import 'package:asasfans_next/shared/widgets/feed_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 FanartItem _item(String id) => FanartItem(
@@ -297,7 +298,9 @@ void main() {
   );
 
   testWidgets('scrolling to the bottom appends the next page', (tester) async {
-    final repository = _StubRepository();
+    // Text works end with their words, so a page needs enough of them to
+    // run past the viewport before the next is asked for.
+    final repository = _StubRepository(pageSize: 60);
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
     expect(repository.requests, 1);
@@ -411,8 +414,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.queries.last.characters, {FanartCharacter.diana});
-    // A filter change starts a new run, so it must not carry an old cursor.
-    expect(repository.cursors.last, isNull);
+    // A filter change starts a new run, so its first request must not carry
+    // an old cursor (a short page may be followed by its own next one).
+    final first = repository.queries.indexWhere(
+      (query) => query.characters.contains(FanartCharacter.diana),
+    );
+    expect(repository.cursors[first], isNull);
   });
 
   testWidgets('submitting a search applies the keyword', (tester) async {
@@ -496,7 +503,7 @@ void main() {
     await tester.pumpWidget(_app(_StubRepository()));
     await tester.pumpAndSettle();
 
-    // A fixed-extent grid: two columns of tiles no narrower than 136.
+    // Two masonry columns of tiles no narrower than 136.
     expect(_gridColumns(tester), 2);
     expect(
       tester.getSize(find.byType(FanartCard).first).width,
@@ -591,8 +598,8 @@ void main() {
 }
 
 int _gridColumns(WidgetTester tester) {
-  final grid = tester.widget<SliverGrid>(find.byType(SliverGrid));
-  return (grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount)
+  final grid = tester.widget<SliverMasonryGrid>(find.byType(SliverMasonryGrid));
+  return (grid.gridDelegate as SliverSimpleGridDelegateWithFixedCrossAxisCount)
       .crossAxisCount;
 }
 

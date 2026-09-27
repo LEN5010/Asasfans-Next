@@ -33,6 +33,11 @@ class FeedScrollView extends StatefulWidget {
   State<FeedScrollView> createState() => _FeedScrollViewState();
 }
 
+/// What a feed adds on each side to its own 16, for a window [width] wide.
+/// Sized by the window, as the gutter of Today, 日历 and 我的 is by their
+/// body, so a feed's width sums can subtract it before laying out.
+double extraInset(double width) => AppTokens.gutter(width) - 16;
+
 class _FeedScrollViewState extends State<FeedScrollView>
     with SingleTickerProviderStateMixin {
   // Content fades in when it replaces a state; later pages append instantly.
@@ -61,6 +66,10 @@ class _FeedScrollViewState extends State<FeedScrollView>
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
     final reveal = CurvedAnimation(parent: _reveal, curve: Curves.easeOutCubic);
+    // Feeds pad their own rows by 16; this brings their start to the page
+    // gutter every root page shares.
+    final side = extraInset(MediaQuery.sizeOf(context).width);
+    final sides = EdgeInsets.symmetric(horizontal: side);
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       edgeOffset: padding.top,
@@ -70,7 +79,7 @@ class _FeedScrollViewState extends State<FeedScrollView>
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: EdgeInsets.only(top: padding.top + 4),
+            padding: sides.copyWith(top: padding.top + 4),
             sliver: SliverList.list(children: widget.header),
           ),
           if (widget.placeholder case final placeholder?)
@@ -86,7 +95,10 @@ class _FeedScrollViewState extends State<FeedScrollView>
             )
           else ...[
             for (final sliver in widget.slivers)
-              SliverFadeTransition(opacity: reveal, sliver: sliver),
+              SliverPadding(
+                padding: sides,
+                sliver: SliverFadeTransition(opacity: reveal, sliver: sliver),
+              ),
             SliverToBoxAdapter(child: SizedBox(height: padding.bottom + 8)),
           ],
         ],
