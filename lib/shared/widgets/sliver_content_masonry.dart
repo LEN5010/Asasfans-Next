@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import 'media_grid_delegate.dart';
+
 /// Shared feed sizing, not a layout engine: the package measures real children
 /// lazily inside the existing scroll view and retains their column positions.
 /// Each child keeps its own height; columns come from the width actually
@@ -21,7 +23,9 @@ class SliverContentMasonry extends StatelessWidget {
   final IndexedWidgetBuilder itemBuilder;
 
   /// The narrowest a column may get, below and from [wide] width. Large
-  /// text widens it (up to 1.6x), so words keep a readable measure.
+  /// text widens it (up to 1.6x), so words keep a readable measure. It only
+  /// takes columns away: how many there are follows the video grid
+  /// ([MediaGridDelegate.preferredColumns]).
   final double minColumnWidth;
   final double wideMinColumnWidth;
   final int maxColumns;
@@ -45,7 +49,10 @@ class SliverContentMasonry extends StatelessWidget {
     final minimum =
         (width >= wide ? wideMinColumnWidth : minColumnWidth) *
         scaler.scale(1).clamp(1.0, 1.6);
-    return ((width + gap) / (minimum + gap)).floor().clamp(1, maxColumns);
+    final fit = ((width + gap) / (minimum + gap)).floor();
+    return math
+        .min(MediaGridDelegate.preferredColumns(width), fit)
+        .clamp(1, maxColumns);
   }
 
   @override

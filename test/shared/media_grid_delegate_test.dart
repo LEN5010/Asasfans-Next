@@ -1,4 +1,5 @@
 import 'package:asasfans_next/shared/widgets/media_grid_delegate.dart';
+import 'package:asasfans_next/shared/widgets/sliver_content_masonry.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -139,4 +140,28 @@ void main() {
       }
     },
   );
+
+  test('masonry feeds follow the video density and never lose columns', () {
+    const scaler = TextScaler.noScaling;
+    var previous = 0;
+    for (var width = 280.0; width <= 2400; width += 4) {
+      final columns = SliverContentMasonry.columnsFor(width, scaler);
+      expect(columns, greaterThanOrEqualTo(previous), reason: '$width');
+      expect(
+        columns,
+        lessThanOrEqualTo(MediaGridDelegate.preferredColumns(width)),
+      );
+      previous = columns;
+    }
+    // A phone, a narrow window, and the video grid's steps.
+    for (final (width, columns) in [
+      (358.0, 2),
+      (552.0, 2),
+      (752.0, 3),
+      (1100.0, 4),
+      (1400.0, 5),
+    ]) {
+      expect(SliverContentMasonry.columnsFor(width, scaler), columns);
+    }
+  });
 }

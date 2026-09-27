@@ -18,13 +18,20 @@ class MediaGridDelegate extends SliverGridDelegate {
   final double spacing;
   final _cache = _LayoutCache();
 
+  /// The media feeds' density by the width their columns share: two on a
+  /// phone, then three, four and five as the window widens. The video grid
+  /// set it; the masonry feeds follow it, so a wider window never shows
+  /// fewer columns and 二创 is no denser than the videos beside it.
+  static int preferredColumns(double contentWidth) => switch (contentWidth) {
+    >= 1368 => 5,
+    >= 1068 => 4,
+    >= 728 => 3,
+    _ => 2,
+  };
+
   static int columnsFor(double width, {double textScale = 1}) {
-    final preferred = switch (width) {
-      >= 1400 => 5,
-      >= 1100 => 4,
-      >= 760 => 3,
-      _ => 2,
-    };
+    // [width] includes the grid's own 16 px on each side.
+    final preferred = preferredColumns(width - 32);
     final minimum = (width >= 760 ? 220 : 160) * textScale.clamp(1.0, 1.5);
     final gap = spacingFor(width);
     return math.max(
