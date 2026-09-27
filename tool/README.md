@@ -54,6 +54,6 @@ ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/perf/run_macos.sh <label> <out-
 python3 tool/perf/compare.py <out-dir> > <out-dir>/COMPARISON.md
 ```
 
-第五个参数 `shots` 不测帧时，改为在同一份 fixture 上用真实渲染器截图：今日和二创各一张，浅色和深色，分别为静止、指针悬停在第一个作品上、键盘焦点在第一个作品上。PNG 移到 `<out-dir>/<label>/`；`<label>.json` 记录窗口逻辑尺寸、像素比和实际玻璃档位，截图像素不等于逻辑尺寸。窗口大小取 macOS 记住的窗口（首次为 800×600），脚本不改窗口大小，窄屏和宽屏对照用 `tool/visual_capture.sh`。`compare.py` 把同一目录下的多次运行并排列表，每次运行单独一行，不取平均。
+第五个参数 `shots` 不测帧时，改为在同一份 fixture 上用真实渲染器截图：今日和二创各一张，浅色和深色，分别为静止、指针悬停在第一个作品上、键盘焦点在第一个作品上。PNG 移到 `<out-dir>/<label>/`；`<label>.json` 记录窗口逻辑尺寸、像素比和实际玻璃档位，截图像素不等于逻辑尺寸。窗口大小取 macOS 记住的窗口（首次为 800×600），脚本不改窗口大小，窄屏和宽屏对照用 `tool/visual_capture.sh`；屏幕锁定或不想占用窗口时，`ASASFANS_VISUAL_IMPELLER=1 tool/visual_capture.sh <out-dir> test/visual/glass_tiers_test.dart` 用 `flutter_tester --enable-impeller` 在本机 GPU 上绘制三档玻璃，并用 ffmpeg 把逐帧片段合成 mp4（只看画面，不含帧时）。`compare.py` 把同一目录下的多次运行并排列表，每次运行单独一行，不取平均。
 
 脚本构建 Profile，直接启动可执行文件并用 `footprint` 每 2 秒采样宿主内存。它不读个人数据、不联网。运行时会在屏幕上开一个 800×600 的窗口，期间不要操作鼠标、不要跑其他重负载。每次只改一个因子，结果写进 `reports/`，不要把 Mac 结果外推到 Android。
