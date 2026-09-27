@@ -13,6 +13,7 @@ import 'package:asasfans_next/features/calendar/application/calendar_providers.d
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/novels/application/novel_providers.dart';
 import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
+import 'package:asasfans_next/shared/widgets/glass/app_glass_scope.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -510,7 +511,7 @@ Future<void> shoot(
   String scenario,
   VisualView view, {
   String provenance = 'actual-widget-render',
-  String material = 'solid',
+  String? material,
   String notes = '',
   Map<String, Object?> measurements = const {},
 }) async {
@@ -541,18 +542,57 @@ Future<void> shoot(
       'device_pixel_ratio': view.pixelRatio,
       'text_scale': view.textScale,
       'brightness': view.brightness.name,
-      'material': material,
-      'renderer': 'headless-flutter-test (flutter_tester software raster)',
+      // What the app actually drew, not what was asked for.
+      'material': material ?? _drawnMaterial(tester),
+      'renderer': ui.ImageFilter.isShaderFilterSupported
+          ? 'headless-flutter-test (flutter_tester --enable-impeller)'
+          : 'headless-flutter-test (flutter_tester software raster)',
       'font_environment': Visual.fontEnvironment,
       'provenance': provenance,
       'reviewer': 'internal-review',
       if (measurements.isNotEmpty) 'measurements': measurements,
       'notes': [
-        'not evidence of Impeller optics, GPU cost or real-device frame time',
+        if (ui.ImageFilter.isShaderFilterSupported)
+          'Impeller on this machine; not an app window, not frame time'
+        else
+          'not evidence of Impeller optics, GPU cost or real-device frame time',
         if (notes.isNotEmpty) notes,
       ].join('; '),
     }),
   );
+}
+
+/// One frame of a clip, `frames/<clip>/<index>.png`, when capturing. The
+/// capture script joins each clip into a video. Frames are rendered one by
+/// one: a clip shows what is drawn, not how long drawing took.
+Future<void> shootFrame(
+  WidgetTester tester,
+  String clip,
+  int index,
+  VisualView view,
+) async {
+  final dir = Visual.outDir;
+  if (!Visual.capturing || dir == null) return;
+  final boundary =
+      _root.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+  final bytes = await tester.runAsync(() async {
+    final image = await boundary.toImage(pixelRatio: view.pixelRatio);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    return data!.buffer.asUint8List();
+  });
+  final folder = Directory('$dir/frames/${clip}_${view.name}')
+    ..createSync(recursive: true);
+  File(
+    '${folder.path}/${index.toString().padLeft(4, '0')}.png',
+  ).writeAsBytesSync(bytes!);
+}
+
+/// The glass tier in effect where the app draws, solid outside the app.
+String _drawnMaterial(WidgetTester tester) {
+  final scaffold = find.byType(Scaffold);
+  if (scaffold.evaluate().isEmpty) return 'solid';
+  return AppGlassScope.of(tester.element(scaffold.first)).tier.name;
 }
 
 class _FixtureHttpClient implements HttpClient {
