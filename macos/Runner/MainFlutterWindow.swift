@@ -5,6 +5,7 @@ import webview_flutter_wkwebview
 
 class MainFlutterWindow: NSWindow {
   private var loginCookies: FlutterMethodChannel?
+  private var windowAppearance: FlutterMethodChannel?
   private var transparencyPreference: TransparencyPreferenceBridge?
   deinit { transparencyPreference?.dispose() }
   override func awakeFromNib() {
@@ -17,6 +18,21 @@ class MainFlutterWindow: NSWindow {
     transparencyPreference = TransparencyPreferenceBridge(
       messenger: flutterViewController.engine.binaryMessenger
     )
+    // The title bar is native: match the app's light/dark choice, or hand it
+    // back to the system when the app follows the system.
+    windowAppearance = FlutterMethodChannel(name: "asasfans.next/window_appearance", binaryMessenger: flutterViewController.engine.binaryMessenger)
+    windowAppearance?.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "set", let value = call.arguments as? String else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      switch value {
+      case "light": self?.appearance = NSAppearance(named: .aqua)
+      case "dark": self?.appearance = NSAppearance(named: .darkAqua)
+      default: self?.appearance = nil
+      }
+      result(nil)
+    }
     loginCookies = FlutterMethodChannel(name: "asasfans.next/bilibili_login_cookies", binaryMessenger: flutterViewController.engine.binaryMessenger)
     loginCookies?.setMethodCallHandler { [weak flutterViewController] call, result in
       guard let registry = flutterViewController else {
