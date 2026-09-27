@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
@@ -47,12 +50,38 @@ class _AppShellState extends State<AppShell> {
       final mq = MediaQuery.of(context);
       final showBottom = !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
       final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
-      final obstruction = showBottom ? barHeight + 20 : 0.0;
       return AppBackdrop(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
           resizeToAvoidBottomInset: false,
+          // The body runs under the dock, and the Scaffold hands it the
+          // dock's height as bottom padding. Always on: switching it would
+          // rebuild the body.
+          extendBody: true,
+          // Here rather than over the body, so a SnackBar sits above it.
+          bottomNavigationBar: showBottom
+              ? Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    12,
+                    12,
+                    12,
+                    mq.padding.bottom + 8,
+                  ),
+                  // The slot's height is loose: as tall as the dock only.
+                  child: Align(
+                    heightFactor: 1,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: AppGlassNavigation(
+                        selected: selected,
+                        onSelect: _select,
+                        onTools: _tools,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
           body: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -82,57 +111,27 @@ class _AppShellState extends State<AppShell> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          MediaQuery(
-                            data: mq.copyWith(
-                              padding: mq.padding.copyWith(
-                                bottom: mq.padding.bottom + obstruction,
-                              ),
-                            ),
-                            child: widget.navigationShell,
-                          ),
-                          // A subtle edge fade under the bar, not an opaque footer.
-                          if (showBottom)
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height: mq.padding.bottom + barHeight + 40,
-                              child: IgnorePointer(
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Theme.of(context)
-                                            .scaffoldBackgroundColor
-                                            .withValues(alpha: 0),
-                                        Theme.of(context)
-                                            .scaffoldBackgroundColor
-                                            .withValues(alpha: .72),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                      widget.navigationShell,
+                      // A subtle edge fade under the bar, not an opaque footer.
                       if (showBottom)
                         Positioned(
-                          left: 12,
-                          right: 12,
-                          bottom: mq.padding.bottom + 8,
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 520),
-                              child: AppGlassNavigation(
-                                selected: selected,
-                                onSelect: _select,
-                                onTools: _tools,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: mq.padding.bottom + barHeight + 40,
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Theme.of(context).scaffoldBackgroundColor
+                                        .withValues(alpha: 0),
+                                    Theme.of(context).scaffoldBackgroundColor
+                                        .withValues(alpha: .72),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -147,6 +146,60 @@ class _AppShellState extends State<AppShell> {
       );
     },
   );
+}
+
+/// Keyboard focus scrolls its item into the part of the window nothing
+/// floats over. The default reveal lines an item up with the viewport's
+/// edge, and a tab root's viewport runs under the status bar and the dock;
+/// their heights are the padding that viewport's page receives. Traversal
+/// order is the default reading order.
+void revealFocusClear(
+  FocusNode node, {
+  ScrollPositionAlignmentPolicy? alignmentPolicy,
+  double? alignment,
+  Duration? duration,
+  Curve? curve,
+}) {
+  FocusTraversalPolicy.defaultTraversalRequestFocusCallback(
+    node,
+    alignmentPolicy: alignmentPolicy,
+    alignment: alignment,
+    duration: duration,
+    curve: curve,
+  );
+  final context = node.context;
+  if (context == null) return;
+  final scrollable = Scrollable.maybeOf(context, axis: Axis.vertical);
+  final target = context.findRenderObject();
+  final viewportBox = scrollable?.context.findRenderObject();
+  if (scrollable == null ||
+      target == null ||
+      !target.attached ||
+      viewportBox is! RenderBox ||
+      !viewportBox.hasSize) {
+    return;
+  }
+  final viewport = RenderAbstractViewport.maybeOf(target);
+  if (viewport == null) return;
+  // How much of this viewport the bars cover, from the window's padding.
+  final padding = MediaQuery.paddingOf(scrollable.context);
+  final window = MediaQuery.sizeOf(scrollable.context).height;
+  final top = viewportBox.localToGlobal(Offset.zero).dy;
+  final bottom = top + viewportBox.size.height;
+  final coverTop = math.max(0.0, padding.top - top);
+  final coverBottom = math.max(0.0, bottom - (window - padding.bottom));
+  if (coverTop == 0 && coverBottom == 0) return;
+  // Scroll offsets at which the item's top meets the viewport's top, and
+  // its bottom the viewport's bottom; neither depends on the current one.
+  final atTop = viewport.getOffsetToReveal(target, 0).offset;
+  final atBottom = viewport.getOffsetToReveal(target, 1).offset;
+  final position = scrollable.position;
+  var next = position.pixels;
+  if (next < atBottom + coverBottom) next = atBottom + coverBottom;
+  // Its top wins when the item is taller than the clear part.
+  if (next > atTop - coverTop) next = atTop - coverTop;
+  next = next.clamp(position.minScrollExtent, position.maxScrollExtent);
+  if (next != position.pixels) position.jumpTo(next);
 }
 
 /// Main tabs switch with a quick fade-through: the old tab fades out, the

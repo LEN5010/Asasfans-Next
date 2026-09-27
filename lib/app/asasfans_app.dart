@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/window_appearance.dart';
 import 'router/app_router.dart';
+import 'router/app_shell.dart';
 import 'glass_providers.dart';
 import '../shared/widgets/glass/app_glass_scope.dart';
 import '../shared/widgets/glass/glass_policy.dart';
@@ -66,7 +67,13 @@ class _AsasfansAppState extends ConsumerState<AsasfansApp> {
           detail: glass == GlassChoice.visual
               ? GlassDetail.full
               : GlassDetail.platform,
-          child: child!,
+          // The default reading order, revealing focus clear of the bars.
+          child: FocusTraversalGroup(
+            policy: ReadingOrderTraversalPolicy(
+              requestFocusCallback: revealFocusClear,
+            ),
+            child: child!,
+          ),
         );
       },
       routerConfig: ref.watch(appRouterProvider),

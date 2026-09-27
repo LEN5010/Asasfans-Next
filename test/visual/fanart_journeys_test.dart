@@ -8,12 +8,14 @@ import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
 import 'package:asasfans_next/features/creator/presentation/creator_link.dart';
+import 'package:asasfans_next/features/handoff/presentation/anchor_restore.dart';
 import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:asasfans_next/shared/widgets/app_page_bar.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:asasfans_next/shared/widgets/media_card_surface.dart';
 import 'package:asasfans_next/shared/widgets/media_cover.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -323,5 +325,54 @@ void main() {
       findsOneWidget,
     );
     await shoot(tester, 'journey-last-above-dock', phone);
+  });
+
+  testVisual('keyboard focus in the feed is never under the dock', (
+    tester,
+  ) async {
+    await pumpVisualApp(
+      tester,
+      view: phone,
+      location: '/content/fanart',
+      overrides: app(_Links()),
+    );
+    var inFeed = 0;
+    for (var i = 0; i < 60; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      final context = FocusManager.instance.primaryFocus?.context;
+      if (context == null) continue;
+      final scrollable = Scrollable.maybeOf(context, axis: Axis.vertical);
+      if (scrollable == null || scrollable.widget.axis != Axis.vertical) {
+        continue;
+      }
+      inFeed++;
+      final box = context.findRenderObject()! as RenderBox;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      final clear = clearView(tester, phone);
+      // A tall work shows its top; otherwise the whole of it is clear.
+      expect(rect.top, greaterThanOrEqualTo(phone.safeArea.top - 1));
+      if (rect.height <= clear.height) {
+        expect(rect.bottom, lessThanOrEqualTo(clear.bottom + 1), reason: '$i');
+      }
+    }
+    expect(inFeed, greaterThan(20));
+  });
+
+  testVisual('a notice sits above the dock, not over it', (tester) async {
+    await pumpVisualApp(
+      tester,
+      view: phone,
+      location: '/content/fanart',
+      overrides: app(_Links()),
+    );
+    showAnchorFallbackNotice(tester.element(find.byType(FanartCard).first));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    final dock = tester.getRect(find.byType(AppGlassNavigation));
+    expect(
+      tester.getRect(find.byType(SnackBar)).bottom,
+      lessThanOrEqualTo(dock.top),
+    );
   });
 }
