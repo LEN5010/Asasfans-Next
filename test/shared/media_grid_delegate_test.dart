@@ -141,27 +141,31 @@ void main() {
     },
   );
 
-  test('masonry feeds follow the video density and never lose columns', () {
-    const scaler = TextScaler.noScaling;
-    var previous = 0;
-    for (var width = 280.0; width <= 2400; width += 4) {
-      final columns = SliverContentMasonry.columnsFor(width, scaler);
-      expect(columns, greaterThanOrEqualTo(previous), reason: '$width');
-      expect(
-        columns,
-        lessThanOrEqualTo(MediaGridDelegate.preferredColumns(width)),
-      );
-      previous = columns;
+  test('a masonry feed never loses columns as the window widens', () {
+    for (final scale in [1.0, 1.6]) {
+      final scaler = TextScaler.linear(scale);
+      var previous = 0;
+      for (var width = 280.0; width <= 2400; width += 4) {
+        final columns = SliverContentMasonry.columnsFor(width, scaler);
+        expect(columns, greaterThanOrEqualTo(previous), reason: '$width');
+        previous = columns;
+      }
     }
-    // A phone, a narrow window, and the video grid's steps.
+    // A phone, a narrow window, a tablet beside the rail, the old cliff just
+    // under 760, and a wide window.
     for (final (width, columns) in [
       (358.0, 2),
-      (552.0, 2),
+      (568.0, 3),
+      (708.0, 3),
       (752.0, 3),
-      (1100.0, 4),
-      (1400.0, 5),
+      (770.0, 3),
+      (1132.0, 5),
     ]) {
-      expect(SliverContentMasonry.columnsFor(width, scaler), columns);
+      expect(
+        SliverContentMasonry.columnsFor(width, TextScaler.noScaling),
+        columns,
+        reason: '$width',
+      );
     }
   });
 }
