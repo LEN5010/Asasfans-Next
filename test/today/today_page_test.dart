@@ -401,4 +401,42 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(VideoRow), findsOneWidget);
   });
+
+  testWidgets('the page stops at its end; only the top pulls, for refresh', (
+    tester,
+  ) async {
+    _size(tester, const Size(800, 600));
+    await tester.pumpWidget(_host(_Calendar()));
+    await tester.pumpAndSettle();
+    final page = find.byType(TodayPage);
+    final position = tester
+        .state<ScrollableState>(
+          find.descendant(of: page, matching: find.byType(Scrollable)).first,
+        )
+        .position;
+    await tester.fling(page, const Offset(0, -2000), 3000);
+    for (var frame = 0; frame < 60; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(position.pixels, lessThanOrEqualTo(position.maxScrollExtent));
+    }
+    final pull = await tester.startGesture(
+      tester.getTopLeft(page) + const Offset(200, 200),
+    );
+    await pull.moveBy(const Offset(0, -1000));
+    await tester.pump();
+    expect(position.pixels, position.maxScrollExtent);
+    await pull.up();
+    await tester.pumpAndSettle();
+
+    position.jumpTo(0);
+    await tester.pump();
+    final top = await tester.startGesture(
+      tester.getTopLeft(page) + const Offset(200, 200),
+    );
+    await top.moveBy(const Offset(0, 30));
+    await tester.pump();
+    expect(position.pixels, lessThan(0));
+    await top.up();
+    await tester.pumpAndSettle();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 }

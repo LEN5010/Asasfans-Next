@@ -138,7 +138,9 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                 );
             return CustomScrollView(
               key: const PageStorageKey('today-scroll'),
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: const _StopAtEndPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               slivers: [
                 SliverToBoxAdapter(child: SizedBox(height: padding.top + 16)),
                 box(heading, spaced: false),
@@ -182,6 +184,27 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
         ),
       ),
     );
+  }
+}
+
+/// Today is about a screen and a half long, so a swipe soon reaches its
+/// end; there it stops instead of stretching and springing back. The top
+/// keeps the platform's pull, which the refresh gesture uses.
+class _StopAtEndPhysics extends ScrollPhysics {
+  const _StopAtEndPhysics({super.parent});
+
+  @override
+  _StopAtEndPhysics applyTo(ScrollPhysics? ancestor) =>
+      _StopAtEndPhysics(parent: buildParent(ancestor));
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    final end = position.maxScrollExtent;
+    if (end <= position.pixels && position.pixels < value) {
+      return value - position.pixels;
+    }
+    if (position.pixels < end && end < value) return value - end;
+    return super.applyBoundaryConditions(position, value);
   }
 }
 
