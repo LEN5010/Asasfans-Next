@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:asasfans_next/app/theme/app_tokens.dart';
 
 NovelSummary _summary(String tid, {NovelRating rating = NovelRating.sfw}) =>
     NovelSummary(
@@ -109,16 +108,17 @@ void main() {
       expect(find.text('作品 1'), findsOneWidget);
       expect(find.text('摘要 1'), findsOneWidget);
       expect(find.textContaining('2.3 万字'), findsNWidgets(2));
-      expect(find.text('仅提供作品信息与原帖链接'), findsOneWidget);
+      expect(find.text('正文已遮挡'), findsOneWidget);
       expect(find.textContaining('2 部'), findsOneWidget);
       expect(find.text('摘要 2'), findsNothing);
       final first = tester.getTopLeft(find.text('作品 1'));
       final second = tester.getTopLeft(find.text('作品 2'));
-      // A reading list at every width: one column, capped and centred.
-      expect(second.dy, greaterThan(first.dy));
-      expect(second.dx, first.dx);
+      // Cards: one column on a phone, side by side once there is room.
       if (width > 760) {
-        expect(first.dx, greaterThan((width - AppTokens.readingWidth) / 2 - 1));
+        expect(second.dx, greaterThan(first.dx));
+      } else {
+        expect(second.dy, greaterThan(first.dy));
+        expect(second.dx, first.dx);
       }
       expect(tester.takeException(), isNull);
     });
