@@ -270,4 +270,25 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  // Reading entries: the pointer over a dynamic's prose and over a novel.
+  // Prose that opens nothing should not light up as one big button.
+  for (final (name, location, type) in [
+    ('dynamic', '/content/dynamics', 'DynamicCard'),
+    ('novel', '/content/novels', '_NovelCard'),
+  ]) {
+    testVisual('$name hover ${VisualView.wide.name}', (tester) async {
+      await pumpVisualApp(tester, view: VisualView.wide, location: location);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: const Offset(1, 1));
+      addTearDown(mouse.removePointer);
+      final entry = find
+          .byWidgetPredicate((w) => w.runtimeType.toString() == type)
+          .first;
+      await mouse.moveTo(tester.getCenter(entry));
+      await settleVisual(tester, rounds: 2);
+      await shoot(tester, 'review-state-$name-hover', VisualView.wide);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
