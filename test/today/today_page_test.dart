@@ -1,6 +1,7 @@
 import '../helpers/library_fixture.dart';
 import 'dart:async';
 
+import 'package:asasfans_next/app/theme/app_tokens.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
@@ -29,6 +30,17 @@ const _fanart = FanartItem(
   images: [],
   kind: FanartKind.fanart,
   contentType: FanartContentType.text,
+  category: FanartCategory.normal,
+  characterTags: [],
+);
+const _videoWork = FanartItem(
+  identity: ContentIdentity(source: ContentSource.doubanTopic, value: '2'),
+  text: '一段手书视频',
+  authorName: '画手',
+  authorUid: '2',
+  images: [],
+  kind: FanartKind.fanart,
+  contentType: FanartContentType.video,
   category: FanartCategory.normal,
   characterTags: [],
 );
@@ -122,27 +134,45 @@ void _size(WidgetTester tester, Size value) {
 
 void main() {
   testWidgets(
-    'Density: a wide window gives time its own column beside the content',
+    'wide: the schedule is a summary above the works, which take the full width',
     (tester) async {
       _size(tester, const Size(1280, 1100));
       final calendar = _Calendar()
         ..items = [_event('今日歌会', 21), _event('今日杂谈', 21)];
-      await tester.pumpWidget(_host(calendar));
+      await tester.pumpWidget(
+        _host(calendar, fanartLoader: () async => [_fanart, _videoWork]),
+      );
       await tester.pumpAndSettle();
       expect(find.text('今日歌会'), findsOneWidget);
-      expect(find.text('文字作品'), findsOneWidget);
       expect(find.text('最新切片标题'), findsOneWidget);
       expect(find.text('Asasfans Next'), findsNothing);
       expect(find.text('最近更新'), findsNothing);
-      final art = tester.getRect(find.byType(FanartCard));
-      final clip = tester.getRect(find.byType(VideoRow));
       final schedule = tester.getRect(find.text('今日安排'));
-      // Works lead the content column; clips follow them.
-      expect(art.bottom, lessThan(clip.top));
-      // The schedule sits in its own column to the left, level with works.
-      expect(schedule.right, lessThan(art.left));
-      expect(schedule.top, lessThan(art.bottom));
-      // The archive follows today's own content.
+      final works = tester.getRect(find.text('最新二创'));
+      final tiles = [
+        for (final e in find.byType(FanartCard).evaluate())
+          tester.getRect(find.byWidget(e.widget)),
+      ];
+      final clip = tester.getRect(find.byType(VideoRow));
+      // Not a column beside the works: above them, as a few lines.
+      expect(schedule.bottom, lessThan(works.top));
+      // The schedule's lines stay at a reading width; the works do not.
+      expect(
+        tester.getRect(find.widgetWithText(TextButton, '日历')).right,
+        lessThanOrEqualTo(24 + AppTokens.readingWidth + 1),
+      );
+      expect(
+        tester.getRect(find.widgetWithText(TextButton, '查看二创')).right,
+        greaterThan(1280 - 24 - 1),
+      );
+      // Works start where the page starts, in one row, each as tall as its
+      // own content: the first tile does not set the row's height.
+      expect(tiles.first.left, closeTo(schedule.left, 1));
+      expect(tiles, hasLength(2));
+      expect(tiles[0].top, tiles[1].top);
+      expect(tiles[0].height, isNot(closeTo(tiles[1].height, 1)));
+      // Works lead clips; the archive follows today's own content.
+      expect(tiles.first.bottom, lessThan(clip.top));
       expect(tester.getTopLeft(find.text('历史上的今天')).dy, greaterThan(clip.top));
       // Events stay one per line, not side by side.
       expect(
@@ -155,6 +185,20 @@ void main() {
       );
     },
   );
+
+  testWidgets('one event takes a line, and nothing reserves a column for it', (
+    tester,
+  ) async {
+    _size(tester, const Size(1280, 1100));
+    await tester.pumpWidget(_host(_Calendar()..items = [_event('今日歌会', 21)]));
+    await tester.pumpAndSettle();
+    final event = tester.getRect(find.text('今日歌会'));
+    final works = tester.getRect(find.text('最新二创'));
+    // The works follow the one line within a section gap or two, whatever
+    // the window's height.
+    expect(works.top - event.bottom, lessThan(120));
+    expect(tester.getRect(find.byType(FanartCard)).left, closeTo(24, 1));
+  });
 
   testWidgets('a phone puts works before clips and both before the archive', (
     tester,

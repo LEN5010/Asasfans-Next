@@ -41,6 +41,10 @@ abstract final class AppTokens {
   /// once there is room.
   static double gutter(double width) => width >= 600 ? 24 : 16;
 
+  /// The widest a root page's content grows; past it, the page keeps its
+  /// start and leaves the rest of the window empty rather than centring.
+  static const pageWidth = 1360.0;
+
   /// Space between sections of a page, and between items in a section.
   static const sectionGap = 28.0;
   static const itemGap = 12.0;

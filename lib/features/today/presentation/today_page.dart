@@ -2,6 +2,7 @@ import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/resume_when_visible.dart';
+import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
@@ -107,116 +109,94 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
         ),
       ],
     );
-    final schedule = calendar
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _ScheduleSection(day: day, onCalendar: _calendar),
-              // The one optional task slot: back to where picking stopped.
-              const ContinueBrowsingRow(),
-            ],
-          )
-        : null;
-    final works = showFanart ? const _WorksSection() : null;
-    final clips = showClips ? const _ClipsSection() : null;
     return Scaffold(
       // The shell's backdrop shows through the main pages.
       backgroundColor: Colors.transparent,
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1360),
-          child: RefreshIndicator(
-            onRefresh: () => _refresh(true),
-            edgeOffset: MediaQuery.paddingOf(context).top,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                final gutter = AppTokens.gutter(width);
-                final edge = EdgeInsets.symmetric(horizontal: gutter);
-                // Wide windows give time its own column beside the content,
-                // instead of stretching a phone's single column.
-                final paired =
-                    schedule != null &&
-                    (works != null || clips != null) &&
-                    width >= 840 * MediaQuery.textScalerOf(context).scale(1);
-                final modules = <Widget>[
-                  if (paired)
-                    Padding(
-                      padding: edge,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: (width * .3).clamp(300, 380),
-                            child: schedule,
-                          ),
-                          const SizedBox(width: 32),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ?works,
-                                if (works != null && clips != null)
-                                  const SizedBox(height: AppTokens.sectionGap),
-                                ?clips,
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else ...[
-                    if (schedule != null)
-                      Padding(padding: edge, child: schedule),
-                    // Without a schedule the continue row leads the works,
-                    // in the same module, so an empty slot adds no gap.
-                    if (works != null)
-                      Padding(
-                        padding: edge,
-                        child: schedule != null
-                            ? works
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [const ContinueBrowsingRow(), works],
-                              ),
-                      ),
-                    if (clips != null) Padding(padding: edge, child: clips),
-                  ],
-                  // The archive comes after today's own content.
-                  if (history) OnThisDaySection(inset: edge),
-                  // Every module hidden is a choice, not a failure: say so
-                  // and point at the setting that undoes it.
-                  if (!calendar && !history && !showClips && !showFanart)
-                    Padding(padding: edge, child: const _AllHidden()),
-                ];
-                return ListView(
-                  key: const PageStorageKey('today-scroll'),
-                  padding: EdgeInsets.fromLTRB(
-                    0,
-                    MediaQuery.paddingOf(context).top + 16,
-                    0,
-                    MediaQuery.paddingOf(context).bottom + 24,
+      body: RefreshIndicator(
+        onRefresh: () => _refresh(true),
+        edgeOffset: MediaQuery.paddingOf(context).top,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final padding = MediaQuery.paddingOf(context);
+            // The page starts where every page starts, and stops growing
+            // at a readable width instead of centring itself.
+            final width = math.min(constraints.maxWidth, AppTokens.pageWidth);
+            final gutter = AppTokens.gutter(constraints.maxWidth);
+            final edge = EdgeInsets.fromLTRB(
+              gutter,
+              0,
+              math.max(gutter, constraints.maxWidth - width + gutter),
+              0,
+            );
+            const gap = EdgeInsets.only(top: AppTokens.sectionGap - 8);
+            Widget box(Widget child, {bool spaced = true}) =>
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: edge + (spaced ? gap : EdgeInsets.zero),
+                    child: child,
                   ),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    Padding(padding: edge, child: heading),
-                    for (final module in modules)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          top: AppTokens.sectionGap - 8,
-                        ),
-                        child: module,
-                      ),
-                  ],
                 );
-              },
-            ),
-          ),
+            return CustomScrollView(
+              key: const PageStorageKey('today-scroll'),
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: SizedBox(height: padding.top + 16)),
+                box(heading, spaced: false),
+                // What today holds, as a compact summary at the top: a few
+                // lines, never a column beside the works for the whole page.
+                // Then the one optional task slot, back to where picking
+                // stopped; it spaces itself, so an empty slot adds no gap.
+                box(
+                  _TopSummary(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (calendar)
+                          _ScheduleSection(day: day, onCalendar: _calendar),
+                        const ContinueBrowsingRow(),
+                      ],
+                    ),
+                  ),
+                  spaced: calendar,
+                ),
+                if (showFanart) _WorksSection(edge: edge + gap),
+                if (showClips) box(const _ClipsSection()),
+                // The archive comes after today's own content.
+                if (history)
+                  SliverPadding(
+                    padding: gap,
+                    sliver: SliverToBoxAdapter(
+                      child: OnThisDaySection(inset: edge),
+                    ),
+                  ),
+                // Every module hidden is a choice, not a failure: say so
+                // and point at the setting that undoes it.
+                if (!calendar && !history && !showClips && !showFanart)
+                  box(const _AllHidden()),
+                SliverToBoxAdapter(
+                  child: SizedBox(height: padding.bottom + 24),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
+}
+
+/// The top of Today holds a few lines, at a width a line can be read at.
+class _TopSummary extends StatelessWidget {
+  const _TopSummary({required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: AlignmentDirectional.centerStart,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: AppTokens.readingWidth),
+      child: child,
+    ),
+  );
 }
 
 /// Today's schedule, or the next thing on it: at most two lines of today,
@@ -296,77 +276,60 @@ class _ScheduleSection extends ConsumerWidget {
   }
 }
 
-/// The newest works as a row of tiles, as many as the width holds.
+/// The newest works at the full width of the page, each tile as tall as
+/// its own content: one row on a wide window, two on a phone. A sliver,
+/// so the tiles are laid out lazily with the rest of the page.
 class _WorksSection extends ConsumerWidget {
-  const _WorksSection();
+  const _WorksSection({required this.edge});
+  final EdgeInsets edge;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(todayFanartProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SectionHeading(
-          title: '最新二创',
-          action: '查看二创',
-          onAction: () => context.go('/content/fanart'),
-        ),
-        const SizedBox(height: 4),
-        AppFadeSwitcher(
-          phase: asyncPhase(items),
-          child: items.when(
-            loading: () => const _SectionLoading(),
-            error: (error, _) => _SectionError(
-              error: error,
-              onRetry: () => ref.invalidate(todayFanartProvider),
+    Widget box(Widget child) => SliverToBoxAdapter(child: child);
+    return SliverPadding(
+      padding: edge,
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          box(
+            SectionHeading(
+              title: '最新二创',
+              action: '查看二创',
+              onAction: () => context.go('/content/fanart'),
+            ),
+          ),
+          box(const SizedBox(height: 4)),
+          items.when(
+            loading: () => box(const _SectionLoading()),
+            error: (error, _) => box(
+              _SectionError(
+                error: error,
+                onRetry: () => ref.invalidate(todayFanartProvider),
+              ),
             ),
             data: (raw) => RuleFilterScope(
               items: raw,
               subjectOf: RuleSubjects.fanart,
-              builder: (visible) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  RuleStatusBar(visibility: visible),
+              unavailableBuilder: box,
+              builder: (visible) => SliverMainAxisGroup(
+                slivers: [
+                  box(RuleStatusBar(visibility: visible)),
                   if (visible.items.isEmpty)
-                    const _EmptySection('暂时没有内容')
+                    box(const _EmptySection('暂时没有内容'))
                   else
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final scaler = MediaQuery.textScalerOf(context);
-                        final width = constraints.maxWidth;
-                        const gap = AppTokens.itemGap;
-                        final minimum =
-                            (width >= 760 ? 200.0 : 136.0) *
-                            scaler.scale(1).clamp(1.0, 1.6);
-                        final columns = ((width + gap) / (minimum + gap))
-                            .floor()
-                            .clamp(1, 5);
-                        final cell = (width - gap * (columns - 1)) / columns;
-                        final shown = visible.items.take(columns).toList();
-                        return SizedBox(
-                          height: FanartCard.extentFor(
-                            shown.first,
-                            cell,
-                            scaler,
+                    SliverContentMasonry(
+                      itemCount: visible.items.length,
+                      rows: 2,
+                      maxColumns: 5,
+                      itemBuilder: (context, index) {
+                        final item = visible.items[index];
+                        return FanartCard(
+                          key: ValueKey(item.identity),
+                          item: item,
+                          onLongPress: () => showContentActions(
+                            context,
+                            ContentSnapshots.fanart(item),
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (final (index, item) in shown.indexed) ...[
-                                if (index > 0) const SizedBox(width: gap),
-                                SizedBox(
-                                  width: cell,
-                                  child: FanartCard(
-                                    item: item,
-                                    onLongPress: () => showContentActions(
-                                      context,
-                                      ContentSnapshots.fanart(item),
-                                    ),
-                                    onTap: () => openFanart(context, ref, item),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                          onTap: () => openFanart(context, ref, item),
                         );
                       },
                     ),
@@ -374,8 +337,8 @@ class _WorksSection extends ConsumerWidget {
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
