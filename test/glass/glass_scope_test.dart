@@ -15,38 +15,6 @@ class _Signal implements TransparencyPreferenceService {
 }
 
 void main() {
-  testWidgets(
-    'native content never instantiates glass even with a ready runtime',
-    (tester) async {
-      final runtime = GlassRuntime(
-        shaderFiltersSupported: true,
-        load: () async {},
-      );
-      addTearDown(runtime.dispose);
-      await runtime.prepare();
-      await tester.pumpWidget(
-        MaterialApp(
-          builder: (_, child) => AppGlassScope(
-            runtime: runtime,
-            mode: GlassMaterialMode.liquid,
-            transparencyOverride: SystemTransparency.allowed,
-            child: child!,
-          ),
-          home: const Scaffold(
-            body: AppGlassSurface(
-              nativeContent: true,
-              child: Text('native-safe'),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(BackdropFilter), findsNothing);
-      expect(find.text('native-safe'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
   testWidgets('lifecycle changes stop motion even under explicit clear mode', (
     tester,
   ) async {

@@ -1,11 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../app/theme/app_tokens.dart';
 import 'glass/app_glass_scope.dart';
-import 'glass/app_glass_style.dart';
 
 /// Ordinary page actions. Material and geometry are independent: repeated
 /// controls never allocate glass layers, even when navigation uses glass.
@@ -152,9 +150,7 @@ class AppSegments<T> extends StatelessWidget {
     required this.labelOf,
     required this.selected,
     required this.onChanged,
-    this.navigation = false,
   });
-  final bool navigation;
   final List<T> values;
   final String Function(T) labelOf;
   final T selected;
@@ -224,12 +220,10 @@ class AppSegments<T> extends StatelessWidget {
   Widget _segments(BuildContext context) {
     final policy = AppGlassScope.of(context);
     final colors = Theme.of(context).colorScheme;
-    final height = navigation
-        ? heightFor(context)
-        : math.max(
-            AppTokens.controlTarget(context),
-            MediaQuery.textScalerOf(context).scale(14) * 1.3 + 16,
-          );
+    final height = math.max(
+      AppTokens.controlTarget(context),
+      MediaQuery.textScalerOf(context).scale(14) * 1.3 + 16,
+    );
     final hit = math.max(height, AppTokens.touchTarget(context));
     final selectedIndex = values.indexOf(selected);
     final selectedStyle = TextStyle(
@@ -245,112 +239,75 @@ class AppSegments<T> extends StatelessWidget {
     final duration = policy.canAnimate
         ? AppTokens.controlMotion
         : Duration.zero;
-    // The package's segmented spring does not consult reduceMotion; use the
-    // same geometry without that spring when accessibility disables motion.
-    final control = navigation && policy.usesLiquid && policy.canAnimate
-        ? GlassSegmentedControl(
-            segments: [
-              for (final value in values)
-                GlassSegment(label: labelOf(value), enabled: onChanged != null),
-            ],
-            selectedIndex: selectedIndex,
-            onSegmentSelected: (index) => onChanged?.call(values[index]),
-            height: height,
-            padding: const EdgeInsets.all(4),
-            borderRadius: height / 2,
-            indicatorBorderRadius: (height - 8) / 2,
-            backgroundColor: AppGlassStyle.tint(Theme.of(context).brightness),
-            indicatorColor: colors.secondary.withValues(alpha: .70),
-            indicatorExpansion: const EdgeInsets.all(3),
-            selectedTextStyle: selectedStyle,
-            unselectedTextStyle: normalStyle,
-            useOwnLayer: true,
-            quality: AppGlassStyle.qualityOf(context),
-            settings: AppGlassStyle.settings(Theme.of(context).brightness),
-          )
-        // Looks [height] tall; on touch the segments are hit across a 48 dp
-        // band, as AppButton is, so the track sits centred in it.
-        : SizedBox(
-            height: hit,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: (hit - height) / 2),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: colors.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(
-                        navigation ? height / 2 : 12,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: AnimatedAlign(
-                        alignment: AlignmentDirectional(
-                          -1 + 2 * selectedIndex / (values.length - 1),
-                          0,
-                        ),
-                        duration: duration,
-                        curve: Curves.easeOutCubic,
-                        child: FractionallySizedBox(
-                          widthFactor: 1 / values.length,
-                          heightFactor: 1,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: colors.primaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                navigation ? (height - 8) / 2 : 8,
-                              ),
-                            ),
-                          ),
-                        ),
+    // Looks [height] tall; on touch the segments are hit across a 48 dp
+    // band, as AppButton is, so the track sits centred in it.
+    final control = SizedBox(
+      height: hit,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: (hit - height) / 2),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: AnimatedAlign(
+                  alignment: AlignmentDirectional(
+                    -1 + 2 * selectedIndex / (values.length - 1),
+                    0,
+                  ),
+                  duration: duration,
+                  curve: Curves.easeOutCubic,
+                  child: FractionallySizedBox(
+                    widthFactor: 1 / values.length,
+                    heightFactor: 1,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
                 ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final value in values)
-                      Expanded(
-                        child: Semantics(
-                          selected: value == selected,
-                          child: TextButton(
-                            onPressed: onChanged == null
-                                ? null
-                                : () => onChanged!(value),
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: Text(
-                              labelOf(value),
-                              style: value == selected
-                                  ? selectedStyle
-                                  : normalStyle,
-                            ),
-                          ),
+              ),
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final value in values)
+                Expanded(
+                  child: Semantics(
+                    selected: value == selected,
+                    child: TextButton(
+                      onPressed: onChanged == null
+                          ? null
+                          : () => onChanged!(value),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                  ],
+                      child: Text(
+                        labelOf(value),
+                        style: value == selected ? selectedStyle : normalStyle,
+                      ),
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          );
-    // Also blocks drag selection: the package's drag handler ignores the
-    // individual segment enabled flags. Keep disabled selection commit-owned.
-    return ExcludeFocus(
-      excluding: onChanged == null,
-      child: IgnorePointer(
-        ignoring: onChanged == null,
-        child: Opacity(opacity: onChanged == null ? .5 : 1, child: control),
+            ],
+          ),
+        ],
       ),
     );
+    return Opacity(opacity: onChanged == null ? .5 : 1, child: control);
   }
 }
 

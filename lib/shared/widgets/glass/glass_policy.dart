@@ -23,7 +23,6 @@ enum GlassFallback {
   transparencyPending,
   reducedTransparency,
   highContrast,
-  nativeContent,
   inactive,
   unsupported,
   preparing,
@@ -67,7 +66,6 @@ class GlassPolicy {
     TargetPlatform? platform,
     bool highContrast = false,
     bool reduceMotion = false,
-    bool nativeContent = false,
     bool active = true,
   }) {
     final reason = switch ((mode, transparency, runtime)) {
@@ -75,7 +73,6 @@ class GlassPolicy {
       _ when transparency == SystemTransparency.reduced =>
         GlassFallback.reducedTransparency,
       _ when highContrast => GlassFallback.highContrast,
-      _ when nativeContent => GlassFallback.nativeContent,
       _ when !active => GlassFallback.inactive,
       _ when transparency == SystemTransparency.loading =>
         GlassFallback.transparencyPending,

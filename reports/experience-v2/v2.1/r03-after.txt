@@ -1,4 +1,0 @@
-# R03 after the fix
-$ tool/flutterw test test/visual/media_geometry_test.dart
-00:09 +6: All tests passed!
-exit 0

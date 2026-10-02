@@ -78,7 +78,7 @@ android {
     defaultConfig {
         applicationId = "asasfans.next"
         minSdk = 24
-        // Preserve the legacy platform behavior until migration acceptance.
+        // Target-platform behavior changes belong to a separate release task.
         targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -143,29 +143,11 @@ android {
     }
 }
 
-// Flutter's own `profile` build type deliberately carries no
-// applicationIdSuffix of its own (a perf build gets `.perf` from
-// defaultConfig, above).
-//
-// The previous `buildTypes.configureEach` set one on every non-release type.
-// Flutter creates `profile` with initWith(debug) inside every Android project
-// it touches, including plugin libraries, and a library may not carry an
-// applicationIdSuffix at all — so that line failed configuration before any
-// Android build could start. Debug and release were both unbuildable, which
-// is why no Android artifact has ever been produced here.
-//
-// Only `debug` needs the suffix, and it keeps it above: that is the build a
-// developer installs beside the user's real app. A profile build is a timing
-// measurement, not something installed alongside production.
-
-// The gate is now the condition itself rather than an unconditional stop:
-// a release build without the original key fails, and one with it proceeds.
-// Legacy-data migration was cancelled on 2026-09-21 and no longer gates this.
-//
-// What this does not establish is that the wired key is the same one the
-// published APK was signed with. That is a fingerprint comparison against a
-// real published artifact, and it stays a release checklist item — an
-// installable build is not proof of upgrade continuity.
+// Debug uses a development suffix; perf builds use `.perf` above. Do not set
+// applicationIdSuffix on plugin libraries through buildTypes.configureEach.
+// Release requires the original signing configuration. Upgrade continuity
+// still needs separate fingerprint/install verification; legacy migration is
+// cancelled and is not a release prerequisite.
 tasks.matching { it.name == "preReleaseBuild" }.configureEach {
     doFirst {
         if (perfBuild) {

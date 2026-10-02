@@ -1,9 +1,0 @@
-Xcode is fetching Swift Package Manager dependencies. This may take several minutes...
-  Fetching from https://github.com/simolus3/CSQLite.git (cached)...     
-The following plugins do not support Swift Package Manager for macos:
-  - flutter_secure_storage_macos
-This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
-Running pod install...                                             445ms
-Building macOS application...                                   
-warning: Run script build phase 'Run Script' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'Flutter Assemble' from project 'Runner')
-✓ Built build/macos/Build/Products/Profile/Asasfans Next.app (81.3MB)

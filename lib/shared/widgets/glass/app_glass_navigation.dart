@@ -22,13 +22,11 @@ class AppGlassNavigation extends StatefulWidget {
     required this.selected,
     required this.onSelect,
     required this.onTools,
-    this.nativeContent = false,
   }) : assert(selected >= 0 && selected < 4);
 
   final int selected;
   final ValueChanged<int> onSelect;
   final VoidCallback onTools;
-  final bool nativeContent;
 
   /// 56 at 1x: a 48 tab (22 icon + 11 label) inside the 4 px indicator
   /// inset. Only the label line grows with the text scale.
@@ -201,14 +199,13 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
           double.infinity,
         );
         final Widget bar;
-        if (!policy.usesLiquid || widget.nativeContent) {
+        if (!policy.usesLiquid) {
           pointer = pending = visual = null;
           moved = cancelled = pendingWhileDown = false;
           bar = Row(
             children: [
               Expanded(
                 child: AppGlassSurface(
-                  nativeContent: widget.nativeContent,
                   radius: height / 2,
                   child: SizedBox(
                     height: height,
@@ -248,7 +245,6 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
               ),
               const SizedBox(width: 12),
               AppGlassSurface(
-                nativeContent: widget.nativeContent,
                 radius: height / 2,
                 child: SizedBox.square(
                   dimension: height,

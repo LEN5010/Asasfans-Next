@@ -141,7 +141,6 @@ String effectiveGlassLabel(GlassPolicy policy) {
     GlassFallback.failed => '玻璃加载失败，本次运行保持实底',
     GlassFallback.preparing || GlassFallback.transparencyPending => '玻璃准备中',
     GlassFallback.inactive => '应用在后台',
-    GlassFallback.nativeContent => '当前内容不支持玻璃',
   };
   return reason == null ? '当前：$tier' : '当前：$tier（$reason）';
 }

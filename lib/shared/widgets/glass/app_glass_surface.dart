@@ -8,16 +8,10 @@ import 'app_glass_style.dart';
 /// One bounded chrome surface. The actual content is inside AdaptiveGlass,
 /// matching the reference integration, rather than above an empty glass layer.
 class AppGlassSurface extends StatefulWidget {
-  const AppGlassSurface({
-    super.key,
-    required this.child,
-    this.radius = 24,
-    this.nativeContent = false,
-  });
+  const AppGlassSurface({super.key, required this.child, this.radius = 24});
 
   final Widget child;
   final double radius;
-  final bool nativeContent;
 
   static Color surfaceColor(Brightness brightness) =>
       brightness == Brightness.dark ? const Color(0xFF222225) : Colors.white;
@@ -38,8 +32,7 @@ class _AppGlassSurfaceState extends State<AppGlassSurface> {
   @override
   Widget build(BuildContext context) => Builder(
     builder: (context) {
-      final liquid =
-          AppGlassScope.of(context).usesLiquid && !widget.nativeContent;
+      final liquid = AppGlassScope.of(context).usesLiquid;
       final brightness = Theme.of(context).brightness;
       final foreground = AppGlassSurface.foregroundColor(brightness);
       final content = KeyedSubtree(

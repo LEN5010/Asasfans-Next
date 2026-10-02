@@ -9,7 +9,6 @@ void main() {
     SystemTransparency transparency = SystemTransparency.allowed,
     bool highContrast = false,
     bool reduceMotion = false,
-    bool nativeContent = false,
     bool active = true,
   }) => GlassPolicy.resolve(
     mode: mode,
@@ -17,7 +16,6 @@ void main() {
     transparency: transparency,
     highContrast: highContrast,
     reduceMotion: reduceMotion,
-    nativeContent: nativeContent,
     active: active,
   );
 
@@ -57,8 +55,7 @@ void main() {
       );
     },
   );
-  test('inactive and native-content boundaries cannot use a sampler', () {
-    expect(resolve(nativeContent: true).fallback, GlassFallback.nativeContent);
+  test('inactive boundaries cannot use a sampler', () {
     expect(resolve(active: false).fallback, GlassFallback.inactive);
   });
   for (final state in GlassRuntimeState.values.where(
