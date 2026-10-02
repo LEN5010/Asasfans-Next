@@ -80,6 +80,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.text('平台适配'), findsOneWidget);
+      expect(find.text('自动'), findsNothing);
       repository.failure = const StorageFailure(StorageFailureKind.unavailable);
       await tester.tap(find.text('首页切片'));
       await tester.pumpAndSettle();

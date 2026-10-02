@@ -297,7 +297,7 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
         .firstOrNull;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 760;
+        final wide = constraints.maxWidth >= 600;
         void apply(DynamicQuery next) {
           setState(() => _expanded = false);
           widget.onChanged(next);
@@ -446,10 +446,12 @@ class _DynamicFilterBarState extends ConsumerState<_DynamicFilterBar> {
 /// A date range in words. The picker stores calendar dates and the server's
 /// `to` is exclusive, so the last day shown is the one before it.
 String _rangeLabel(DateTime? from, DateTime? to) {
-  String day(DateTime value) => '${value.month}月${value.day}日';
+  String day(DateTime value) => '${value.year}年${value.month}月${value.day}日';
   final last = to?.subtract(const Duration(days: 1));
   return switch ((from, last)) {
-    (final from?, final last?) when day(from) == day(last) => day(from),
+    (final from?, final last?) when DateUtils.isSameDay(from, last) => day(
+      from,
+    ),
     (final from?, final last?) => '${day(from)}–${day(last)}',
     (final from?, null) => '${day(from)} 起',
     (null, final last?) => '至 ${day(last)}',

@@ -124,23 +124,102 @@ void main() {
     });
   }
 
-  testWidgets('UI UX: novel rating is committed only on filter apply', (
-    tester,
-  ) async {
-    final repository = await pump(tester, 400);
-    await tester.tap(find.byTooltip('筛选与排序'));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(AppSegments<NovelRatingFilter>),
-        matching: find.text('R18'),
-      ),
-    );
-    expect(repository.queries.last.rating, NovelRatingFilter.all);
-    await tester.tap(find.text('应用筛选'));
-    await tester.pumpAndSettle();
-    expect(repository.queries.last.rating, NovelRatingFilter.nsfw);
-  });
+  for (final width in [400.0, 800.0]) {
+    testWidgets('novel filters cancel or apply one draft at width $width', (
+      tester,
+    ) async {
+      final repository = await pump(tester, width);
+      final rating = find.byType(AppSegments<NovelRatingFilter>);
+      final r18 = find.descendant(of: rating, matching: find.text('R18'));
+      expect(rating, findsNothing);
+
+      await tester.tap(find.byTooltip('筛选与排序'));
+      await tester.pumpAndSettle();
+      expect(find.text('筛选小说'), width < 600 ? findsOneWidget : findsNothing);
+      await tester.tap(find.widgetWithText(AppButton, '嘉然'));
+      await tester.tap(r18);
+      await tester.pumpAndSettle();
+      expect(repository.queries, [const NovelQuery()]);
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(rating, findsNothing);
+
+      await tester.tap(find.byTooltip('筛选与排序'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
+        NovelRatingFilter.all,
+      );
+      expect(
+        tester.widget<AppButton>(find.widgetWithText(AppButton, '嘉然')).selected,
+        isFalse,
+      );
+      await tester.tap(find.widgetWithText(AppButton, '嘉然'));
+      await tester.tap(r18);
+      await tester.pumpAndSettle();
+      expect(repository.queries.length, 1);
+      await tester.tap(find.text('应用筛选'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.length, 2);
+      expect(repository.queries.last.rating, NovelRatingFilter.nsfw);
+      expect(repository.queries.last.characters, {NovelCharacter.diana});
+      expect(rating, findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+    'inline novel draft follows search and clear, resize never applies',
+    (tester) async {
+      final repository = await pump(tester, 800);
+      final rating = find.byType(AppSegments<NovelRatingFilter>);
+      final r18 = find.descendant(of: rating, matching: find.text('R18'));
+      await tester.tap(find.byTooltip('筛选与排序'));
+      await tester.pumpAndSettle();
+      await tester.tap(r18);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '新的搜索');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      expect(repository.queries.last, const NovelQuery(keyword: '新的搜索'));
+      expect(
+        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
+        NovelRatingFilter.all,
+      );
+
+      await tester.tap(r18);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('清除小说筛选'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.last, const NovelQuery());
+      expect(
+        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
+        NovelRatingFilter.all,
+      );
+
+      await tester.tap(r18);
+      await tester.pumpAndSettle();
+      final committed = repository.queries.length;
+      tester.view.physicalSize = const Size(400, 900);
+      await tester.pumpAndSettle();
+      expect(rating, findsNothing);
+      tester.view.physicalSize = const Size(800, 900);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
+        NovelRatingFilter.all,
+      );
+      for (final text in ['角色', '分级', '搜索范围', '排序', '应用筛选']) {
+        await tester.ensureVisible(find.text(text));
+      }
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.length, committed);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('the reader lays out text blocks', (tester) async {
     await pump(tester, 1200);

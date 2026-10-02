@@ -107,7 +107,7 @@ class PreferencesControls extends ConsumerWidget {
 
   static String _glass(GlassChoice value) => switch (value) {
     GlassChoice.smooth => '流畅优先',
-    GlassChoice.auto => '自动',
+    GlassChoice.auto => '平台适配',
     GlassChoice.visual => '视觉优先',
   };
 

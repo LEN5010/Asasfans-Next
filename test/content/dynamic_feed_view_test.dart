@@ -62,12 +62,21 @@ class _StubRepository implements DynamicRepository {
   Future<List<DynamicMember>> members() async => const [];
 }
 
-Widget _app(DynamicRepository repository) => ProviderScope(
+Widget _app(
+  DynamicRepository repository, {
+  TextScaler textScaler = TextScaler.noScaling,
+}) => ProviderScope(
   overrides: [
     ...offlineLibrary(),
     dynamicRepositoryProvider.overrideWithValue(repository),
   ],
-  child: const MaterialApp(home: ContentPage(channel: 'dynamics')),
+  child: MaterialApp(
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+      child: child!,
+    ),
+    home: const ContentPage(channel: 'dynamics'),
+  ),
 );
 
 void main() {
@@ -170,6 +179,157 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.queries.last.keyword, '生日');
+  });
+
+  testWidgets('wide dynamic filters keep a draft until applied or cancelled', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(1000, 900)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repository = _StubRepository(pages: 1);
+    await tester.pumpWidget(
+      _app(repository, textScaler: const TextScaler.linear(2)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('筛选动态'), findsNothing);
+    final initialRequests = repository.requests;
+
+    await tester.tap(find.byTooltip('筛选与排序'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.text('筛选动态'), findsOneWidget);
+    await tester.ensureVisible(find.widgetWithText(AppButton, '视频'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(AppButton, '视频'));
+    await tester.ensureVisible(find.text('点赞最多'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('点赞最多'));
+    await tester.pumpAndSettle();
+    expect(repository.requests, initialRequests);
+    expect(find.text('筛选动态'), findsOneWidget);
+    await tester.ensureVisible(find.text('取消'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(repository.queries.last, const DynamicQuery());
+    expect(find.text('筛选动态'), findsNothing);
+
+    await tester.scrollUntilVisible(
+      find.byTooltip('筛选与排序'),
+      -300,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const PageStorageKey('historical-dynamics-feed')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('筛选与排序'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<AppSegments<DynamicSort>>(
+            find.byType(AppSegments<DynamicSort>),
+          )
+          .selected,
+      DynamicSort.newest,
+    );
+    await tester.ensureVisible(find.widgetWithText(AppButton, '视频'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(AppButton, '视频'));
+    await tester.ensureVisible(find.text('点赞最多'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('点赞最多'));
+    await tester.ensureVisible(find.text('应用筛选'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('应用筛选'));
+    await tester.pumpAndSettle();
+    expect(repository.requests, initialRequests + 1);
+    expect(repository.queries.last.type, DynamicType.video);
+    expect(repository.queries.last.sort, DynamicSort.likes);
+    expect(find.text('筛选动态'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('an external dynamic query replaces an open filter draft', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(1000, 900)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repository = _StubRepository(pages: 1);
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('筛选与排序'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(AppButton, '视频'));
+    final controller = ProviderScope.containerOf(
+      tester.element(find.byType(ContentPage)),
+    ).read(dynamicFeedControllerProvider);
+    const external = DynamicQuery(
+      keyword: '生日',
+      type: DynamicType.image,
+      sort: DynamicSort.oldest,
+    );
+    await controller.applyQuery(external);
+    await tester.pumpAndSettle();
+    expect(find.text('筛选动态'), findsOneWidget);
+    expect(
+      tester
+          .widget<AppSegments<DynamicSort>>(
+            find.byType(AppSegments<DynamicSort>),
+          )
+          .selected,
+      DynamicSort.oldest,
+    );
+    await tester.ensureVisible(find.text('应用筛选'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('应用筛选'));
+    await tester.pumpAndSettle();
+    expect(controller.state.query, external);
+    expect(repository.queries.last, external);
+    expect(find.text('筛选动态'), findsNothing);
+  });
+
+  testWidgets('dynamic date summaries retain years and exclusive end dates', (
+    tester,
+  ) async {
+    final repository = _StubRepository(pages: 1);
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+    final controller = ProviderScope.containerOf(
+      tester.element(find.byType(ContentPage)),
+    ).read(dynamicFeedControllerProvider);
+    final examples = [
+      (
+        DynamicQuery(
+          from: DateTime.utc(2025, 1, 1),
+          to: DateTime.utc(2025, 1, 2),
+        ),
+        '2025年1月1日',
+      ),
+      (
+        DynamicQuery(
+          from: DateTime.utc(2025, 1, 1),
+          to: DateTime.utc(2026, 1, 2),
+        ),
+        '2025年1月1日–2026年1月1日',
+      ),
+      (DynamicQuery(from: DateTime.utc(2025, 1, 1)), '2025年1月1日 起'),
+      (DynamicQuery(to: DateTime.utc(2026, 1, 2)), '至 2026年1月1日'),
+    ];
+    for (final (query, label) in examples) {
+      await controller.applyQuery(query);
+      await tester.pumpAndSettle();
+      expect(find.text(label), findsOneWidget);
+      expect(repository.queries.last.from, query.from);
+      expect(repository.queries.last.to, query.to);
+    }
   });
 
   testWidgets('a first page failure offers a retry', (tester) async {

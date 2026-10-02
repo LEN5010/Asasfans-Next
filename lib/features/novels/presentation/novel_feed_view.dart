@@ -158,12 +158,12 @@ class _NovelFilters extends ConsumerStatefulWidget {
 }
 
 class _NovelFiltersState extends ConsumerState<_NovelFilters> {
-  bool _expanded = true;
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final wide = constraints.maxWidth >= 760;
+      final wide = constraints.maxWidth >= 600;
       final query = widget.query;
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -228,7 +228,10 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
                           key: ValueKey(query),
                           query: query,
                           embedded: true,
-                          onApply: widget.onChanged,
+                          onApply: (next) {
+                            setState(() => _expanded = false);
+                            widget.onChanged(next);
+                          },
                           onClose: () => setState(() => _expanded = false),
                         ),
                       ),
@@ -306,7 +309,6 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
 
   void _change(NovelQuery next) {
     setState(() => _draft = next);
-    if (widget.embedded) widget.onApply(next);
   }
 
   @override
@@ -425,26 +427,25 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
           fields
         else
           Expanded(child: SingleChildScrollView(child: fields)),
-        if (!widget.embedded)
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: Row(
-                children: [
-                  AppButton(onPressed: widget.onClose, child: const Text('取消')),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppButton(
-                      selected: true,
-                      onPressed: () => widget.onApply(_draft),
-                      child: const Text('应用筛选'),
-                    ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Row(
+              children: [
+                AppButton(onPressed: widget.onClose, child: const Text('取消')),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    selected: true,
+                    onPressed: () => widget.onApply(_draft),
+                    child: const Text('应用筛选'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }

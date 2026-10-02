@@ -65,7 +65,7 @@ class _FeedScrollViewState extends State<FeedScrollView>
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final reveal = CurvedAnimation(parent: _reveal, curve: Curves.easeOutCubic);
+    final reveal = _reveal.drive(CurveTween(curve: Curves.easeOutCubic));
     // Feeds pad their own rows by 16; this brings their start to the page
     // gutter every root page shares.
     final side = extraInset(MediaQuery.sizeOf(context).width);

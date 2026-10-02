@@ -167,7 +167,13 @@ class _ContentPageState extends ConsumerState<ContentPage>
         offstage: !active && !leaving,
         child: TickerMode(
           enabled: active || leaving,
-          child: SlideTransition(position: position, child: feed),
+          child: ExcludeFocus(
+            excluding: !active,
+            child: IgnorePointer(
+              ignoring: !active,
+              child: SlideTransition(position: position, child: feed),
+            ),
+          ),
         ),
       ),
     );

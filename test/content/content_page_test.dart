@@ -540,6 +540,70 @@ void main() {
   });
 
   testWidgets(
+    'leaving channels stop input while retaining their query and search draft',
+    (tester) async {
+      final repository = _StubRepository();
+      final channel = ValueNotifier('fanart');
+      addTearDown(channel.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...offlineLibrary(),
+            fanartRepositoryProvider.overrideWithValue(repository),
+            dynamicRepositoryProvider.overrideWithValue(_NoDynamics()),
+          ],
+          child: MaterialApp(
+            home: ValueListenableBuilder(
+              valueListenable: channel,
+              builder: (_, slug, _) => ContentPage(channel: slug),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '已提交');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '未提交草稿');
+      final input = tester.widget<EditableText>(find.byType(EditableText));
+      final requests = repository.requests;
+      expect(input.focusNode.hasFocus, isTrue);
+
+      channel.value = 'dynamics';
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(input.focusNode.hasFocus, isFalse);
+      expect(input.focusNode.canRequestFocus, isFalse);
+      // The old controls are still painting their exit, but cannot be hit.
+      final leaving = find.byKey(const ValueKey(ContentChannel.fanart));
+      expect(leaving, findsOneWidget);
+      expect(
+        find
+            .descendant(of: leaving, matching: find.byType(TextField))
+            .hitTestable(),
+        findsNothing,
+      );
+      input.focusNode.requestFocus();
+      await tester.pumpAndSettle();
+      expect(input.focusNode.hasFocus, isFalse);
+      expect(tester.testTextInput.isVisible, isFalse);
+
+      channel.value = 'fanart';
+      await tester.pumpAndSettle();
+      expect(repository.requests, requests);
+      expect(repository.queries.last.keyword, '已提交');
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).focusNode,
+        same(input.focusNode),
+      );
+      expect(input.controller.text, '未提交草稿');
+      expect(input.focusNode.canRequestFocus, isTrue);
+      expect(input.focusNode.hasFocus, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'only two channels stay mounted; a returning channel keeps pages and offset',
     (tester) async {
       final repository = _StubRepository();
