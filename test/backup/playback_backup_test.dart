@@ -187,6 +187,77 @@ void main() {
     },
   );
 
+  test(
+    'a newer unknown-duration backup keeps its position and local completion',
+    () async {
+      await library.saveProgress(
+        video,
+        '77',
+        const Duration(minutes: 1),
+        duration: const Duration(minutes: 1),
+      );
+      final root = object(await backup.export());
+      final row = (root['data']['playback_progress'] as List).single as Map;
+      final later = at.add(const Duration(hours: 1)).millisecondsSinceEpoch;
+      row['position_ms'] = const Duration(minutes: 2).inMilliseconds;
+      row['duration_ms'] = 0;
+      row['completed'] = 0;
+      row['updated_at'] = later;
+      final imported = await backup.inspect(bytesOf(root));
+      await backup.merge(imported);
+      await backup.merge(imported);
+      final restored = (await library.progress(part('77')))!;
+      expect(restored.position, const Duration(minutes: 2));
+      expect(restored.durationKnown, isFalse);
+      expect(restored.completed, isTrue);
+      expect(restored.updatedAt.millisecondsSinceEpoch, later);
+    },
+  );
+
+  test(
+    'playback milliseconds round-trip through 30 days without widening counters',
+    () async {
+      const limit = Duration(days: 30);
+      await library.saveProgress(video, '77', limit, duration: limit);
+      await library.addBookmark(video, '77', limit, end: limit, title: '长记录');
+      await library.recordHistory(video, HistoryAction.detail);
+      final exported = await backup.export();
+      final target = MemoryLocalDatabase();
+      addTearDown(target.close);
+      final targetLibrary = SqliteLibraryRepository(
+        target,
+        backgroundDecoding: false,
+      );
+      addTearDown(targetLibrary.close);
+      final targetBackup = SqliteBackupRepository(
+        target,
+        onCommitted: targetLibrary.notifyExternalCommit,
+      );
+      await targetBackup.merge(await targetBackup.inspect(exported));
+      final restored = (await targetLibrary.progress(part('77')))!;
+      expect(restored.position, limit);
+      expect(restored.duration, limit);
+      final bookmark = (await targetLibrary.bookmarks(part('77'))).single;
+      expect(bookmark.start, limit);
+      expect(bookmark.end, limit);
+
+      for (final (table, column) in [
+        ('playback_progress', 'position_ms'),
+        ('playback_progress', 'duration_ms'),
+        ('playback_bookmarks', 'start_ms'),
+        ('playback_bookmarks', 'end_ms'),
+        ('content_history', 'visits'),
+      ]) {
+        final root = object(exported);
+        final row = (root['data'][table] as List).single as Map;
+        row[column] = column == 'visits'
+            ? 2147483648
+            : limit.inMilliseconds + 1;
+        await expectLater(backup.inspect(bytesOf(root)), invalid());
+      }
+    },
+  );
+
   test('progress referencing a missing snapshot is rejected', () async {
     await library.saveProgress(video, '77', const Duration(seconds: 30));
     final root = object(await backup.export());

@@ -140,6 +140,23 @@ void main() {
     );
   });
 
+  test('a newer position can outgrow a previously known duration', () async {
+    final item = _item('BV1');
+    await repository.saveProgress(
+      item,
+      '77',
+      const Duration(seconds: 30),
+      duration: const Duration(minutes: 1),
+    );
+    now = now.add(const Duration(minutes: 1));
+    await repository.saveProgress(item, '77', const Duration(minutes: 2));
+    final progress = (await repository.progress(_part('BV1', '77')))!;
+    expect(progress.position, const Duration(minutes: 2));
+    expect(progress.durationKnown, isFalse);
+    expect(progress.fraction, isNull);
+    expect(progress.updatedAt, now);
+  });
+
   test(
     'progress keeps its snapshot alive after the item leaves every list',
     () async {

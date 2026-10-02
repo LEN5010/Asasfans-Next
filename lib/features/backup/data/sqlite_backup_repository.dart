@@ -86,11 +86,15 @@ class SqliteBackupRepository implements BackupRepository {
           AND (excluded.sequence>calendar_follows.sequence OR excluded.observed_at>calendar_follows.observed_at)''',
         // A newer stored position wins, and a part already finished locally
         // stays finished: a restore must not rewind real watch state. An
-        // imported known duration fills in an unknown one.
+        // imported known duration fills in an unknown one. Keep a previous
+        // duration only while it can still contain the newer position.
         'playback_progress' =>
           '''ON CONFLICT(source,content_id,part_id) DO UPDATE SET
           position_ms=excluded.position_ms,
-          duration_ms=CASE WHEN excluded.duration_ms>0 THEN excluded.duration_ms ELSE playback_progress.duration_ms END,
+          duration_ms=CASE
+            WHEN excluded.duration_ms>0 THEN excluded.duration_ms
+            WHEN excluded.position_ms<=playback_progress.duration_ms THEN playback_progress.duration_ms
+            ELSE 0 END,
           completed=MAX(playback_progress.completed,excluded.completed),
           updated_at=excluded.updated_at
           WHERE excluded.updated_at>playback_progress.updated_at''',

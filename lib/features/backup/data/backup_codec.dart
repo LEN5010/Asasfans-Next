@@ -23,13 +23,14 @@ class ValidatedBackup implements BackupImport {
   final Map<String, List<Map<String, Object?>>> tables;
 }
 
-/// Portable allowlisted v3 format; v1/v2 remain readable without read receipts.
+/// Portable allowlisted personal backup; older formats remain readable.
 /// Neither raw database files nor cache / credential stores are exportable.
 abstract final class BackupCodec {
   /// Version written by [encode]. Older files stay readable; see [columns].
   static const formatVersion = 6;
   static const maxBytes = 32 * 1024 * 1024;
   static const maxRows = 50000;
+  static const _maxPlaybackMillis = 1000 * 60 * 60 * 24 * 30;
   static const _invalid = BackupFailure(BackupFailureKind.invalid);
   static const columnsV1 = {
     'preferences': ['key', 'value'],
@@ -427,8 +428,8 @@ abstract final class BackupCodec {
         _id(row['part_id']);
       }
       if (table == 'playback_progress') {
-        _number(row['position_ms']);
-        _number(row['duration_ms']);
+        _number(row['position_ms'], max: _maxPlaybackMillis);
+        _number(row['duration_ms'], max: _maxPlaybackMillis);
         final position = row['position_ms'] as int;
         final duration = row['duration_ms'] as int;
         // An unknown duration is 0 and cannot bound the position; a known one
@@ -441,12 +442,12 @@ abstract final class BackupCodec {
       }
       if (table == 'playback_bookmarks') {
         _id(row['id']);
-        _number(row['start_ms']);
+        _number(row['start_ms'], max: _maxPlaybackMillis);
         final end = row['end_ms'];
         // Null stays a point bookmark. A present end may equal the start but
         // never precede it.
         if (end != null) {
-          _number(end);
+          _number(end, max: _maxPlaybackMillis);
           if ((end as int) < (row['start_ms'] as int)) throw _invalid;
         }
         _text(row['title'], 200);
@@ -553,8 +554,8 @@ abstract final class BackupCodec {
     if (value is! int || value < 0 || value > 253402300799999) throw _invalid;
   }
 
-  static void _number(Object? value, {int min = 0}) {
-    if (value is! int || value < min || value > 2147483647) throw _invalid;
+  static void _number(Object? value, {int min = 0, int max = 2147483647}) {
+    if (value is! int || value < min || value > max) throw _invalid;
   }
 
   static void _uri(Object? value, {bool nullable = false}) {

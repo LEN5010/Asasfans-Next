@@ -652,8 +652,8 @@ class SqliteLibraryRepository implements LibraryRepository {
   }) async {
     final positionMs = _millis(position);
     final durationMs = _millis(duration);
-    // A known duration bounds the position: a late report from a longer source
-    // must not store a position past the end of the part being watched.
+    // This report's known duration bounds its position. Without one, keep the
+    // position and reuse an earlier duration only if it can still contain it.
     final bounded = durationMs == 0
         ? positionMs
         : positionMs > durationMs
@@ -671,7 +671,10 @@ class SqliteLibraryRepository implements LibraryRepository {
         VALUES(?,?,?,?,?,?,?)
         ON CONFLICT(source,content_id,part_id) DO UPDATE SET
           position_ms=excluded.position_ms,
-          duration_ms=CASE WHEN excluded.duration_ms>0 THEN excluded.duration_ms ELSE playback_progress.duration_ms END,
+          duration_ms=CASE
+            WHEN excluded.duration_ms>0 THEN excluded.duration_ms
+            WHEN excluded.position_ms<=playback_progress.duration_ms THEN playback_progress.duration_ms
+            ELSE 0 END,
           completed=excluded.completed,
           updated_at=excluded.updated_at
         WHERE excluded.updated_at >= playback_progress.updated_at''',
