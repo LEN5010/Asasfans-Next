@@ -28,27 +28,21 @@ class UpdateController extends ChangeNotifier {
   /// after: the follow rows hold the revision the user last saw, which is the
   /// only thing a change can be measured against.
   ///
-  /// A failure here is swallowed. The calendar itself loaded, and refusing to
-  /// show it because an inbox write failed would trade a working feature for a
-  /// secondary one.
+  /// A failed commit must stop the subsequent follow synchronization. The
+  /// calendar repository still shows its loaded events and marks that failure.
   Future<void> recordCalendarSnapshot(
     Uri source,
     List<CalendarEvent> events,
   ) async {
     if (_closed) return;
-    try {
-      final follows = await _library.calendarFollows();
-      if (_closed || follows.isEmpty) return;
-      final harvest = _collector.collectSchedule(
-        source: source,
-        follows: follows,
-        events: events,
-      );
-      await _updates.commit(harvest);
-    } catch (_) {
-      // Leaving the follow rows untouched means the next snapshot compares
-      // against the same revision and can still report the change.
-    }
+    final follows = await _library.calendarFollows();
+    if (_closed || follows.isEmpty) return;
+    final harvest = _collector.collectSchedule(
+      source: source,
+      follows: follows,
+      events: events,
+    );
+    await _updates.commit(harvest);
   }
 
   Future<void> markRead(Iterable<String> ids, {bool read = true}) =>

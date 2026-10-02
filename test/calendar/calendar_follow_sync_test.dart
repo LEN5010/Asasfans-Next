@@ -1,10 +1,18 @@
 import 'dart:typed_data';
 
+import 'package:asasfans_next/app/providers.dart';
+import 'package:asasfans_next/core/config/app_environment.dart';
+import 'package:asasfans_next/core/storage/storage_providers.dart';
+import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/data/ics_calendar_repository.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
+import 'package:asasfans_next/features/library/application/library_providers.dart';
 import 'package:asasfans_next/features/library/data/sqlite_library_repository.dart';
 import 'package:asasfans_next/features/library/domain/library_models.dart';
+import 'package:asasfans_next/features/updates/application/update_providers.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/sqlite_fixture.dart';
@@ -81,6 +89,77 @@ void main() {
         forceRefresh: true,
       );
       expect(await library.calendarFollows(), hasLength(1));
+    },
+  );
+  test(
+    'failed inbox commit keeps the follow revision and retries without duplicate updates',
+    () async {
+      final db = MemoryLocalDatabase();
+      addTearDown(db.close);
+      final dio = Dio()..httpClientAdapter = _Feed();
+      addTearDown(() => dio.close(force: true));
+      final url = Uri.parse('https://fixture.example/calendar.ics');
+      final container = ProviderContainer(
+        overrides: [
+          localDatabaseProvider.overrideWithValue(db),
+          calendarDioProvider.overrideWithValue(dio),
+          currentTimeProvider.overrideWithValue(
+            () => DateTime.utc(2026, 9, 21),
+          ),
+          appEnvironmentProvider.overrideWithValue(
+            AppEnvironment(
+              dynamicApiBaseUrl: Uri.parse('https://fixture.example/api/'),
+              calendarUrl: url,
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final library = container.read(libraryRepositoryProvider);
+      final updates = container.read(updateRepositoryProvider);
+      final original = CalendarEvent(
+        uid: 'stable',
+        title: '九月旧安排',
+        start: DateTime.utc(2026, 9, 21, 12),
+        end: DateTime.utc(2026, 9, 21, 14),
+        allDay: false,
+      );
+      await library.followCalendar(
+        CalendarFollowKey(source: url, uid: 'stable'),
+        original,
+      );
+      db.database.execute('''CREATE TRIGGER fail_inbox_commit
+        BEFORE INSERT ON update_events
+        BEGIN SELECT RAISE(ABORT, 'fixture'); END''');
+      final calendar = container.read(calendarRepositoryProvider);
+      final failed = await calendar.events(
+        from: DateTime.utc(2026, 10),
+        until: DateTime.utc(2026, 11),
+      );
+      expect(failed.events.single.sequence, 1);
+      expect(failed.isStale, isFalse);
+      expect(failed.followSyncUnavailable, isTrue);
+      final unchanged = (await library.calendarFollows()).single.event;
+      expect(unchanged.sequence, original.sequence);
+      expect(unchanged.start, original.start);
+      expect((await updates.counts()).inbox, 0);
+
+      db.database.execute('DROP TRIGGER fail_inbox_commit');
+      final recovered = await calendar.events(
+        from: DateTime.utc(2026, 10),
+        until: DateTime.utc(2026, 11),
+        forceRefresh: true,
+      );
+      expect(recovered.followSyncUnavailable, isFalse);
+      expect((await library.calendarFollows()).single.event.sequence, 1);
+      expect((await updates.counts()).inbox, 1);
+
+      await calendar.events(
+        from: DateTime.utc(2026, 10),
+        until: DateTime.utc(2026, 11),
+        forceRefresh: true,
+      );
+      expect((await updates.counts()).inbox, 1);
     },
   );
   test(
