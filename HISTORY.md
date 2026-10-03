@@ -53,10 +53,9 @@
 `old` 分支只用来保存，不再接受新提交。
 
 ```sh
-git switch old                 # 切过去看完整的旧工程
 git show old:<path>            # 不切分支，直接读某个文件
 git ls-tree -r --name-only old # 列出全部文件
 ```
 
-用标签也能读到期内容，例如 `git show v2.0.0:<path>`。
+用标签也能读到对应内容，例如 `git show v2.0.0:<path>`。
 旧版的构建和发布流程均在 `old` 分支和历史标签里。

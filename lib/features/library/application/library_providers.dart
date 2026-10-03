@@ -107,26 +107,6 @@ final playbackBookmarksProvider =
       );
     });
 
-/// Null means no stored position, which a player must treat as "start at the
-/// beginning" rather than as a resume offer.
-final partProgressProvider = FutureProvider.autoDispose
-    .family<PlaybackProgress?, PlaybackPart>((ref, part) {
-      _watchChanges(ref);
-      return ref.watch(libraryRepositoryProvider).progress(part);
-    });
-
-/// Every stored part of one item, so a part list can mark watched parts.
-final contentProgressProvider = FutureProvider.autoDispose
-    .family<Map<String, PlaybackProgress>, ContentIdentity>((ref, identity) {
-      _watchChanges(ref);
-      return ref.watch(libraryRepositoryProvider).contentProgress(identity);
-    });
-final partBookmarksProvider = FutureProvider.autoDispose
-    .family<List<PlaybackBookmark>, PlaybackPart>((ref, part) {
-      _watchChanges(ref);
-      return ref.watch(libraryRepositoryProvider).bookmarks(part);
-    });
-
 final isSubscribedProvider = FutureProvider.autoDispose.family<bool, String>((
   ref,
   mid,

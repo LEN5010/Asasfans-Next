@@ -56,15 +56,3 @@ final updateListProvider = StateNotifierProvider.autoDispose
         repository.changes,
       );
     });
-
-/// The newest few unread entries, for the Today module. It deliberately does
-/// not page: Today shows what is waiting, the inbox shows everything.
-final recentUpdatesProvider = FutureProvider.autoDispose<List<UpdateEvent>>((
-  ref,
-) async {
-  ref.watch(_changesProvider.select((value) => value.valueOrNull ?? 0));
-  final page = await ref
-      .watch(updateRepositoryProvider)
-      .page(filter: UpdateFilter.inbox, limit: 5);
-  return page.items;
-});

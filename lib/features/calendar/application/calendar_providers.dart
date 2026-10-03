@@ -93,13 +93,6 @@ final monthEventsProvider = FutureProvider.autoDispose
       return snapshot;
     });
 
-/// The schedule is published on the Shanghai calendar, so day grouping uses it
-/// rather than the device timezone.
-DateTime shanghaiNow() => CalendarTime.inShanghai(DateTime.now());
-
-DateTime shanghaiDayOf(DateTime instant, {required bool allDay}) =>
-    CalendarTime.dayOf(instant, allDay: allDay);
-
 /// Refresh the underlying feed, then invalidate *all* monthly views so an old
 /// cached month cannot survive a successful global calendar revalidation.
 final refreshCalendarProvider = Provider<Future<void> Function(DateTime)>((

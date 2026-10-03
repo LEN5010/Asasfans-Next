@@ -8,9 +8,9 @@
 
 ## 当前开发方式
 
-先完成当前批次的 UI/组件开发或反馈修复；中途不自动测试、构建或启动应用。不写新的材质实验、基准与证据工具。
+连续开发后集中执行必要静态检查与相关回归，不自动启动应用；构建选本机或手动 CI 一条路径，不默认跑全量测试。现有预览、截图和性能工具仅在用户明确要求时运行，不作为开发门禁，也不新增实验或证据工具。
 
-轻量源码格式整理可按需执行；只有最终集中交付时才执行必要静态检查/编译。CI 均为手动触发，默认不运行全量测试。格式化时如 `.dart_tool` 已清理，可显式使用项目语言版本，避免因缺少 package_config 而按新语言版本重排旧代码：
+轻量格式整理可按需执行。如 `.dart_tool` 已清理，显式使用包语言版本，避免因缺少 package_config 而按新语言版本重排旧代码：
 
 ```sh
 ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/flutterw --dart format --language-version=3.9 <本次修改的文件>
@@ -22,9 +22,9 @@ ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/flutterw --dart format --langua
 
 - `flutterw` / `flutterw.ps1` / `flutter_sdk.dart`：复用同一套已固定 SDK。
 - `brand/generate_icons.cjs`：从原 A 路径生成四端资产，仅在确需改图标时使用。
-- `preview/`：现有隔离内存数据入口。仅用户明确要求离线演示时使用，不作为开发闸门，不自动运行。
+- `preview/`：隔离内存数据的离线演示入口。
 
-不保留独立玻璃 probe 和折射对照工具。正式组件直接服务真实页面；材质效果由用户在最终开发包验收。参考适配许可见 `third_party/README.md`。
+参考适配许可见 `third_party/README.md`。
 
 ## 性能测量包（asasfans.next.perf）
 
@@ -58,4 +58,4 @@ python3 tool/perf/compare.py <out-dir> > <out-dir>/COMPARISON.md
 
 屏幕锁定时窗口到不了前台、拿不到帧。`ASASFANS_PERF_FORCE_RESUMED=true` 让入口自己声明 resumed，应用照常在窗口里绘制，环境记录写 `lifecycle_forced: true`。实测这时系统会在运行十几秒后开始节流被遮住的应用，后半程帧时明显漂移；这类数据只用于同条件下的构建互比，而且只看开头的冷缓存阶段，不能和前台运行比较，也不代表体验。
 
-脚本构建 Profile，直接启动可执行文件并用 `footprint` 每 2 秒采样宿主内存。它不读个人数据、不联网。运行时会在屏幕上开一个 800×600 的窗口，期间不要操作鼠标、不要跑其他重负载。每次只改一个因子，结果写进 `reports/`，不要把 Mac 结果外推到 Android。
+脚本会构建并启动 Profile 窗口，用 `footprint` 每 2 秒采样宿主内存；不读个人数据、不联网。测量期间不要操作鼠标或运行其他重负载；单因素结果写入指定输出目录，不把 Mac 结果外推到 Android。
