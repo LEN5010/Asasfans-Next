@@ -8,7 +8,7 @@ import 'glass_policy.dart';
 /// Chrome keeps the package's optics (thickness, blur, refraction) with a
 /// fixed legible tint, but not its saturation boost or glow: over colourful
 /// art those turned the dock into a bright band that competed with its own
-/// labels (Impeller renders, reports/layout-perf). A high-opacity veil
+/// labels in headless Impeller renders. A high-opacity veil
 /// would hide the very backdrop being refracted, so the tint stays partial.
 abstract final class AppGlassStyle {
   /// The package quality for the scope's effective tier. Solid never
