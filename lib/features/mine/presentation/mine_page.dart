@@ -7,6 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/config/app_version.dart';
+import '../../release/application/release_providers.dart';
+import '../../release/presentation/release_check.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_cover.dart';
@@ -99,12 +102,14 @@ class MinePage extends ConsumerWidget {
                 tone: '嘉然',
                 onTap: () => context.go('/mine/credits'),
               ),
+              const _ReleaseLink(),
               _Link(
                 label: '关于',
                 icon: Icons.info_outline,
                 onTap: () => showLicensePage(
                   context: context,
                   applicationName: 'Asasfans Next',
+                  applicationVersion: appVersion,
                 ),
               ),
             ],
@@ -397,6 +402,28 @@ class _RecentSection extends ConsumerWidget {
   }
 }
 
+/// 检查更新, with what the last check found beside it.
+class _ReleaseLink extends ConsumerWidget {
+  const _ReleaseLink();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final check = ref.watch(releaseCheckProvider);
+    final newer = check?.valueOrNull;
+    return _Link(
+      label: '检查更新',
+      icon: Icons.system_update_outlined,
+      tone: newer == null ? null : '嘉然',
+      detail: switch (check) {
+        AsyncLoading() => '正在检查…',
+        AsyncData(value: final release?) => '新版本 ${release.version}',
+        _ => appVersion,
+      },
+      highlight: newer != null,
+      onTap: check is AsyncLoading ? null : () => checkForUpdates(context, ref),
+    );
+  }
+}
+
 class _Link extends StatelessWidget {
   const _Link({
     required this.label,
@@ -404,14 +431,20 @@ class _Link extends StatelessWidget {
     required this.onTap,
     this.tone,
     this.trailing = Icons.chevron_right,
+    this.detail,
+    this.highlight = false,
   });
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   /// The member colour of the row's badge; none is a neutral badge.
   final String? tone;
   final IconData trailing;
+
+  /// A short value before the chevron, in the accent when [highlight].
+  final String? detail;
+  final bool highlight;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -426,6 +459,19 @@ class _Link extends StatelessWidget {
               ToneBadge(icon: icon, member: tone),
               const SizedBox(width: 14),
               Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
+              if (detail != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 4),
+                  child: Text(
+                    detail!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: highlight
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: highlight ? FontWeight.w600 : null,
+                    ),
+                  ),
+                ),
               Icon(
                 trailing,
                 size: trailing == Icons.chevron_right ? 20 : 17,

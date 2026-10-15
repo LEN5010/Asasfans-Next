@@ -14,6 +14,7 @@ import '../../features/library/presentation/playback_pages.dart';
 import '../../features/library/presentation/calendar_follows.dart';
 import '../../features/handoff/presentation/return_restorer.dart';
 import '../../features/today/presentation/today_page.dart';
+import '../../features/release/presentation/release_check.dart';
 import '../../features/updates/presentation/updates_page.dart';
 import '../../shared/widgets/app_page_bar.dart';
 import 'app_shell.dart';
@@ -31,18 +32,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             // Wraps the shell so a return lands before any branch is chosen.
             ReturnRestorer(
-              child: AppShell(
-                navigationShell: navigationShell,
-                isTabRoot: const {
-                  '/today',
-                  '/calendar',
-                  '/mine',
-                  '/content',
-                  '/content/videos',
-                  '/content/fanart',
-                  '/content/dynamics',
-                  '/content/novels',
-                }.contains(state.uri.path),
+              child: ReleaseNotice(
+                child: AppShell(
+                  navigationShell: navigationShell,
+                  isTabRoot: const {
+                    '/today',
+                    '/calendar',
+                    '/mine',
+                    '/content',
+                    '/content/videos',
+                    '/content/fanart',
+                    '/content/dynamics',
+                    '/content/novels',
+                  }.contains(state.uri.path),
+                ),
               ),
             ),
         branches: [
@@ -62,7 +65,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/content',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   key: ValueKey('content'),
-                  child: ContentPage(channel: 'videos'),
+                  child: ContentPage(),
                 ),
               ),
               GoRoute(
