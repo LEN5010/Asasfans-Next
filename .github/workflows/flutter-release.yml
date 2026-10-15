@@ -1,0 +1,192 @@
+name: Flutter Release
+
+# Manual only. Builds the installers for an existing tag and leaves them on a
+# draft GitHub Release; a person publishes it after looking it over.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag, for example v3.0.0-beta.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flutter-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify tag, version and notes
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - id: check
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          tag = os.environ["RELEASE_TAG"]
+          if not re.fullmatch(r"v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?", tag):
+              raise SystemExit("Invalid release tag")
+          pubspec = Path("pubspec.yaml").read_text()
+          version = re.search(r"^version:\s*(\S+)", pubspec, re.M).group(1)
+          name, _, build = version.partition("+")
+          if tag != f"v{name}" or not build.isdigit():
+              raise SystemExit(f"Tag {tag} does not match pubspec {version}")
+          app = Path("lib/core/config/app_version.dart").read_text()
+          if f"'{name}'" not in app:
+              raise SystemExit("app_version.dart does not match pubspec")
+          notes = Path("release-notes") / f"{name}.md"
+          if not notes.is_file() or not notes.read_text().strip():
+              raise SystemExit(f"{notes} is required")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"version={name}\n")
+          print(f"Verified {tag}, build {build}")
+          PY
+
+  build:
+    name: ${{ matrix.platform }}
+    needs: verify
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: android
+            os: ubuntu-latest
+          - platform: windows
+            os: windows-2022
+          - platform: macos
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      NAME: Asasfans-Next-${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+      - name: Verify SDK (Unix)
+        if: runner.os != 'Windows'
+        run: ASASFANS_FLUTTER_SDK="$FLUTTER_ROOT" tool/flutterw --verify-sdk
+      - name: Verify SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:ASASFANS_FLUTTER_SDK = $env:FLUTTER_ROOT
+          ./tool/flutterw.ps1 --verify-sdk
+      - run: flutter pub get --enforce-lockfile
+
+      # The production key, as v1.3 and v2.0 were signed: an APK signed with
+      # anything else could not upgrade an installed asasfans.next.
+      - name: Restore Android signing
+        if: matrix.platform == 'android'
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "Missing Android signing secrets." >&2
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > asasfans-release.jks
+          {
+            echo "storeFile=asasfans-release.jks"
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+          } > keystore.properties
+      - name: Build Android
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          flutter build apk --release --no-pub
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/$NAME-android.apk"
+          build_tools="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          "$build_tools/apksigner" verify --print-certs "dist/$NAME-android.apk"
+      - name: Remove Android signing
+        if: always() && matrix.platform == 'android'
+        run: rm -f asasfans-release.jks keystore.properties
+
+      - name: Build Windows
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          flutter build windows --release --no-pub
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "dist/$env:NAME-windows-x64.zip"
+
+      # Ad-hoc signed, not notarized: the notes say how to open it.
+      - name: Build macOS
+        if: matrix.platform == 'macos'
+        run: |
+          flutter build macos --release --no-pub
+          mkdir -p dist
+          ditto -c -k --keepParent "build/macos/Build/Products/Release/Asasfans Next.app" "dist/$NAME-macos.zip"
+
+      - name: Checksums
+        shell: bash
+        run: |
+          cd dist
+          for file in *; do
+            if command -v sha256sum >/dev/null; then sha256sum "$file"; else shasum -a 256 "$file"; fi > "$file.sha256"
+            cat "$file.sha256"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  draft:
+    name: Draft GitHub Release
+    needs: [verify, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create or update the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          NOTES: release-notes/${{ needs.verify.outputs.version }}.md
+        shell: bash
+        run: |
+          prerelease=()
+          [[ "$RELEASE_TAG" == *-* ]] && prerelease=(--prerelease)
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --clobber
+            gh release edit "$RELEASE_TAG" --notes-file "$NOTES"
+          else
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --draft "${prerelease[@]}" \
+              --title "Asasfans Next $RELEASE_TAG" --notes-file "$NOTES"
+          fi
