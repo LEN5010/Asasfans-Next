@@ -70,12 +70,6 @@ class _StubRepository implements FanartRepository {
   }
 
   @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => null;
-
-  @override
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
@@ -166,7 +160,7 @@ void main() {
     await tester.pumpWidget(_detail(_item(sourceUrl: source), links: links));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('打开原动态'));
+    await tester.tap(find.text('去 B 站看原动态'));
     await tester.pumpAndSettle();
 
     expect(links.opened, [source]);

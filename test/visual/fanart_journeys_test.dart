@@ -156,7 +156,7 @@ void main() {
     );
     await settleVisual(tester);
     expect(find.byType(FanartDetailPage), findsOneWidget);
-    await tester.tap(find.byTooltip('打开原动态'));
+    await tester.tap(find.text('去 B 站看原动态'));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_motion.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../rules/application/feed_visibility.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +72,11 @@ void openFanart(
 /// The item is handed in from the list rather than re-fetched, so opening a
 /// detail costs no extra request against the shared rate limit and returning
 /// keeps the list exactly where it was.
+///
+/// The work leads: its first picture large, then who made it and what they
+/// wrote, then the rest of the set as a grid. The two ways on — the
+/// originals and the post at its source — are named buttons on a bar that
+/// stays in reach, not icons in the corner.
 class FanartDetailPage extends ConsumerWidget {
   const FanartDetailPage({
     required this.item,
@@ -87,116 +95,145 @@ class FanartDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final text = item.text.trim();
+    void openViewer(int index) =>
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute<void>(
+            builder: (_) => FanartImageViewer(
+              images: item.images,
+              initial: index,
+              onOpenOriginal: (uri) async {
+                final opened = await ref
+                    .read(externalLinkServiceProvider)
+                    .open(uri);
+                if (!opened && context.mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('无法打开原图')));
+                }
+              },
+            ),
+          ),
+        );
+    final actions = _ActionBar(
+      item: item,
+      onViewer: item.images.isEmpty ? null : () => openViewer(0),
+      onSource: item.sourceUrl == null
+          ? null
+          : () => openContentSource(
+              context,
+              ref,
+              ContentSnapshots.fanart(item),
+              url: item.sourceUrl,
+              returnTo: origin.target,
+              channel: origin.channel,
+              query: origin.query,
+              anchor: origin.anchorOf?.call(),
+            ),
+    );
+    final hasActions = item.images.isNotEmpty || item.sourceUrl != null;
     return HistoryRecorder(
       item: ContentSnapshots.fanart(item),
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppPageBar(
-          title: Text(item.authorName.isEmpty ? '二创详情' : item.authorName),
+          title: const Text('二创详情'),
           actions: [
             ContentActionsButton(
               item: ContentSnapshots.fanart(item),
               ruleSubject: RuleSubjects.fanart(item),
             ),
-            if (item.sourceUrl != null)
-              AppButton.icon(
-                tooltip: '打开原动态',
-                icon: const Icon(Icons.open_in_new),
-                onPressed: () => openContentSource(
-                  context,
-                  ref,
-                  ContentSnapshots.fanart(item),
-                  url: item.sourceUrl,
-                  returnTo: origin.target,
-                  channel: origin.channel,
-                  query: origin.query,
-                  anchor: origin.anchorOf?.call(),
-                ),
-              ),
           ],
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {
+            final theme = Theme.of(context);
             final info = <Widget>[
-              _AuthorRow(item: item),
-              const SizedBox(height: 16),
-              if (text.isNotEmpty)
-                SelectableText(text, style: theme.textTheme.bodyLarge),
+              _AuthorCard(item: item),
+              if (text.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                if (item.images.isEmpty)
+                  _Letter(item: item, text: text)
+                else
+                  SelectableText(
+                    text,
+                    style: theme.textTheme.bodyLarge?.copyWith(height: 1.75),
+                  ),
+              ],
               if (item.images.isEmpty && text.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 48),
                   child: Center(child: Text('这条动态没有可显示的正文或图片')),
                 ),
-              _MetaRow(item: item),
-            ];
-            final oneColumn = constraints.maxWidth < 1000;
-            final images = <Widget>[
-              for (var index = 0; index < item.images.length; index++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _DetailImage(
-                    item: item,
-                    index: index,
-                    // The first image leads the page, so it may not push the
-                    // author and the words far down.
-                    cap: oneColumn && index == 0
-                        ? math.max(240, constraints.maxHeight * .55)
-                        : null,
-                    heroTag: index == 0 ? heroTag : null,
-                    onTap: () =>
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => FanartImageViewer(
-                              images: item.images,
-                              initial: index,
-                            ),
-                          ),
-                        ),
-                  ),
-                ),
+              _Facts(item: item),
             ];
             if (constraints.maxWidth >= 1000 && item.images.isNotEmpty) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: ListView(
-                      key: const ValueKey('fanart-detail-gallery'),
-                      padding: pageInsets(context, horizontal: 24),
-                      children: images,
-                    ),
-                  ),
-                  const VerticalDivider(width: 1),
-                  SizedBox(
-                    width: (constraints.maxWidth * .34).clamp(340, 440),
-                    child: ListView(
-                      key: const ValueKey('fanart-detail-info'),
-                      padding: pageInsets(context, horizontal: 20),
-                      children: info,
-                    ),
-                  ),
-                ],
+              return _WideDetail(
+                item: item,
+                heroTag: heroTag,
+                info: info,
+                actions: actions,
+                sideWidth: (constraints.maxWidth * .34).clamp(340, 440),
+                onOpen: openViewer,
               );
             }
-            return Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 780),
-                // The work leads: its first image, then who made it and
-                // what they wrote, then the rest of the set.
-                child: ListView(
-                  padding: pageInsets(context),
-                  children: [
-                    ...images.take(1),
-                    if (images.isNotEmpty) const SizedBox(height: 4),
-                    ...info,
-                    if (images.length > 1) const SizedBox(height: 16),
-                    ...images.skip(1),
-                  ],
+            final padding = MediaQuery.paddingOf(context);
+            // The bar floats over the end of the page; the page ends clear
+            // of it.
+            final barSpace = hasActions
+                ? AppSegments.heightFor(context) + 16 + 12
+                : 0.0;
+            final rest = item.images.length - 1;
+            return Stack(
+              children: [
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: ListView(
+                      padding: pageInsets(context, bottom: 24 + barSpace),
+                      children: [
+                        if (item.images.isNotEmpty) ...[
+                          _DetailImage(
+                            item: item,
+                            index: 0,
+                            // The first picture leads the page, so it may not
+                            // push the author and the words far down.
+                            cap: math.max(240, constraints.maxHeight * .55),
+                            heroTag: heroTag,
+                            onTap: () => openViewer(0),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        ...info,
+                        if (rest > 0) ...[
+                          const SizedBox(height: 24),
+                          _SetHeading(count: item.images.length),
+                          const SizedBox(height: 10),
+                          _ImageGrid(
+                            item: item,
+                            first: 1,
+                            columns: rest <= 2 ? 2 : 3,
+                            onOpen: openViewer,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+                if (hasActions)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: padding.bottom + 12,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: _FloatingBar(child: actions),
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),
@@ -205,8 +242,352 @@ class FanartDetailPage extends ConsumerWidget {
   }
 }
 
-class _AuthorRow extends ConsumerWidget {
-  const _AuthorRow({required this.item});
+/// A wide window: the pictures large on one side, everything about them
+/// on the other, with the set as thumbnails that bring a picture into view
+/// and the two ways on at the foot of the column.
+class _WideDetail extends StatefulWidget {
+  const _WideDetail({
+    required this.item,
+    required this.heroTag,
+    required this.info,
+    required this.actions,
+    required this.sideWidth,
+    required this.onOpen,
+  });
+  final FanartItem item;
+  final Object? heroTag;
+  final List<Widget> info;
+  final Widget actions;
+  final double sideWidth;
+  final ValueChanged<int> onOpen;
+
+  @override
+  State<_WideDetail> createState() => _WideDetailState();
+}
+
+class _WideDetailState extends State<_WideDetail> {
+  late final _keys = [for (final _ in widget.item.images) GlobalKey()];
+
+  void _reveal(int index) {
+    final target = _keys[index].currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: appMotion(context, AppTokens.emphasisMotion),
+      curve: AppCurves.standard,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final padding = MediaQuery.paddingOf(context);
+    final images = widget.item.images;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ColoredBox(
+            color: theme.colorScheme.surfaceContainerLowest,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: ListView(
+                  key: const ValueKey('fanart-detail-gallery'),
+                  padding: pageInsets(context, horizontal: 24),
+                  children: [
+                    for (var index = 0; index < images.length; index++)
+                      Padding(
+                        key: _keys[index],
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _DetailImage(
+                          item: widget.item,
+                          index: index,
+                          heroTag: index == 0 ? widget.heroTag : null,
+                          onTap: () => widget.onOpen(index),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              start: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          child: SizedBox(
+            width: widget.sideWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: ListView(
+                    key: const ValueKey('fanart-detail-info'),
+                    padding: pageInsets(context, horizontal: 20, bottom: 16),
+                    children: [
+                      ...widget.info,
+                      if (images.length > 1) ...[
+                        const SizedBox(height: 24),
+                        _SetHeading(count: images.length),
+                        const SizedBox(height: 10),
+                        _ImageGrid(
+                          item: widget.item,
+                          first: 0,
+                          columns: 3,
+                          onOpen: _reveal,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, padding.bottom + 20),
+                  child: widget.actions,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The two ways on: every picture at full size, and the post where it was
+/// published.
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({
+    required this.item,
+    required this.onViewer,
+    required this.onSource,
+  });
+  final FanartItem item;
+  final VoidCallback? onViewer;
+  final VoidCallback? onSource;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = AppSegments.heightFor(context);
+    final count = item.images.length;
+    return Row(
+      spacing: 8,
+      children: [
+        if (onViewer != null)
+          Expanded(
+            child: SizedBox(
+              height: height,
+              child: AppButton.withIcon(
+                filled: true,
+                onPressed: onViewer,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(
+                  count > 1 ? '看原图 · $count 张' : '看原图',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ),
+        if (onSource != null)
+          Expanded(
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                minimumSize: Size(0, height),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.inputRadius),
+                ),
+              ),
+              onPressed: onSource,
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(
+                item.identity.source == ContentSource.doubanTopic
+                    ? '去豆瓣看原帖'
+                    : '去 B 站看原动态',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// The action bar's own surface where it floats over the page.
+class _FloatingBar extends StatelessWidget {
+  const _FloatingBar({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    const padding = 8.0;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        // Concentric with the buttons inside it.
+        borderRadius: BorderRadius.circular(AppTokens.inputRadius + padding),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: .7)),
+        boxShadow: AppTokens.cardShadow(colors.brightness),
+      ),
+      child: Padding(padding: const EdgeInsets.all(padding), child: child),
+    );
+  }
+}
+
+/// A work that is only words, set as a letter: on the wash of the member
+/// it is about, as its tile is, under an opening quote mark.
+class _Letter extends StatelessWidget {
+  const _Letter({required this.item, required this.text});
+  final FanartItem item;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final members = {
+      for (final tag in item.characterTags) ...AppTheme.membersIn(tag.wire),
+    };
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: members.length == 1
+            ? Color.alphaBlend(
+                MemberTone.of(members.single, theme.brightness).wash,
+                colors.surfaceContainerLow,
+              )
+            : colors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ExcludeSemantics(
+              child: Text(
+                '“',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  color: colors.primary,
+                  height: 1,
+                ),
+              ),
+            ),
+            SelectableText(
+              text,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontSize: 17,
+                height: 1.85,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SetHeading extends StatelessWidget {
+  const _SetHeading({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text('全部图片', style: theme.textTheme.titleMedium),
+        const SizedBox(width: 8),
+        Text(
+          '$count 张',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontFeatures: AppTheme.tabular,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The set from [first] on, as square thumbnails; a tap hands its index on.
+class _ImageGrid extends StatelessWidget {
+  const _ImageGrid({
+    required this.item,
+    required this.first,
+    required this.columns,
+    required this.onOpen,
+  });
+  final FanartItem item;
+  final int first;
+  final int columns;
+  final ValueChanged<int> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const gap = 8.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final side = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (var index = first; index < item.images.length; index++)
+              SizedBox.square(
+                dimension: side,
+                child: Semantics(
+                  button: true,
+                  label: '第 ${index + 1} 张图片',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image(
+                          image: MediaImagePolicy.preview(
+                            item.images[index],
+                            logicalWidth: side,
+                            logicalHeight: side,
+                            devicePixelRatio: MediaQuery.devicePixelRatioOf(
+                              context,
+                            ),
+                          ),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: theme.colorScheme.surfaceContainerHigh,
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                        ),
+                        Material(
+                          type: MaterialType.transparency,
+                          child: InkWell(onTap: () => onOpen(index)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AuthorCard extends ConsumerWidget {
+  const _AuthorCard({required this.item});
   final FanartItem item;
 
   @override
@@ -217,47 +598,77 @@ class _AuthorRow extends ConsumerWidget {
             validBilibiliMid(item.authorUid)
         ? item.authorUid
         : null;
-    return Row(
-      children: [
-        CreatorLink(
-          mid: mid,
-          child: CircleAvatar(
-            radius: 20,
-            backgroundColor: theme.colorScheme.primaryContainer,
-            foregroundImage: item.authorAvatarUrl == null
-                ? null
-                : MediaImagePolicy.preview(
-                    item.authorAvatarUrl!,
-                    logicalWidth: 40,
-                    devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-                  ),
-            child: Text(
-              item.authorName.isEmpty ? '?' : item.authorName.characters.first,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: CreatorLink(
+    final member = [
+      for (final tag in item.characterTags) ...AppTheme.membersIn(tag.wire),
+    ].firstOrNull;
+    final source = item.identity.source == ContentSource.doubanTopic
+        ? '豆瓣'
+        : 'B 站动态';
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+      child: Row(
+        children: [
+          CreatorLink(
             mid: mid,
-            child: Text(
-              item.authorName.isEmpty ? '未知作者' : item.authorName,
-              style: theme.textTheme.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: MemberRing(
+              member: member,
+              size: 44,
+              child: CircleAvatar(
+                radius: member == null ? 22 : 18,
+                backgroundColor: theme.colorScheme.primaryContainer,
+                foregroundImage: item.authorAvatarUrl == null
+                    ? null
+                    : MediaImagePolicy.preview(
+                        item.authorAvatarUrl!,
+                        logicalWidth: 44,
+                        devicePixelRatio: MediaQuery.devicePixelRatioOf(
+                          context,
+                        ),
+                      ),
+                child: Text(
+                  item.authorName.isEmpty
+                      ? '?'
+                      : item.authorName.characters.first,
+                ),
+              ),
             ),
           ),
-        ),
-        if (mid != null || item.authorSpaceUrl != null)
-          AppButton(
-            onPressed: mid != null
-                ? () => openCreatorPage(context, mid)
-                : () => ref
-                      .read(externalLinkServiceProvider)
-                      .open(item.authorSpaceUrl!),
-            child: const Text('作者主页'),
+          const SizedBox(width: 12),
+          Expanded(
+            child: CreatorLink(
+              mid: mid,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.authorName.isEmpty ? '未知作者' : item.authorName,
+                    style: theme.textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '发布于 $source',
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
           ),
-      ],
+          if (mid != null || item.authorSpaceUrl != null)
+            AppButton(
+              filled: true,
+              onPressed: mid != null
+                  ? () => openCreatorPage(context, mid)
+                  : () => ref
+                        .read(externalLinkServiceProvider)
+                        .open(item.authorSpaceUrl!),
+              child: const Text('作者主页'),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -431,34 +842,55 @@ class _DetailImageState extends State<_DetailImage> {
   }
 }
 
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.item});
+/// Who appears and what kind of work it is, in the members' colours, and
+/// how it has done where it was published.
+class _Facts extends StatelessWidget {
+  const _Facts({required this.item});
   final FanartItem item;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final labels = <String>[
-      item.category.wire,
-      for (final tag in item.characterTags) tag.wire,
-      if (item.viewCount != null) '播放 ${item.viewCount}',
-      if (item.favoriteCount != null) '收藏 ${item.favoriteCount}',
-    ];
-    if (item.images.length > 1) labels.add('${item.images.length} 张 · 点按看原图');
-    if (labels.isEmpty) return const SizedBox.shrink();
-    // One quiet line of facts, not a chip for each.
-    final style = theme.textTheme.bodySmall;
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Wrap(
-        runSpacing: 4,
-        children: [
-          for (final (index, label) in labels.indexed) ...[
-            if (index > 0) Text('  ·  ', style: style),
-            Text(label, style: style),
-          ],
-        ],
+    Widget plain(String label, {IconData? icon}) => DecoratedBox(
+      decoration: ShapeDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        shape: const StadiumBorder(),
       ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 3,
+          children: [
+            if (icon != null)
+              Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.35,
+                fontFeatures: AppTheme.tabular,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    final facts = <Widget>[
+      for (final tag in item.characterTags)
+        MemberTag(
+          member: AppTheme.membersIn(tag.wire).firstOrNull ?? tag.wire,
+          label: tag.wire,
+        ),
+      plain(item.category.wire),
+      if (item.viewCount != null)
+        plain('播放 ${item.viewCount}', icon: Icons.play_arrow_rounded),
+      if (item.favoriteCount != null)
+        plain('收藏 ${item.favoriteCount}', icon: Icons.star_rounded),
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Wrap(spacing: 6, runSpacing: 6, children: facts),
     );
   }
 }

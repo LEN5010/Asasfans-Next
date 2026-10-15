@@ -183,7 +183,7 @@ void main() {
 
     // Back to the grid, and the same work again: its preview is cached now,
     // so the ratio arrives during the build; still capped, and no error.
-    await tester.tap(find.byTooltip('返回').last);
+    await tester.tap(find.byTooltip('关闭'));
     await settleVisual(tester);
     await tester.tap(find.byTooltip('返回').last);
     await settleVisual(tester);
