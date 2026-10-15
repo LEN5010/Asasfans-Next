@@ -111,11 +111,6 @@ class _Repository
   }
 
   @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => null;
-  @override
   Future<List<DynamicMember>> members() async => [];
   @override
   Future<List<DynamicPost>> onThisDay({

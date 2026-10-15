@@ -27,6 +27,7 @@ import '../../content/presentation/video_card.dart';
 import '../../content/domain/fanart_repository.dart';
 import '../../content/presentation/fanart_card.dart';
 import '../../content/presentation/fanart_detail_page.dart';
+import '../../content/presentation/random_fanart_page.dart';
 import '../../preferences/application/preferences_controller.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../library/application/content_snapshots.dart';
@@ -482,9 +483,6 @@ class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
   }
 }
 
-/// The newest works at the full width of the page, each tile as tall as
-/// its own content: one row on a wide window, two on a phone. A sliver,
-/// so the tiles are laid out lazily with the rest of the page.
 /// A random handful of works, two rows of one tile shape, so the rows line
 /// up whatever each work is. 换一批 draws again; the current works stay
 /// until the next ones arrive.
@@ -507,8 +505,9 @@ class _WorksSection extends ConsumerWidget {
               icon: const Icon(Icons.shuffle, size: 20),
             ),
           ],
-          action: '查看二创',
-          onAction: () => context.go('/content/fanart'),
+          // The same draw, without end.
+          action: '更多',
+          onAction: () => openRandomFanart(context),
         ),
         const SizedBox(height: 4),
         AppFadeSwitcher(

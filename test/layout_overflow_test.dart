@@ -60,12 +60,6 @@ class _FanartStub implements FanartRepository {
   );
 
   @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => _fanart('r');
-
-  @override
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,

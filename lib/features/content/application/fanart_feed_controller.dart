@@ -92,10 +92,17 @@ class FanartFeedController extends ChangeNotifier {
     this._repository, {
     FanartQuery query = const FanartQuery(),
     DateTime Function()? clock,
+    this.random = false,
   }) : _state = FanartFeedState(query: query),
        _rateLimit = RateLimitGate(clock: clock);
 
   final FanartRepository _repository;
+
+  /// Draws instead of pages: each load is a fresh random batch, and the
+  /// list goes on while the draws still bring works it has not shown. Three
+  /// draws in a row with nothing new end it, as the end of the pool.
+  final bool random;
+  int _draws = 0;
   FanartFeedState _state;
   int _generation = 0;
   bool _disposed = false;
@@ -139,37 +146,66 @@ class FanartFeedController extends ChangeNotifier {
     return _loadFirstPage();
   }
 
+  Future<FanartPage> _fetch(
+    RequestCancellation cancellation, {
+    String? cursor,
+  }) async {
+    if (!random) {
+      return _repository.page(
+        query: _state.query,
+        cursor: cursor,
+        cancellation: cancellation,
+      );
+    }
+    final items = await _repository.sample(
+      query: _state.query,
+      cancellation: cancellation,
+    );
+    return FanartPage(
+      items: items,
+      snapshotId: 'random',
+      nextCursor: items.isEmpty ? null : '${++_draws}',
+    );
+  }
+
+  /// The state after a page lands on [items]. A random feed that stops
+  /// finding new works has reached its end, not a fault.
+  FanartFeedState _settle(
+    FanartPage page,
+    ({List<FanartItem> added, bool stalled}) progress,
+    List<FanartItem> items,
+  ) {
+    final stalled = progress.stalled && !random;
+    return _state.copyWith(
+      items: items,
+      snapshotId: page.snapshotId,
+      nextCursor: (value: progress.stalled ? null : page.nextCursor),
+      total: page.total,
+      failure: stalled
+          ? const ApiFailure(ApiFailureKind.paginationStalled)
+          : null,
+      status: stalled
+          ? FeedStatus.stalled
+          : progress.stalled || page.nextCursor == null
+          ? FeedStatus.endOfList
+          : FeedStatus.ready,
+      clearFailure: !stalled,
+    );
+  }
+
   Future<void> _loadFirstPage() async {
     final generation = ++_generation;
     _progress.reset();
     _inFlight?.cancel();
     final cancellation = _inFlight = RequestCancellation();
     try {
-      final page = await _rateLimit.run(
-        () => _repository.page(query: _state.query, cancellation: cancellation),
-      );
+      final page = await _rateLimit.run(() => _fetch(cancellation));
       if (_disposed || generation != _generation) return;
       final progress = _progress.accept(
         page.items,
         continuation: page.nextCursor,
       );
-      _emit(
-        _state.copyWith(
-          items: progress.added,
-          snapshotId: page.snapshotId,
-          nextCursor: (value: progress.stalled ? null : page.nextCursor),
-          total: page.total,
-          failure: progress.stalled
-              ? const ApiFailure(ApiFailureKind.paginationStalled)
-              : null,
-          status: progress.stalled
-              ? FeedStatus.stalled
-              : page.nextCursor == null
-              ? FeedStatus.endOfList
-              : FeedStatus.ready,
-          clearFailure: !progress.stalled,
-        ),
-      );
+      _emit(_settle(page, progress, progress.added));
     } on ApiFailure catch (failure) {
       if (_disposed ||
           generation != _generation ||
@@ -194,11 +230,7 @@ class FanartFeedController extends ChangeNotifier {
     final cancellation = _inFlight = RequestCancellation();
     try {
       final page = await _rateLimit.run(
-        () => _repository.page(
-          query: _state.query,
-          cursor: cursor,
-          cancellation: cancellation,
-        ),
+        () => _fetch(cancellation, cursor: cursor),
       );
       if (_disposed || generation != _generation) return;
       final progress = _progress.accept(
@@ -209,19 +241,10 @@ class FanartFeedController extends ChangeNotifier {
       // changes at the Bilibili/Douban boundary. The opaque cursor binds all
       // source revisions server-side; only a 409 invalidates this run.
       _emit(
-        _state.copyWith(
-          items: List.unmodifiable([..._state.items, ...progress.added]),
-          snapshotId: page.snapshotId,
-          nextCursor: (value: progress.stalled ? null : page.nextCursor),
-          total: page.total,
-          failure: progress.stalled
-              ? const ApiFailure(ApiFailureKind.paginationStalled)
-              : null,
-          status: progress.stalled
-              ? FeedStatus.stalled
-              : page.nextCursor == null
-              ? FeedStatus.endOfList
-              : FeedStatus.ready,
+        _settle(
+          page,
+          progress,
+          List.unmodifiable([..._state.items, ...progress.added]),
         ),
       );
     } on ApiFailure catch (failure) {

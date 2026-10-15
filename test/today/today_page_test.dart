@@ -162,7 +162,7 @@ void main() {
         lessThanOrEqualTo(24 + AppTokens.readingWidth + 1),
       );
       expect(
-        tester.getRect(find.widgetWithText(TextButton, '查看二创')).right,
+        tester.getRect(find.widgetWithText(TextButton, '更多')).right,
         greaterThan(1280 - 24 - 1),
       );
       // Works start where the page starts, in one row of one tile shape:

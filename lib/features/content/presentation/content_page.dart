@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:ui' show FlutterView;
 
-import '../../rules/application/rules_providers.dart';
-import '../../rules/application/visible_random.dart';
-import '../../rules/presentation/rule_common.dart';
 import '../../novels/presentation/novel_feed_view.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/presentation/rule_filter_scope.dart';
@@ -20,10 +17,8 @@ import '../../../app/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../../../shared/widgets/feed_scroll_view.dart';
-import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../handoff/application/handoff_providers.dart';
 import '../../handoff/application/handoff_coordinator.dart';
 import '../../handoff/domain/return_context.dart';
@@ -41,13 +36,12 @@ import 'fanart_card.dart';
 import 'fanart_detail_page.dart';
 import '../domain/saved_channel.dart';
 import 'fanart_filter_bar.dart';
+import 'fanart_grid.dart';
+import 'random_fanart_page.dart';
 import 'saved_channel_bar.dart';
-import 'feed_status_footer.dart';
-import '../../library/application/content_snapshots.dart';
-import '../../library/presentation/content_actions.dart';
 
 class ContentPage extends ConsumerStatefulWidget {
-  const ContentPage({this.channel = 'videos', this.videoKind, super.key});
+  const ContentPage({this.channel = 'fanart', this.videoKind, super.key});
   final String channel;
 
   /// The video filter to open with, from a return or an old channel link.
@@ -81,7 +75,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
   );
 
   static ContentChannel _parse(String slug) =>
-      ContentChannel.fromSlug(slug) ?? ContentChannel.videos;
+      ContentChannel.fromSlug(slug) ?? ContentChannel.fanart;
 
   static CommunityChannel _parseKind(String? name) =>
       CommunityChannel.values.where((c) => c.name == name).firstOrNull ??
@@ -249,89 +243,16 @@ class _ChannelStrip extends StatelessWidget {
   );
 }
 
-/// Draws one random post and opens it directly.
-///
-/// Each draw is an independent request, so the button disables itself while
-/// one is in flight instead of letting repeated taps stack up requests.
-class _FanartMoreActions extends ConsumerStatefulWidget {
+/// The channel's own commands: saved channels and a refresh.
+class _FanartMoreActions extends ConsumerWidget {
   const _FanartMoreActions({required this.channel});
   final ContentChannel channel;
 
   @override
-  ConsumerState<_FanartMoreActions> createState() => _FanartMoreActionsState();
-}
-
-class _FanartMoreActionsState extends ConsumerState<_FanartMoreActions> {
-  bool _loading = false;
-  RequestCancellation? _cancellation;
-
-  @override
-  void dispose() {
-    _cancellation?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _draw() async {
-    if (_loading) return;
-    setState(() => _loading = true);
-    final feed = ref.read(fanartFeedControllerProvider(widget.channel));
-    final query = feed.state.query;
-    final generation = feed.generation;
-    try {
-      final result = await drawVisibleFanart(
-        ref.read(fanartRepositoryProvider),
-        ref.read(rulesControllerProvider.notifier),
-        query: query,
-        cancellation: _cancellation = RequestCancellation(),
-      );
-      final item = result.item;
-      if (!mounted || feed.generation != generation) return;
-      if (item == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.filtered ? '本次结果均被屏蔽，请调整规则或重试' : '没有可用的二创'),
-          ),
-        );
-        return;
-      }
-      openFanart(
-        context,
-        ref,
-        item,
-        returnTo: ReturnTarget.contentChannel,
-        channel: ContentChannel.fanart.slug,
-        query: ChannelSpec.ofFanart(query).values,
-      );
-    } on ApiFailure catch (failure) {
-      if (!mounted ||
-          feed.generation != generation ||
-          failure.kind == ApiFailureKind.cancelled) {
-        return;
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message)));
-    } catch (error) {
-      if (mounted && feed.generation == generation) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(ruleError(error))));
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final feed = ref.read(fanartFeedControllerProvider(widget.channel));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feed = ref.read(fanartFeedControllerProvider(channel));
     return MenuAnchor(
       menuChildren: [
-        MenuItemButton(
-          onPressed: _loading ? null : _draw,
-          leadingIcon: const Icon(Icons.shuffle),
-          child: const Text('随机二创'),
-        ),
         SavedChannelBar(
           menuItem: true,
           feed: ChannelFeed.fanart,
@@ -348,12 +269,7 @@ class _FanartMoreActionsState extends ConsumerState<_FanartMoreActions> {
         tooltip: '更多内容操作',
         filled: true,
         onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-        icon: _loading
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.more_horiz),
+        icon: const Icon(Icons.more_horiz),
       ),
     );
   }
@@ -595,6 +511,13 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
                         ),
                       ),
                     ),
+                    AppButton.icon(
+                      tooltip: '随机二创',
+                      filled: true,
+                      onPressed: () =>
+                          openRandomFanart(context, query: state.query),
+                      icon: const Icon(Icons.shuffle),
+                    ),
                     _FanartMoreActions(channel: widget.channel),
                   ],
                 ),
@@ -620,7 +543,8 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
           scrollResetKey: state.query,
           canLoadMore: state.status == FeedStatus.ready,
           onLoadMore: () => _controller.loadMore(automatic: true),
-          child: _FanartGrid(
+          child: FanartGrid(
+            storageKey: const PageStorageKey('fanart-feed'),
             hidden: visible.userHidden.length,
             onBuilt: (items) =>
                 _visible = [for (final item in items) item.identity],
@@ -638,119 +562,24 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
             onRetryAppend: _controller.loadMore,
             onRefresh: _controller.refresh,
             onClear: () => _applyQuery(const FanartQuery()),
+            // A root route or an external open keeps the branch's scroll
+            // position and loaded pages.
+            onOpen: (item) => openFanart(
+              context,
+              ref,
+              item,
+              returnTo: ReturnTarget.contentChannel,
+              channel: ContentChannel.fanart.slug,
+              query: ChannelSpec.ofFanart(state.query).values,
+              anchor: ReturnAnchor(
+                identity: item.identity,
+                offset: _scrollController.offset,
+              ),
+              heroTag: fanartHeroTag(item),
+            ),
           ),
         ),
       );
     },
   );
-}
-
-class _FanartGrid extends ConsumerWidget {
-  const _FanartGrid({
-    required this.hidden,
-    required this.onBuilt,
-    required this.state,
-    required this.header,
-    required this.controller,
-    required this.onRetryAppend,
-    required this.onRefresh,
-    required this.onClear,
-  });
-
-  final ValueChanged<List<FanartItem>> onBuilt;
-
-  /// Back to the channel's defaults, from the empty state.
-  final VoidCallback onClear;
-
-  /// Loaded items the user's rules hide.
-  final int hidden;
-  final FanartFeedState state;
-  final List<Widget> header;
-  final ScrollController controller;
-  final VoidCallback onRetryAppend;
-  final Future<void> Function() onRefresh;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    onBuilt(state.items);
-    final placeholder = state.items.isNotEmpty
-        ? null
-        : switch (state.status) {
-            FeedStatus.failed => FeedMessage(
-              icon: Icons.cloud_off_outlined,
-              text: state.failure?.message ?? '内容加载失败',
-              failure: state.failure,
-              onRetry: onRefresh,
-            ),
-            FeedStatus.idle || FeedStatus.loadingFirstPage => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            FeedStatus.endOfList || FeedStatus.stalled when hidden > 0 =>
-              FeedAllHiddenMessage(count: hidden),
-            FeedStatus.endOfList => FeedMessage.empty(
-              noun: '二创',
-              filtered: state.query != const FanartQuery(),
-              // Unlike the summary's 清除条件, this also clears the members:
-              // the label says so.
-              clearLabel: '清除全部条件',
-              onClear: onClear,
-              onRefresh: onRefresh,
-            ),
-            _ => null,
-          };
-    return FeedScrollView(
-      storageKey: const PageStorageKey('fanart-feed'),
-      controller: controller,
-      onRefresh: onRefresh,
-      header: header,
-      placeholder: placeholder,
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          // Each work as tall as its own content: a video's words follow its
-          // cover, a text work ends with its excerpt. Built lazily, measured
-          // as they come.
-          sliver: SliverContentMasonry(
-            itemCount: state.items.length,
-            itemBuilder: (context, index) {
-              final item = state.items[index];
-              return FanartCard(
-                key: ValueKey(item.identity),
-                item: item,
-                heroTag: fanartHeroTag(item),
-                onLongPress: () => showContentActions(
-                  context,
-                  ContentSnapshots.fanart(item),
-                  ruleSubject: RuleSubjects.fanart(item),
-                ),
-                // A root route or an external open keeps the branch's
-                // scroll position and loaded pages.
-                onTap: () => openFanart(
-                  context,
-                  ref,
-                  item,
-                  returnTo: ReturnTarget.contentChannel,
-                  channel: ContentChannel.fanart.slug,
-                  query: ChannelSpec.ofFanart(state.query).values,
-                  anchor: ReturnAnchor(
-                    identity: item.identity,
-                    offset: controller.offset,
-                  ),
-                  heroTag: fanartHeroTag(item),
-                ),
-              );
-            },
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: FeedStatusFooter(
-            status: state.status,
-            failure: state.failure,
-            onRetry: onRetryAppend,
-            onRefresh: onRefresh,
-          ),
-        ),
-      ],
-    );
-  }
 }

@@ -55,12 +55,6 @@ class _Recording implements FanartRepository {
   }
 
   @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => _item('r');
-
-  @override
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,

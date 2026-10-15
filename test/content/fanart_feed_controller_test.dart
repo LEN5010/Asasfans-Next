@@ -48,12 +48,6 @@ class _FakeRepository implements FanartRepository {
   }
 
   @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => null;
-
-  @override
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
@@ -70,6 +64,34 @@ void main() {
   });
 
   tearDown(() => controller.dispose());
+
+  test(
+    'a random feed draws on, skips shown works, ends when draws repeat',
+    () async {
+      final random = FanartFeedController(repository, random: true);
+      addTearDown(random.dispose);
+      Future<void> draw(Future<void> loading, List<String> ids) async {
+        repository.pending.last.complete(
+          FanartPage(items: [for (final id in ids) _item(id)], snapshotId: 's'),
+        );
+        await loading;
+      }
+
+      await draw(random.loadInitial(), ['a', 'b']);
+      expect(random.state.status, FeedStatus.ready);
+      await draw(random.loadMore(), ['b', 'c']);
+      expect(
+        [for (final item in random.state.items) item.identity.value],
+        ['a', 'b', 'c'],
+      );
+      for (var i = 0; i < 3; i++) {
+        await draw(random.loadMore(), ['a', 'c']);
+      }
+      expect(random.state.status, FeedStatus.endOfList);
+      expect(random.state.failure, isNull);
+      expect(random.state.items, hasLength(3));
+    },
+  );
 
   test(
     'first page then append accumulates without losing earlier items',

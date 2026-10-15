@@ -1,24 +1,11 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/public_api_client.dart';
 import 'package:asasfans_next/features/content/data/dynamic_fanart_repository.dart';
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-class _Pick implements Random {
-  _Pick(this.index);
-  final int index;
-  @override
-  int nextInt(int max) => index % max;
-  @override
-  bool nextBool() => index.isOdd;
-  @override
-  double nextDouble() => 0;
-}
 
 class _Adapter implements HttpClientAdapter {
   _Adapter(this.items);
@@ -48,73 +35,7 @@ class _Adapter implements HttpClientAdapter {
 }
 
 void main() {
-  for (final index in [0, 1]) {
-    test(
-      'union draw can pick source $index instead of always the Bilibili first row',
-      () async {
-        final base = Uri.parse('https://example.test/api/');
-        final adapter = _Adapter([
-          {'sourceDynamicId': '123'},
-          {'sourceDynamicId': 'douban:456'},
-        ]);
-        final dio = Dio(BaseOptions(baseUrl: base.toString()))
-          ..httpClientAdapter = adapter;
-        addTearDown(() => dio.close(force: true));
-        final repository = DynamicFanartRepository(
-          PublicApiClient(dio),
-          baseUrl: base,
-          random: _Pick(index),
-        );
-        final item = await repository.random(
-          query: const FanartQuery(
-            keyword: '生日',
-            characters: {FanartCharacter.diana},
-          ),
-        );
-        expect(
-          item?.identity.source,
-          index == 0
-              ? ContentSource.bilibiliDynamic
-              : ContentSource.doubanTopic,
-        );
-        expect(adapter.request?.queryParameters, containsPair('random', '1'));
-        expect(adapter.request?.queryParameters, containsPair('limit', 1));
-        expect(adapter.request?.queryParameters, containsPair('q', '生日'));
-        expect(
-          adapter.request?.queryParameters,
-          containsPair('character', '嘉然'),
-        );
-        expect(adapter.request?.queryParameters.containsKey('cursor'), isFalse);
-      },
-    );
-  }
-
-  test(
-    'single nonempty source still returns a draw; no sources is a real empty result',
-    () async {
-      final base = Uri.parse('https://example.test/api/');
-      for (final items in <List<Map<String, Object>>>[
-        [],
-        [
-          {'sourceDynamicId': 'douban:1'},
-        ],
-      ]) {
-        final dio = Dio(BaseOptions(baseUrl: base.toString()))
-          ..httpClientAdapter = _Adapter(items);
-        addTearDown(() => dio.close(force: true));
-        final result = await DynamicFanartRepository(
-          PublicApiClient(dio),
-          baseUrl: base,
-        ).random();
-        expect(
-          result?.identity.source,
-          items.isEmpty ? null : ContentSource.doubanTopic,
-        );
-      }
-    },
-  );
-
-  test('a sample is one random request for every draw it returns', () async {
+  test('a sample is one random request with the filters, no cursor', () async {
     final base = Uri.parse('https://example.test/api/');
     final adapter = _Adapter([
       {'sourceDynamicId': '1'},
@@ -124,13 +45,23 @@ void main() {
     final dio = Dio(BaseOptions(baseUrl: base.toString()))
       ..httpClientAdapter = adapter;
     addTearDown(() => dio.close(force: true));
-    final items = await DynamicFanartRepository(
-      PublicApiClient(dio),
-      baseUrl: base,
-    ).sample(query: const FanartQuery(limit: 10));
+    final items =
+        await DynamicFanartRepository(
+          PublicApiClient(dio),
+          baseUrl: base,
+        ).sample(
+          query: const FanartQuery(
+            keyword: '生日',
+            characters: {FanartCharacter.diana},
+            limit: 10,
+          ),
+        );
     expect(items, hasLength(3));
-    expect(adapter.request?.queryParameters, containsPair('random', '1'));
-    expect(adapter.request?.queryParameters, containsPair('limit', 10));
-    expect(adapter.request?.queryParameters.containsKey('cursor'), isFalse);
+    final query = adapter.request?.queryParameters;
+    expect(query, containsPair('random', '1'));
+    expect(query, containsPair('limit', 10));
+    expect(query, containsPair('q', '生日'));
+    expect(query, containsPair('character', '嘉然'));
+    expect(query?.containsKey('cursor'), isFalse);
   });
 }

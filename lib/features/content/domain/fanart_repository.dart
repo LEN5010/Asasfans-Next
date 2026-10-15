@@ -183,18 +183,9 @@ abstract interface class FanartRepository {
     RequestCancellation? cancellation,
   });
 
-  /// One random post matching the filters.
-  ///
-  /// Random mode is cursorless by design: each call is an independent draw,
-  /// so there is no page to continue and no cursor to carry.
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  });
-
   /// A random handful matching the filters, up to [FanartQuery.limit] from
-  /// each source, in one request. Cursorless like [random]: each call is a
-  /// fresh draw.
+  /// each source, in one request. Random mode is cursorless by design: each
+  /// call is an independent draw, with no page to continue.
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,

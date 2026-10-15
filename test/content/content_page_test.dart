@@ -14,7 +14,7 @@ import 'package:asasfans_next/features/content/presentation/content_page.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
 import 'package:asasfans_next/features/content/presentation/content_search_control.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';
-import 'package:asasfans_next/features/content/presentation/fanart_detail_page.dart';
+import 'package:asasfans_next/features/content/presentation/random_fanart_page.dart';
 import 'package:asasfans_next/shared/widgets/app_page_bar.dart';
 import 'package:asasfans_next/shared/widgets/feed_scroll_view.dart';
 import 'package:flutter/material.dart';
@@ -43,20 +43,9 @@ class _StubRepository implements FanartRepository {
   final int pageSize;
   final bool failFirst;
   int requests = 0;
-  int randomDraws = 0;
-  final randomQueries = <FanartQuery>[];
+  final samples = <FanartQuery>[];
   final List<FanartQuery> queries = [];
   final List<String?> cursors = [];
-
-  @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async {
-    randomDraws++;
-    randomQueries.add(query);
-    return _item('random-$randomDraws');
-  }
 
   @override
   Future<FanartPage> page({
@@ -78,11 +67,15 @@ class _StubRepository implements FanartRepository {
     );
   }
 
+  /// A new batch on every draw, so a random feed can keep growing.
   @override
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
-  }) async => (await page(query: query, cancellation: cancellation)).items;
+  }) async {
+    samples.add(query);
+    return [for (var i = 0; i < pageSize; i++) _item('s${samples.length}i$i')];
+  }
 }
 
 Widget _app(FanartRepository repository) => ProviderScope(
@@ -440,43 +433,36 @@ void main() {
     expect(repository.queries.last.keyword, '嘉然');
   });
 
-  testWidgets('UX3: the random draw opens a post directly', (tester) async {
+  testWidgets('the random button opens an endless draw with the filters', (
+    tester,
+  ) async {
     final repository = _StubRepository();
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('更多内容操作'));
+    await tester.tap(find.text('嘉然'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('随机二创'));
+    await tester.enterText(find.byType(TextField), '生日');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
 
-    expect(repository.randomDraws, 1);
-    expect(find.byType(FanartDetailPage), findsOneWidget);
-    // A draw is independent of the list, which keeps its own pages.
-    expect(find.text('作品 random-1'), findsOneWidget);
+    await tester.tap(find.byTooltip('随机二创'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RandomFanartPage), findsOneWidget);
+    expect(repository.samples.first.keyword, '生日');
+    expect(repository.samples.first.characters, {FanartCharacter.diana});
+    final draws = repository.samples.length;
+    await tester.drag(
+      find.descendant(
+        of: find.byType(RandomFanartPage),
+        matching: find.byType(CustomScrollView),
+      ),
+      const Offset(0, -4000),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.samples.length, greaterThan(draws));
+    expect(tester.takeException(), isNull);
   });
-
-  testWidgets(
-    'random uses the current applied query rather than an unfiltered draw',
-    (tester) async {
-      final repository = _StubRepository();
-      await tester.pumpWidget(_app(repository));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('嘉然'));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), '生日');
-      await tester.testTextInput.receiveAction(TextInputAction.search);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('更多内容操作'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('随机二创'));
-      await tester.pumpAndSettle();
-      expect(repository.randomQueries.single.keyword, '生日');
-      expect(repository.randomQueries.single.characters, {
-        FanartCharacter.diana,
-      });
-    },
-  );
 
   testWidgets('the random action is absent on channels it cannot serve', (
     tester,

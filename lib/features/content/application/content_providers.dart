@@ -124,9 +124,10 @@ final communityFeedControllerProvider = Provider.autoDispose
 
 /// The indexed video stream is the main source; fanart, historical posts and
 /// novels are the archive.
+/// In tab order: fanart leads and is where 内容 opens.
 enum ContentChannel {
-  videos('videos', '视频'),
   fanart('fanart', '二创'),
+  videos('videos', '视频'),
   dynamics('dynamics', '动态'),
   novels('novels', '小说');
 
