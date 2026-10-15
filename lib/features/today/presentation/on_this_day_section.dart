@@ -62,9 +62,12 @@ class _OnThisDaySectionState extends ConsumerState<OnThisDaySection> {
                   runSpacing: 4,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
-                      '历史上的今天',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        '历史上的今天',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                     ),
                     MenuAnchor(
                       menuChildren: [

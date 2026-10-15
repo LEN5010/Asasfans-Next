@@ -161,9 +161,13 @@ class FeedMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 44, color: Theme.of(context).colorScheme.outline),
-          const SizedBox(height: 12),
-          Text(text, textAlign: TextAlign.center),
+          FeedMark(icon: icon),
+          const SizedBox(height: 14),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           if (detail != null) ...[
             const SizedBox(height: 4),
             Text(
@@ -177,12 +181,40 @@ class FeedMessage extends StatelessWidget {
             RetryButton(failure: failure, onRetry: onRetry, filled: true),
           ] else if (onAction != null && actionLabel != null) ...[
             const SizedBox(height: 16),
-            AppButton(onPressed: onAction, child: Text(actionLabel!)),
+            AppButton(
+              selected: true,
+              onPressed: onAction,
+              child: Text(actionLabel!),
+            ),
           ],
         ],
       ),
     ),
   );
+}
+
+/// The picture at the head of an empty or failed state: its icon on a soft
+/// pink disc, so a blank list still looks like part of the app.
+class FeedMark extends StatelessWidget {
+  const FeedMark({super.key, required this.icon});
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return ExcludeSemantics(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.primaryContainer.withValues(alpha: .7),
+          shape: BoxShape.circle,
+        ),
+        child: SizedBox.square(
+          dimension: 68,
+          child: Icon(icon, size: 30, color: colors.primary),
+        ),
+      ),
+    );
+  }
 }
 
 /// Everything the source returned is hidden by the user's own rules. That is
@@ -199,15 +231,16 @@ class FeedAllHiddenMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.filter_alt_off_outlined,
-            size: 44,
-            color: Theme.of(context).colorScheme.outline,
+          const FeedMark(icon: Icons.filter_alt_off_outlined),
+          const SizedBox(height: 14),
+          Text(
+            '已加载的 $count 条内容都被你的规则屏蔽',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 12),
-          Text('已加载的 $count 条内容都被你的规则屏蔽', textAlign: TextAlign.center),
           const SizedBox(height: 16),
           AppButton(
+            selected: true,
             onPressed: () => context.go('/mine/rules'),
             child: const Text('查看内容规则'),
           ),

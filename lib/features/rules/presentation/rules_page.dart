@@ -10,6 +10,7 @@ import '../application/rules_providers.dart';
 import '../domain/content_rules.dart';
 import 'rule_common.dart';
 import 'rule_editor.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
 
 class RulesPage extends ConsumerStatefulWidget {
   const RulesPage({super.key});
@@ -150,9 +151,10 @@ class _RulesPageState extends ConsumerState<RulesPage> {
                   ),
                 )
               else if (rules.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('没有屏蔽规则')),
+                const FeedMessage(
+                  icon: Icons.filter_alt_outlined,
+                  text: '没有屏蔽规则',
+                  detail: '点右上角新建，或在内容的更多操作里屏蔽作者和内容',
                 )
               else
                 Card(

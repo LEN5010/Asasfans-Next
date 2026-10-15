@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../../shared/widgets/app_panel.dart';
 
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../../core/time/calendar_time.dart';
+import '../../../core/time/shanghai_date_provider.dart';
 import '../domain/calendar_agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/event_classifier.dart';
@@ -141,7 +144,6 @@ class CalendarAgendaRow extends StatelessWidget {
     final muted = event.isCancelled;
     final timing = now == null ? null : calendarEventTiming(event, now!);
     final over = timing == '已结束';
-    final scale = MediaQuery.textScalerOf(context).scale(1);
     // The kind is said in the member's own colour; the group's is warm.
     final tone = MemberTone.of(
       cast.length == 1 ? cast.single : 'A-SOUL',
@@ -151,79 +153,128 @@ class CalendarAgendaRow extends StatelessWidget {
       color: muted ? colors.error : tone.text,
     );
     final lifted = highlight && !muted && !over;
-    final line = Row(
+    final timeStyle = theme.textTheme.titleMedium?.copyWith(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      fontFeatures: AppTheme.tabular,
+      color: muted ? colors.onSurfaceVariant : null,
+    );
+    // The column is as wide as its widest words at this text size, so a
+    // time never breaks across lines when the type is large.
+    double measure(String text, TextStyle? style) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 1,
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    }
+
+    final timeWidth = math.max(
+      54.0,
+      math.max(
+            measure('00:00', timeStyle),
+            showDay ? measure(day, theme.textTheme.bodySmall) : 0.0,
+          ) +
+          8,
+    );
+    final time = Text(
+      event.allDay ? '全天' : CalendarAgenda.time(event.start),
+      maxLines: 1,
+      style: timeStyle,
+    );
+    final dayLabel = Text(day, maxLines: 1, style: theme.textTheme.bodySmall);
+    // Who appears: one segment per member.
+    final bar = MemberBar(
+      members: muted ? const [] : cast,
+      fallback: muted ? colors.outlineVariant : calendarEventColor(event),
+      length: 38,
+    );
+    final words = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 54 * scale.clamp(1.0, 1.6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event.allDay ? '全天' : CalendarAgenda.time(event.start),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: AppTheme.tabular,
-                  color: muted ? colors.onSurfaceVariant : null,
-                ),
+        if (lifted && timing != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              timing == '进行中' ? '进行中' : '下一场 · $timing',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colors.primary,
+                fontFeatures: AppTheme.tabular,
               ),
-              if (showDay) Text(day, style: theme.textTheme.bodySmall),
-            ],
+            ),
+          ),
+        Text(
+          headline,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            height: 1.35,
+            fontWeight: FontWeight.w600,
+            decoration: muted ? TextDecoration.lineThrough : null,
+            color: muted ? colors.onSurfaceVariant : null,
           ),
         ),
-        // Who appears: one segment per member.
-        MemberBar(
-          members: muted ? const [] : cast,
-          fallback: muted ? colors.outlineVariant : calendarEventColor(event),
-          length: 38,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        // What kind of event, beside what it is about: the state never
+        // sits apart at the far end of the line.
+        Text.rich(
+          TextSpan(
             children: [
-              if (lifted && timing != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Text(
-                    timing == '进行中' ? '进行中' : '下一场 · $timing',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colors.primary,
-                      fontFeatures: AppTheme.tabular,
-                    ),
-                  ),
+              if (state.isNotEmpty) TextSpan(text: state, style: stateStyle),
+              if (subtitle.isNotEmpty)
+                TextSpan(
+                  text: state.isEmpty ? subtitle : ' · $subtitle',
+                  style: theme.textTheme.bodySmall,
                 ),
-              Text(
-                headline,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  height: 1.35,
-                  fontWeight: FontWeight.w600,
-                  decoration: muted ? TextDecoration.lineThrough : null,
-                  color: muted ? colors.onSurfaceVariant : null,
-                ),
-              ),
-              // What kind of event, beside what it is about: the
-              // state never sits apart at the far end of the line.
-              Row(
-                children: [
-                  if (state.isNotEmpty) Text(state, style: stateStyle),
-                  if (subtitle.isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        state.isEmpty ? subtitle : ' · $subtitle',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                ],
-              ),
             ],
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
+    );
+    // Beside the words while the time column leaves them room; at very
+    // large text the time goes above them instead of squeezing them out.
+    final line = LayoutBuilder(
+      builder: (context, constraints) {
+        if (timeWidth <= constraints.maxWidth * .4) {
+          return Row(
+            children: [
+              SizedBox(
+                width: timeWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [time, if (showDay) dayLabel],
+                ),
+              ),
+              bar,
+              const SizedBox(width: 12),
+              Expanded(child: words),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              children: [time, if (showDay) dayLabel],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                bar,
+                const SizedBox(width: 12),
+                Expanded(child: words),
+              ],
+            ),
+          ],
+        );
+      },
     );
     return Semantics(
       button: true,
@@ -456,6 +507,7 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
     final event = widget.event;
     final theme = Theme.of(context);
     final members = EventClassifier.members(event);
+    final timing = calendarEventTiming(event, ref.watch(currentTimeProvider)());
     return SizedBox(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -466,12 +518,36 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 12),
+                  padding: const EdgeInsets.only(top: 18, bottom: 10),
                   child: SelectableText(
                     event.title.isEmpty ? '未命名安排' : event.title,
                     style: theme.textTheme.titleLarge,
                   ),
                 ),
+                // Who, in their colours, and where it stands by the clock.
+                if (members.isNotEmpty || timing != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final member in members) MemberTag(member: member),
+                        if (timing != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Text(
+                              timing,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontFeatures: AppTheme.tabular,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 CalendarFollowButton(event: event, source: widget.source),
                 _DetailLine(
                   icon: Icons.schedule,
@@ -492,12 +568,6 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
                     icon: Icons.place_outlined,
                     label: '地点',
                     value: event.location,
-                  ),
-                if (members.isNotEmpty)
-                  _DetailLine(
-                    icon: Icons.people_outline,
-                    label: '成员',
-                    value: members.join(' · '),
                   ),
                 if (event.categories.isNotEmpty)
                   _DetailLine(

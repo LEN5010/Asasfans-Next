@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
 import '../application/library_pager.dart';
 import 'library_common.dart';
+import '../../../shared/widgets/feed_scroll_view.dart';
 
 class LibraryPagedList<T> extends StatefulWidget {
   const LibraryPagedList({
@@ -97,19 +98,10 @@ class _LibraryPagedListState<T> extends State<LibraryPagedList<T>> {
                             ],
                           )
                         : state.items.isEmpty
-                        ? Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(widget.empty, textAlign: TextAlign.center),
-                              if (widget.emptyHint != null) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  widget.emptyHint!,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
-                            ],
+                        ? FeedMessage(
+                            icon: Icons.inbox_outlined,
+                            text: widget.empty,
+                            detail: widget.emptyHint,
                           )
                         : Text(
                             state.next == null ? '已显示全部' : '',
