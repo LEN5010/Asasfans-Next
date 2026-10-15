@@ -10,7 +10,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../core/time/shanghai_date_provider.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/time/calendar_time.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/resume_when_visible.dart';
@@ -18,7 +20,6 @@ import '../../../shared/widgets/sliver_content_masonry.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
-import '../../calendar/domain/calendar_event.dart';
 import '../../../shared/widgets/page_heading.dart';
 import '../../calendar/presentation/calendar_event_widgets.dart';
 import '../../content/presentation/video_card.dart';
@@ -67,13 +68,15 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
     }
   }
 
-  void _calendar() {
-    final day = ref.read(shanghaiDateProvider);
+  /// Opens the calendar on [picked], or on today (with no selection of its
+  /// own, so it keeps following the date) when nothing else was picked.
+  void _calendar([DateTime? picked]) {
+    final DateTime day = picked ?? ref.read(shanghaiDateProvider);
     ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
       day.year,
       day.month,
     );
-    ref.read(selectedCalendarDayProvider.notifier).state = null;
+    ref.read(selectedCalendarDayProvider.notifier).state = picked;
     context.go('/calendar');
   }
 
@@ -94,7 +97,7 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
     final day = ref.watch(shanghaiDateProvider);
     final heading = RootHeading(
       title: '${day.month}月${day.day}日 星期${'一二三四五六日'[day.weekday - 1]}',
-      subtitle: '今天，来枝江看看',
+      subtitle: _TodaySummary(day: day, calendar: calendar),
       actions: [
         const UpdatesBellButton(),
         AppButton.icon(
@@ -143,20 +146,23 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
               ),
               slivers: [
                 SliverToBoxAdapter(child: SizedBox(height: padding.top + 16)),
-                box(heading, spaced: false),
-                // What today holds, as a compact summary at the top: a few
+                box(AppEntrance(child: heading), spaced: false),
+                // What today holds, as a compact card at the top: a few
                 // lines, never a column beside the works for the whole page.
                 // Then the one optional task slot, back to where picking
                 // stopped; it spaces itself, so an empty slot adds no gap.
                 box(
-                  _TopSummary(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (calendar)
-                          _ScheduleSection(day: day, onCalendar: _calendar),
-                        const ContinueBrowsingRow(),
-                      ],
+                  AppEntrance(
+                    order: 1,
+                    child: _TopSummary(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (calendar)
+                            _ScheduleSection(day: day, onCalendar: _calendar),
+                          const ContinueBrowsingRow(),
+                        ],
+                      ),
                     ),
                   ),
                   spaced: calendar,
@@ -222,76 +228,225 @@ class _TopSummary extends StatelessWidget {
   );
 }
 
-/// Today's schedule, or the next thing on it: at most two lines of today,
-/// else the first live event within a week.
-class _ScheduleSection extends ConsumerWidget {
-  const _ScheduleSection({required this.day, required this.onCalendar});
+/// The line under Today's date: a greeting for the hour, and how much the
+/// day holds once the schedule is known.
+class _TodaySummary extends ConsumerWidget {
+  const _TodaySummary({required this.day, required this.calendar});
   final DateTime day;
-  final VoidCallback onCalendar;
+  final bool calendar;
+
+  static String greeting(DateTime now) {
+    final hour = CalendarTime.inShanghai(now).hour;
+    return switch (hour) {
+      < 5 => '夜深了',
+      < 11 => '早上好',
+      < 13 => '中午好',
+      < 18 => '下午好',
+      < 23 => '晚上好',
+      _ => '夜深了',
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final hello = greeting(ref.watch(currentTimeProvider)());
+    final events = calendar
+        ? ref.watch(todayScheduleProvider).valueOrNull?.events
+        : null;
+    if (events == null) return Text('$hello，来枝江看看');
+    final count = CalendarAgenda.onDay(
+      events.where((event) => !event.isCancelled),
+      day,
+    ).length;
+    final theme = Theme.of(context);
+    return Text.rich(
+      TextSpan(
+        text: '$hello，',
+        children: [
+          if (count == 0)
+            const TextSpan(text: '今天没有安排')
+          else ...[
+            const TextSpan(text: '今天有 '),
+            TextSpan(
+              text: '$count',
+              style: TextStyle(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                fontFeatures: AppTheme.tabular,
+              ),
+            ),
+            const TextSpan(text: ' 项安排'),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Today's schedule as one card: this week as a strip of days, a dot per
+/// event in its member's colour, and the chosen day's events beneath. The
+/// chosen day is today until another is tapped; today's next event is
+/// lifted with how soon it starts, and an empty today falls forward to the
+/// first live event within a week. At most two lines, then a count.
+class _ScheduleSection extends ConsumerStatefulWidget {
+  const _ScheduleSection({required this.day, required this.onCalendar});
+  final DateTime day;
+  final void Function([DateTime? picked]) onCalendar;
+
+  @override
+  ConsumerState<_ScheduleSection> createState() => _ScheduleSectionState();
+}
+
+class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
+  /// Another day of the week, once tapped; null is today.
+  DateTime? _picked;
+  late DateTime _now = ref.read(currentTimeProvider)();
+  Timer? _tick;
+
+  static const _weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+  @override
+  void initState() {
+    super.initState();
+    // How soon the next event starts is told to the minute; a hidden tab
+    // does not redraw for it.
+    _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
+      setState(() => _now = ref.read(currentTimeProvider)());
+    });
+  }
+
+  @override
+  void didUpdateWidget(_ScheduleSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.day != widget.day) _picked = null;
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final day = widget.day;
     final schedule = ref.watch(todayScheduleProvider);
+    final week = ref.watch(todayWeekProvider).valueOrNull;
+    final now = ref.watch(currentTimeProvider)();
+    if (now.isAfter(_now)) _now = now;
+    // Today's month and the week together, each event once.
+    final seen = <String>{};
+    final pool = [
+      for (final event in [...?schedule.valueOrNull?.events, ...?week])
+        if (seen.add(event.identity)) event,
+    ];
+    final selected = _picked ?? day;
+    final isToday = selected == day;
     var next = false;
-    var entries = const <CalendarEvent>[];
-    if (schedule case AsyncData(:final value)) {
-      entries = CalendarAgenda.onDay(value.events, day);
-      if (entries.isEmpty) {
-        for (var offset = 1; offset <= 7; offset++) {
-          entries = CalendarAgenda.onDay(
-            value.events.where((event) => !event.isCancelled),
-            day.add(Duration(days: offset)),
-          );
-          if (entries.isNotEmpty) {
-            entries = entries.take(1).toList();
-            next = true;
-            break;
-          }
+    var entries = CalendarAgenda.onDay(pool, selected);
+    if (isToday && entries.isEmpty) {
+      for (var offset = 1; offset <= 7; offset++) {
+        entries = CalendarAgenda.onDay(
+          pool.where((event) => !event.isCancelled),
+          day.add(Duration(days: offset)),
+        );
+        if (entries.isNotEmpty) {
+          entries = entries.take(1).toList();
+          next = true;
+          break;
         }
       }
     }
+    // Today's lines start at the next event; earlier ones are over.
+    final lift = isToday
+        ? entries.indexWhere(
+            (event) =>
+                !event.isCancelled && calendarEventTiming(event, _now) != '已结束',
+          )
+        : -1;
+    final first = lift >= 0
+        ? lift
+        : isToday
+        ? (entries.length - 2).clamp(0, entries.length)
+        : 0;
+    final shown = entries.skip(first).take(2).toList();
+    final hidden = entries.length - shown.length;
+    final title = next
+        ? '接下来'
+        : isToday
+        ? '今日安排'
+        : '${_weekdays[selected.weekday - 1]}安排';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeading(
-          title: next ? '接下来' : '今日安排',
+          title: title,
           action: '日历',
-          onAction: onCalendar,
+          onAction: () => widget.onCalendar(_picked),
         ),
-        AppFadeSwitcher(
-          phase: asyncPhase(schedule),
-          child: schedule.when(
-            loading: () => const _SectionLoading(),
-            error: (error, _) => _SectionError(
-              error: error,
-              onRetry: () => ref.invalidate(
-                monthEventsProvider(DateTime.utc(day.year, day.month)),
+        const SizedBox(height: 4),
+        AppCard(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CalendarWeekStrip(
+                selected: selected,
+                today: day,
+                events: pool,
+                onSelect: (value) =>
+                    setState(() => _picked = value == day ? null : value),
               ),
-            ),
-            data: (snapshot) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (snapshot.isStale)
-                  CalendarStaleBanner(fetchedAt: snapshot.fetchedAt),
-                if (snapshot.offlineCacheUnavailable)
-                  const CalendarCacheFailureBanner(),
-                if (snapshot.followSyncUnavailable)
-                  const CalendarFollowSyncBanner(),
-                if (entries.isEmpty)
-                  const _EmptySection('接下来一周没有安排')
-                else ...[
-                  for (final event in entries.take(2))
-                    CalendarAgendaRow(event: event, showDay: next, today: day),
-                  if (entries.length > 2)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppButton(
-                        onPressed: onCalendar,
-                        child: Text('还有 ${entries.length - 2} 项安排'),
-                      ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(8, 10, 8, 6),
+                child: Divider(height: 1),
+              ),
+              AppFadeSwitcher(
+                phase: (asyncPhase(schedule), selected),
+                child: schedule.when(
+                  loading: () => const _SectionLoading(),
+                  error: (error, _) => _SectionError(
+                    error: error,
+                    onRetry: () => ref.invalidate(
+                      monthEventsProvider(DateTime.utc(day.year, day.month)),
                     ),
-                ],
-              ],
-            ),
+                  ),
+                  data: (snapshot) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (snapshot.isStale)
+                        CalendarStaleBanner(fetchedAt: snapshot.fetchedAt),
+                      if (snapshot.offlineCacheUnavailable)
+                        const CalendarCacheFailureBanner(),
+                      if (snapshot.followSyncUnavailable)
+                        const CalendarFollowSyncBanner(),
+                      if (entries.isEmpty)
+                        _EmptySection(isToday ? '接下来一周没有安排' : '这一天没有安排')
+                      else ...[
+                        for (final event in shown)
+                          CalendarAgendaRow(
+                            event: event,
+                            showDay: next,
+                            today: day,
+                            now: isToday ? _now : null,
+                            highlight:
+                                isToday && event == entries[first] && lift >= 0,
+                          ),
+                        if (hidden > 0)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: AppButton(
+                              onPressed: () => widget.onCalendar(_picked),
+                              child: Text('还有 $hidden 项安排'),
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -434,7 +589,7 @@ class _EmptySection extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     child: Text(
       text,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(

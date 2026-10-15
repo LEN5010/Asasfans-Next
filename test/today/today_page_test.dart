@@ -433,6 +433,8 @@ void main() {
     final top = await tester.startGesture(
       tester.getTopLeft(page) + const Offset(200, 200),
     );
+    // Past the slop first: the gesture may start on a tappable day.
+    await top.moveBy(const Offset(0, 20));
     await top.moveBy(const Offset(0, 30));
     await tester.pump();
     expect(position.pixels, lessThan(0));

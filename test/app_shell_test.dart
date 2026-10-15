@@ -2,7 +2,6 @@ import 'package:asasfans_next/app/asasfans_app.dart';
 import 'package:asasfans_next/shared/theme/app_icons.dart';
 import 'package:asasfans_next/shared/widgets/glass/app_glass_navigation.dart';
 import 'package:asasfans_next/features/mine/presentation/mine_page.dart';
-import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,7 +67,7 @@ void main() {
       await tester.tap(find.text('我的').last);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
-        find.widgetWithText(AppButton, '内容规则'),
+        find.text('内容规则'),
         180,
         // Other branches keep their scrollables mounted offstage.
         scrollable: find
@@ -79,7 +78,7 @@ void main() {
             .first,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(AppButton, '内容规则'));
+      await tester.tap(find.text('内容规则'));
       await tester.pumpAndSettle();
       // Built-in video filtering was silenced in c77045c; the page now opens
       // on the user's own rules.

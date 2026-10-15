@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/media_image_policy.dart';
 import 'fanart_image_viewer.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/member_tone.dart';
 
 class ContentAvatar extends StatelessWidget {
   const ContentAvatar({
@@ -17,14 +19,20 @@ class ContentAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    // Without a picture a member's account still shows her colour.
+    final member = AppTheme.membersIn(name).firstOrNull;
+    final tone = member == null
+        ? null
+        : MemberTone.of(member, Theme.of(context).brightness);
     final fallback = ColoredBox(
-      color: colors.primaryContainer,
+      color: tone?.wash ?? colors.primaryContainer,
       child: Center(
         child: Text(
           name.isEmpty ? '?' : name.characters.first,
           style: TextStyle(
-            color: colors.onPrimaryContainer,
+            color: tone?.text ?? colors.onPrimaryContainer,
             fontSize: size * .4,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

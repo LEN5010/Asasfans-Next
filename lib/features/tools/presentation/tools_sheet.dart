@@ -5,7 +5,7 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_panel.dart';
-import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../domain/community_tool.dart';
 
 Future<void> showToolsSheet(BuildContext context) async {
@@ -134,7 +134,7 @@ class _ToolsSheetState extends ConsumerState<ToolsSheet> {
                                       mainAxisSpacing: 10,
                                       crossAxisSpacing: 10,
                                       mainAxisExtent:
-                                          56 +
+                                          64 +
                                           (scaler.scale(14) * 1.35)
                                               .ceilToDouble(),
                                     ),
@@ -168,42 +168,48 @@ class _ToolTile extends StatelessWidget {
   const _ToolTile({required this.tool, required this.onTap});
   final CommunityTool tool;
   final VoidCallback? onTap;
+
+  /// Neighbouring tiles take neighbouring support colours.
+  static const _tones = ['嘉然', '乃琳', '贝拉', '心宜', '思诺', 'A-SOUL'];
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return AppButton(
-      tooltip: Uri.parse(tool.url).host,
-      radius: AppTokens.cardRadius,
-      onPressed: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              _toolIcon(tool.id),
-              size: 20,
-              color: colors.onPrimaryContainer,
-            ),
+    final tone = _tones[communityTools.indexOf(tool) % _tones.length];
+    return Tooltip(
+      message: Uri.parse(tool.url).host,
+      child: Material(
+        color: colors.surfaceContainerHigh.withValues(alpha: .6),
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ToneBadge(icon: _toolIcon(tool.id), member: tone, size: 36),
+              const SizedBox(height: 7),
+              // One line on every width: a long name shrinks a little rather
+              // than breaking mid-word and pushing its icon out of line.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    tool.name,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 13.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          // One line on every width: a long name shrinks a little rather
-          // than breaking mid-word and pushing its icon out of line.
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              tool.name,
-              maxLines: 1,
-              softWrap: false,
-              style: const TextStyle(fontSize: 14, height: 1.35),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

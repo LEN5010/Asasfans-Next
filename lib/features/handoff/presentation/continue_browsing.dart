@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../content/domain/community_video_repository.dart';
 import '../../content/domain/dynamic_repository.dart';
 import '../../content/domain/fanart_repository.dart';
@@ -105,10 +106,8 @@ class ContinueBrowsingRow extends ConsumerWidget {
         final where = describeBrowse(snapshot).join(' · ');
         return Padding(
           padding: const EdgeInsets.only(top: AppTokens.itemGap),
-          child: Material(
-            color: colors.primaryContainer.withValues(alpha: .5),
-            borderRadius: BorderRadius.circular(14),
-            clipBehavior: Clip.antiAlias,
+          child: AppCard(
+            padding: EdgeInsets.zero,
             child: InkWell(
               onTap: () {
                 final request = handoff.resumeBrowsing();
@@ -121,11 +120,11 @@ class ContinueBrowsingRow extends ConsumerWidget {
                 Timer(_claimWindow, () => handoff.cancelBrowseRestore(request));
               },
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+                padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
                 child: Row(
                   children: [
-                    Icon(Icons.history, size: 20, color: colors.primary),
-                    const SizedBox(width: 10),
+                    const ToneBadge(icon: Icons.history, member: '嘉然'),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Semantics(
                         button: true,

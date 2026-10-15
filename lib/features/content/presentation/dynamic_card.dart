@@ -1,3 +1,4 @@
+import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/app_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import '../../../core/domain/bilibili_id.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/media_cover.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../creator/presentation/creator_link.dart';
 import '../../handoff/domain/return_context.dart';
 import '../../library/application/content_snapshots.dart';
@@ -161,11 +163,7 @@ class DynamicCard extends ConsumerWidget {
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(
-                  '赞 ${post.likeCount} · 评论 ${post.commentCount} · '
-                  '转发 ${post.forwardCount}',
-                  style: theme.textTheme.bodySmall,
-                ),
+                DynamicStats(post: post),
                 if (post.sourceUrl != null)
                   AppButton(
                     onPressed: () => open(post.sourceUrl!),
@@ -183,12 +181,18 @@ class DynamicCard extends ConsumerWidget {
 
   Widget _author(BuildContext context, VoidCallback actions) {
     final theme = Theme.of(context);
+    final member = AppTheme.membersIn(post.member.name).firstOrNull;
     return Row(
       children: [
-        ContentAvatar(
-          name: post.member.name,
-          image: post.member.avatarUrl,
-          size: 34,
+        // A member's own post wears her colour round the avatar.
+        MemberRing(
+          member: member,
+          size: 38,
+          child: ContentAvatar(
+            name: post.member.name,
+            image: post.member.avatarUrl,
+            size: member == null ? 38 : 30,
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -324,19 +328,58 @@ class DynamicCard extends ConsumerWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    '赞 ${post.likeCount} · 评论 ${post.commentCount}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
+                Expanded(child: DynamicStats(post: post, forwards: false)),
                 AppButton(onPressed: showFull, child: const Text('查看全文')),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A post's numbers as small icons and figures: likes, comments and, unless
+/// [forwards] is off, reposts. Read out in words.
+class DynamicStats extends StatelessWidget {
+  const DynamicStats({super.key, required this.post, this.forwards = true});
+  final DynamicPost post;
+  final bool forwards;
+
+  static String _count(int value) =>
+      value >= 10000 ? '${(value / 10000).toStringAsFixed(1)}万' : '$value';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.bodySmall?.copyWith(
+      fontSize: 12.5,
+      fontFeatures: AppTheme.tabular,
+    );
+    final color = theme.colorScheme.onSurfaceVariant;
+    Widget stat(IconData icon, int value) => Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 4,
+      children: [
+        Icon(icon, size: 15, color: color),
+        Text(_count(value), style: style),
+      ],
+    );
+    return Semantics(
+      label: [
+        '赞 ${post.likeCount}',
+        '评论 ${post.commentCount}',
+        if (forwards) '转发 ${post.forwardCount}',
+      ].join('，'),
+      excludeSemantics: true,
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 4,
+        children: [
+          stat(Icons.favorite_border_rounded, post.likeCount),
+          stat(Icons.chat_bubble_outline_rounded, post.commentCount),
+          if (forwards) stat(Icons.repeat_rounded, post.forwardCount),
+        ],
       ),
     );
   }
@@ -490,12 +533,19 @@ class _MediaCard extends StatelessWidget {
         ? Uri.https('www.bilibili.com', '/video/${media.ref}')
         : sourceUrl;
     final title = media.title.replaceFirst(RegExp(r'^直播预约[：:]\s*'), '');
+    // A reservation is its own kind of thing, in violet as on the archive
+    // site; other attachments sit on the raised tone.
     return DecoratedBox(
       decoration: BoxDecoration(
         color: reserve
-            ? theme.colorScheme.tertiaryContainer.withValues(alpha: .35)
+            ? theme.colorScheme.tertiaryContainer
             : theme.colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
+        border: reserve
+            ? Border.all(
+                color: theme.colorScheme.tertiary.withValues(alpha: .28),
+              )
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -553,7 +603,9 @@ class _MediaCard extends StatelessWidget {
                       ? '视频动态'
                       : '相关内容',
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
+                    color: reserve
+                        ? theme.colorScheme.tertiary
+                        : theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 4),

@@ -14,6 +14,8 @@ import '../../../shared/widgets/feed_offset_memory.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/app_motion.dart';
+import '../../../app/theme/app_tokens.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -74,7 +76,7 @@ class _ContentPageState extends ConsumerState<ContentPage>
   static const _mountedLimit = 2;
   late final _slide = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: AppTokens.emphasisMotion,
     value: 1,
   );
 
@@ -148,19 +150,38 @@ class _ContentPageState extends ConsumerState<ContentPage>
   };
 
   // One stable structure per channel, so moving between active, leaving and
-  // offstage never remounts the feed.
+  // offstage never remounts the feed. A switch moves along the tabs' axis
+  // without carrying a whole page across: the old feed drifts a little the
+  // other way and fades out first, then the new one drifts in and settles.
   Widget _entry(ContentChannel channel, Widget feed) {
     final active = channel == _current;
     final leaving = channel == _previous && _slide.isAnimating;
     final direction = _previous == null || _current.index >= _previous!.index
         ? 1.0
         : -1.0;
-    final curve = _slide.drive(CurveTween(curve: Curves.easeOutCubic));
+    const drift = .08;
+    final incoming = _slide.drive(
+      CurveTween(curve: const Interval(.25, 1, curve: AppCurves.enter)),
+    );
+    final outgoing = _slide.drive(
+      CurveTween(curve: const Interval(0, .4, curve: AppCurves.exit)),
+    );
     final Animation<Offset> position = active
-        ? Tween(begin: Offset(direction, 0), end: Offset.zero).animate(curve)
+        ? Tween(
+            begin: Offset(direction * drift, 0),
+            end: Offset.zero,
+          ).animate(incoming)
         : leaving
-        ? Tween(begin: Offset.zero, end: Offset(-direction, 0)).animate(curve)
+        ? Tween(
+            begin: Offset.zero,
+            end: Offset(-direction * drift, 0),
+          ).animate(outgoing)
         : const AlwaysStoppedAnimation(Offset.zero);
+    final Animation<double> opacity = active
+        ? incoming
+        : leaving
+        ? ReverseAnimation(outgoing)
+        : kAlwaysCompleteAnimation;
     return KeyedSubtree(
       key: ValueKey(channel),
       child: Offstage(
@@ -171,7 +192,10 @@ class _ContentPageState extends ConsumerState<ContentPage>
             excluding: !active,
             child: IgnorePointer(
               ignoring: !active,
-              child: SlideTransition(position: position, child: feed),
+              child: FadeTransition(
+                opacity: opacity,
+                child: SlideTransition(position: position, child: feed),
+              ),
             ),
           ),
         ),

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
@@ -379,9 +381,9 @@ class NovelR18Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: colors.errorContainer,
-        borderRadius: BorderRadius.circular(AppTokens.inputRadius),
+        shape: const StadiumBorder(),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -401,6 +403,8 @@ class NovelCharacterTags extends StatelessWidget {
   const NovelCharacterTags({required this.characters, super.key});
   final List<NovelCharacter> characters;
 
+  /// Each character in her own colour; a name that is not a member keeps
+  /// the neutral violet.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -409,21 +413,24 @@ class NovelCharacterTags extends StatelessWidget {
       runSpacing: 4,
       children: [
         for (final character in characters)
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiaryContainer.withValues(alpha: .45),
-              borderRadius: BorderRadius.circular(AppTokens.inputRadius),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              child: Text(
-                character.wire,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onTertiaryContainer,
+          if (AppTheme.membersIn(character.wire).firstOrNull case final member?)
+            MemberTag(member: member, label: character.wire)
+          else
+            DecoratedBox(
+              decoration: ShapeDecoration(
+                color: theme.colorScheme.tertiaryContainer,
+                shape: const StadiumBorder(),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                child: Text(
+                  character.wire,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onTertiaryContainer,
+                  ),
                 ),
               ),
             ),
-          ),
       ],
     );
   }

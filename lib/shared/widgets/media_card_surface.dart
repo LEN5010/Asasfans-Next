@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_tokens.dart';
 import 'app_controls.dart';
+import 'app_motion.dart';
 import 'glass/app_glass_scope.dart';
 
 /// One stable content surface. Hover/focus changes its border, never its size.
@@ -30,20 +31,24 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
         color: focused
             ? colors.primary
             : hover
-            ? colors.primary.withValues(alpha: .28)
-            : colors.outlineVariant.withValues(alpha: .55),
+            ? colors.primary.withValues(alpha: .3)
+            : colors.outlineVariant.withValues(alpha: .7),
+        width: focused ? 2 : 1,
       ),
     );
     final motion = AppGlassScope.of(context).canAnimate
         ? AppTokens.pressMotion
         : Duration.zero;
+    final shadow = AppTokens.cardShadow(colors.brightness);
     // A light press-in; layout keeps the card's size, only paint scales.
+    // Under the pointer the card lifts a little further off the page.
     return AnimatedScale(
       scale: pressed ? .98 : 1,
       duration: motion,
-      curve: Curves.easeOutCubic,
+      curve: AppCurves.standard,
       child: AnimatedContainer(
-        duration: motion,
+        duration: motion * 2,
+        curve: AppCurves.standard,
         foregroundDecoration: ShapeDecoration(shape: shape),
         decoration: BoxDecoration(
           color: pressed
@@ -53,6 +58,15 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
                 )
               : colors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+          boxShadow: [
+            for (final layer in shadow)
+              hover
+                  ? layer.copyWith(
+                      blurRadius: layer.blurRadius * 1.4,
+                      offset: layer.offset * 1.5,
+                    )
+                  : layer,
+          ],
         ),
         child: Material(
           color: Colors.transparent,
@@ -115,9 +129,9 @@ class _MediaActionRegionState extends State<MediaActionRegion> {
     // and no press, so resting a pointer on prose changes nothing.
     final tappable = widget.onTap != null;
     return AnimatedScale(
-      scale: pressed && tappable && widget.pressScale ? .98 : 1,
+      scale: pressed && tappable && widget.pressScale ? .97 : 1,
       duration: motion,
-      curve: Curves.easeOutCubic,
+      curve: AppCurves.standard,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(

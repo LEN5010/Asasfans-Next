@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/app_motion.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../../core/time/calendar_time.dart';
 import '../domain/calendar_agenda.dart';
 import '../domain/calendar_event.dart';
@@ -70,14 +72,40 @@ calendarEventParts(CalendarEvent event) {
   );
 }
 
-/// One agenda line: time, who (a thin bar in their colours), what, and its
-/// state in words. Quieter than [CalendarEventTile]: no filled block, so a
-/// list of several reads as a schedule rather than a stack of banners.
+/// Where an event stands against [now], by its schedule alone: still to
+/// come (and how soon), under way, or over. A schedule, not a report of a
+/// live room; cancelled and all-day events have no such state.
+String? calendarEventTiming(CalendarEvent event, DateTime now) {
+  if (event.isCancelled || event.allDay) return null;
+  if (!now.isBefore(event.end) && event.end.isAfter(event.start)) {
+    return '已结束';
+  }
+  if (!now.isBefore(event.start)) {
+    return event.end.isAfter(event.start) ? '进行中' : '已结束';
+  }
+  final left = event.start.difference(now);
+  if (left.inMinutes < 1) return '即将开始';
+  if (left.inMinutes < 60) return '还有 ${left.inMinutes} 分钟';
+  if (left.inHours < 24) {
+    final minutes = left.inMinutes % 60;
+    return minutes == 0
+        ? '还有 ${left.inHours} 小时'
+        : '还有 ${left.inHours} 小时 $minutes 分';
+  }
+  return '${left.inDays} 天后';
+}
+
+/// One agenda line: time, who (a bar in their colours), what, and its kind
+/// in words. [highlight] lifts the line onto a wash of its member's colour
+/// with how soon it starts, for the next thing on a day; given [now], a
+/// line that is over steps back.
 class CalendarAgendaRow extends StatelessWidget {
   const CalendarAgendaRow({
     required this.event,
     this.showDay = false,
     this.today,
+    this.now,
+    this.highlight = false,
     super.key,
   });
   final CalendarEvent event;
@@ -87,6 +115,10 @@ class CalendarAgendaRow extends StatelessWidget {
 
   /// The Shanghai day the list is anchored to, for 今天/明天 labels.
   final DateTime? today;
+
+  /// The present moment, when the line should say where it stands.
+  final DateTime? now;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -107,101 +139,110 @@ class CalendarAgendaRow extends StatelessWidget {
         ? '待定'
         : label;
     final muted = event.isCancelled;
+    final timing = now == null ? null : calendarEventTiming(event, now!);
+    final over = timing == '已结束';
     final scale = MediaQuery.textScalerOf(context).scale(1);
-    final stateStyle = theme.textTheme.labelMedium?.copyWith(
-      color: muted ? colors.error : colors.primary,
-      fontWeight: FontWeight.w600,
+    // The kind is said in the member's own colour; the group's is warm.
+    final tone = MemberTone.of(
+      cast.length == 1 ? cast.single : 'A-SOUL',
+      theme.brightness,
     );
-    return Semantics(
-      button: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () => showCalendarEvent(context, event),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 60 * scale.clamp(1.0, 1.6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.allDay ? '全天' : CalendarAgenda.time(event.start),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: muted ? colors.onSurfaceVariant : null,
-                        ),
-                      ),
-                      if (showDay) Text(day, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
+    final stateStyle = theme.textTheme.labelMedium?.copyWith(
+      color: muted ? colors.error : tone.text,
+    );
+    final lifted = highlight && !muted && !over;
+    final line = Row(
+      children: [
+        SizedBox(
+          width: 54 * scale.clamp(1.0, 1.6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event.allDay ? '全天' : CalendarAgenda.time(event.start),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: AppTheme.tabular,
+                  color: muted ? colors.onSurfaceVariant : null,
                 ),
-                // Who appears: one segment per member.
-                SizedBox(
-                  width: 4,
-                  height: 36,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (cast.isEmpty || muted)
-                          Expanded(
-                            child: ColoredBox(
-                              color: muted
-                                  ? colors.outlineVariant
-                                  : calendarEventColor(event),
-                            ),
-                          )
-                        else
-                          for (final member in cast)
-                            Expanded(
-                              child: ColoredBox(
-                                color: AppTheme.memberColors[member]!,
-                              ),
-                            ),
-                      ],
+              ),
+              if (showDay) Text(day, style: theme.textTheme.bodySmall),
+            ],
+          ),
+        ),
+        // Who appears: one segment per member.
+        MemberBar(
+          members: muted ? const [] : cast,
+          fallback: muted ? colors.outlineVariant : calendarEventColor(event),
+          length: 38,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (lifted && timing != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    timing == '进行中' ? '进行中' : '下一场 · $timing',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.primary,
+                      fontFeatures: AppTheme.tabular,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        headline,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          height: 1.35,
-                          decoration: muted ? TextDecoration.lineThrough : null,
-                          color: muted ? colors.onSurfaceVariant : null,
-                        ),
-                      ),
-                      // What kind of event, beside what it is about: the
-                      // state never sits apart at the far end of the line.
-                      Row(
-                        children: [
-                          if (state.isNotEmpty) Text(state, style: stateStyle),
-                          if (subtitle.isNotEmpty)
-                            Flexible(
-                              child: Text(
-                                state.isEmpty ? subtitle : ' · $subtitle',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+              Text(
+                headline,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                  decoration: muted ? TextDecoration.lineThrough : null,
+                  color: muted ? colors.onSurfaceVariant : null,
                 ),
-              ],
+              ),
+              // What kind of event, beside what it is about: the
+              // state never sits apart at the far end of the line.
+              Row(
+                children: [
+                  if (state.isNotEmpty) Text(state, style: stateStyle),
+                  if (subtitle.isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        state.isEmpty ? subtitle : ' · $subtitle',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    return Semantics(
+      button: true,
+      child: Opacity(
+        opacity: over ? .55 : 1,
+        child: Material(
+          color: lifted ? tone.wash : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => showCalendarEvent(context, event),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
+              child: Padding(
+                padding: lifted
+                    ? const EdgeInsets.fromLTRB(10, 10, 10, 10)
+                    : const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                child: line,
+              ),
             ),
           ),
         ),
@@ -210,171 +251,173 @@ class CalendarAgendaRow extends StatelessWidget {
   }
 }
 
-class CalendarEventTile extends StatelessWidget {
-  const CalendarEventTile({
-    required this.event,
-    this.day,
-    this.showDate = false,
-    this.compact = false,
+/// One day in a strip or a month: its number in a circle (filled when
+/// selected, ringed when today) and a dot per event in its member's colour.
+/// With [weekday], the day's name sits above, for a strip with no header.
+class CalendarDayCell extends StatelessWidget {
+  const CalendarDayCell({
+    required this.day,
+    required this.events,
+    required this.isSelected,
+    required this.isToday,
+    required this.onTap,
+    this.weekday,
     super.key,
   });
-  final CalendarEvent event;
-  final DateTime? day;
-  final bool showDate;
-  final bool compact;
+  final DateTime day;
+  final List<CalendarEvent> events;
+  final bool isSelected;
+  final bool isToday;
+  final VoidCallback onTap;
+  final String? weekday;
+
+  static double _circle(TextScaler scaler) =>
+      (scaler.scale(14) * 1.35 + 14).clamp(32, double.infinity);
+
+  /// The cell's height at the current text size, with or without its name.
+  static double heightFor(BuildContext context, {bool weekday = false}) {
+    final scaler = MediaQuery.textScalerOf(context);
+    return _circle(scaler) +
+        15 +
+        (weekday ? (scaler.scale(11) * 1.3).ceilToDouble() + 4 : 0);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cast = calendarEventCast(event);
-    final startDay = CalendarTime.dayOf(event.start, allDay: event.allDay);
-    final date = showDate || (day != null && day != startDay);
-    final scale = MediaQuery.textScalerOf(context).scale(1);
-    final (:headline, :subtitle, :label, :live) = calendarEventParts(event);
-    // White text throughout; the fill is dimmed so light colours carry it.
-    final fill = event.isCancelled
-        ? const Color(0xFF7D7881)
-        : Color.lerp(calendarEventColor(event), Colors.black, .15)!;
-    const foreground = Colors.white;
-    final strike = event.isCancelled ? TextDecoration.lineThrough : null;
-    final badges = [
-      for (final badge in [
-        label,
-        if (event.isCancelled) '已取消',
-        if (event.status == EventStatus.tentative) '待定',
-      ])
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .2),
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            child: Text(
-              badge,
-              style: const TextStyle(
-                fontSize: 11,
-                height: 1.3,
-                fontWeight: FontWeight.w600,
-                decoration: TextDecoration.none,
+    final colors = theme.colorScheme;
+    final count = events.length;
+    final duration = appMotion(context, AppTokens.controlMotion);
+    final number = theme.textTheme.bodyMedium?.copyWith(
+      fontSize: 14,
+      height: 1.35,
+      fontWeight: isSelected || isToday ? FontWeight.w700 : FontWeight.w500,
+      fontFeatures: AppTheme.tabular,
+      color: isSelected
+          ? AppTheme.ink
+          : isToday
+          ? colors.primary
+          : colors.onSurface,
+    );
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: '${day.year} 年 ${CalendarAgenda.date(day)}，$count 项安排',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (weekday != null) ...[
+              Text(
+                weekday!,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isToday ? colors.primary : null,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final circle = _circle(
+                  MediaQuery.textScalerOf(context),
+                ).clamp(0.0, constraints.maxWidth - 2).toDouble();
+                return AnimatedContainer(
+                  duration: duration,
+                  curve: AppCurves.standard,
+                  width: circle,
+                  height: circle,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? AppTheme.dianaPink : Colors.transparent,
+                    border: Border.all(
+                      color: isToday && !isSelected
+                          ? colors.primary.withValues(alpha: .7)
+                          : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('${day.day}', maxLines: 1, style: number),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              height: 5,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // One dot per event in its member's colour.
+                  for (final event in events.take(3))
+                    Container(
+                      width: 5,
+                      height: 5,
+                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: event.isCancelled
+                            ? colors.outlineVariant
+                            : calendarEventColor(event),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
+          ],
         ),
-      if (live && !event.isCancelled)
-        const Icon(Icons.sensors, size: 14, color: foreground),
-    ];
-    final heading = Text(
-      headline,
-      maxLines: compact ? 2 : 1,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        height: 1.3,
       ),
     );
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 50 * scale,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (date)
-                  Text(
-                    '${startDay.month}-${startDay.day}',
-                    style: theme.textTheme.labelSmall,
-                  ),
-                Text(
-                  event.allDay ? '全天' : CalendarAgenda.time(event.start),
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.primary,
-                  ),
+  }
+}
+
+/// The week holding [selected], Monday first, as seven day cells. With
+/// [weekdays] each cell carries its day's name.
+class CalendarWeekStrip extends StatelessWidget {
+  const CalendarWeekStrip({
+    required this.selected,
+    required this.today,
+    required this.events,
+    required this.onSelect,
+    this.weekdays = true,
+    super.key,
+  });
+  final DateTime selected;
+  final DateTime today;
+  final List<CalendarEvent> events;
+  final ValueChanged<DateTime> onSelect;
+  final bool weekdays;
+
+  static const names = ['一', '二', '三', '四', '五', '六', '日'];
+
+  @override
+  Widget build(BuildContext context) {
+    final monday = CalendarAgenda.weekStart(selected);
+    return SizedBox(
+      height: CalendarDayCell.heightFor(context, weekday: weekdays),
+      child: Row(
+        children: [
+          for (var i = 0; i < 7; i++)
+            Expanded(
+              child: CalendarDayCell(
+                day: monday.add(Duration(days: i)),
+                weekday: weekdays ? names[i] : null,
+                events: CalendarAgenda.onDay(
+                  events,
+                  monday.add(Duration(days: i)),
                 ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: Material(
-            color: fill,
-            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => showCalendarEvent(context, event),
-              child: DefaultTextStyle.merge(
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: foreground, decoration: strike),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: compact ? 44 : 50),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: compact ? 8 : 10,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Tags trail the title and wrap below it only when
-                            // the title leaves no room.
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 4,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [heading, ...badges],
-                            ),
-                            if (subtitle.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                subtitle,
-                                maxLines: compact ? 1 : null,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: compact ? 12 : 13,
-                                  height: 1.35,
-                                  color: foreground.withValues(alpha: .88),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Who appears: one segment per member, or the fill's own
-                    // colour when nobody is named.
-                    SizedBox(
-                      height: 3,
-                      child: Row(
-                        children: [
-                          if (cast.isEmpty || event.isCancelled)
-                            Expanded(child: ColoredBox(color: fill))
-                          else
-                            for (final member in cast)
-                              Expanded(
-                                child: ColoredBox(
-                                  color: AppTheme.memberColors[member]!,
-                                ),
-                              ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                isSelected: selected == monday.add(Duration(days: i)),
+                isToday: today == monday.add(Duration(days: i)),
+                onTap: () => onSelect(monday.add(Duration(days: i))),
               ),
             ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

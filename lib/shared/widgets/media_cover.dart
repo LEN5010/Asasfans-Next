@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_theme.dart';
 import '../../app/theme/app_tokens.dart';
 import 'app_motion.dart';
 import 'media_image_policy.dart';
@@ -28,6 +29,7 @@ class MediaCover extends StatelessWidget {
     required this.image,
     required this.aspectRatio,
     this.badge,
+    this.caption,
     this.video = false,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
@@ -36,6 +38,11 @@ class MediaCover extends StatelessWidget {
   final Uri? image;
   final double aspectRatio;
   final String? badge;
+
+  /// Facts drawn on the cover's lower edge over a soft scrim, as video sites
+  /// do (views on the left, [badge] on the right), so the words below the
+  /// cover keep to the title and who made it.
+  final String? caption;
   final bool video;
   final BoxFit fit;
 
@@ -81,7 +88,59 @@ class MediaCover extends StatelessWidget {
           )
         else
           _fallback(context),
-        if (badge != null)
+        if (caption != null) ...[
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 44,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00000000), Color(0x8C000000)],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 5,
+            child: DefaultTextStyle.merge(
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11.5,
+                height: 1.3,
+                fontWeight: FontWeight.w500,
+                fontFeatures: AppTheme.tabular,
+                shadows: [Shadow(color: Color(0x66000000), blurRadius: 4)],
+              ),
+              child: Row(
+                children: [
+                  if (video) ...[
+                    const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 2),
+                  ],
+                  Expanded(child: Text(caption!)),
+                  if (badge != null) ...[
+                    const SizedBox(width: 6),
+                    Text(badge!),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ] else if (badge != null)
           Positioned(
             right: 8,
             bottom: 8,
@@ -90,8 +149,8 @@ class MediaCover extends StatelessWidget {
               widthFactor: 1,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: .66),
-                  borderRadius: BorderRadius.circular(5),
+                  color: Colors.black.withValues(alpha: .62),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -106,6 +165,8 @@ class MediaCover extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 11,
                       height: 1.3,
+                      fontWeight: FontWeight.w500,
+                      fontFeatures: AppTheme.tabular,
                     ),
                   ),
                 ),

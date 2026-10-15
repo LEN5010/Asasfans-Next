@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/media_cover.dart';
 import '../../../shared/widgets/media_card_surface.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../creator/presentation/creator_link.dart';
 import 'content_images.dart';
 import 'dynamic_rich_text.dart';
@@ -73,12 +75,21 @@ class FanartCard extends StatelessWidget {
       );
     }
 
-    final members = item.characterTags.map((tag) => tag.wire).join(' · ');
+    final members = [
+      for (final tag in item.characterTags) ...AppTheme.membersIn(tag.wire),
+    ];
     final Widget preview;
     if (textOnly) {
       final style = theme.textTheme.bodyMedium?.copyWith(height: 1.6);
+      // A work about one member is washed in her colour, as a letter on
+      // her stationery; others keep the plain raised tone.
       preview = ColoredBox(
-        color: colors.surfaceContainerHigh,
+        color: members.length == 1
+            ? Color.alphaBlend(
+                MemberTone.of(members.single, theme.brightness).wash,
+                colors.surfaceContainerLow,
+              )
+            : colors.surfaceContainerHigh,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
           child: Column(
@@ -88,7 +99,9 @@ class FanartCard extends StatelessWidget {
                 child: Text(
                   '“',
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: colors.primary,
+                    color: members.length == 1
+                        ? MemberTone.of(members.single, theme.brightness).text
+                        : colors.primary,
                     height: 1,
                   ),
                 ),
@@ -192,7 +205,11 @@ class FanartCard extends StatelessWidget {
         child: cover,
       );
 
-  Widget _byline(BuildContext context, String members, VoidCallback more) {
+  Widget _byline(
+    BuildContext context,
+    List<String> members,
+    VoidCallback more,
+  ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final scaler = MediaQuery.textScalerOf(context);
@@ -231,12 +248,28 @@ class FanartCard extends StatelessWidget {
                               color: colors.onSurface,
                             ),
                           ),
+                          // Who it is about, each name in her own colour.
                           if (members.isNotEmpty)
-                            Text(
-                              members,
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  for (final (i, member) in members.indexed)
+                                    TextSpan(
+                                      text: i == 0 ? member : ' · $member',
+                                      style: TextStyle(
+                                        color: MemberTone.of(
+                                          member,
+                                          theme.brightness,
+                                        ).text,
+                                      ),
+                                    ),
+                                ],
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                         ],
                       ),

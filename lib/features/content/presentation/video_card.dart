@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_theme.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../../core/domain/content_identity.dart';
@@ -38,19 +39,10 @@ class VideoCard extends ConsumerWidget {
   ) => extentForWidth(width, scaler);
 
   /// Built from the same parts the card lays out, so the grid's fixed
-  /// extent and the card cannot drift apart.
+  /// extent and the card cannot drift apart: the cover (views and length
+  /// drawn on it), two lines of title, and one line of who and when.
   static double extentForWidth(double width, TextScaler scaler) =>
-      width / (16 / 9) +
-      _gap +
-      _titleExtent(scaler) +
-      (inlineMeta(width, scaler) ? 0 : 2 + _metaExtent(scaler)) +
-      _bylineExtent(scaler);
-
-  /// A card wide enough for the numbers to follow the maker's name on one
-  /// line: title, then one line of who, how many and when. A phone's
-  /// narrow card keeps them on a line of their own.
-  static bool inlineMeta(double width, TextScaler scaler) =>
-      width - MediaMoreButton.reserve >= scaler.scale(12) * 16;
+      width / (16 / 9) + _gap + _titleExtent(scaler) + _bylineExtent(scaler);
 
   static const _gap = 8.0;
   static double _titleExtent(TextScaler scaler) =>
@@ -64,38 +56,63 @@ class VideoCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scaler = MediaQuery.textScalerOf(context);
-    return LayoutBuilder(
-      builder: (context, constraints) =>
-          _card(context, ref, inlineMeta(constraints.maxWidth, scaler)),
-    );
-  }
-
-  Widget _card(BuildContext context, WidgetRef ref, bool inline) {
     final theme = Theme.of(context);
     final scaler = MediaQuery.textScalerOf(context);
+    final now = ref.watch(currentTimeProvider)();
     void more() => showContentActions(
       context,
       ContentSnapshots.video(video),
       ruleSubject: RuleSubjects.video(video),
     );
-    final maker = CreatorLink(
-      mid: video.creatorId,
-      minHeight: _bylineExtent(scaler),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Text(
-          video.creatorName.isEmpty ? '未知作者' : video.creatorName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 12,
-            height: 1.35,
-            color: theme.colorScheme.onSurface,
+    final quiet = theme.textTheme.bodySmall?.copyWith(
+      fontSize: 12,
+      height: 1.35,
+      fontFeatures: AppTheme.tabular,
+    );
+    final published = video.publishedAt;
+    // Who made it, then when, on one quiet line: the name is the link and
+    // gives way first; the date always shows.
+    final byline = Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: CreatorLink(
+                  mid: video.creatorId,
+                  minHeight: _bylineExtent(scaler),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Text(
+                      video.creatorName.isEmpty ? '未知作者' : video.creatorName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: quiet?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: .78,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (published != null)
+                Semantics(
+                  label: '发布于 ${fullDate(published)}',
+                  excludeSemantics: true,
+                  child: Text(
+                    ' · ${compactDate(published, now)}',
+                    style: quiet,
+                  ),
+                ),
+            ],
           ),
         ),
-      ),
+        MediaMoreButton(onPressed: more),
+      ],
     );
+    final views = video.viewCount == null ? null : count(video.viewCount!);
+    final length = video.duration == null ? null : _duration(video.duration!);
     // No frame: the cover and the words are the card, as with works.
     return MediaActionRegion(
       radius: 10,
@@ -107,13 +124,21 @@ class VideoCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: MediaCover(
-              image: video.coverUrl,
-              aspectRatio: 16 / 9,
-              video: true,
-              badge: video.duration == null ? null : _duration(video.duration!),
+          Semantics(
+            label: [
+              if (views != null) '$views 播放',
+              if (length != null) '时长 $length',
+            ].join('，'),
+            excludeSemantics: true,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: MediaCover(
+                image: video.coverUrl,
+                aspectRatio: 16 / 9,
+                video: true,
+                caption: views,
+                badge: length,
+              ),
             ),
           ),
           const SizedBox(height: _gap),
@@ -133,36 +158,7 @@ class VideoCard extends ConsumerWidget {
               ),
             ),
           ),
-          if (!inline) ...[
-            const SizedBox(height: 2),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: SizedBox(
-                height: _metaExtent(scaler),
-                child: VideoMeta(video: video),
-              ),
-            ),
-          ],
-          SizedBox(
-            height: _bylineExtent(scaler),
-            child: Row(
-              children: [
-                // The link is the name's width; the rest of the line (and
-                // the numbers after the name) still opens the video.
-                if (inline) ...[
-                  // The name takes at most half the line; the numbers
-                  // follow it and give way first.
-                  Flexible(child: maker),
-                  const SizedBox(width: 6),
-                  Expanded(child: VideoMeta(video: video)),
-                ] else
-                  Expanded(
-                    child: Align(alignment: Alignment.centerLeft, child: maker),
-                  ),
-                MediaMoreButton(onPressed: more),
-              ],
-            ),
-          ),
+          SizedBox(height: _bylineExtent(scaler), child: byline),
         ],
       ),
     );

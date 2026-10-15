@@ -9,6 +9,8 @@ import '../../../shared/widgets/query_summary.dart';
 
 import '../application/fanart_filter_rules.dart';
 import '../domain/fanart_repository.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/member_tone.dart';
 
 /// Members stay in the open as one chip strip, the one condition people
 /// change most; every tap applies at once. Everything else lives in the
@@ -38,6 +40,7 @@ class FanartQuickFilters extends StatelessWidget {
         for (final character in FanartCharacter.values)
           _QuickChip(
             label: character.wire,
+            members: AppTheme.membersIn(character.wire),
             selected: query.characters.contains(character),
             onTap: () => onChanged(
               query.copyWith(
@@ -59,15 +62,34 @@ class _QuickChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.members = const [],
   });
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
+  /// Who the chip stands for: a dot each, and, once chosen, a wash of the
+  /// first one's colour instead of the generic pink.
+  final List<String> members;
+
+  Widget _withDots(Widget label) => members.isEmpty
+      ? label
+      : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MemberDots(members: members, size: 6),
+            const SizedBox(width: 6),
+            label,
+          ],
+        );
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final duration = appMotion(context, AppTokens.controlMotion);
+    final tone = members.isEmpty
+        ? null
+        : MemberTone.of(members.first, colors.brightness);
     return Semantics(
       button: true,
       selected: selected,
@@ -85,7 +107,7 @@ class _QuickChip extends StatelessWidget {
             decoration: ShapeDecoration(
               shape: const StadiumBorder(),
               color: selected
-                  ? colors.primaryContainer
+                  ? tone?.wash ?? colors.primaryContainer
                   : colors.surfaceContainerHigh,
             ),
             child: Material(
@@ -94,22 +116,28 @@ class _QuickChip extends StatelessWidget {
                 customBorder: const StadiumBorder(),
                 onTap: onTap,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
+                  padding: EdgeInsets.fromLTRB(
+                    members.isEmpty ? 12 : 10,
+                    5,
+                    12,
+                    5,
                   ),
-                  child: AnimatedDefaultTextStyle(
-                    duration: duration,
-                    curve: Curves.easeOutCubic,
-                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                      fontSize: 13,
-                      height: 1.3,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                      color: selected
-                          ? colors.onPrimaryContainer
-                          : colors.onSurfaceVariant,
+                  child: _withDots(
+                    AnimatedDefaultTextStyle(
+                      duration: duration,
+                      curve: AppCurves.standard,
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                        fontSize: 13,
+                        height: 1.3,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: selected
+                            ? tone?.text ?? colors.onPrimaryContainer
+                            : colors.onSurfaceVariant,
+                      ),
+                      child: Text(label),
                     ),
-                    child: Text(label),
                   ),
                 ),
               ),

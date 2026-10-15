@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../calendar/application/calendar_providers.dart';
+import '../../calendar/domain/calendar_agenda.dart';
 import '../../calendar/domain/calendar_event.dart';
 import '../../content/application/community_video_pager.dart';
 import '../../content/application/content_providers.dart';
@@ -21,6 +22,31 @@ final todayScheduleProvider = FutureProvider.autoDispose<CalendarSnapshot>((
   return ref.watch(
     monthEventsProvider(DateTime.utc(day.year, day.month)).future,
   );
+});
+
+/// Today's week, Monday to Sunday, for the strip of days above the
+/// schedule: the month holding today, and the neighbouring one too when the
+/// week runs across a month's edge. Each event appears once, whichever
+/// month carried it.
+final todayWeekProvider = FutureProvider.autoDispose<List<CalendarEvent>>((
+  ref,
+) async {
+  final day = ref.watch(shanghaiDateProvider);
+  final monday = CalendarAgenda.weekStart(day);
+  final sunday = monday.add(const Duration(days: 6));
+  final months = {
+    DateTime.utc(monday.year, monday.month),
+    DateTime.utc(sunday.year, sunday.month),
+  };
+  final snapshots = await Future.wait([
+    for (final month in months) ref.watch(monthEventsProvider(month).future),
+  ]);
+  final seen = <String>{};
+  return List.unmodifiable([
+    for (final snapshot in snapshots)
+      for (final event in snapshot.events)
+        if (seen.add(event.identity)) event,
+  ]);
 });
 
 final todayFanartProvider = FutureProvider.autoDispose<List<FanartItem>>((

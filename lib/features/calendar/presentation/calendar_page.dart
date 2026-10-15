@@ -145,6 +145,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
     Widget agenda({required bool scrollable, bool segments = true}) => _Agenda(
       key: ValueKey('calendar-agenda-$scrollable'),
       day: selected,
+      today: today,
+      now: ref.watch(currentTimeProvider)(),
       week: _week,
       segments: segments,
       onWeek: (value) => setState(() => _week = value),
@@ -192,18 +194,25 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                     ),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 12, bottom: 12),
+                        padding: const EdgeInsets.only(left: 12, bottom: 16),
                         child: heading,
                       ),
-                      monthHeader(),
-                      _MonthGrid(
-                        month: month,
-                        selected: selected,
-                        today: today,
-                        byDay: byDay,
-                        onSelect: _select,
+                      AppCard(
+                        padding: const EdgeInsets.fromLTRB(0, 6, 0, 10),
+                        child: Column(
+                          children: [
+                            monthHeader(),
+                            _MonthGrid(
+                              month: month,
+                              selected: selected,
+                              today: today,
+                              byDay: byDay,
+                              onSelect: _select,
+                            ),
+                          ],
+                        ),
                       ),
-                      const Divider(height: 28),
+                      const SizedBox(height: 20),
                       filters(wide: true),
                     ],
                   ),
@@ -238,24 +247,46 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                 ),
                 child: heading,
               ),
-              const SizedBox(height: 12),
-              monthHeader(collapsible: true),
-              if (_monthExpanded)
-                _MonthGrid(
-                  month: month,
-                  selected: selected,
-                  today: today,
-                  byDay: byDay,
-                  onSelect: _select,
-                )
-              else
-                _WeekStrip(
-                  selected: selected,
-                  today: today,
-                  events: events,
-                  onSelect: _select,
+              const SizedBox(height: 16),
+              // The month or the week, as one card the dates live in.
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTokens.gutter(constraints.maxWidth),
                 ),
-              const SizedBox(height: 8),
+                child: AppCard(
+                  padding: const EdgeInsets.fromLTRB(0, 6, 0, 10),
+                  child: Column(
+                    children: [
+                      monthHeader(collapsible: true),
+                      AnimatedSize(
+                        duration: appMotion(context, AppTokens.controlMotion),
+                        curve: AppCurves.standard,
+                        alignment: Alignment.topCenter,
+                        child: _monthExpanded
+                            ? _MonthGrid(
+                                month: month,
+                                selected: selected,
+                                today: today,
+                                byDay: byDay,
+                                onSelect: _select,
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: CalendarWeekStrip(
+                                  selected: selected,
+                                  today: today,
+                                  events: events,
+                                  onSelect: _select,
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               // One row of controls under the dates: day or week, and the
               // less used type and member choices folded behind 筛选.
               Padding(
@@ -485,13 +516,13 @@ class _MonthGrid extends StatelessWidget {
     final leading = first.weekday - 1;
     final days = DateTime.utc(month.year, month.month + 1, 0).day;
     final cells = ((leading + days) / 7).ceil() * 7;
-    final height = _cellHeight(context);
+    final height = CalendarDayCell.heightFor(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         children: [
           const _Weekdays(),
-          const SizedBox(height: 2),
+          const SizedBox(height: 6),
           SizedBox(
             height: cells / 7 * height,
             child: GridView.builder(
@@ -507,7 +538,7 @@ class _MonthGrid extends StatelessWidget {
                 final number = index - leading + 1;
                 if (number < 1 || number > days) return const SizedBox.shrink();
                 final day = DateTime.utc(month.year, month.month, number);
-                return _DayCell(
+                return CalendarDayCell(
                   day: day,
                   events: byDay[day] ?? const [],
                   isSelected: day == selected,
@@ -522,58 +553,6 @@ class _MonthGrid extends StatelessWidget {
     );
   }
 }
-
-class _WeekStrip extends StatelessWidget {
-  const _WeekStrip({
-    required this.selected,
-    required this.today,
-    required this.events,
-    required this.onSelect,
-  });
-  final DateTime selected;
-  final DateTime today;
-  final List<CalendarEvent> events;
-  final ValueChanged<DateTime> onSelect;
-  @override
-  Widget build(BuildContext context) {
-    final monday = CalendarAgenda.weekStart(selected);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          const _Weekdays(),
-          const SizedBox(height: 2),
-          SizedBox(
-            height: _cellHeight(context),
-            child: Row(
-              children: [
-                for (var i = 0; i < 7; i++)
-                  Expanded(
-                    child: _DayCell(
-                      day: monday.add(Duration(days: i)),
-                      events: CalendarAgenda.onDay(
-                        events,
-                        monday.add(Duration(days: i)),
-                      ),
-                      isSelected: selected == monday.add(Duration(days: i)),
-                      isToday: today == monday.add(Duration(days: i)),
-                      onTap: () => onSelect(monday.add(Duration(days: i))),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-double _cellHeight(BuildContext context) =>
-    (MediaQuery.textScalerOf(context).scale(13) * 1.35 + 14).clamp(
-      44,
-      double.infinity,
-    );
 
 class _Weekdays extends StatelessWidget {
   const _Weekdays();
@@ -590,89 +569,11 @@ class _Weekdays extends StatelessWidget {
   );
 }
 
-class _DayCell extends StatelessWidget {
-  const _DayCell({
-    required this.day,
-    required this.events,
-    required this.isSelected,
-    required this.isToday,
-    required this.onTap,
-  });
-  final DateTime day;
-  final List<CalendarEvent> events;
-  final bool isSelected;
-  final bool isToday;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final count = events.length;
-    return Semantics(
-      button: true,
-      selected: isSelected,
-      label: '${day.year} 年 ${CalendarAgenda.date(day)}，$count 项安排',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
-          decoration: BoxDecoration(
-            color: isSelected ? colors.secondaryContainer : null,
-            border: isToday
-                ? Border.all(color: colors.primary, width: 1.5)
-                : null,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  '${day.day}',
-                  maxLines: 1,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.35),
-                ),
-              ),
-              const SizedBox(height: 2),
-              SizedBox(
-                height: 5,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // One dot per event in its member's colour; the selected
-                    // day's pink fill would swallow a pink dot, so it rings.
-                    for (final event in events.take(3))
-                      Container(
-                        width: 5,
-                        height: 5,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: event.isCancelled
-                              ? colors.outlineVariant
-                              : calendarEventColor(event),
-                          border: isSelected
-                              ? Border.all(color: Colors.white, width: 1)
-                              : null,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _Agenda extends StatelessWidget {
   const _Agenda({
     required this.day,
+    required this.today,
+    required this.now,
     required this.week,
     required this.onWeek,
     this.segments = true,
@@ -684,6 +585,11 @@ class _Agenda extends StatelessWidget {
     super.key,
   });
   final DateTime day;
+  final DateTime today;
+
+  /// The present moment: today's lines say whether they are over, and the
+  /// next one is lifted.
+  final DateTime now;
   final bool week;
   final ValueChanged<bool> onWeek;
 
@@ -695,6 +601,13 @@ class _Agenda extends StatelessWidget {
   final bool filtered;
   final VoidCallback onRetry;
   final bool scrollable;
+
+  CalendarEvent? nextToday(List<CalendarEvent> events) => events
+      .where(
+        (event) =>
+            !event.isCancelled && calendarEventTiming(event, now) != '已结束',
+      )
+      .firstOrNull;
 
   @override
   Widget build(BuildContext context) {
@@ -711,14 +624,24 @@ class _Agenda extends StatelessWidget {
         ),
         const SizedBox(height: 12),
       ],
-      Semantics(
-        header: true,
-        child: Text(
-          week
-              ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
-              : CalendarAgenda.date(day),
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+      Row(
+        children: [
+          Flexible(
+            child: Semantics(
+              header: true,
+              child: Text(
+                week
+                    ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
+                    : CalendarAgenda.date(day),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+          ),
+          if (!week) ...[
+            const SizedBox(width: 10),
+            _DayTag(day: day, today: today),
+          ],
+        ],
       ),
       const SizedBox(height: 8),
       snapshot.when(
@@ -775,9 +698,15 @@ class _Agenda extends StatelessWidget {
                     ),
                   ),
                 // Quiet lines: a day with several events reads as a
-                // schedule, not a stack of coloured banners.
+                // schedule, not a stack of coloured banners. Today's next
+                // event is the one lifted.
                 for (final event in entry.value)
-                  CalendarAgendaRow(event: event),
+                  CalendarAgendaRow(
+                    event: event,
+                    now: entry.key == today ? now : null,
+                    highlight:
+                        entry.key == today && event == nextToday(entry.value),
+                  ),
               ],
               // A single day also says what comes next, from what is
               // already loaded, so the next event is never a hunt.
@@ -824,6 +753,43 @@ class _Agenda extends StatelessWidget {
       primary: false,
       physics: scrollable ? null : const NeverScrollableScrollPhysics(),
       children: children,
+    );
+  }
+}
+
+/// Beside a day's heading: 今天, 明天 or the day of the week.
+class _DayTag extends StatelessWidget {
+  const _DayTag({required this.day, required this.today});
+  final DateTime day;
+  final DateTime today;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final gap = day.difference(today).inDays;
+    final label = switch (gap) {
+      0 => '今天',
+      1 => '明天',
+      -1 => '昨天',
+      _ => '周${'一二三四五六日'[day.weekday - 1]}',
+    };
+    final current = gap == 0;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: current
+            ? AppTheme.dianaPink
+            : theme.colorScheme.surfaceContainerHigh,
+        shape: const StadiumBorder(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+        child: Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: current ? AppTheme.ink : theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
     );
   }
 }

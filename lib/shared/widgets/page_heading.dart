@@ -12,12 +12,19 @@ class RootHeading extends StatelessWidget {
     this.actions = const [],
   });
   final String title;
-  final String? subtitle;
+
+  /// One line under the title; a widget, so a page can say what it holds
+  /// ("今天 2 场安排") with emphasis of its own.
+  final Object? subtitle;
   final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final subtitle = this.subtitle;
+    final subtitleStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -37,20 +44,30 @@ class RootHeading extends StatelessWidget {
                   excludeSemantics: true,
                   child: Wrap(
                     spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.end,
                     children: [
-                      for (final part in title.split(' '))
-                        Text(part, style: theme.textTheme.headlineSmall),
+                      for (final (index, part) in title.split(' ').indexed)
+                        Text(
+                          part,
+                          // The first part is the title; the rest qualify it.
+                          style: index == 0
+                              ? theme.textTheme.headlineSmall
+                              : theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                        ),
                     ],
                   ),
                 ),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
-                Text(
-                  subtitle!,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                DefaultTextStyle.merge(
+                  style: subtitleStyle,
+                  child: subtitle is Widget
+                      ? subtitle
+                      : Text('$subtitle', style: subtitleStyle),
                 ),
               ],
             ],
@@ -67,11 +84,15 @@ class SectionHeading extends StatelessWidget {
   const SectionHeading({
     super.key,
     required this.title,
+    this.caption,
     this.action,
     this.onAction,
     this.trailing = const [],
   });
   final String title;
+
+  /// A quiet fact after the title: how many, or since when.
+  final String? caption;
 
   /// Short label for the link to the full list, e.g. "日历".
   final String? action;
@@ -83,6 +104,10 @@ class SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final link = theme.textTheme.labelLarge?.copyWith(
+      fontSize: 13.5,
+      color: theme.colorScheme.primary,
+    );
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 44),
       child: Row(
@@ -90,7 +115,21 @@ class SectionHeading extends StatelessWidget {
           Expanded(
             child: Semantics(
               header: true,
-              child: Text(title, style: theme.textTheme.titleLarge),
+              child: Text.rich(
+                TextSpan(
+                  text: title,
+                  children: [
+                    if (caption != null)
+                      TextSpan(
+                        text: '  $caption',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                        ),
+                      ),
+                  ],
+                ),
+                style: theme.textTheme.titleLarge,
+              ),
             ),
           ),
           ...trailing,
@@ -110,10 +149,7 @@ class SectionHeading extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    action!,
-                    style: TextStyle(color: theme.colorScheme.primary),
-                  ),
+                  Text(action!, style: link),
                   Icon(
                     Icons.chevron_right,
                     size: 18,

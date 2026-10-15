@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_tokens.dart';
+import 'app_motion.dart';
 import 'glass/app_glass_scope.dart';
 
 /// Ordinary page actions. Material and geometry are independent: repeated
@@ -226,19 +227,22 @@ class AppSegments<T> extends StatelessWidget {
     );
     final hit = math.max(height, AppTokens.touchTarget(context));
     final selectedIndex = values.indexOf(selected);
-    final selectedStyle = TextStyle(
+    // From the theme, so the labels keep its typeface and fallbacks.
+    final label = Theme.of(context).textTheme.labelLarge!;
+    final selectedStyle = label.copyWith(
       fontSize: 14,
-      fontWeight: FontWeight.w600,
-      color: colors.onPrimaryContainer,
+      fontWeight: FontWeight.w700,
+      color: colors.primary,
     );
-    final normalStyle = TextStyle(
+    final normalStyle = label.copyWith(
       fontSize: 14,
       fontWeight: FontWeight.w500,
-      color: colors.onSurface,
+      color: colors.onSurfaceVariant,
     );
     final duration = policy.canAnimate
         ? AppTokens.controlMotion
         : Duration.zero;
+    final dark = colors.brightness == Brightness.dark;
     // Looks [height] tall; on touch the segments are hit across a 48 dp
     // band, as AppButton is, so the track sits centred in it.
     final control = SizedBox(
@@ -255,20 +259,33 @@ class AppSegments<T> extends StatelessWidget {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(4),
+                // A raised thumb that slides to the choice, as on the
+                // archive site: the page's own surface over the track.
                 child: AnimatedAlign(
                   alignment: AlignmentDirectional(
                     -1 + 2 * selectedIndex / (values.length - 1),
                     0,
                   ),
                   duration: duration,
-                  curve: Curves.easeOutCubic,
+                  curve: AppCurves.enter,
                   child: FractionallySizedBox(
                     widthFactor: 1 / values.length,
                     heightFactor: 1,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
+                        color: dark
+                            ? colors.surfaceContainerHighest
+                            : colors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(9),
+                        boxShadow: dark
+                            ? null
+                            : const [
+                                BoxShadow(
+                                  color: Color(0x1A000000),
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
                       ),
                     ),
                   ),
@@ -295,9 +312,11 @@ class AppSegments<T> extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text(
-                        labelOf(value),
+                      child: AnimatedDefaultTextStyle(
+                        duration: duration,
+                        curve: AppCurves.standard,
                         style: value == selected ? selectedStyle : normalStyle,
+                        child: Text(labelOf(value)),
                       ),
                     ),
                   ),
@@ -328,4 +347,38 @@ class AppSwitch extends StatelessWidget {
     label: label,
     child: Switch(value: value, onChanged: onChanged),
   );
+}
+
+/// A quiet content card: the content surface, a hairline and the card's
+/// lift. Ink inside it paints on the card, not on the page beneath.
+class AppCard extends StatelessWidget {
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.color,
+  });
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(AppTokens.cardRadius);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color ?? colors.surfaceContainerLow,
+        borderRadius: radius,
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: .7)),
+        boxShadow: AppTokens.cardShadow(colors.brightness),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(padding: padding, child: child),
+      ),
+    );
+  }
 }

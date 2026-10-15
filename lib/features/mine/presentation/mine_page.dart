@@ -10,6 +10,7 @@ import '../../../app/providers.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_cover.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../../shared/widgets/page_heading.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../library/application/library_providers.dart';
@@ -35,16 +36,24 @@ class MinePage extends ConsumerWidget {
     ('应用内更新', 'updates', Icons.notifications_none),
   ];
 
+  /// Each entry's badge takes one of the support colours in turn, so a
+  /// list of places reads as distinct marks rather than a column of grey.
+  static const tones = ['嘉然', '乃琳', '贝拉', '心宜', '思诺', 'A-SOUL'];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasLocalLogin = ref.watch(
       accountControllerProvider.select((account) => account.hasLocalLogin),
     );
-    List<Widget> links(List<(String, String, IconData)> entries) => [
-      for (final entry in entries)
+    List<Widget> links(
+      List<(String, String, IconData)> entries, {
+      int offset = 0,
+    }) => [
+      for (final (index, entry) in entries.indexed)
         _Link(
           label: entry.$1,
           icon: entry.$3,
+          tone: tones[(index + offset) % tones.length],
           onTap: () => context.go('/mine/${entry.$2}'),
         ),
     ];
@@ -72,14 +81,24 @@ class MinePage extends ConsumerWidget {
           final app = _Group(
             title: '应用',
             children: [
-              ...links(const [('设置', 'settings', Icons.tune)]),
+              _Link(
+                label: '设置',
+                icon: Icons.tune,
+                onTap: () => context.go('/mine/settings'),
+              ),
               // A text way into the tools, beside the floating button.
               _Link(
                 label: '工具与相关站点',
                 icon: Icons.handyman_outlined,
+                tone: 'A-SOUL',
                 onTap: () => showToolsSheet(context),
               ),
-              ...links(const [('作者与致谢', 'credits', Icons.people_outline)]),
+              _Link(
+                label: '作者与致谢',
+                icon: Icons.people_outline,
+                tone: '嘉然',
+                onTap: () => context.go('/mine/credits'),
+              ),
               _Link(
                 label: '关于',
                 icon: Icons.info_outline,
@@ -189,19 +208,17 @@ class _LibraryGrid extends StatelessWidget {
     final colors = theme.colorScheme;
     Widget tile((String, String, IconData) entry, {required bool lead}) {
       final (label, path, icon) = entry;
+      final tone =
+          MinePage.tones[entries.indexOf(entry) % MinePage.tones.length];
       final text = Text(
         label,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: lead ? theme.textTheme.titleMedium : theme.textTheme.titleSmall,
       );
-      return Material(
-        // The lead is larger, not louder: the same light tint as 继续挑选.
-        color: lead
-            ? colors.primaryContainer.withValues(alpha: .5)
-            : colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-        clipBehavior: Clip.antiAlias,
+      // The lead pair is larger, not louder: the same card, more room.
+      return AppCard(
+        padding: EdgeInsets.zero,
         child: InkWell(
           onTap: () => onOpen(path),
           child: ConstrainedBox(
@@ -209,19 +226,29 @@ class _LibraryGrid extends StatelessWidget {
             child: Padding(
               padding: lead
                   ? const EdgeInsets.fromLTRB(16, 16, 12, 16)
-                  : const EdgeInsets.fromLTRB(14, 10, 10, 10),
+                  : const EdgeInsets.fromLTRB(12, 10, 10, 10),
               child: lead
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(icon, color: colors.primary),
-                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            ToneBadge(icon: icon, member: tone, size: 40),
+                            const Spacer(),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 20,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
                         text,
                       ],
                     )
                   : Row(
                       children: [
-                        Icon(icon, size: 20, color: colors.primary),
+                        ToneBadge(icon: icon, member: tone),
                         const SizedBox(width: 10),
                         Expanded(child: text),
                       ],
@@ -371,25 +398,45 @@ class _RecentSection extends ConsumerWidget {
 }
 
 class _Link extends StatelessWidget {
-  const _Link({required this.label, required this.icon, required this.onTap});
+  const _Link({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.tone,
+    this.trailing = Icons.chevron_right,
+  });
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+
+  /// The member colour of the row's badge; none is a neutral badge.
+  final String? tone;
+  final IconData trailing;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(8),
-    child: AppButton(
-      onPressed: onTap,
-      child: Row(
-        children: [
-          Icon(icon, size: 22),
-          const SizedBox(width: 12),
-          Expanded(child: Text(label)),
-          const Icon(Icons.chevron_right, size: 20),
-        ],
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 54),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            children: [
+              ToneBadge(icon: icon, member: tone),
+              const SizedBox(width: 14),
+              Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
+              Icon(
+                trailing,
+                size: trailing == Icons.chevron_right ? 20 : 17,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// The app's settings, moved off the Mine root: appearance, glass and the
@@ -434,13 +481,12 @@ class _Group extends StatelessWidget {
           child: Text(title, style: Theme.of(context).textTheme.titleLarge),
         ),
       ),
-      Card(
-        clipBehavior: Clip.antiAlias,
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+      AppCard(
+        padding: EdgeInsets.zero,
         child: Column(
           children: [
             for (var index = 0; index < children.length; index++) ...[
-              if (index > 0) const Divider(height: 1, indent: 56),
+              if (index > 0) const Divider(height: 1, indent: 58),
               children[index],
             ],
           ],
@@ -468,20 +514,13 @@ class CreditsPage extends ConsumerWidget {
     }
 
     List<Widget> rows(List<(String, String, IconData)> entries) => [
-      for (final entry in entries)
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: AppButton(
-            onPressed: () => open(entry.$2),
-            child: Row(
-              children: [
-                Icon(entry.$3, size: 22),
-                const SizedBox(width: 12),
-                Expanded(child: Text(entry.$1)),
-                const Icon(Icons.open_in_new, size: 18),
-              ],
-            ),
-          ),
+      for (final (index, entry) in entries.indexed)
+        _Link(
+          label: entry.$1,
+          icon: entry.$3,
+          tone: MinePage.tones[index % MinePage.tones.length],
+          trailing: Icons.open_in_new,
+          onTap: () => open(entry.$2),
         ),
     ];
 
