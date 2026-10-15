@@ -1,5 +1,7 @@
 import 'package:asasfans_next/features/mine/presentation/mine_page.dart';
 import 'package:asasfans_next/features/tools/presentation/tools_sheet.dart';
+import 'package:asasfans_next/core/config/app_version.dart';
+import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,7 +97,7 @@ void main() {
     expect(saved.top, later.top);
     expect(history.top, updates.top);
     expect(history.top, greaterThan(saved.bottom));
-    expect(updates.right - saved.left, lessThan(900));
+    expect(updates.right - saved.left, lessThan(1100));
     // 管理 and 应用 are two bounded groups side by side, not rows as long as
     // the window.
     final manage = tester.getRect(find.text('管理'));
@@ -103,11 +105,24 @@ void main() {
     expect(manage.top, app.top);
     expect(app.left, greaterThan(manage.right));
     expect(tester.getRect(find.text('备份与恢复')).left, lessThan(app.left - 200));
-    await tester.scrollUntilVisible(find.text('关于'), 180);
-    // The page is longer now; bring the row fully into view before the tap.
-    await tester.ensureVisible(find.text('关于'));
+    // Every block shares one right edge, and the two groups end level.
+    Rect card(String label) => tester.getRect(
+      find.ancestor(of: find.text(label), matching: find.byType(AppCard)).first,
+    );
+    expect(card('应用内更新').right, closeTo(card('设置').right, 1));
+    expect(card('备份与恢复').bottom, closeTo(card('关于').bottom, 1));
+
+    // 关于 holds the version and the licences.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [offlinePreferences(), ...offlineLibrary()],
+        child: const MaterialApp(home: AboutPage()),
+      ),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('关于'));
+    expect(find.text('版本 $appVersion'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('开源许可'), 180);
+    await tester.tap(find.text('开源许可'));
     await tester.pumpAndSettle();
     expect(find.byType(LicensePage), findsOneWidget);
   });

@@ -162,7 +162,14 @@ void main() {
         lessThanOrEqualTo(24 + AppTokens.readingWidth + 1),
       );
       expect(
-        tester.getRect(find.widgetWithText(TextButton, '更多')).right,
+        tester
+            .getRect(
+              find.ancestor(
+                of: find.text('一直刷'),
+                matching: find.byWidgetPredicate((w) => w is FilledButton),
+              ),
+            )
+            .right,
         greaterThan(1280 - 24 - 1),
       );
       // Works start where the page starts, in one row of one tile shape:

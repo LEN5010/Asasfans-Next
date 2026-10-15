@@ -15,6 +15,7 @@ import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_cover.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../../shared/widgets/page_heading.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../library/application/library_providers.dart';
 import '../../library/domain/library_models.dart';
@@ -66,10 +67,9 @@ class MinePage extends ConsumerWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final gutter = AppTokens.gutter(constraints.maxWidth);
-          // The page starts where every page starts. What it holds keeps
-          // readable widths: the library at most [_libraryWidth], each
-          // group at most [_groupWidth], the two groups side by side once
-          // both fit.
+          // The page starts where every page starts, and every block on it
+          // shares one right edge, at most [_contentWidth]: the library, the
+          // recent row, and the two groups, side by side once both fit.
           final width = constraints.maxWidth - gutter * 2;
           final paired = width >= _groupWidth * 1.4 + AppTokens.sectionGap;
           final manage = _Group(
@@ -96,21 +96,13 @@ class MinePage extends ConsumerWidget {
                 tone: 'A-SOUL',
                 onTap: () => showToolsSheet(context),
               ),
-              _Link(
-                label: '作者与致谢',
-                icon: Icons.people_outline,
-                tone: '嘉然',
-                onTap: () => context.go('/mine/credits'),
-              ),
               const _ReleaseLink(),
+              // Who made it, whom it thanks, and the licences, on one page.
               _Link(
                 label: '关于',
                 icon: Icons.info_outline,
-                onTap: () => showLicensePage(
-                  context: context,
-                  applicationName: 'Asasfans Next',
-                  applicationVersion: appVersion,
-                ),
+                tone: '嘉然',
+                onTap: () => context.go('/mine/about'),
               ),
             ],
           );
@@ -130,7 +122,7 @@ class MinePage extends ConsumerWidget {
             ),
             children: [
               bounded(
-                AppTokens.pageWidth,
+                _contentWidth,
                 RootHeading(
                   title: '我的',
                   actions: [
@@ -147,7 +139,7 @@ class MinePage extends ConsumerWidget {
               if (hasLocalLogin) ...[
                 const SizedBox(height: AppTokens.sectionGap),
                 bounded(
-                  _groupWidth,
+                  _contentWidth,
                   const _Group(
                     title: '账号',
                     children: [LocalLoginCleanupTile()],
@@ -156,7 +148,7 @@ class MinePage extends ConsumerWidget {
               ],
               const SizedBox(height: AppTokens.sectionGap - 8),
               bounded(
-                _libraryWidth,
+                _contentWidth,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -169,11 +161,11 @@ class MinePage extends ConsumerWidget {
                   ],
                 ),
               ),
-              bounded(AppTokens.pageWidth, const _RecentSection()),
+              bounded(_contentWidth, const _RecentSection()),
               const SizedBox(height: AppTokens.sectionGap),
               if (paired)
                 bounded(
-                  _groupWidth * 2 + AppTokens.sectionGap,
+                  _contentWidth,
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -184,9 +176,9 @@ class MinePage extends ConsumerWidget {
                   ),
                 )
               else ...[
-                bounded(_groupWidth, manage),
+                bounded(_contentWidth, manage),
                 const SizedBox(height: AppTokens.sectionGap),
-                bounded(_groupWidth, app),
+                bounded(_contentWidth, app),
               ],
             ],
           );
@@ -195,8 +187,8 @@ class MinePage extends ConsumerWidget {
     );
   }
 
-  static const _libraryWidth = 880.0;
   static const _groupWidth = 520.0;
+  static const _contentWidth = _groupWidth * 2 + AppTokens.sectionGap;
 }
 
 /// The library as tiles: each a place of my own, reached in one tap. The
@@ -543,9 +535,10 @@ class _Group extends StatelessWidget {
   );
 }
 
-/// The author's links and the projects this app grew from.
-class CreditsPage extends ConsumerWidget {
-  const CreditsPage({super.key});
+/// The app itself: its name and version, the author's links, the projects
+/// it grew from, and the licences.
+class AboutPage extends ConsumerWidget {
+  const AboutPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -573,7 +566,7 @@ class CreditsPage extends ConsumerWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const AppPageBar(title: Text('作者与致谢')),
+      appBar: const AppPageBar(title: Text('关于')),
       body: Builder(
         // Inside the body, so MediaQuery carries the page bar height.
         builder: (context) => Align(
@@ -583,6 +576,8 @@ class CreditsPage extends ConsumerWidget {
             child: ListView(
               padding: pageInsets(context, top: 4),
               children: [
+                const _AppIdentity(),
+                const SizedBox(height: 20),
                 _Group(
                   title: '作者 · LEN5010',
                   children: rows(const [
@@ -621,10 +616,67 @@ class CreditsPage extends ConsumerWidget {
                     ),
                   ]),
                 ),
+                const SizedBox(height: 20),
+                _Group(
+                  title: '许可',
+                  children: [
+                    _Link(
+                      label: '开源许可',
+                      icon: Icons.gavel_outlined,
+                      onTap: () => showLicensePage(
+                        context: context,
+                        applicationName: 'Asasfans Next',
+                        applicationVersion: appVersion,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The app's mark, name and version, at the head of 关于.
+class _AppIdentity extends StatelessWidget {
+  const _AppIdentity();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.asset(
+              'assets/brand/asasfans.png',
+              width: 56,
+              height: 56,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Asasfans Next', style: theme.textTheme.titleLarge),
+                const SizedBox(height: 2),
+                Text(
+                  '版本 $appVersion',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontFeatures: AppTheme.tabular,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

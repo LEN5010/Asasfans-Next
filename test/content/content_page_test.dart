@@ -445,7 +445,7 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('随机二创'));
+    await tester.tap(find.text('随机刷'));
     await tester.pumpAndSettle();
 
     expect(find.byType(RandomFanartPage), findsOneWidget);
@@ -481,7 +481,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byTooltip('随机二创'), findsNothing);
+    expect(find.text('随机刷'), findsNothing);
   });
 
   testWidgets('the narrowest phone keeps two readable artwork columns', (

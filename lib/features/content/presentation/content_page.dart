@@ -501,7 +501,10 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
                     Expanded(
                       child: ContentSearchControl(
                         value: state.query.keyword,
-                        hint: '搜索二创正文或作者',
+                        // Room for the random button on a phone.
+                        hint: MediaQuery.sizeOf(context).width < 480
+                            ? '搜索二创'
+                            : '搜索二创正文或作者',
                         expanded: true,
                         onSubmitted: (keyword) =>
                             _applyQuery(state.query.copyWith(keyword: keyword)),
@@ -511,12 +514,9 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
                         ),
                       ),
                     ),
-                    AppButton.icon(
-                      tooltip: '随机二创',
-                      filled: true,
-                      onPressed: () =>
-                          openRandomFanart(context, query: state.query),
-                      icon: const Icon(Icons.shuffle),
+                    RandomFanartButton(
+                      query: state.query,
+                      compact: MediaQuery.sizeOf(context).width < 360,
                     ),
                     _FanartMoreActions(channel: widget.channel),
                   ],

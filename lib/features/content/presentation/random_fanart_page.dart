@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/auto_fill_viewport.dart';
@@ -25,6 +26,52 @@ void openRandomFanart(
   Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(builder: (_) => RandomFanartPage(query: query)),
   );
+}
+
+/// The way into the random feed, filled in the accent: it is the fanart
+/// side's lead feature, not one more grey control. [compact] keeps only
+/// the icon, for the narrowest rows.
+class RandomFanartButton extends StatelessWidget {
+  const RandomFanartButton({
+    this.query = const FanartQuery(),
+    this.label = '随机刷',
+    this.compact = false,
+    super.key,
+  });
+  final FanartQuery query;
+  final String label;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = AppSegments.heightFor(context);
+    final style = FilledButton.styleFrom(
+      minimumSize: Size(height, height),
+      padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.inputRadius),
+      ),
+    );
+    void open() => openRandomFanart(context, query: query);
+    if (compact) {
+      return Tooltip(
+        message: label,
+        child: FilledButton(
+          style: style.copyWith(
+            fixedSize: WidgetStatePropertyAll(Size.square(height)),
+          ),
+          onPressed: open,
+          child: const Icon(Icons.shuffle, size: 20),
+        ),
+      );
+    }
+    return FilledButton.icon(
+      style: style,
+      onPressed: open,
+      icon: const Icon(Icons.shuffle, size: 18),
+      label: Text(label, maxLines: 1),
+    );
+  }
 }
 
 /// Random works without end: scrolling down draws another batch, and a work

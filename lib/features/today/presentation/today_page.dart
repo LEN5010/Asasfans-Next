@@ -502,12 +502,12 @@ class _WorksSection extends ConsumerWidget {
               onPressed: items.isLoading
                   ? null
                   : () => ref.invalidate(todayFanartProvider),
-              icon: const Icon(Icons.shuffle, size: 20),
+              icon: const Icon(Icons.refresh, size: 20),
             ),
+            const SizedBox(width: 4),
+            // The same draw, without end: the lead way in.
+            const RandomFanartButton(label: '一直刷'),
           ],
-          // The same draw, without end.
-          action: '更多',
-          onAction: () => openRandomFanart(context),
         ),
         const SizedBox(height: 4),
         AppFadeSwitcher(
