@@ -1,7 +1,7 @@
 name: asasfans_next
 description: "Asasfans Next — A-SOUL 内容、日历与社区工具。"
 publish_to: 'none'
-version: 3.0.0-beta.1+202
+version: 3.0.0+203
 
 environment:
   sdk: ^3.9.2

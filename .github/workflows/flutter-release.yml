@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing release tag, for example v3.0.0-beta.1"
+        description: "Existing release tag, for example v3.0.0"
         required: true
         type: string
 
@@ -65,6 +65,8 @@ jobs:
           - platform: windows
             os: windows-2022
           - platform: macos
+            os: macos-latest
+          - platform: ios
             os: macos-latest
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
@@ -140,12 +142,27 @@ jobs:
           Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "dist/$env:NAME-windows-x64.zip"
 
       # Ad-hoc signed, not notarized: the notes say how to open it.
+      # keychain-access-groups is a restricted entitlement: without a
+      # provisioning profile it can stop the app from launching, so this
+      # build drops it. The keychain only held the retired Bilibili login,
+      # which a new install never has.
       - name: Build macOS
         if: matrix.platform == 'macos'
         run: |
+          /usr/libexec/PlistBuddy -c "Delete :keychain-access-groups" macos/Runner/Release.entitlements
           flutter build macos --release --no-pub
+          codesign -d --entitlements - "build/macos/Build/Products/Release/Asasfans Next.app"
           mkdir -p dist
           ditto -c -k --keepParent "build/macos/Build/Products/Release/Asasfans Next.app" "dist/$NAME-macos.zip"
+
+      # Unsigned: people sign it with their own Apple ID (Sideloadly, AltStore).
+      - name: Build iOS
+        if: matrix.platform == 'ios'
+        run: |
+          flutter build ios --release --no-codesign --no-pub
+          mkdir -p dist ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app ipa/Payload/
+          (cd ipa && zip -qry "../dist/$NAME-ios-unsigned.ipa" Payload)
 
       - name: Checksums
         shell: bash

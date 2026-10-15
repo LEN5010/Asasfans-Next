@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/storage/local_database.dart';
@@ -28,10 +29,30 @@ class PlatformBiliKeyStore implements SecretKeyStore {
       synchronizable: false,
     ),
   );
+
+  /// errSecMissingEntitlement. The ad-hoc signed macOS release carries no
+  /// keychain entitlement, so it can neither have stored a session nor
+  /// reach one; there is nothing for it to clean up.
+  static const _missingEntitlement = -34018;
+
   @override
-  Future<String?> read() => _store.read(key: _key);
+  Future<String?> read() async {
+    try {
+      return await _store.read(key: _key);
+    } on PlatformException catch (error) {
+      if (error.details == _missingEntitlement) return null;
+      rethrow;
+    }
+  }
+
   @override
-  Future<void> delete() => _store.delete(key: _key);
+  Future<void> delete() async {
+    try {
+      await _store.delete(key: _key);
+    } on PlatformException catch (error) {
+      if (error.details != _missingEntitlement) rethrow;
+    }
+  }
 }
 
 /// The session envelope an earlier build wrote. It is no longer parsed:
