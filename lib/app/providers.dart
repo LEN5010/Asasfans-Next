@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/config/app_environment.dart';
+import '../core/config/app_version.dart';
 import '../core/network/public_api_client.dart';
 import '../core/platform/external_link_service.dart';
 import '../core/platform/return_entry_service.dart';
@@ -21,7 +22,7 @@ final publicApiClientProvider = Provider<PublicApiClient>((ref) {
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       sendTimeout: const Duration(seconds: 10),
-      headers: {'Accept': 'application/json'},
+      headers: {'Accept': 'application/json', 'User-Agent': appUserAgent},
       followRedirects: false,
     ),
   );

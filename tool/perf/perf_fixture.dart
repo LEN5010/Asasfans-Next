@@ -100,12 +100,6 @@ class PerfFanart implements FanartRepository {
   }
 
   @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => perfItem(0);
-
-  @override
   Future<List<FanartItem>> sample({
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/config/app_version.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../data/community_video_source.dart';
@@ -96,7 +97,7 @@ final communityDioProvider = Provider<Dio>((ref) {
     BaseOptions(
       connectTimeout: const Duration(seconds: 12),
       receiveTimeout: const Duration(seconds: 12),
-      headers: {'Accept': 'application/json'},
+      headers: {'Accept': 'application/json', 'User-Agent': appUserAgent},
     ),
   );
   ref.onDispose(() => dio.close(force: true));

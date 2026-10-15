@@ -69,11 +69,6 @@ class _EmptyFanart implements FanartRepository {
     String? cursor,
     RequestCancellation? cancellation,
   }) async => const FanartPage(items: [], snapshotId: 'offline', total: 0);
-  @override
-  Future<FanartItem?> random({
-    FanartQuery query = const FanartQuery(),
-    RequestCancellation? cancellation,
-  }) async => null;
 
   @override
   Future<List<FanartItem>> sample({

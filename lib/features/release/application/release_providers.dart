@@ -1,22 +1,26 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/config/app_version.dart';
-import '../data/github_release_source.dart';
+import '../data/release_source.dart';
 import '../domain/app_release.dart';
 
 final currentVersion = AppVersion.tryParse(appVersion)!;
 
-final releaseSourceProvider = Provider<GithubReleaseSource>((ref) {
-  final dio = Dio(
+final releaseSourceProvider = Provider<ReleaseSource>((ref) {
+  final github = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {'Accept': 'application/vnd.github+json'},
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': appUserAgent,
+      },
     ),
   );
-  ref.onDispose(() => dio.close(force: true));
-  return GithubReleaseSource(dio);
+  ref.onDispose(() => github.close(force: true));
+  return ReleaseSource(ref.watch(publicApiClientProvider), github);
 });
 
 /// The last update check: null until one is asked for, then its progress
@@ -28,7 +32,7 @@ final releaseCheckProvider =
 
 class ReleaseCheck extends StateNotifier<AsyncValue<AppRelease?>?> {
   ReleaseCheck(this._source) : super(null);
-  final GithubReleaseSource _source;
+  final ReleaseSource _source;
   Future<AppRelease?>? _running;
 
   /// A check already under way is joined, not repeated.
