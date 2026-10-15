@@ -123,6 +123,12 @@ class _Repository
     OnThisDaySort sort = OnThisDaySort.hot,
     int limit = 8,
   }) async => [];
+
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => (await page(query: query, cancellation: cancellation)).items;
 }
 
 class _Harness {

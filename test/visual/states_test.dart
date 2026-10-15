@@ -36,6 +36,12 @@ class _Switchable implements FanartRepository {
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
   }) async => null;
+
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => (await page(query: query, cancellation: cancellation)).items;
 }
 
 /// R06/U18: every list state says what happened and what to do next, and

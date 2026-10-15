@@ -134,12 +134,14 @@ class _MediaActionRegionState extends State<MediaActionRegion> {
     // Without a tap there is nothing to activate: no focus stop, no hover
     // and no press, so resting a pointer on prose changes nothing.
     final tappable = widget.onTap != null;
+    // A faint wash of the accent rather than grey, so the plate reads as
+    // the app's own highlight on the warm page.
     final plate = !tappable
         ? 0.0
         : pressed
-        ? .09
+        ? .11
         : hovered
-        ? .05
+        ? .065
         : 0.0;
     return AnimatedScale(
       scale: pressed && tappable && widget.pressScale ? .97 : 1,
@@ -151,7 +153,7 @@ class _MediaActionRegionState extends State<MediaActionRegion> {
         curve: AppCurves.standard,
         builder: (context, alpha, child) => CustomPaint(
           painter: _RegionStatePainter(
-            fill: colors.onSurface.withValues(alpha: alpha),
+            fill: colors.primary.withValues(alpha: alpha),
             ring: focused ? colors.primary : null,
             radius: widget.radius,
           ),

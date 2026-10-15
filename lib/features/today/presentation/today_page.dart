@@ -24,6 +24,7 @@ import '../../calendar/domain/calendar_agenda.dart';
 import '../../../shared/widgets/page_heading.dart';
 import '../../calendar/presentation/calendar_event_widgets.dart';
 import '../../content/presentation/video_card.dart';
+import '../../content/domain/fanart_repository.dart';
 import '../../content/presentation/fanart_card.dart';
 import '../../content/presentation/fanart_detail_page.dart';
 import '../../preferences/application/preferences_controller.dart';
@@ -168,7 +169,7 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                   ),
                   spaced: calendar,
                 ),
-                if (showFanart) _WorksSection(edge: edge + gap),
+                if (showFanart) box(const _WorksSection()),
                 if (showClips) box(const _ClipsSection()),
                 // The archive comes after today's own content.
                 if (history)
@@ -484,68 +485,96 @@ class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
 /// The newest works at the full width of the page, each tile as tall as
 /// its own content: one row on a wide window, two on a phone. A sliver,
 /// so the tiles are laid out lazily with the rest of the page.
+/// A random handful of works, two rows of one tile shape, so the rows line
+/// up whatever each work is. 换一批 draws again; the current works stay
+/// until the next ones arrive.
 class _WorksSection extends ConsumerWidget {
-  const _WorksSection({required this.edge});
-  final EdgeInsets edge;
+  const _WorksSection();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(todayFanartProvider);
-    Widget box(Widget child) => SliverToBoxAdapter(child: child);
-    return SliverPadding(
-      padding: edge,
-      sliver: SliverMainAxisGroup(
-        slivers: [
-          box(
-            SectionHeading(
-              title: '最新二创',
-              action: '查看二创',
-              onAction: () => context.go('/content/fanart'),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeading(
+          title: '随机二创',
+          trailing: [
+            AppButton.icon(
+              tooltip: '换一批',
+              onPressed: items.isLoading
+                  ? null
+                  : () => ref.invalidate(todayFanartProvider),
+              icon: const Icon(Icons.shuffle, size: 20),
             ),
-          ),
-          box(const SizedBox(height: 4)),
-          items.when(
-            loading: () => box(const _SectionLoading()),
-            error: (error, _) => box(
-              _SectionError(
-                error: error,
-                onRetry: () => ref.invalidate(todayFanartProvider),
-              ),
+          ],
+          action: '查看二创',
+          onAction: () => context.go('/content/fanart'),
+        ),
+        const SizedBox(height: 4),
+        AppFadeSwitcher(
+          phase: (asyncPhase(items), items.valueOrNull),
+          child: items.when(
+            loading: () => const _SectionLoading(),
+            error: (error, _) => _SectionError(
+              error: error,
+              onRetry: () => ref.invalidate(todayFanartProvider),
             ),
             data: (raw) => RuleFilterScope(
               items: raw,
               subjectOf: RuleSubjects.fanart,
-              unavailableBuilder: box,
-              builder: (visible) => SliverMainAxisGroup(
-                slivers: [
-                  box(RuleStatusBar(visibility: visible)),
+              builder: (visible) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RuleStatusBar(visibility: visible),
                   if (visible.items.isEmpty)
-                    box(const _EmptySection('暂时没有内容'))
+                    const _EmptySection('暂时没有内容')
                   else
-                    SliverContentMasonry(
-                      itemCount: visible.items.length,
-                      rows: 2,
-                      maxColumns: 5,
-                      itemBuilder: (context, index) {
-                        final item = visible.items[index];
-                        return FanartCard(
-                          key: ValueKey(item.identity),
-                          item: item,
-                          onLongPress: () => showContentActions(
-                            context,
-                            ContentSnapshots.fanart(item),
-                          ),
-                          onTap: () => openFanart(context, ref, item),
-                        );
-                      },
-                    ),
+                    _WorksGrid(items: visible.items),
                 ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
+
+/// Two rows of equal tiles, as many columns as the width holds.
+class _WorksGrid extends ConsumerWidget {
+  const _WorksGrid({required this.items});
+  final List<FanartItem> items;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final gap = SliverContentMasonry.spacingFor(width);
+      final columns = SliverContentMasonry.columnsFor(
+        width,
+        MediaQuery.textScalerOf(context),
+        maxColumns: todayFanartCount ~/ 2,
+      );
+      final tile = (width - gap * (columns - 1)) / columns;
+      return Wrap(
+        spacing: gap,
+        runSpacing: gap + 4,
+        children: [
+          for (final item in items.take(columns * 2))
+            SizedBox(
+              width: tile,
+              child: FanartCard(
+                key: ValueKey(item.identity),
+                item: item,
+                uniform: true,
+                onLongPress: () =>
+                    showContentActions(context, ContentSnapshots.fanart(item)),
+                onTap: () => openFanart(context, ref, item),
+              ),
+            ),
+        ],
+      );
+    },
+  );
 }
 
 /// A few new clips as list lines: they accompany the works, not compete.

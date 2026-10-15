@@ -1,7 +1,7 @@
 import '../../../core/network/api_failure.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../../rules/application/rules_providers.dart';
-import '../../content/application/feed_progress.dart';
+import '../../../core/domain/content_identity.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/time/shanghai_date_provider.dart';
@@ -49,43 +49,42 @@ final todayWeekProvider = FutureProvider.autoDispose<List<CalendarEvent>>((
   ]);
 });
 
+/// A random handful of works: a fresh draw on each load, pull to refresh
+/// and 换一批, not tied to the day. One request brings up to ten from each
+/// source; a second is made only when the rules leave too few for two rows.
 final todayFanartProvider = FutureProvider.autoDispose<List<FanartItem>>((
   ref,
 ) async {
-  ref.watch(shanghaiDateProvider);
   final cancellation = RequestCancellation();
   ref.onDispose(cancellation.cancel);
   final repository = ref.watch(fanartRepositoryProvider);
   final rules = ref.read(rulesControllerProvider.notifier);
-  final progress = FeedProgress<FanartItem>((item) => item.identity);
   final items = <FanartItem>[];
-  String? cursor;
-  for (var scan = 0; scan < 3; scan++) {
-    final page = await repository.page(
-      query: const FanartQuery(limit: 6),
-      cursor: cursor,
+  final seen = <ContentIdentity>{};
+  for (var draw = 0; draw < 2; draw++) {
+    final batch = await repository.sample(
+      query: const FanartQuery(limit: todayFanartCount),
       cancellation: cancellation,
     );
     if (cancellation.isCancelled) {
       throw const ApiFailure(ApiFailureKind.cancelled);
     }
-    final accepted = progress.accept(page.items, continuation: page.nextCursor);
-    items.addAll(accepted.added);
-    if (page.nextCursor == null) break;
-    if (accepted.stalled) {
-      throw const ApiFailure(ApiFailureKind.paginationStalled);
-    }
+    items.addAll(batch.where((item) => seen.add(item.identity)));
+    if (batch.isEmpty) break;
     final policy = await rules.ready();
     if (cancellation.isCancelled) {
       throw const ApiFailure(ApiFailureKind.cancelled);
     }
-    if (projectFeed(items, RuleSubjects.fanart, policy).items.length >= 6) {
+    if (projectFeed(items, RuleSubjects.fanart, policy).items.length >=
+        todayFanartCount) {
       break;
     }
-    cursor = page.nextCursor;
   }
   return List.unmodifiable(items);
 });
+
+/// The most works Today shows: two rows of at most five.
+const todayFanartCount = 10;
 
 final todayClipsProvider = FutureProvider.autoDispose<List<CommunityVideo>>((
   ref,

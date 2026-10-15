@@ -59,6 +59,12 @@ class _Recording implements FanartRepository {
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
   }) async => _item('r');
+
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => (await page(query: query, cancellation: cancellation)).items;
 }
 
 class _Links implements ExternalLinkService {

@@ -10,9 +10,25 @@ class MainFlutterWindow: NSWindow {
   deinit { transparencyPreference?.dispose() }
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
-    let windowFrame = self.frame
     self.contentViewController = flutterViewController
-    self.setFrame(windowFrame, display: true)
+    // A desktop-sized first window, centred: wide enough for the side rail
+    // and two-pane pages, and never larger than the screen it opens on. A
+    // window the system restores keeps the size it was left at.
+    if let visible = (self.screen ?? NSScreen.main)?.visibleFrame {
+      let size = NSSize(
+        width: min(1280, visible.width * 0.9),
+        height: min(820, visible.height * 0.9)
+      )
+      self.setFrame(
+        NSRect(
+          x: visible.midX - size.width / 2,
+          y: visible.midY - size.height / 2,
+          width: size.width,
+          height: size.height
+        ),
+        display: true
+      )
+    }
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     transparencyPreference = TransparencyPreferenceBridge(

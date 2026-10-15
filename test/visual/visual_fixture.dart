@@ -485,6 +485,12 @@ class FixtureFanart implements FanartRepository {
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
   }) async => (items ?? fixtureFanart).firstOrNull;
+
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => (await page(query: query, cancellation: cancellation)).items;
 }
 
 class FixtureVideos implements CommunityVideoRepository {

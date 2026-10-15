@@ -148,7 +148,7 @@ void main() {
       expect(find.text('Asasfans Next'), findsNothing);
       expect(find.text('最近更新'), findsNothing);
       final schedule = tester.getRect(find.text('今日安排'));
-      final works = tester.getRect(find.text('最新二创'));
+      final works = tester.getRect(find.text('随机二创'));
       final tiles = [
         for (final e in find.byType(FanartCard).evaluate())
           tester.getRect(find.byWidget(e.widget)),
@@ -165,12 +165,12 @@ void main() {
         tester.getRect(find.widgetWithText(TextButton, '查看二创')).right,
         greaterThan(1280 - 24 - 1),
       );
-      // Works start where the page starts, in one row, each as tall as its
-      // own content: the first tile does not set the row's height.
+      // Works start where the page starts, in one row of one tile shape:
+      // an image work and a video work line up.
       expect(tiles.first.left, closeTo(schedule.left, 1));
       expect(tiles, hasLength(2));
       expect(tiles[0].top, tiles[1].top);
-      expect(tiles[0].height, isNot(closeTo(tiles[1].height, 1)));
+      expect(tiles[0].height, closeTo(tiles[1].height, 1));
       // Works lead clips; the archive follows today's own content.
       expect(tiles.first.bottom, lessThan(clip.top));
       expect(tester.getTopLeft(find.text('历史上的今天')).dy, greaterThan(clip.top));
@@ -193,7 +193,7 @@ void main() {
     await tester.pumpWidget(_host(_Calendar()..items = [_event('今日歌会', 21)]));
     await tester.pumpAndSettle();
     final event = tester.getRect(find.text('今日歌会'));
-    final works = tester.getRect(find.text('最新二创'));
+    final works = tester.getRect(find.text('随机二创'));
     // The works follow the one line within a section gap or two, whatever
     // the window's height.
     expect(works.top - event.bottom, lessThan(120));
@@ -208,7 +208,7 @@ void main() {
     await tester.pumpWidget(_host(calendar));
     await tester.pumpAndSettle();
     final schedule = tester.getTopLeft(find.text('今日安排')).dy;
-    final fanart = tester.getTopLeft(find.text('最新二创')).dy;
+    final fanart = tester.getTopLeft(find.text('随机二创')).dy;
     final clips = tester.getTopLeft(find.text('最新切片')).dy;
     final history = tester.getTopLeft(find.text('历史上的今天')).dy;
     expect(schedule, lessThan(fanart));

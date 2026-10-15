@@ -64,6 +64,12 @@ class _FanartStub implements FanartRepository {
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
   }) async => _fanart('r');
+
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => (await page(query: query, cancellation: cancellation)).items;
 }
 
 class _DynamicStub implements DynamicRepository {

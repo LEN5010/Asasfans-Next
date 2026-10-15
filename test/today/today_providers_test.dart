@@ -34,6 +34,12 @@ class _Fanart implements FanartRepository {
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
   }) async => null;
+
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async => (await page(query: query, cancellation: cancellation)).items;
 }
 
 class _Community implements CommunityVideoRepository {
@@ -142,24 +148,22 @@ void main() {
   );
 
   testWidgets(
-    'rollover cancels yesterday fanart and a late response cannot replace today',
+    'a new draw cancels the last one and a late response cannot replace it',
     (tester) async {
-      var now = DateTime.utc(2026, 9, 21, 15, 59, 59);
       final repository = _Fanart();
       final container = ProviderContainer(
         overrides: [
           ...offlineLibrary(),
-          currentTimeProvider.overrideWithValue(() => now),
+          currentTimeProvider.overrideWithValue(
+            () => DateTime.utc(2026, 9, 21, 4),
+          ),
           fanartRepositoryProvider.overrideWithValue(repository),
         ],
       );
       final subscription = container.listen(todayFanartProvider, (_, _) {});
-      expect(repository.queries.single.limit, 6);
-      expect(repository.queries.single.sort, FanartSort.newest);
-      now = now.add(const Duration(seconds: 2));
-      container.read(shanghaiDateProvider.notifier).resync();
-      // The new day's request is dispatched by a rebuild on a later microtask,
-      // so advance fake time before treating the two as separate requests.
+      expect(repository.queries.single.limit, todayFanartCount);
+      // 换一批.
+      container.invalidate(todayFanartProvider);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1));
       expect(repository.handles.first.isCancelled, isTrue);

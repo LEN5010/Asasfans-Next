@@ -8,6 +8,7 @@ import '../../../shared/widgets/media_card_surface.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../creator/presentation/creator_link.dart';
 import 'content_images.dart';
+import 'video_card.dart';
 import 'dynamic_rich_text.dart';
 import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
@@ -30,11 +31,20 @@ class FanartCard extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.heroTag,
+    this.uniform = false,
     super.key,
   });
   final FanartItem item;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+
+  /// One shape for every work, for a grid that lines up in rows: the art,
+  /// a video's cover or a text's excerpt all in a [uniformRatio] box, then
+  /// two lines kept for the words whether used or not. Without it a tile
+  /// is as tall as its own content, for a masonry.
+  final bool uniform;
+
+  static const uniformRatio = 4 / 3;
 
   /// Links the tile's art to the detail's first image, so opening and
   /// closing a work reads as the same picture moving. Only where each work
@@ -78,9 +88,28 @@ class FanartCard extends StatelessWidget {
     final members = [
       for (final tag in item.characterTags) ...AppTheme.membersIn(tag.wire),
     ];
-    final Widget preview;
+    final scaler = MediaQuery.textScalerOf(context);
+    Widget preview;
     if (textOnly) {
       final style = theme.textTheme.bodyMedium?.copyWith(height: 1.6);
+      final markStyle = theme.textTheme.headlineSmall?.copyWith(
+        color: members.length == 1
+            ? MemberTone.of(members.single, theme.brightness).text
+            : colors.primary,
+        height: 1,
+      );
+      Widget excerpt(int lines) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(child: Text('“', style: markStyle)),
+          DynamicRichText(
+            text: text.isNotEmpty ? text : '文字作品',
+            maxLines: lines,
+            selectable: false,
+            style: style,
+          ),
+        ],
+      );
       // A work about one member is washed in her colour, as a letter on
       // her stationery; others keep the plain raised tone.
       preview = ColoredBox(
@@ -92,47 +121,58 @@ class FanartCard extends StatelessWidget {
             : colors.surfaceContainerHigh,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ExcludeSemantics(
-                child: Text(
-                  '“',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: members.length == 1
-                        ? MemberTone.of(members.single, theme.brightness).text
-                        : colors.primary,
-                    height: 1,
-                  ),
-                ),
-              ),
-              // A bounded excerpt, ending on an ellipsis; the box is as
-              // tall as the words, never a portrait frame to fill.
-              DynamicRichText(
-                text: text.isNotEmpty ? text : '文字作品',
-                maxLines: excerptLines,
-                selectable: false,
-                style: style,
-              ),
-            ],
-          ),
+          // A bounded excerpt, ending on an ellipsis: as tall as the words
+          // in a masonry, as many lines as the box holds in a grid.
+          child: uniform
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    final line = MediaCardMetrics.line(
+                      scaler,
+                      style?.fontSize ?? 14,
+                      1.6,
+                    );
+                    final mark = MediaCardMetrics.line(
+                      scaler,
+                      markStyle?.fontSize ?? 28,
+                      1,
+                    );
+                    final lines = ((constraints.maxHeight - mark - 4) / line)
+                        .floor();
+                    return excerpt(lines.clamp(1, excerptLines));
+                  },
+                )
+              : excerpt(excerptLines),
         ),
       );
+      if (uniform) {
+        preview = AspectRatio(aspectRatio: uniformRatio, child: preview);
+      }
     } else {
       preview = _hero(
         context,
         _outlined(
           context,
           cover: video
-              ? MediaCover(
-                  image: item.images.firstOrNull,
-                  aspectRatio: videoRatio,
-                  video: true,
-                  badge: '去 B 站看 ↗',
-                )
+              ? uniform
+                    // Cropped a little to the grid's shape; what it is and
+                    // how often it was watched sit on its lower edge.
+                    ? MediaCover(
+                        image: item.images.firstOrNull,
+                        aspectRatio: uniformRatio,
+                        video: true,
+                        caption: item.viewCount == null
+                            ? '视频'
+                            : '${VideoCard.count(item.viewCount!)} 播放',
+                      )
+                    : MediaCover(
+                        image: item.images.firstOrNull,
+                        aspectRatio: videoRatio,
+                        video: true,
+                        badge: '去 B 站看 ↗',
+                      )
               : MediaCover(
                   image: item.images.firstOrNull,
-                  aspectRatio: AppTokens.artworkRatio,
+                  aspectRatio: uniform ? uniformRatio : AppTokens.artworkRatio,
                   // A tile shows a crop; the detail shows the whole image.
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
@@ -154,22 +194,35 @@ class FanartCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTokens.artworkRadius),
             child: preview,
           ),
-          if (!textOnly) ...[
+          if (!textOnly || uniform) ...[
             const SizedBox(height: 8),
-            // At most two lines, and only the lines it has: the byline
-            // follows the words, whatever the cover above them.
-            Text(
-              text.isNotEmpty
-                  ? text
-                  : video
-                  ? '视频作品'
-                  : '图片作品',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: 14,
-                height: 1.4,
-                fontWeight: FontWeight.w500,
+            // At most two lines. In a masonry only the lines it has, so the
+            // byline follows the words; in a grid both lines are kept, so
+            // every byline in a row sits level.
+            SizedBox(
+              height: uniform
+                  ? MediaCardMetrics.line(scaler, 14, 1.4) * 2
+                  : null,
+              child: Text(
+                textOnly
+                    ? '文字作品 · ${text.characters.length} 字'
+                    : text.isNotEmpty
+                    ? text
+                    : video
+                    ? '视频作品'
+                    : '图片作品',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textOnly
+                    ? theme.textTheme.bodySmall?.copyWith(
+                        height: 1.4 * 14 / 12,
+                        color: colors.onSurfaceVariant,
+                      )
+                    : theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
               ),
             ),
           ],

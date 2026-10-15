@@ -191,4 +191,12 @@ abstract interface class FanartRepository {
     FanartQuery query = const FanartQuery(),
     RequestCancellation? cancellation,
   });
+
+  /// A random handful matching the filters, up to [FanartQuery.limit] from
+  /// each source, in one request. Cursorless like [random]: each call is a
+  /// fresh draw.
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  });
 }

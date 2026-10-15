@@ -113,4 +113,24 @@ void main() {
       }
     },
   );
+
+  test('a sample is one random request for every draw it returns', () async {
+    final base = Uri.parse('https://example.test/api/');
+    final adapter = _Adapter([
+      {'sourceDynamicId': '1'},
+      {'sourceDynamicId': 'douban:2'},
+      {'sourceDynamicId': '3'},
+    ]);
+    final dio = Dio(BaseOptions(baseUrl: base.toString()))
+      ..httpClientAdapter = adapter;
+    addTearDown(() => dio.close(force: true));
+    final items = await DynamicFanartRepository(
+      PublicApiClient(dio),
+      baseUrl: base,
+    ).sample(query: const FanartQuery(limit: 10));
+    expect(items, hasLength(3));
+    expect(adapter.request?.queryParameters, containsPair('random', '1'));
+    expect(adapter.request?.queryParameters, containsPair('limit', 10));
+    expect(adapter.request?.queryParameters.containsKey('cursor'), isFalse);
+  });
 }

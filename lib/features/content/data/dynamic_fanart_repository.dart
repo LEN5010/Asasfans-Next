@@ -68,6 +68,25 @@ class DynamicFanartRepository implements FanartRepository {
     return selected[_random.nextInt(selected.length)];
   }
 
+  @override
+  Future<List<FanartItem>> sample({
+    FanartQuery query = const FanartQuery(),
+    RequestCancellation? cancellation,
+  }) async {
+    if (!query.isServerAcceptable) {
+      throw const ApiFailure(ApiFailureKind.invalidRequest);
+    }
+    final token = CancelToken();
+    cancellation?.onCancel(token.cancel);
+    final json = await _api.get(
+      'fanart',
+      query: {...buildQuery(query), 'random': '1'},
+      cancelToken: token,
+    );
+    // Union random interleaves the sources' draws, Bilibili first.
+    return decodePage(json, baseUrl: baseUrl).items;
+  }
+
   /// Only parameters the deployed service validates are sent; an unsupported
   /// value would spend one of the shared 120 requests per minute on a 400.
   static Map<String, dynamic> buildQuery(FanartQuery query, {String? cursor}) {

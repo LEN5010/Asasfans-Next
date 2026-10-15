@@ -154,7 +154,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(sourceLoads, 0);
-      expect(find.text('最新二创'), findsNothing);
+      expect(find.text('随机二创'), findsNothing);
       expect(find.text('最新切片'), findsNothing);
       expect(find.text('历史上的今天'), findsNothing);
       // An all-hidden home explains itself instead of rendering blank.
