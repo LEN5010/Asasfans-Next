@@ -17,8 +17,10 @@
   <a href="HISTORY.md">项目历史</a>
 </p>
 
-<h3 align="center">若有一天我会离开. 这座城是否还在. 她们会不会依然像现在. 这样日复一日笑着走来</h3>
-<h3 align="center">若有一天你也离开. 会不会偶尔感怀. 再看看当时艰难和愉快. 再听听那些. 夸张的告白.</h3>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/readme/lyrics-dark.png" />
+  <img src=".github/readme/lyrics.png" alt="若有一天我会离开. 这座城是否还在. 她们会不会依然像现在. 这样日复一日笑着走来 / 若有一天你也离开. 会不会偶尔感怀. 再看看当时艰难和愉快. 再听听那些. 夸张的告白." />
+</picture>
 
 <br />
 
@@ -63,22 +65,22 @@
 
 ## 下载
 
-在 [Releases](https://github.com/LEN5010/Asasfans-Next/releases/latest) 页面下载对应平台的文件：
+在 [Releases](https://github.com/LEN5010/Asasfans-Next/releases/latest) 页面下载对应平台的文件。
 
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
 | Android 7.0+ | `-android.apk` | 签名与 2.0 相同，可以直接覆盖安装 |
 | Windows 10+（x64） | `-windows-x64.zip` | 解压后运行 `asasfans_next.exe` |
 | macOS 12+ | `-macos.zip` | 未经 Apple 公证，首次打开请右键点应用 → 打开 |
-| iOS 15+ | `-ios-unsigned.ipa` | 未签名，用 Sideloadly、AltStore 等工具以自己的 Apple ID 签名安装 |
+| iOS 15+ | `-ios-unsigned.ipa` | 未签名，需要用 Sideloadly 或 AltStore 这类工具，以自己的 Apple ID 签名后安装 |
 
-macOS 提示「已损坏，无法打开」时，在终端执行 `xattr -dr com.apple.quarantine "/Applications/Asasfans Next.app"` 再打开。每个文件都附有 `.sha256` 校验值。
+如果 macOS 提示「已损坏，无法打开」，在终端执行 `xattr -dr com.apple.quarantine "/Applications/Asasfans Next.app"` 后再打开。每个安装文件都附带一个 `.sha256` 校验文件。
 
-3.0 是 Flutter 重写的版本。原生 Android 版停在 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0)，源码在该标签和 `old` 分支里；2.0 的收藏、订阅和屏蔽规则不会迁移到 3.0。
+3.0 是用 Flutter 重写的版本。原生 Android 版的最后一版是 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0)，源码保存在该标签和 `old` 分支里。2.0 里的收藏和订阅不会迁移到 3.0，屏蔽规则也不会。
 
 ## 从源码构建
 
-Flutter 固定为 **3.47.3**（Dart **3.13.3**），下载地址和校验值记在 `tool/flutter-sdk.json`。请用仓库自带的启动脚本，它会先核对本机 SDK 的版本：
+本项目固定使用 Flutter **3.47.3**（Dart **3.13.3**），SDK 的下载地址和校验值记录在 `tool/flutter-sdk.json`。构建时请使用仓库自带的启动脚本 `tool/flutterw`，它会先核对本机 SDK 的版本。
 
 ```sh
 tool/flutterw pub get --enforce-lockfile
@@ -86,23 +88,23 @@ tool/flutterw analyze --no-pub
 tool/flutterw build macos --profile --no-pub
 ```
 
-Windows 上用 `tool/flutterw.ps1`，格式化用 `tool/flutterw --dart format`。更完整的工具链说明见 [tool/README.md](tool/README.md)。
+Windows 上改用 `tool/flutterw.ps1`。格式化代码用 `tool/flutterw --dart format`。完整的工具链说明见 [tool/README.md](tool/README.md)。
 
 <details>
 <summary>各平台要求与 GitHub Actions</summary>
 
-- iOS 15 / macOS 12 起，需要 Xcode 和对应的签名配置。
-- Android 最低 API 24，Java 编译目标 17，Android SDK 36。
-- Windows 需要 Visual Studio 的 C++ 桌面开发组件，只能在 Windows 上构建。
+- iOS 版最低支持 iOS 15，macOS 版最低支持 macOS 12，构建这两个版本都需要 Xcode 和相应的签名配置。
+- Android 版最低支持 API 24，Java 编译目标为 17，使用 Android SDK 36。
+- Windows 版只能在 Windows 上构建，需要安装 Visual Studio 的 C++ 桌面开发组件。
 
-Android 开发包的包名是 `asasfans.next.flutterdev`，可以和正式版装在同一台手机上。正式包沿用 `asasfans.next` 和原来的签名；签名文件和密码只放在本地或 CI 密钥里，不要提交到仓库。
+Android 开发包的包名是 `asasfans.next.flutterdev`，可以和正式版同时安装在一台手机上。正式包沿用包名 `asasfans.next` 和原来的签名。签名文件和密码只保存在本地或 CI 密钥中，不要提交到仓库。
 
-所有 workflow 都只能手动触发，推送和 PR 不会自动运行：
+所有 workflow 都只能手动触发，推送和 PR 不会触发它们。
 
-- `Flutter Checks`：固定 SDK 的格式检查和静态分析，勾选 `run_tests` 时再跑全量测试。
-- `Flutter Development Validation`：构建 Android Debug、iOS Debug（无签名）和 macOS / Windows Profile 开发包，不签名，也不发布。
-- `Flutter Release`：为已有的版本标签构建签名 APK、Windows、macOS 和未签名 iOS 安装包，放进一个草稿 Release，确认后再手动发布。
-- `Flutter Performance Validation`：按需构建独立身份的 Android 性能测量包及体积报告。
+- `Flutter Checks` 用固定版本的 SDK 做格式检查和静态分析，勾选 `run_tests` 时再运行全量测试。
+- `Flutter Development Validation` 构建开发包，Android 和 iOS 为 Debug 版，macOS 和 Windows 为 Profile 版。这些包都不签名，也不发布。
+- `Flutter Release` 为一个已有的版本标签构建四个平台的安装包，Android 版使用正式签名，iOS 版不签名。安装包放进一个草稿 Release，由人确认后再手动发布。
+- `Flutter Performance Validation` 按需构建一个独立包名的 Android 性能测量包，并生成体积报告。
 
 </details>
 
