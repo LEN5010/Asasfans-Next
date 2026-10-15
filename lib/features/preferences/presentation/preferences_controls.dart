@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../handoff/presentation/return_entry_tile.dart';
 import '../../../shared/theme/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/app_motion.dart';
 import '../application/preferences_controller.dart';
 import '../domain/app_preferences.dart';
 
@@ -143,4 +145,45 @@ String effectiveGlassLabel(GlassPolicy policy) {
     GlassFallback.inactive => '应用在后台',
   };
   return reason == null ? '当前：$tier' : '当前：$tier（$reason）';
+}
+
+/// One tap between light and dark, from whichever is showing now; saved as
+/// the 主题 choice in settings, where following the system is chosen again.
+class ThemeToggleButton extends ConsumerWidget {
+  const ThemeToggleButton({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canEdit = ref.watch(
+      preferencesControllerProvider.select((state) => state.canEdit),
+    );
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return AppButton.icon(
+      tooltip: dark ? '切换到浅色' : '切换到深色',
+      onPressed: canEdit
+          ? () async {
+              final saved = await ref
+                  .read(preferencesControllerProvider.notifier)
+                  .setAppearance(
+                    dark ? AppAppearance.light : AppAppearance.dark,
+                  );
+              if (!saved && context.mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('主题没有保存，请稍后再试')));
+              }
+            }
+          : null,
+      icon: AnimatedSwitcher(
+        duration: appMotion(context, AppTokens.controlMotion),
+        transitionBuilder: (child, animation) => RotationTransition(
+          turns: Tween(begin: -.25, end: 0.0).animate(animation),
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: Icon(
+          dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+          key: ValueKey(dark),
+        ),
+      ),
+    );
+  }
 }

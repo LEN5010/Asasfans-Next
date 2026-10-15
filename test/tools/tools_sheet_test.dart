@@ -64,13 +64,7 @@ void main() {
         icons.add(
           tester
               .widget<Icon>(
-                // The small external-link hint is not the tool's own glyph.
-                find.descendant(
-                  of: tile,
-                  matching: find.byWidgetPredicate(
-                    (widget) => widget is Icon && widget.size == 20,
-                  ),
-                ),
+                find.descendant(of: tile, matching: find.byType(Icon)),
               )
               .icon!,
         );

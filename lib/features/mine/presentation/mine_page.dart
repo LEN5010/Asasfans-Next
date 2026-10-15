@@ -128,8 +128,8 @@ class MinePage extends ConsumerWidget {
                 AppTokens.pageWidth,
                 RootHeading(
                   title: '我的',
-                  subtitle: '收藏、记录和本地资料，都保存在这台设备上',
                   actions: [
+                    const ThemeToggleButton(),
                     AppButton.icon(
                       tooltip: '设置',
                       onPressed: () => context.go('/mine/settings'),
@@ -474,8 +474,9 @@ class _Group extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      // Level with the page's other headings and the card's own edge.
       Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 8),
+        padding: const EdgeInsets.only(bottom: 8),
         child: Semantics(
           header: true,
           child: Text(title, style: Theme.of(context).textTheme.titleLarge),

@@ -169,7 +169,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('周边首发'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(AppChoice, '直播'));
+    // The kind switch in the month overview beside the grid.
+    await tester.tap(
+      find.descendant(
+        of: find.byWidgetPredicate((w) => w is AppSegments<CalendarFilter>),
+        matching: find.text('直播'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('嘉然杂谈'), findsOneWidget);

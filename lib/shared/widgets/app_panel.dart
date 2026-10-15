@@ -79,7 +79,9 @@ class AppPanelHeader extends StatelessWidget {
       ),
     ),
     child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 8, 4),
+      // Clear of the panel's large corners: the title and the close button
+      // sit inside the curve, not under it.
+      padding: const EdgeInsets.fromLTRB(20, 10, 12, 8),
       child: Row(
         children: [
           Expanded(

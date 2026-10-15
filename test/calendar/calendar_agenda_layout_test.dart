@@ -7,7 +7,6 @@ import 'package:asasfans_next/features/calendar/application/calendar_providers.d
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_event_widgets.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_page.dart';
-import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -150,11 +149,12 @@ void main() {
         _host([_event('安排甲', 21), _event('安排乙', 21, member: '贝拉')]),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(AppChoice, '嘉然'));
+      // Her row in the month overview.
+      await tester.tap(find.widgetWithText(InkWell, '嘉然'));
       await tester.pumpAndSettle();
       expect(find.text('安排甲'), findsOneWidget);
       expect(find.text('安排乙'), findsNothing);
-      await tester.tap(find.text('重置筛选'));
+      await tester.tap(find.text('重置'));
       await tester.pumpAndSettle();
       expect(find.text('安排乙'), findsOneWidget);
     },
@@ -249,7 +249,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('网络连接失败'), findsOneWidget);
     expect(find.text('30'), findsOneWidget);
-    expect(find.widgetWithText(AppChoice, '嘉然'), findsOneWidget);
+    expect(find.widgetWithText(InkWell, '嘉然'), findsOneWidget);
     expect(find.byTooltip('回到今天'), findsOneWidget);
   });
 

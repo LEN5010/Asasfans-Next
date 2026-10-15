@@ -516,6 +516,9 @@ class _MediaCard extends StatelessWidget {
   final DateTime? publishedAt;
   final ValueChanged<Uri> onOpen;
 
+  /// From this width the cover sits beside its words.
+  static const sideBySide = 440.0;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -535,6 +538,97 @@ class _MediaCard extends StatelessWidget {
     final title = media.title.replaceFirst(RegExp(r'^直播预约[：:]\s*'), '');
     // A reservation is its own kind of thing, in violet as on the archive
     // site; other attachments sit on the raised tone.
+    final open = target == null || expired ? null : () => onOpen(target);
+    Widget cover({required BorderRadius radius, double play = 24}) => ClipRRect(
+      borderRadius: radius,
+      child: InkWell(
+        onTap: open,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            MediaCover(
+              image: media.url,
+              aspectRatio: media.aspectRatio ?? 16 / 9,
+              badge: media.durationText.isEmpty ? null : media.durationText,
+              video: media.kind == DynamicMediaKind.video,
+            ),
+            if (media.kind == DynamicMediaKind.video && target != null)
+              AppButton.icon(
+                onPressed: () => onOpen(target),
+                icon: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: Color(0x99000000),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: play,
+                    ),
+                  ),
+                ),
+                tooltip: '去 B 站看',
+              ),
+          ],
+        ),
+      ),
+    );
+    Widget details({required bool compact}) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          reserve
+              ? '直播预约'
+              : media.kind == DynamicMediaKind.video
+              ? '视频动态'
+              : '相关内容',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: reserve
+                ? theme.colorScheme.tertiary
+                : theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title.isEmpty ? '查看相关内容' : title,
+          maxLines: compact ? 2 : null,
+          overflow: compact ? TextOverflow.ellipsis : null,
+          style: theme.textTheme.titleMedium,
+        ),
+        if (media.description.isNotEmpty || media.badge.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              [
+                media.description,
+                media.badge,
+              ].where((value) => value.isNotEmpty).join(' · '),
+              maxLines: compact ? 2 : null,
+              overflow: compact ? TextOverflow.ellipsis : null,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+        if (target != null || expired)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: expired
+                ? Text('已过期', style: theme.textTheme.labelMedium)
+                : AppButton(
+                    onPressed: () => onOpen(target!),
+                    child: Text(
+                      reserve
+                          ? (time == null ? '查看预约 ↗' : '前往预约 ↗')
+                          : media.kind == DynamicMediaKind.video
+                          ? '去 B 站看 ↗'
+                          : '查看详情 ↗',
+                    ),
+                  ),
+          ),
+      ],
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         color: reserve
@@ -547,103 +641,46 @@ class _MediaCard extends StatelessWidget {
               )
             : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (media.url != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: InkWell(
-                onTap: target == null || expired ? null : () => onOpen(target),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    MediaCover(
-                      image: media.url,
-                      aspectRatio: media.aspectRatio ?? 16 / 9,
-                      badge: media.durationText.isEmpty
-                          ? null
-                          : media.durationText,
-                      video: media.kind == DynamicMediaKind.video,
-                    ),
-                    if (media.kind == DynamicMediaKind.video && target != null)
-                      AppButton.icon(
-                        onPressed: () => onOpen(target),
-                        icon: const DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Color(0x99000000),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                        tooltip: '去 B 站看',
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  reserve
-                      ? '直播预约'
-                      : media.kind == DynamicMediaKind.video
-                      ? '视频动态'
-                      : '相关内容',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: reserve
-                        ? theme.colorScheme.tertiary
-                        : theme.colorScheme.primary,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // In a reading column the cover sits beside its words, at a
+          // thumbnail's width, rather than spanning the column; a phone
+          // keeps it above them at full width.
+          if (media.url != null && constraints.maxWidth >= sideBySide) {
+            return Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: (constraints.maxWidth * .36).clamp(160.0, 240.0),
+                    child: cover(radius: BorderRadius.circular(6), play: 20),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title.isEmpty ? '查看相关内容' : title,
-                  style: theme.textTheme.titleMedium,
-                ),
-                if (media.description.isNotEmpty || media.badge.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      [
-                        media.description,
-                        media.badge,
-                      ].where((value) => value.isNotEmpty).join(' · '),
-                      style: theme.textTheme.bodySmall,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 4, 4, 4),
+                      child: details(compact: true),
                     ),
                   ),
-                if (target != null || expired)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: expired
-                        ? Text('已过期', style: theme.textTheme.labelMedium)
-                        : AppButton(
-                            onPressed: () => onOpen(target!),
-                            child: Text(
-                              reserve
-                                  ? (time == null ? '查看预约 ↗' : '前往预约 ↗')
-                                  : media.kind == DynamicMediaKind.video
-                                  ? '去 B 站看 ↗'
-                                  : '查看详情 ↗',
-                            ),
-                          ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+                ],
+              ),
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (media.url != null)
+                cover(
+                  radius: const BorderRadius.vertical(top: Radius.circular(12)),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: details(compact: false),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

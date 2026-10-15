@@ -282,7 +282,8 @@ class CalendarAgendaRow extends StatelessWidget {
         opacity: over ? .55 : 1,
         child: Material(
           color: lifted ? tone.wash : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          // Inside a card's padding, so the corners follow the card's.
+          borderRadius: BorderRadius.circular(10),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => showCalendarEvent(context, event),

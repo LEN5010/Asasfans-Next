@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -141,7 +142,7 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                 );
             return CustomScrollView(
               key: const PageStorageKey('today-scroll'),
-              physics: const _StopAtEndPhysics(
+              physics: const _SettleAtEndsPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
@@ -193,24 +194,50 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
   }
 }
 
-/// Today is about a screen and a half long, so a swipe soon reaches its
-/// end; there it stops instead of stretching and springing back. The top
-/// keeps the platform's pull, which the refresh gesture uses.
-class _StopAtEndPhysics extends ScrollPhysics {
-  const _StopAtEndPhysics({super.parent});
+/// Today's two ends. A fling that would run on past either one eases
+/// into it and rests there, rather than hitting it at speed or bouncing
+/// off. Pulling on past an end is the platform's own: a rubber band on
+/// Apple's systems that springs back when let go, and at the top the pull
+/// that refreshes. Letting go mid-stretch springs back from where it is,
+/// without flying further out first.
+class _SettleAtEndsPhysics extends ScrollPhysics {
+  const _SettleAtEndsPhysics({super.parent});
 
   @override
-  _StopAtEndPhysics applyTo(ScrollPhysics? ancestor) =>
-      _StopAtEndPhysics(parent: buildParent(ancestor));
+  _SettleAtEndsPhysics applyTo(ScrollPhysics? ancestor) =>
+      _SettleAtEndsPhysics(parent: buildParent(ancestor));
 
   @override
-  double applyBoundaryConditions(ScrollMetrics position, double value) {
-    final end = position.maxScrollExtent;
-    if (end <= position.pixels && position.pixels < value) {
-      return value - position.pixels;
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    final outward =
+        (position.pixels > position.maxScrollExtent && velocity > 0) ||
+        (position.pixels < position.minScrollExtent && velocity < 0);
+    if (outward) return super.createBallisticSimulation(position, 0);
+    final natural = super.createBallisticSimulation(position, velocity);
+    if (natural == null || position.outOfRange || velocity == 0) {
+      return natural;
     }
-    if (position.pixels < end && end < value) return value - end;
-    return super.applyBoundaryConditions(position, value);
+    final edge = velocity > 0
+        ? position.maxScrollExtent
+        : position.minScrollExtent;
+    final tolerance = toleranceFor(position);
+    final rest = natural.x(60);
+    final reaches = velocity > 0
+        ? rest >= edge - tolerance.distance
+        : rest <= edge + tolerance.distance;
+    if (!reaches || (edge - position.pixels).abs() <= tolerance.distance) {
+      return natural;
+    }
+    // Slowing all the way from here, arriving at the edge as it stops.
+    return FrictionSimulation.through(
+      position.pixels,
+      edge,
+      velocity,
+      velocity.sign * tolerance.velocity,
+    );
   }
 }
 

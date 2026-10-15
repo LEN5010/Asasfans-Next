@@ -402,7 +402,7 @@ void main() {
     expect(find.byType(VideoRow), findsOneWidget);
   });
 
-  testWidgets('the page stops at its end; only the top pulls, for refresh', (
+  testWidgets('a fling settles at the end; pulling past it springs back', (
     tester,
   ) async {
     _size(tester, const Size(800, 600));
@@ -414,19 +414,28 @@ void main() {
           find.descendant(of: page, matching: find.byType(Scrollable)).first,
         )
         .position;
-    await tester.fling(page, const Offset(0, -2000), 3000);
-    for (var frame = 0; frame < 60; frame++) {
+    expect(position.maxScrollExtent, greaterThan(100));
+    // Slows into the end and rests there: not past it by a pixel, and
+    // never back.
+    await tester.fling(page, const Offset(0, -60), 4000);
+    var last = position.pixels;
+    for (var frame = 0; frame < 90; frame++) {
       await tester.pump(const Duration(milliseconds: 16));
-      expect(position.pixels, lessThanOrEqualTo(position.maxScrollExtent));
+      expect(position.pixels, lessThan(position.maxScrollExtent + 1));
+      expect(position.pixels, greaterThan(last - 1));
+      last = position.pixels;
     }
+    expect(position.pixels, closeTo(position.maxScrollExtent, 1));
     final pull = await tester.startGesture(
-      tester.getTopLeft(page) + const Offset(200, 200),
+      tester.getTopLeft(page) + const Offset(200, 400),
     );
-    await pull.moveBy(const Offset(0, -1000));
+    await pull.moveBy(const Offset(0, -20));
+    await pull.moveBy(const Offset(0, -200));
     await tester.pump();
-    expect(position.pixels, position.maxScrollExtent);
+    expect(position.pixels, greaterThan(position.maxScrollExtent));
     await pull.up();
     await tester.pumpAndSettle();
+    expect(position.pixels, position.maxScrollExtent);
 
     position.jumpTo(0);
     await tester.pump();

@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../../../app/theme/app_theme.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
@@ -130,16 +133,16 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
       _filter = CalendarFilter.all;
       _members = {};
     });
-    Widget filters({required bool wide}) => _CalendarFilters(
-      wide: wide,
+    void toggleMember(String value) => setState(
+      () => _members = _members.contains(value)
+          ? ({..._members}..remove(value))
+          : {..._members, value},
+    );
+    Widget filters() => _CalendarFilters(
       filter: _filter,
       members: _members,
       onFilter: (value) => setState(() => _filter = value),
-      onMember: (value) => setState(
-        () => _members = _members.contains(value)
-            ? ({..._members}..remove(value))
-            : {..._members, value},
-      ),
+      onMember: toggleMember,
       onReset: reset,
     );
     Widget agenda({required bool scrollable, bool segments = true}) => _Agenda(
@@ -198,7 +201,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                         child: heading,
                       ),
                       AppCard(
-                        padding: const EdgeInsets.fromLTRB(0, 6, 0, 10),
+                        padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
                         child: Column(
                           children: [
                             monthHeader(),
@@ -212,8 +215,25 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      filters(wide: true),
+                      const SizedBox(height: 12),
+                      _MonthOverview(
+                        events: (snapshot.valueOrNull?.events ?? const [])
+                            .where((event) {
+                              final start = CalendarTime.dayOf(
+                                event.start,
+                                allDay: event.allDay,
+                              );
+                              return !event.isCancelled &&
+                                  start.year == month.year &&
+                                  start.month == month.month;
+                            })
+                            .toList(),
+                        filter: _filter,
+                        members: _members,
+                        onFilter: (value) => setState(() => _filter = value),
+                        onMember: toggleMember,
+                        onReset: reset,
+                      ),
                     ],
                   ),
                 ),
@@ -254,7 +274,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                   horizontal: AppTokens.gutter(constraints.maxWidth),
                 ),
                 child: AppCard(
-                  padding: const EdgeInsets.fromLTRB(0, 6, 0, 10),
+                  padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
                   child: Column(
                     children: [
                       monthHeader(collapsible: true),
@@ -329,7 +349,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                 child: _filtersOpen
                     ? Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: filters(wide: false),
+                        child: filters(),
                       )
                     : QuerySummary(
                         padding: EdgeInsets.fromLTRB(
@@ -382,7 +402,8 @@ class _MonthHeader extends StatelessWidget {
   final bool collapsible;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8),
+    // Clear of the card's rounded corners, not tucked into them.
+    padding: const EdgeInsets.symmetric(horizontal: 12),
     child: Row(
       children: [
         AppButton.icon(
@@ -421,14 +442,12 @@ class _MonthHeader extends StatelessWidget {
 
 class _CalendarFilters extends StatelessWidget {
   const _CalendarFilters({
-    required this.wide,
     required this.filter,
     required this.members,
     required this.onFilter,
     required this.onMember,
     required this.onReset,
   });
-  final bool wide;
   final CalendarFilter filter;
   final Set<String> members;
   final ValueChanged<CalendarFilter> onFilter;
@@ -456,21 +475,14 @@ class _CalendarFilters extends StatelessWidget {
           onSelected: (_) => onMember(name),
         ),
     ];
-    Widget row(List<Widget> children) => wide
-        ? Wrap(spacing: 6, runSpacing: 4, children: children)
-        : HorizontalChoices(children: children);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          row(types),
+          HorizontalChoices(children: types),
           const SizedBox(height: 4),
-          if (wide) ...[
-            Text('成员', style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 4),
-          ],
-          row(roles),
+          HorizontalChoices(children: roles),
           if (filter != CalendarFilter.all || members.isNotEmpty)
             AppButton(
               onPressed: onReset,
@@ -483,6 +495,193 @@ class _CalendarFilters extends StatelessWidget {
 }
 
 const _chipText = TextStyle(fontSize: 13);
+
+/// The month at a glance beside its grid: how many events it holds, of
+/// which kind, and how many each member has, as a bar in her colour. The
+/// kinds and the rows are the filters too: a tap narrows the dates and the
+/// agenda to them, and tapping again lets go.
+class _MonthOverview extends StatelessWidget {
+  const _MonthOverview({
+    required this.events,
+    required this.filter,
+    required this.members,
+    required this.onFilter,
+    required this.onMember,
+    required this.onReset,
+  });
+
+  /// The month's events that are going ahead, whatever the filters.
+  final List<CalendarEvent> events;
+  final CalendarFilter filter;
+  final Set<String> members;
+  final ValueChanged<CalendarFilter> onFilter;
+  final ValueChanged<String> onMember;
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final ofKind = events
+        .where((event) => CalendarAgenda.visible(event, filter: filter))
+        .toList();
+    final shown = ofKind
+        .where((event) => CalendarAgenda.visible(event, members: members))
+        .length;
+    final counts = {
+      for (final name in EventClassifier.memberAliases.keys)
+        name: ofKind
+            .where((event) => EventClassifier.members(event).contains(name))
+            .length,
+    };
+    final most = counts.values.fold(1, math.max);
+    final filtered = filter != CalendarFilter.all || members.isNotEmpty;
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      const TextSpan(text: '本月 '),
+                      TextSpan(
+                        text: '$shown',
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontFeatures: AppTheme.tabular,
+                        ),
+                      ),
+                      TextSpan(text: filtered ? ' 场符合筛选' : ' 场安排'),
+                    ],
+                  ),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (filtered)
+                AppButton(onPressed: onReset, child: const Text('重置')),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AppSegments<CalendarFilter>(
+            values: CalendarFilter.values,
+            labelOf: (value) => value.label,
+            selected: filter,
+            onChanged: onFilter,
+          ),
+          const SizedBox(height: 10),
+          for (final MapEntry(key: name, value: count) in counts.entries)
+            _MemberShare(
+              name: name,
+              count: count,
+              share: count / most,
+              selected: members.contains(name),
+              onTap: () => onMember(name),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One member's line in the month: her colour, her name, her count as a
+/// bar, and whether the agenda is narrowed to her.
+class _MemberShare extends StatelessWidget {
+  const _MemberShare({
+    required this.name,
+    required this.count,
+    required this.share,
+    required this.selected,
+    required this.onTap,
+  });
+  final String name;
+  final int count;
+  final double share;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tone = MemberTone.of(name, theme.brightness);
+    final motion = appMotion(context, AppTokens.controlMotion);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$name，本月 $count 场',
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? tone.wash : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 40),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                children: [
+                  MemberDots(members: [name], size: 9),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 64,
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: selected ? FontWeight.w700 : null,
+                        color: selected ? tone.text : null,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: SizedBox(
+                        height: 6,
+                        child: ColoredBox(
+                          color: theme.colorScheme.surfaceContainerHigh,
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: AnimatedFractionallySizedBox(
+                              duration: motion,
+                              curve: AppCurves.standard,
+                              widthFactor: share,
+                              heightFactor: 1,
+                              child: ColoredBox(color: tone.color),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '$count',
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontFeatures: AppTheme.tabular,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _DayOrWeek extends StatelessWidget {
   const _DayOrWeek({required this.week, required this.onWeek});
@@ -613,6 +812,11 @@ class _Agenda extends StatelessWidget {
   Widget build(BuildContext context) {
     final from = week ? CalendarAgenda.weekStart(day) : day;
     final until = from.add(Duration(days: week ? 7 : 1));
+    final going = CalendarAgenda.group(
+      events.where((event) => !event.isCancelled),
+      from: from,
+      until: until,
+    ).values.expand((list) => list).toSet().length;
     final children = <Widget>[
       if (segments) ...[
         Align(
@@ -626,21 +830,39 @@ class _Agenda extends StatelessWidget {
       ],
       Row(
         children: [
-          Flexible(
-            child: Semantics(
-              header: true,
-              child: Text(
-                week
-                    ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
-                    : CalendarAgenda.date(day),
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Semantics(
+                    header: true,
+                    child: Text(
+                      week
+                          ? '${CalendarAgenda.date(from)} — ${CalendarAgenda.date(until.subtract(const Duration(days: 1)))}'
+                          : CalendarAgenda.date(day),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ),
+                if (!week) ...[
+                  const SizedBox(width: 10),
+                  _DayTag(day: day, today: today),
+                ],
+              ],
             ),
           ),
-          if (!week) ...[
-            const SizedBox(width: 10),
-            _DayTag(day: day, today: today),
-          ],
+          // How full the day (or week) is, once it is known.
+          if (snapshot.hasValue)
+            Padding(
+              padding: const EdgeInsets.only(left: 12, right: 4),
+              child: Text(
+                '$going 场',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontFeatures: AppTheme.tabular,
+                ),
+              ),
+            ),
         ],
       ),
       const SizedBox(height: 8),
@@ -674,22 +896,39 @@ class _Agenda extends StatelessWidget {
                 const CalendarCacheFailureBanner(),
               if (data.followSyncUnavailable) const CalendarFollowSyncBanner(),
               if (grouped.values.every((list) => list.isEmpty))
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: Text(
-                    '${week ? '这一周' : CalendarAgenda.date(day)}${filtered ? '没有符合条件的安排' : '没有安排'}',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
+                _AgendaCard(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 28),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.event_available_outlined,
+                            size: 28,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${week ? '这一周' : CalendarAgenda.date(day)}${filtered ? '没有符合条件的安排' : '没有安排'}',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               for (final entry in grouped.entries.where(
                 (entry) => entry.value.isNotEmpty,
               )) ...[
                 if (week)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 2),
+                    padding: const EdgeInsets.fromLTRB(4, 14, 0, 6),
                     child: Text(
                       CalendarAgenda.date(entry.key),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -697,16 +936,21 @@ class _Agenda extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Quiet lines: a day with several events reads as a
-                // schedule, not a stack of coloured banners. Today's next
-                // event is the one lifted.
-                for (final event in entry.value)
-                  CalendarAgendaRow(
-                    event: event,
-                    now: entry.key == today ? now : null,
-                    highlight:
-                        entry.key == today && event == nextToday(entry.value),
-                  ),
+                // Quiet lines on one card: a day with several events reads
+                // as a schedule, not a stack of coloured banners. Today's
+                // next event is the one lifted.
+                _AgendaCard(
+                  children: [
+                    for (final event in entry.value)
+                      CalendarAgendaRow(
+                        event: event,
+                        now: entry.key == today ? now : null,
+                        highlight:
+                            entry.key == today &&
+                            event == nextToday(entry.value),
+                      ),
+                  ],
+                ),
               ],
               // A single day also says what comes next, from what is
               // already loaded, so the next event is never a hunt.
@@ -725,9 +969,9 @@ class _Agenda extends StatelessWidget {
                           .toList()
                         ..sort((a, b) => a.start.compareTo(b.start));
                   return [
-                    if (later.isNotEmpty)
+                    if (later.isNotEmpty) ...[
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 2),
+                        padding: const EdgeInsets.fromLTRB(4, 20, 0, 6),
                         child: Text(
                           '之后',
                           style: Theme.of(context).textTheme.titleSmall
@@ -736,8 +980,13 @@ class _Agenda extends StatelessWidget {
                               ),
                         ),
                       ),
-                    for (final event in later.take(3))
-                      CalendarAgendaRow(event: event, showDay: true),
+                      _AgendaCard(
+                        children: [
+                          for (final event in later.take(3))
+                            CalendarAgendaRow(event: event, showDay: true),
+                        ],
+                      ),
+                    ],
                   ];
                 }(),
             ],
@@ -755,6 +1004,21 @@ class _Agenda extends StatelessWidget {
       children: children,
     );
   }
+}
+
+/// A day's events on one card; rows keep [CalendarAgendaRow]'s own
+/// corners, inset so they follow the card's.
+class _AgendaCard extends StatelessWidget {
+  const _AgendaCard({required this.children});
+  final List<Widget> children;
+  @override
+  Widget build(BuildContext context) => AppCard(
+    padding: const EdgeInsets.all(6),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    ),
+  );
 }
 
 /// Beside a day's heading: 今天, 明天 or the day of the week.

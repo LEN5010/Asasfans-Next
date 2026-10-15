@@ -90,10 +90,12 @@ class _MediaCardSurfaceState extends State<MediaCardSurface> {
 }
 
 /// The same interaction as [MediaCardSurface] without its visible frame:
-/// tap, long-press, right-click, and four states that never wash over the
-/// words. Under the pointer a work gets a hairline edge; under keyboard
-/// focus a clear ring, so the two are told apart; a press sinks a work in
-/// a little. An entry without a tap of its own (selectable prose) shows no
+/// tap, long-press, right-click, and states drawn just outside the work,
+/// never over its words. Under the pointer a soft plate appears around it
+/// and a press deepens the plate; keyboard focus is a clear ring. Plate and
+/// ring stand [outset] clear of the work, with corners following its own,
+/// so a title never sits on an edge. A press also sinks the work in a
+/// little. An entry without a tap of its own (selectable prose) shows no
 /// hover and no press at all: nothing there is a button.
 class MediaActionRegion extends StatefulWidget {
   const MediaActionRegion({
@@ -112,6 +114,11 @@ class MediaActionRegion extends StatefulWidget {
   /// Whether a press sinks the region in. Off for tall reading entries,
   /// where scaling a block of text only blurs it.
   final bool pressScale;
+
+  /// How far the plate and ring stand outside the work; less than half the
+  /// narrowest gap between works, so a neighbour is never overlapped.
+  static const outset = 6.0;
+
   @override
   State<MediaActionRegion> createState() => _MediaActionRegionState();
 }
@@ -121,49 +128,90 @@ class _MediaActionRegionState extends State<MediaActionRegion> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final radius = BorderRadius.circular(widget.radius);
     final motion = AppGlassScope.of(context).canAnimate
         ? AppTokens.pressMotion
         : Duration.zero;
     // Without a tap there is nothing to activate: no focus stop, no hover
     // and no press, so resting a pointer on prose changes nothing.
     final tappable = widget.onTap != null;
+    final plate = !tappable
+        ? 0.0
+        : pressed
+        ? .09
+        : hovered
+        ? .05
+        : 0.0;
     return AnimatedScale(
       scale: pressed && tappable && widget.pressScale ? .97 : 1,
       duration: motion,
       curve: AppCurves.standard,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: radius,
-          canRequestFocus: tappable,
-          // States are drawn as an edge below, never as a grey block.
-          hoverColor: Colors.transparent,
-          focusColor: Colors.transparent,
-          highlightColor: tappable ? null : Colors.transparent,
-          splashFactory: tappable ? null : NoSplash.splashFactory,
-          onTap: widget.onTap,
-          onLongPress: widget.onMore,
-          onSecondaryTap: widget.onMore,
-          onHover: tappable ? (value) => setState(() => hovered = value) : null,
-          onHighlightChanged: (value) => setState(() => pressed = value),
-          onFocusChange: (value) => setState(() => focused = value),
-          child: DecoratedBox(
-            position: DecorationPosition.foreground,
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              border: focused
-                  ? Border.all(color: colors.primary, width: 2)
-                  : hovered
-                  ? Border.all(color: colors.primary.withValues(alpha: .32))
-                  : null,
-            ),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(end: plate),
+        duration: motion * 2,
+        curve: AppCurves.standard,
+        builder: (context, alpha, child) => CustomPaint(
+          painter: _RegionStatePainter(
+            fill: colors.onSurface.withValues(alpha: alpha),
+            ring: focused ? colors.primary : null,
+            radius: widget.radius,
+          ),
+          child: child,
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            canRequestFocus: tappable,
+            // States are the plate and ring, never a block over the words.
+            overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+            splashFactory: NoSplash.splashFactory,
+            onTap: widget.onTap,
+            onLongPress: widget.onMore,
+            onSecondaryTap: widget.onMore,
+            onHover: tappable
+                ? (value) => setState(() => hovered = value)
+                : null,
+            onHighlightChanged: (value) => setState(() => pressed = value),
+            onFocusChange: (value) => setState(() => focused = value),
             child: widget.child,
           ),
         ),
       ),
     );
   }
+}
+
+class _RegionStatePainter extends CustomPainter {
+  const _RegionStatePainter({
+    required this.fill,
+    required this.ring,
+    required this.radius,
+  });
+  final Color fill;
+  final Color? ring;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const outset = MediaActionRegion.outset;
+    final shape = RRect.fromRectAndRadius(
+      (Offset.zero & size).inflate(outset),
+      Radius.circular(radius + outset),
+    );
+    if (fill.a > 0) canvas.drawRRect(shape, Paint()..color = fill);
+    if (ring != null) {
+      canvas.drawRRect(
+        shape.deflate(1),
+        Paint()
+          ..color = ring!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RegionStatePainter old) =>
+      old.fill != fill || old.ring != ring || old.radius != radius;
 }
 
 /// The card's trailing action, pinned to its bottom-right corner. Caption rows

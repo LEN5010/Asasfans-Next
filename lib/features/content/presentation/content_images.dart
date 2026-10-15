@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/media_image_policy.dart';
@@ -58,8 +60,11 @@ class ContentAvatar extends StatelessWidget {
   }
 }
 
-/// A single image keeps its ratio; sets use an uncropped contact sheet. All
-/// thumbnails open the existing original-size viewer, including long images.
+/// A single image keeps its ratio inside a bounded box, so a portrait photo
+/// is not as tall as the screen; a very long one shows its top with a 长图
+/// mark. Sets are a contact sheet of square cells at a thumbnail size, not
+/// stretched across the column. All thumbnails open the existing
+/// original-size viewer, including long images.
 class ContentImageGallery extends StatelessWidget {
   const ContentImageGallery({
     super.key,
@@ -71,11 +76,23 @@ class ContentImageGallery extends StatelessWidget {
   final Map<Uri, double> aspectRatios;
   final bool preview;
 
+  /// The box a single image fits in, and the width of a set's sheet.
+  static const singleBound = 400.0;
+  static const sheetWidth = 420.0;
+
+  /// Narrower than 3:4, an image is a long one: its top is shown.
+  static const longRatio = 3 / 4;
+
   @override
   Widget build(BuildContext context) {
     if (images.isEmpty) return const SizedBox.shrink();
     Widget image(int index, {bool square = false}) {
       final uri = images[index];
+      final ratio = aspectRatios[uri];
+      final long = !square && !preview && ratio != null && ratio < longRatio;
+      // A lone image of unknown shape takes its own once loaded, within
+      // the bound; every other image fills the width it is given.
+      final free = !square && !preview && ratio == null;
       // Decoded for the width it is drawn at; the viewer opens the original.
       final photo = LayoutBuilder(
         builder: (context, constraints) => Image(
@@ -84,15 +101,21 @@ class ContentImageGallery extends StatelessWidget {
             logicalWidth: constraints.maxWidth,
             devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
           ),
-          width: double.infinity,
-          fit: square || preview ? BoxFit.contain : BoxFit.fitWidth,
-          errorBuilder: (_, _, _) => const SizedBox(
+          width: free ? null : double.infinity,
+          height: long ? double.infinity : null,
+          fit: square || long
+              ? BoxFit.cover
+              : preview
+              ? BoxFit.contain
+              : BoxFit.fitWidth,
+          alignment: long ? Alignment.topCenter : Alignment.center,
+          errorBuilder: (_, _, _) => SizedBox(
+            width: free ? singleBound / 2 : null,
             height: 100,
-            child: Center(child: Icon(Icons.broken_image_outlined)),
+            child: const Center(child: Icon(Icons.broken_image_outlined)),
           ),
         ),
       );
-      final ratio = aspectRatios[uri];
       return Semantics(
         button: true,
         label: '查看图片 ${index + 1}，共 ${images.length} 张',
@@ -116,11 +139,15 @@ class ContentImageGallery extends StatelessWidget {
                         ? 1
                         : preview
                         ? 16 / 9
+                        : long
+                        ? longRatio
                         : ratio!,
                     child: photo,
                   )
                 else
                   photo,
+                if (long)
+                  const Positioned(right: 8, bottom: 8, child: _Mark('长图')),
                 if (index == 8 && images.length > 9)
                   Positioned.fill(
                     child: ColoredBox(
@@ -171,12 +198,34 @@ class ContentImageGallery extends StatelessWidget {
         ],
       );
     }
-    if (images.length == 1) return image(0);
+    if (images.length == 1) {
+      // Within a square bound, at the image's own shape: a wide photo
+      // is as wide as the bound, a tall one as tall as it.
+      final ratio = aspectRatios[images.first];
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: ratio == null
+                ? singleBound
+                : singleBound * math.min(1, math.max(ratio, longRatio)),
+            maxHeight: ratio == null ? singleBound : double.infinity,
+          ),
+          child: image(0),
+        ),
+      );
+    }
     final count = images.length.clamp(0, 9);
     final columns = count == 2 || count == 4 ? 2 : 3;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = (constraints.maxWidth - (columns - 1) * 6) / columns;
+        // Two columns keep the cell size of three, so a pair is no larger
+        // per picture than a set of nine.
+        final sheet = math.min(constraints.maxWidth, sheetWidth);
+        final cell = (sheet - 2 * 6) / 3;
+        final width = columns == 3
+            ? cell
+            : math.min(cell * 1.25, (constraints.maxWidth - 6) / 2);
         return Wrap(
           spacing: 6,
           runSpacing: 6,
@@ -188,4 +237,26 @@ class ContentImageGallery extends StatelessWidget {
       },
     );
   }
+}
+
+/// A small dark label on a picture's corner.
+class _Mark extends StatelessWidget {
+  const _Mark(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Colors.black54,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: Colors.white),
+      ),
+    ),
+  );
 }
