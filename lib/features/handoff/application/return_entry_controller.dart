@@ -19,6 +19,7 @@ import '../domain/return_session.dart';
 class ReturnEntryController extends ChangeNotifier {
   ReturnEntryController(this._service) {
     _taps = _service.taps.listen(_onTap);
+    unawaited(_restoreOptIn());
   }
 
   final ReturnEntryService _service;
@@ -31,6 +32,10 @@ class ReturnEntryController extends ChangeNotifier {
   /// True while the user is away at the system permission screen, so the
   /// resume it produces is not mistaken for a return from Bilibili.
   bool _awaitingPermission = false;
+
+  /// True once the user has switched it on or off in this run, so a stored
+  /// choice still being read cannot overwrite the newer one.
+  bool _chosen = false;
 
   /// Set when the user turns the entry on. Without an explicit opt-in no
   /// overlay is ever created, whatever the permission state happens to be.
@@ -55,6 +60,16 @@ class ReturnEntryController extends ChangeNotifier {
   /// context the tap refers to; the controller itself does no navigation.
   void Function(String sessionId)? onReturnRequested;
 
+  /// Brings back the opt-in from an earlier run. Only the choice is kept: a
+  /// permission revoked while the app was closed leaves the switch off.
+  Future<void> _restoreOptIn() async {
+    if (!await _service.readEnabled() || _closed || _chosen) return;
+    final capability = await refreshCapability();
+    if (_closed || _chosen) return;
+    enabled = capability.available;
+    _notify();
+  }
+
   Future<ReturnEntryCapability> refreshCapability() async {
     final result = await _service.capability();
     if (_closed) return result;
@@ -71,10 +86,12 @@ class ReturnEntryController extends ChangeNotifier {
   /// blocking the app and re-prompting in a loop, so a denied request simply
   /// reports the current state.
   Future<bool> enable() async {
+    _chosen = true;
     final capability = await refreshCapability();
     if (capability.available) {
       enabled = true;
       _notify();
+      await _service.writeEnabled(true);
       return true;
     }
     if (capability.block != ReturnEntryBlock.permissionMissing) {
@@ -103,10 +120,13 @@ class ReturnEntryController extends ChangeNotifier {
     final capability = await refreshCapability();
     enabled = capability.available;
     _notify();
+    await _service.writeEnabled(enabled);
   }
 
   void disable() {
+    _chosen = true;
     enabled = false;
+    unawaited(_service.writeEnabled(false));
     unawaited(_end(ReturnEntryEnd.dismissed));
   }
 

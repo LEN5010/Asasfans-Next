@@ -65,6 +65,12 @@ abstract interface class ReturnEntryService {
   /// Removes the entry and stops the service backing it.
   Future<void> hide();
 
+  /// The user's opt-in from an earlier run, kept on this device only.
+  Future<bool> readEnabled();
+
+  /// Remembers the opt-in. False when it could not be stored.
+  Future<bool> writeEnabled(bool enabled);
+
   /// Fires when the user taps the entry, carrying the session id it was shown
   /// with. A session id that does not match the live one is ignored by the
   /// listener, so a stale entry cannot drive a restore.
@@ -92,6 +98,12 @@ class UnsupportedReturnEntryService implements ReturnEntryService {
 
   @override
   Future<void> hide() async {}
+
+  @override
+  Future<bool> readEnabled() async => false;
+
+  @override
+  Future<bool> writeEnabled(bool enabled) async => false;
 
   @override
   Stream<String> get taps => const Stream.empty();
@@ -172,6 +184,31 @@ class AndroidReturnEntryService implements ReturnEntryService {
       // that is not there is not an error worth surfacing.
     } on MissingPluginException {
       // Nothing to hide.
+    }
+  }
+
+  @override
+  Future<bool> readEnabled() async {
+    try {
+      return await _methods.invokeMethod<bool>('readEnabled') ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> writeEnabled(bool enabled) async {
+    try {
+      return await _methods.invokeMethod<bool>('writeEnabled', {
+            'enabled': enabled,
+          }) ??
+          false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
     }
   }
 

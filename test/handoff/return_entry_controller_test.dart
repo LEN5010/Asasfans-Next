@@ -15,6 +15,7 @@ class FakeReturnEntryService implements ReturnEntryService {
   ReturnEntryBlock? block;
   int permissionRequests = 0;
   int hides = 0;
+  bool stored = false;
   final shown = <String>[];
   final _taps = StreamController<String>.broadcast();
 
@@ -41,6 +42,15 @@ class FakeReturnEntryService implements ReturnEntryService {
 
   @override
   Future<void> hide() async => hides++;
+
+  @override
+  Future<bool> readEnabled() async => stored;
+
+  @override
+  Future<bool> writeEnabled(bool enabled) async {
+    stored = enabled;
+    return true;
+  }
 
   @override
   Stream<String> get taps => _taps.stream;
@@ -112,6 +122,27 @@ void main() {
         // One request per explicit user action: no loop back to the permission
         // screen just because the answer was no.
         expect(service.permissionRequests, 1);
+      },
+    );
+
+    test(
+      'the choice survives a restart, but not a revoked permission',
+      () async {
+        await controller.enable();
+        final next = ReturnEntryController(service);
+        await pumpEventQueue();
+        expect(next.enabled, isTrue);
+        next.dispose();
+
+        service.available = false;
+        final revoked = ReturnEntryController(service);
+        await pumpEventQueue();
+        expect(revoked.enabled, isFalse);
+        revoked.dispose();
+
+        controller.disable();
+        await pumpEventQueue();
+        expect(service.stored, isFalse);
       },
     );
   });

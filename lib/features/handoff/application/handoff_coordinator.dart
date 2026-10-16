@@ -50,9 +50,8 @@ abstract final class BilibiliTargets {
 
 /// Owns one trip out to Bilibili and the context needed to come back.
 ///
-/// Separate from [ExternalLinkService], which stays a plain "open this https
-/// URL" boundary. Widening that service to understand one platform's scheme
-/// would make every tools link inherit the exemption.
+/// Separate from [ExternalLinkService], which only takes https URLs and on a
+/// phone tries the Bilibili app for the few Bilibili page shapes it knows.
 class HandoffCoordinator extends ChangeNotifier {
   HandoffCoordinator(
     this._links,

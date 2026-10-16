@@ -28,6 +28,10 @@ class ReturnEntryBridge(
         private const val CHANNEL = "asasfans.next/return_entry"
     }
 
+    /// Only the user's opt-in, kept on this device so it survives the process.
+    /// Whether it can still be honoured is asked again every time.
+    private val optIn = activity.getSharedPreferences("return_entry", Context.MODE_PRIVATE)
+
     private val methods = MethodChannel(messenger, CHANNEL)
     private val events = EventChannel(messenger, "$CHANNEL/taps")
     private var taps: EventChannel.EventSink? = null
@@ -51,6 +55,12 @@ class ReturnEntryBridge(
                 "hide" -> {
                     hide()
                     result.success(null)
+                }
+                "readEnabled" -> result.success(optIn.getBoolean("enabled", false))
+                "writeEnabled" -> {
+                    result.success(
+                        optIn.edit().putBoolean("enabled", call.argument<Boolean>("enabled") == true).commit()
+                    )
                 }
                 else -> result.notImplemented()
             }
