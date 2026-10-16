@@ -173,27 +173,12 @@ void main() {
     expect(plainNotes(release.notes), '更新\n\n• 新功能');
   });
 
-  test(
-    'Windows installer URLs match release asset names and preserve tags',
-    () {
-      for (final tag in ['v3.0.1', 'v3.1.0-beta.1']) {
-        final release = ReleaseSource.decodeGithub([_json(tag)]).single;
-        expect(
-          release.windowsInstaller.toString(),
-          'https://github.com/LEN5010/Asasfans-Next/releases/download/'
-          '$tag/Asasfans-Next-$tag-windows-x64-setup.exe',
-        );
-        final fromFeed = ReleaseSource.decodeFeed({
-          'releases': [
-            {'version': tag, 'page': release.page.toString()},
-          ],
-        }).single;
-        expect(fromFeed.windowsInstaller, release.windowsInstaller);
-      }
-    },
-  );
-
-  for (final platform in [TargetPlatform.windows, TargetPlatform.macOS]) {
+  for (final platform in [
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+    TargetPlatform.macOS,
+    TargetPlatform.windows,
+  ]) {
     testWidgets('$platform update opens its download destination', (
       tester,
     ) async {
@@ -216,11 +201,16 @@ void main() {
       );
       await tester.tap(find.text('更新'));
       await tester.pumpAndSettle();
-      final windows = platform == TargetPlatform.windows;
-      expect(find.text('发布页面'), windows ? findsOneWidget : findsNothing);
-      await tester.tap(find.text(windows ? '下载安装包' : '前往下载'));
+      expect(find.text('发布页面'), findsOneWidget);
+      await tester.tap(find.text('前往下载'));
       await tester.pumpAndSettle();
-      expect(links.opened, [windows ? release.windowsInstaller : release.page]);
+      final name = {
+        TargetPlatform.android: 'android',
+        TargetPlatform.iOS: 'ios',
+        TargetPlatform.macOS: 'macos',
+        TargetPlatform.windows: 'windows',
+      }[platform];
+      expect(links.opened, [Uri.parse('https://len5010.top/download?p=$name')]);
       expect(find.byType(AlertDialog), findsNothing);
     }, variant: TargetPlatformVariant({platform}));
   }

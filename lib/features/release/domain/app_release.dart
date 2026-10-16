@@ -81,26 +81,6 @@ class AppRelease {
   final String notes;
   final bool preRelease;
   final DateTime? publishedAt;
-
-  /// Matches the asset name produced by Flutter Release. The cached feed only
-  /// carries the release page, so this uses the same tag without another API call.
-  Uri? get windowsInstaller {
-    final parts = page.pathSegments;
-    if (page.host != 'github.com' ||
-        parts.length != 5 ||
-        parts.take(4).join('/') != 'LEN5010/Asasfans-Next/releases/tag') {
-      return null;
-    }
-    final tag = parts.last;
-    return page.replace(
-      pathSegments: [
-        ...parts.take(3),
-        'download',
-        tag,
-        'Asasfans-Next-$tag-windows-x64-setup.exe',
-      ],
-    );
-  }
 }
 
 /// The newest release above [current] that this build should be offered,

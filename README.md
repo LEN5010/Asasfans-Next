@@ -48,7 +48,7 @@
 
 ## 下载
 
-在 [Releases](https://github.com/LEN5010/Asasfans-Next/releases/latest) 页面下载对应平台的文件。
+在 [Releases](https://github.com/LEN5010/Asasfans-Next/releases/latest) 页面下载对应平台的文件；访问不了 GitHub 时到 [len5010.top/download](https://len5010.top/download) 下载，同样的文件和校验值。
 
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
@@ -59,7 +59,7 @@
 
 如果 macOS 提示「已损坏，无法打开」，在终端执行 `xattr -dr com.apple.quarantine "/Applications/Asasfans Next.app"` 后再打开。每个安装文件都附带一个 `.sha256` 校验文件。
 
-Windows 安装器安装到当前用户目录，提供开始菜单入口、可选桌面快捷方式和卸载入口。之后收到更新提示，点「下载安装包」，关闭应用后运行新版安装器即可覆盖更新。收藏与设置保存在应用数据目录，安装和卸载均不删除它们。
+Windows 安装器安装到当前用户目录，提供开始菜单入口、可选桌面快捷方式和卸载入口。之后收到更新提示，点「前往下载」打开 [len5010.top/download](https://len5010.top/download) 下载新版安装器，关闭应用后运行即可覆盖更新。收藏与设置保存在应用数据目录，安装和卸载均不删除它们。
 
 3.0 是用 Flutter 重写的版本。原生 Android 版的最后一版是 [v2.0.0](https://github.com/LEN5010/Asasfans-Next/releases/tag/v2.0.0)，源码保存在该标签和 `old` 分支里。2.0 里的收藏和订阅不会迁移到 3.0，屏蔽规则也不会。
 

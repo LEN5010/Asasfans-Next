@@ -78,6 +78,12 @@ Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// The site's download page with this platform picked; it offers mirrors
+/// for networks that cannot reach GitHub.
+@visibleForTesting
+Uri downloadPage(TargetPlatform platform) =>
+    Uri.https('len5010.top', '/download', {'p': platform.name.toLowerCase()});
+
 Future<void> showReleaseDialog(BuildContext context, AppRelease release) =>
     showDialog<void>(
       context: context,
@@ -93,9 +99,6 @@ class _ReleaseDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final date = release.publishedAt?.toLocal();
     final notes = plainNotes(release.notes);
-    final installer = defaultTargetPlatform == TargetPlatform.windows
-        ? release.windowsInstaller
-        : null;
     return AlertDialog(
       icon: const Icon(Icons.system_update_outlined),
       title: Text('新版本 ${release.version}'),
@@ -131,15 +134,15 @@ class _ReleaseDialog extends ConsumerWidget {
           onPressed: () => Navigator.pop(context),
           child: const Text('稍后'),
         ),
-        if (installer != null)
-          AppButton(
-            onPressed: () => _open(context, ref, release.page),
-            child: const Text('发布页面'),
-          ),
+        AppButton(
+          onPressed: () => _open(context, ref, release.page),
+          child: const Text('发布页面'),
+        ),
         AppButton(
           selected: true,
-          onPressed: () => _open(context, ref, installer ?? release.page),
-          child: Text(installer == null ? '前往下载' : '下载安装包'),
+          onPressed: () =>
+              _open(context, ref, downloadPage(defaultTargetPlatform)),
+          child: const Text('前往下载'),
         ),
       ],
     );
