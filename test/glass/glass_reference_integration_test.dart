@@ -162,7 +162,7 @@ void main() {
       expect(selections, [1, 2]);
 
       // Tools is a separate action, never a tab the indicator can reach.
-      expect(bar().tabs, hasLength(4));
+      expect(bar().tabs, hasLength(5));
       bar().extraButton!.onTap();
       await tester.pumpAndSettle();
       expect(opens, 1);
