@@ -178,9 +178,8 @@ void main() {
       expect(tiles, hasLength(2));
       expect(tiles[0].top, tiles[1].top);
       expect(tiles[0].height, closeTo(tiles[1].height, 1));
-      // Works lead clips; the archive follows today's own content.
-      expect(tiles.first.bottom, lessThan(clip.top));
-      expect(tester.getTopLeft(find.text('历史上的今天')).dy, greaterThan(clip.top));
+      expect(tester.getTopLeft(find.text('历史上的今天')).dy, lessThan(clip.top));
+      expect(clip.bottom, lessThan(works.top));
       // Events stay one per line, not side by side.
       expect(
         tester.getTopLeft(find.text('今日歌会')).dx,
@@ -200,14 +199,12 @@ void main() {
     await tester.pumpWidget(_host(_Calendar()..items = [_event('今日歌会', 21)]));
     await tester.pumpAndSettle();
     final event = tester.getRect(find.text('今日歌会'));
-    final works = tester.getRect(find.text('随机二创'));
-    // The works follow the one line within a section gap or two, whatever
-    // the window's height.
-    expect(works.top - event.bottom, lessThan(120));
+    final history = tester.getRect(find.text('历史上的今天'));
+    expect(history.top - event.bottom, lessThan(120));
     expect(tester.getRect(find.byType(FanartCard)).left, closeTo(24, 1));
   });
 
-  testWidgets('a phone puts works before clips and both before the archive', (
+  testWidgets('a phone puts history before clips and random works last', (
     tester,
   ) async {
     _size(tester, const Size(390, 2400));
@@ -218,9 +215,9 @@ void main() {
     final fanart = tester.getTopLeft(find.text('随机二创')).dy;
     final clips = tester.getTopLeft(find.text('最新切片')).dy;
     final history = tester.getTopLeft(find.text('历史上的今天')).dy;
-    expect(schedule, lessThan(fanart));
-    expect(fanart, lessThan(clips));
-    expect(clips, lessThan(history));
+    expect(schedule, lessThan(history));
+    expect(history, lessThan(clips));
+    expect(clips, lessThan(fanart));
   });
 
   testWidgets(

@@ -88,6 +88,49 @@ Widget _app(FanartRepository repository) => ProviderScope(
 
 void main() {
   testWidgets(
+    'wide fanart filters expand inline and only apply on confirmation',
+    (tester) async {
+      tester.view
+        ..physicalSize = const Size(1280, 1000)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final repository = _StubRepository(pages: 1);
+      await tester.pumpWidget(_app(repository));
+      await tester.pumpAndSettle();
+      final calls = repository.requests;
+      await tester.tap(find.byTooltip('筛选'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<FanartFilterPanel>(find.byType(FanartFilterPanel))
+            .embedded,
+        isTrue,
+      );
+      expect(find.byType(Dialog), findsNothing);
+      expect(find.byType(BottomSheet), findsNothing);
+      final video = find.widgetWithText(AppChoice, '视频');
+      await tester.tap(video);
+      await tester.pumpAndSettle();
+      expect(repository.requests, calls);
+      await tester.tap(find.widgetWithText(AppButton, '取消'));
+      await tester.pumpAndSettle();
+      expect(find.byType(FanartFilterPanel), findsNothing);
+      expect(repository.requests, calls);
+      await tester.tap(find.byTooltip('筛选'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<AppChoice>(video).selected, isFalse);
+      await tester.tap(video);
+      await tester.tap(find.widgetWithText(AppChoice, '播放最多'));
+      await tester.tap(find.widgetWithText(AppButton, '应用筛选'));
+      await tester.pumpAndSettle();
+      expect(repository.requests, calls + 1);
+      expect(repository.queries.last.contentType, FanartContentType.video);
+      expect(repository.queries.last.sort, FanartSort.views);
+      expect(find.byType(FanartFilterPanel), findsNothing);
+    },
+  );
+
+  testWidgets(
     'Density: fanart stays compact across widths and menus remain usable',
     (tester) async {
       tester.view

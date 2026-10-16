@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:asasfans_next/features/content/presentation/dynamic_card.dart';
 import 'package:asasfans_next/features/content/presentation/dynamic_rich_text.dart';
 import '../helpers/library_fixture.dart';
@@ -60,6 +62,55 @@ Widget _app(DynamicRepository repository) => ProviderScope(
 );
 
 void main() {
+  testWidgets('history starts at its first card after the page has scrolled', (
+    tester,
+  ) async {
+    final pending = Completer<List<DynamicPost>>();
+    final pageScroll = ScrollController();
+    addTearDown(pageScroll.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...offlineLibrary(),
+          onThisDayProvider.overrideWith((ref) => pending.future),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              key: const PageStorageKey('today-scroll'),
+              controller: pageScroll,
+              child: const Column(
+                children: [
+                  SizedBox(height: 400),
+                  OnThisDaySection(inset: EdgeInsets.symmetric(horizontal: 24)),
+                  SizedBox(height: 800),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    pageScroll.jumpTo(240);
+    await tester.pump();
+    pending.complete([for (var i = 0; i < 8; i++) _post('$i')]);
+    await tester.pumpAndSettle();
+    final shelf = tester
+        .state<ScrollableState>(
+          find.descendant(
+            of: find.byType(OnThisDaySection),
+            matching: find.byType(Scrollable),
+          ),
+        )
+        .position;
+    expect(shelf.pixels, 0);
+    expect(
+      tester.getTopLeft(find.byType(DynamicCard).first).dx,
+      tester.getTopLeft(find.text('历史上的今天')).dx,
+    );
+  });
+
   testWidgets('UI UX: history cards retain original body and Shanghai year', (
     tester,
   ) async {

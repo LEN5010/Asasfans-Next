@@ -169,6 +169,8 @@ class _OnThisDaySectionState extends ConsumerState<OnThisDaySection> {
                         // The endpoint supplies at most eight history items,
                         // so equal heights may measure every card.
                         return SingleChildScrollView(
+                          // This shelf must not restore the page's vertical offset.
+                          key: const PageStorageKey('today-history-shelf'),
                           controller: _scroll,
                           scrollDirection: Axis.horizontal,
                           padding: widget.inset,

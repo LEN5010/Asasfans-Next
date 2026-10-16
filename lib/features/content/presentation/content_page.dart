@@ -293,6 +293,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
 
   ScrollController get _scrollController => feedScrollController();
   late FanartFeedController _controller;
+  bool _filtersExpanded = false;
 
   @override
   void initState() {
@@ -469,6 +470,7 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
   /// Applying a filter starts a new query generation, so the view returns to
   /// the top rather than keeping an offset that belonged to the old result.
   void _applyQuery(FanartQuery query) {
+    if (_filtersExpanded) setState(() => _filtersExpanded = false);
     _controller.applyQuery(query);
     if (_scrollController.hasClients) _scrollController.jumpTo(0);
   }
@@ -484,49 +486,82 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
     builder: (context, _) {
       final state = _controller.state;
       // Search sits at the head of the feed, as in dynamics and novels.
-      final filters = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: ContentSearchControl.rowWidth,
-                ),
-                child: Row(
-                  spacing: 8,
-                  children: [
-                    Expanded(
-                      child: ContentSearchControl(
-                        value: state.query.keyword,
-                        // Room for the random button on a phone.
-                        hint: MediaQuery.sizeOf(context).width < 480
-                            ? '搜索二创'
-                            : '搜索二创正文或作者',
-                        expanded: true,
-                        onSubmitted: (keyword) =>
-                            _applyQuery(state.query.copyWith(keyword: keyword)),
-                        filter: FanartFilterButton(
-                          query: state.query,
-                          onChanged: _applyQuery,
+      final filters = LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 600;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: ContentSearchControl.rowWidth,
+                    ),
+                    child: Row(
+                      spacing: 8,
+                      children: [
+                        Expanded(
+                          child: ContentSearchControl(
+                            value: state.query.keyword,
+                            // Room for the random button on a phone.
+                            hint: MediaQuery.sizeOf(context).width < 480
+                                ? '搜索二创'
+                                : '搜索二创正文或作者',
+                            expanded: true,
+                            onSubmitted: (keyword) => _applyQuery(
+                              state.query.copyWith(keyword: keyword),
+                            ),
+                            filter: FanartFilterButton(
+                              query: state.query,
+                              onChanged: _applyQuery,
+                              expanded: wide && _filtersExpanded,
+                              onPressed: wide
+                                  ? () => setState(
+                                      () =>
+                                          _filtersExpanded = !_filtersExpanded,
+                                    )
+                                  : null,
+                            ),
+                          ),
                         ),
-                      ),
+                        RandomFanartButton(
+                          query: state.query,
+                          compact: MediaQuery.sizeOf(context).width < 360,
+                        ),
+                        _FanartMoreActions(channel: widget.channel),
+                      ],
                     ),
-                    RandomFanartButton(
-                      query: state.query,
-                      compact: MediaQuery.sizeOf(context).width < 360,
-                    ),
-                    _FanartMoreActions(channel: widget.channel),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          FanartQuickFilters(query: state.query, onChanged: _applyQuery),
-          FanartFilterBar(query: state.query, onChanged: _applyQuery),
-        ],
+              AnimatedSize(
+                duration: appMotion(context, AppTokens.controlMotion),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: !(wide && _filtersExpanded)
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: Card(
+                          child: FanartFilterPanel(
+                            key: ValueKey(state.query),
+                            query: state.query,
+                            embedded: true,
+                            onApply: _applyQuery,
+                            onClose: () =>
+                                setState(() => _filtersExpanded = false),
+                          ),
+                        ),
+                      ),
+              ),
+              FanartQuickFilters(query: state.query, onChanged: _applyQuery),
+              FanartFilterBar(query: state.query, onChanged: _applyQuery),
+            ],
+          );
+        },
       );
       return RuleFilterScope(
         items: state.items,

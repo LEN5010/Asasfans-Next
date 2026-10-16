@@ -97,6 +97,17 @@ void main() {
     tester,
   ) async {
     final container = await pumpVisualApp(tester, view: view);
+    await tester.scrollUntilVisible(
+      find.text('随机二创'),
+      240,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const PageStorageKey('today-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await settleVisual(tester);
     final tile = find.byType(FanartCard).first;
     await tester.runAsync(
       () => Scrollable.ensureVisible(tester.element(tile), alignment: .4),

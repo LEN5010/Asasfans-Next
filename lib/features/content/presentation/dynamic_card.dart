@@ -326,9 +326,13 @@ class DynamicCard extends ConsumerWidget {
             // the bottom instead of floating under a short summary.
             const Spacer(),
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Expanded(child: DynamicStats(post: post, forwards: false)),
+                DynamicStats(post: post, forwards: false),
                 AppButton(onPressed: showFull, child: const Text('查看全文')),
               ],
             ),

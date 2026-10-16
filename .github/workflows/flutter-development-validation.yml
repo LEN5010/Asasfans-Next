@@ -54,11 +54,11 @@ jobs:
           ./tool/flutterw.ps1 --verify-sdk
       - run: flutter pub get --enforce-lockfile
       - name: Build development application
-        run: ${{ fromJSON('{"android":"flutter build apk --debug --no-pub","ios":"flutter build ios --debug --no-codesign --no-pub","macos":"flutter build macos --profile --no-pub","windows":"flutter build windows --release --no-pub"}')[matrix.platform] }}
+        run: ${{ fromJSON('{"android":"flutter build apk --debug --no-pub","ios":"flutter build ios --debug --no-codesign --no-pub","macos":"flutter build macos --profile --no-pub","windows":"flutter build windows --profile --no-pub"}')[matrix.platform] }}
       - name: Package Windows installer
         if: matrix.platform == 'windows'
         shell: pwsh
-        run: ./tool/package_windows.ps1
+        run: ./tool/package_windows.ps1 -Configuration Profile
       - name: Preserve macOS application bundle and executable modes
         if: matrix.platform == 'macos'
         run: tar -czf build/asasfans-development-macos.tar.gz -C build/macos/Build/Products/Profile 'Asasfans Next.app'

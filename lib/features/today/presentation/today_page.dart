@@ -170,9 +170,6 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                   ),
                   spaced: calendar,
                 ),
-                if (showFanart) box(const _WorksSection()),
-                if (showClips) box(const _ClipsSection()),
-                // The archive comes after today's own content.
                 if (history)
                   SliverPadding(
                     padding: gap,
@@ -180,6 +177,8 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
                       child: OnThisDaySection(inset: edge),
                     ),
                   ),
+                if (showClips) box(const _ClipsSection()),
+                if (showFanart) box(const _WorksSection()),
                 // Every module hidden is a choice, not a failure: say so
                 // and point at the setting that undoes it.
                 if (!calendar && !history && !showClips && !showFanart)

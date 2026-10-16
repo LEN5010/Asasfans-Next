@@ -53,7 +53,7 @@
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
 | Android 7.0+ | `-android.apk` | 签名与 2.0 相同，可以直接覆盖安装 |
-| Windows 10+（x64） | `-windows-x64-setup.exe` / `-windows-x64.zip` | 下一版起提供安装器；v3.0.0 请下载 ZIP，完整解压后运行 `asasfans_next.exe` |
+| Windows 10+（x64） | `-windows-x64-setup.exe` / `-windows-x64.zip` | 推荐使用安装器；ZIP 完整解压后运行 `asasfans_next.exe` |
 | macOS 12+ | `-macos.zip` | 未经 Apple 公证，首次打开请右键点应用 → 打开 |
 | iOS 15+ | `-ios-unsigned.ipa` | 未签名，需要用 Sideloadly 或 AltStore 这类工具，以自己的 Apple ID 签名后安装 |
 
@@ -87,7 +87,7 @@ Android 开发包的包名是 `asasfans.next.flutterdev`，可以和正式版同
 所有 workflow 都只能手动触发，推送和 PR 不会触发它们。
 
 - `Flutter Checks` 用固定版本的 SDK 做格式检查和静态分析，勾选 `run_tests` 时再运行全量测试。
-- `Flutter Development Validation` 可选择单个平台，Android 和 iOS 为 Debug 版，macOS 为 Profile 版，Windows 为 Release 模式的开发安装器。这些包都不签名，也不发布。
+- `Flutter Development Validation` 可选择单个平台，Android 和 iOS 为 Debug 版，macOS 和 Windows 为 Profile 版；Windows 提供开发安装器。这些包都不签名，也不发布。
 - `Flutter Release` 为一个已有的版本标签构建四个平台的安装包，Android 版使用正式签名，iOS 版不签名。安装包放进一个草稿 Release，由人确认后再手动发布。
 - `Flutter Performance Validation` 按需构建一个独立包名的 Android 性能测量包，并生成体积报告。
 
