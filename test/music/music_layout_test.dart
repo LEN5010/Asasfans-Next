@@ -70,7 +70,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('搜索歌名'), findsOneWidget);
     expect(find.text(_track.title), findsOneWidget);
-    expect(find.text('B 站'), findsOneWidget);
+    // A phone's card keeps its menu for a long press.
+    await tester.longPress(find.text(_track.title));
+    await tester.pumpAndSettle();
+    expect(find.text('去 B 站搜这首'), findsOneWidget);
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
+    expect(find.text('去 B 站搜这首'), findsNothing);
     // Members who have left wait behind 更多成员.
     expect(find.text('嘉然'), findsOneWidget);
     expect(find.text('向晚'), findsNothing);

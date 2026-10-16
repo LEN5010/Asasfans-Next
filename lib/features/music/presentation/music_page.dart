@@ -115,14 +115,6 @@ class _MusicPageState extends ConsumerState<MusicPage> {
           final narrow = constraints.maxWidth < 600;
           final value = catalog.valueOrNull;
           if (value != null) _filter(value);
-          Widget bounded(Widget child, {double max = AppTokens.readingWidth}) =>
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: max),
-                  child: child,
-                ),
-              );
           final header = Padding(
             padding: EdgeInsets.fromLTRB(
               gutter,
@@ -133,32 +125,35 @@ class _MusicPageState extends ConsumerState<MusicPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                bounded(
-                  RootHeading(
-                    title: '音乐',
-                    actions: [
-                      AppButton.withIcon(
-                        onPressed: () => context.go('/music/favorites'),
-                        icon: const Icon(Icons.favorite_rounded, size: 18),
-                        label: Text(
-                          [narrow ? '收藏' : '收藏的歌', ?kept?.toString()].join(' '),
-                        ),
+                RootHeading(
+                  title: '音乐',
+                  actions: [
+                    AppButton.withIcon(
+                      onPressed: () => context.go('/music/favorites'),
+                      icon: const Icon(Icons.favorite_rounded, size: 18),
+                      label: Text(
+                        [narrow ? '收藏' : '收藏的歌', ?kept?.toString()].join(' '),
                       ),
-                      MusicStudioButton(compact: narrow),
-                    ],
-                  ),
+                    ),
+                    MusicStudioButton(compact: narrow),
+                  ],
                 ),
                 const SizedBox(height: 12),
-                bounded(
-                  max: ContentSearchControl.rowWidth,
-                  SizedBox(
-                    width: double.infinity,
-                    child: ContentSearchControl(
-                      value: _query.keyword,
-                      hint: '搜索歌名',
-                      expanded: true,
-                      onSubmitted: (keyword) =>
-                          _apply(_query.copyWith(keyword: keyword)),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: ContentSearchControl.rowWidth,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ContentSearchControl(
+                        value: _query.keyword,
+                        hint: '搜索歌名',
+                        expanded: true,
+                        onSubmitted: (keyword) =>
+                            _apply(_query.copyWith(keyword: keyword)),
+                      ),
                     ),
                   ),
                 ),
@@ -214,72 +209,68 @@ class _MusicPageState extends ConsumerState<MusicPage> {
           final years = _years(value);
           final sectionHeader = Padding(
             padding: EdgeInsets.fromLTRB(gutter, 16, gutter, 8),
-            child: bounded(
-              Row(
-                children: [
-                  Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        text: _query.keyword.isEmpty ? '歌曲' : '搜索结果',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        children: [
-                          if (value != null)
-                            TextSpan(
-                              text: '  ${_shown.length} 首',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontFeatures: AppTheme.tabular,
-                              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      text: _query.keyword.isEmpty ? '歌曲' : '搜索结果',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      children: [
+                        if (value != null)
+                          TextSpan(
+                            text: '  ${_shown.length} 首',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontFeatures: AppTheme.tabular,
                             ),
-                        ],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  MenuAnchor(
-                    menuChildren: [
-                      for (final year in [null, ...years])
-                        MenuItemButton(
-                          trailingIcon: year == _query.year
-                              ? const Icon(Icons.check, size: 18)
-                              : null,
-                          onPressed: () => _apply(
-                            year == null
-                                ? _query.copyWith(clearYear: true)
-                                : _query.copyWith(year: year),
                           ),
-                          child: Text(year == null ? '全部年份' : '$year 年'),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                MenuAnchor(
+                  menuChildren: [
+                    for (final year in [null, ...years])
+                      MenuItemButton(
+                        trailingIcon: year == _query.year
+                            ? const Icon(Icons.check, size: 18)
+                            : null,
+                        onPressed: () => _apply(
+                          year == null
+                              ? _query.copyWith(clearYear: true)
+                              : _query.copyWith(year: year),
                         ),
-                    ],
-                    builder: (context, menu, _) => AppButton(
-                      selected: _query.year != null,
-                      onPressed: years.isEmpty
-                          ? null
-                          : () => menu.isOpen ? menu.close() : menu.open(),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _query.year == null ? '全部年份' : '${_query.year} 年',
-                          ),
-                          const SizedBox(width: 2),
-                          const Icon(Icons.expand_more, size: 18),
-                        ],
+                        child: Text(year == null ? '全部年份' : '$year 年'),
                       ),
+                  ],
+                  builder: (context, menu, _) => AppButton(
+                    selected: _query.year != null,
+                    onPressed: years.isEmpty
+                        ? null
+                        : () => menu.isOpen ? menu.close() : menu.open(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_query.year == null ? '全部年份' : '${_query.year} 年'),
+                        const SizedBox(width: 2),
+                        const Icon(Icons.expand_more, size: 18),
+                      ],
                     ),
                   ),
-                  AppButton.withIcon(
-                    onPressed: () =>
-                        _apply(_query.copyWith(oldest: !_query.oldest)),
-                    icon: const Icon(Icons.swap_vert_rounded),
-                    label: Text(_query.oldest ? '最早在前' : '最新在前'),
-                  ),
-                ],
-              ),
+                ),
+                AppButton.withIcon(
+                  onPressed: () =>
+                      _apply(_query.copyWith(oldest: !_query.oldest)),
+                  icon: const Icon(Icons.swap_vert_rounded),
+                  label: Text(_query.oldest ? '最早在前' : '最新在前'),
+                ),
+              ],
             ),
           );
           final Widget? placeholder = switch (catalog) {
@@ -336,15 +327,12 @@ class _MusicPageState extends ConsumerState<MusicPage> {
                     sliver: SliverList.separated(
                       itemCount: _shown.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) => bounded(
-                        MusicSongTile(
-                          track: _shown[index],
-                          selected: _shown[index].id == currentId,
-                          // On through the list as it is shown.
-                          onPlay: () => unawaited(
-                            handler.playTracks(_shown, start: index),
-                          ),
-                        ),
+                      itemBuilder: (context, index) => MusicSongTile(
+                        track: _shown[index],
+                        selected: _shown[index].id == currentId,
+                        // On through the list as it is shown.
+                        onPlay: () =>
+                            unawaited(handler.playTracks(_shown, start: index)),
                       ),
                     ),
                   ),

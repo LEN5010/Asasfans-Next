@@ -10,10 +10,8 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/app_controls.dart';
-import '../../../shared/widgets/media_image_policy.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../../shared/widgets/glass/app_glass_navigation.dart';
-import '../../content/application/content_providers.dart';
 import '../../library/application/library_providers.dart';
 import '../../library/presentation/library_common.dart';
 import '../application/music_audio_handler.dart';
@@ -68,11 +66,9 @@ class MusicStudioButton extends ConsumerWidget {
   }
 }
 
-/// A song's cover, made of its singers' account pictures the way
-/// a streaming app makes a playlist's: one fills it, two split it, three or
-/// more tile it. Until a picture loads its tile is the member's initial in
-/// her colour.
-class MusicCover extends ConsumerWidget {
+/// A song's cover without pictures: its singers' colours run corner to
+/// corner under a note, one singer's from her colour to a deeper shade.
+class MusicCover extends StatelessWidget {
   const MusicCover({
     super.key,
     required this.members,
@@ -84,70 +80,33 @@ class MusicCover extends ConsumerWidget {
   final double radius;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final avatars = ref.watch(memberAvatarsProvider);
-    final brightness = Theme.of(context).brightness;
-    final ratio = MediaQuery.devicePixelRatioOf(context);
-    Widget tile(String member, double width) {
-      final tone = MemberTone.of(member, brightness);
-      final fallback = ColoredBox(
-        color: Color.alphaBlend(
-          tone.color.withValues(alpha: .3),
-          brightness == Brightness.dark ? Colors.black : Colors.white,
-        ),
-        child: Center(
-          child: Text(
-            member.characters.first,
-            style: TextStyle(
-              color: tone.text,
-              fontSize: width * .4,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      );
-      final url = avatars[member];
-      return url == null
-          ? fallback
-          : Image(
-              image: MediaImagePolicy.preview(
-                url,
-                logicalWidth: width,
-                devicePixelRatio: ratio,
-              ),
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => fallback,
-            );
-    }
-
-    final half = size / 2;
-    Widget split(Axis axis, List<Widget> children) => Flex(
-      direction: axis,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [for (final child in children) Expanded(child: child)],
-    );
-    final Widget body = switch (members) {
-      [] => tile('A-SOUL', size),
-      [final one] => tile(one, size),
-      [final a, final b] => split(Axis.horizontal, [
-        tile(a, half),
-        tile(b, half),
-      ]),
-      [final a, final b, final c] => split(Axis.horizontal, [
-        tile(a, size),
-        split(Axis.vertical, [tile(b, half), tile(c, half)]),
-      ]),
-      [final a, final b, final c, final d, ...] => split(Axis.vertical, [
-        split(Axis.horizontal, [tile(a, half), tile(b, half)]),
-        split(Axis.horizontal, [tile(c, half), tile(d, half)]),
-      ]),
+  Widget build(BuildContext context) {
+    final tones = [
+      for (final member in members)
+        AppTheme.memberColors[member] ?? AppTheme.dianaPink,
+    ];
+    final colors = switch (tones) {
+      [] => [AppTheme.dianaPink, AppTheme.deepRose],
+      [final one] => [one, Color.lerp(one, Colors.black, .3)!],
+      _ => tones,
     };
     return ExcludeSemantics(
       child: SizedBox.square(
         dimension: size,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
-          child: body,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: colors,
+            ),
+          ),
+          child: Icon(
+            Icons.music_note_rounded,
+            size: size * .42,
+            color: Colors.white.withValues(alpha: .9),
+          ),
         ),
       ),
     );
@@ -586,9 +545,11 @@ class MusicFavoriteButton extends ConsumerWidget {
   }
 }
 
-/// A song as a long card: its singers' cover, the title, who sang it and
-/// when, the heart and the way to B 站. A tap plays from it. Inside a list
-/// that is itself a card, [card] is false.
+/// A song as a long card: a bar in its singers' colours, the title, who
+/// sang it, when and how long, the heart and a round play button. A tap
+/// anywhere plays from it; a long press or a right click opens its menu,
+/// which a wide card also shows a button for. Inside a list that is itself
+/// a card, [card] is false.
 class MusicSongTile extends ConsumerWidget {
   const MusicSongTile({
     super.key,
@@ -606,23 +567,36 @@ class MusicSongTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final content = LayoutBuilder(
+    // [tile] is the card itself, which the menu is placed against.
+    Widget content(BuildContext tile, MenuController menu) => LayoutBuilder(
       builder: (context, constraints) {
+        void openMenu(Offset? at) =>
+            menu.isOpen ? menu.close() : menu.open(position: at);
+        // A phone leaves out the length and the menu button, and the
+        // singers give way before the date does.
         final roomy = constraints.maxWidth >= 480;
-        // A phone keeps the date whole and leaves out the length.
-        final detail = [
-          track.singers,
+        final when = [
           track.dateLabel,
           if (roomy) musicDuration(track.duration),
           if (track.isLive) 'Live',
         ].join(' · ');
+        final detailStyle = theme.textTheme.bodySmall?.copyWith(
+          color: colors.onSurfaceVariant,
+          fontFeatures: AppTheme.tabular,
+        );
         return InkWell(
           onTap: onPlay,
+          onLongPress: () => openMenu(null),
+          onSecondaryTapUp: (details) => openMenu(details.localPosition),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
             child: Row(
               children: [
-                MusicCover(members: track.members, size: 48, radius: 10),
+                MemberBar(
+                  members: track.members,
+                  fallback: AppTheme.dianaPink,
+                  length: 40,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -633,18 +607,18 @@ class MusicSongTile extends ConsumerWidget {
                           if (selected) ...[
                             Icon(
                               Icons.graphic_eq,
-                              size: 16,
+                              size: 18,
                               color: colors.primary,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 6),
                           ],
                           Flexible(
                             child: Text(
                               track.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
                                 color: selected ? colors.primary : null,
                               ),
                             ),
@@ -652,13 +626,32 @@ class MusicSongTile extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        detail,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                          fontFeatures: AppTheme.tabular,
+                      LayoutBuilder(
+                        builder: (context, line) => Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                track.singers,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                // As wide as what is shown, with no gap
+                                // before the date once it is cut.
+                                textWidthBasis: TextWidthBasis.longestLine,
+                                style: detailStyle,
+                              ),
+                            ),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: line.maxWidth * .75,
+                              ),
+                              child: Text(
+                                ' · $when',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: detailStyle,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -666,49 +659,103 @@ class MusicSongTile extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 MusicFavoriteButton(track: track),
-                roomy
-                    ? AppButton.withIcon(
-                        onPressed: () => unawaited(
-                          openMusicSearch(context, ref, track, replay: false),
-                        ),
-                        icon: const Icon(Icons.open_in_new, size: 16),
-                        label: const Text('去 B 站'),
-                      )
-                    : AppButton(
-                        tonal: true,
-                        tooltip: '去 B 站搜这首',
-                        onPressed: () => unawaited(
-                          openMusicSearch(context, ref, track, replay: false),
-                        ),
-                        child: const Text('B 站'),
-                      ),
-                _SongMenu(track: track),
+                if (roomy)
+                  Builder(
+                    builder: (button) => AppButton.icon(
+                      tooltip: '歌曲操作',
+                      onPressed: () {
+                        final box = button.findRenderObject()! as RenderBox;
+                        openMenu(
+                          box.localToGlobal(
+                            box.size.bottomLeft(Offset.zero),
+                            ancestor: tile.findRenderObject(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.more_horiz),
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                _SongPlayButton(selected: selected, onPlay: onPlay),
               ],
             ),
           ),
         );
       },
     );
-    if (!card) return content;
-    return AppCard(
-      padding: EdgeInsets.zero,
-      color: selected
-          ? Color.alphaBlend(
-              colors.primaryContainer.withValues(alpha: .35),
-              colors.surfaceContainerLow,
-            )
-          : null,
-      child: content,
+    return _SongMenu(
+      track: track,
+      builder: (context, menu) => !card
+          ? content(context, menu)
+          : AppCard(
+              padding: EdgeInsets.zero,
+              color: selected
+                  ? Color.alphaBlend(
+                      colors.primaryContainer.withValues(alpha: .35),
+                      colors.surfaceContainerLow,
+                    )
+                  : null,
+              child: content(context, menu),
+            ),
     );
   }
 }
 
+/// The round button at a song's end: it plays the song, or, for the song
+/// that is on, pauses and resumes it.
+class _SongPlayButton extends ConsumerWidget {
+  const _SongPlayButton({required this.selected, required this.onPlay});
+  final bool selected;
+  final VoidCallback onPlay;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (selected) {
+      // Rebuilt for play and pause only, not every tick of the position.
+      ref.watch(
+        musicAudioHandlerProvider.select((h) => (h.playing, h.loading)),
+      );
+      return MusicPlayButton(
+        handler: ref.read(musicAudioHandlerProvider),
+        size: 42,
+      );
+    }
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox.square(
+      dimension: 42,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size.square(42),
+          shape: const CircleBorder(),
+          backgroundColor: colors.onSurface,
+          foregroundColor: colors.surface,
+        ),
+        onPressed: onPlay,
+        child: const Icon(
+          Icons.play_arrow_rounded,
+          size: 24,
+          semanticLabel: '播放',
+        ),
+      ),
+    );
+  }
+}
+
+/// A song's menu, anchored to its whole card.
 class _SongMenu extends ConsumerWidget {
-  const _SongMenu({required this.track});
+  const _SongMenu({required this.track, required this.builder});
   final MusicTrack track;
+  final Widget Function(BuildContext tile, MenuController menu) builder;
   @override
   Widget build(BuildContext context, WidgetRef ref) => MenuAnchor(
     menuChildren: [
+      MenuItemButton(
+        leadingIcon: const Icon(Icons.open_in_new),
+        onPressed: () =>
+            unawaited(openMusicSearch(context, ref, track, replay: false)),
+        child: const Text('去 B 站搜这首'),
+      ),
       MenuItemButton(
         leadingIcon: const Icon(Icons.playlist_play),
         onPressed: () => unawaited(
@@ -747,11 +794,9 @@ class _SongMenu extends ConsumerWidget {
         child: const Text('搜这天的录播'),
       ),
     ],
-    builder: (context, menu, _) => AppButton.icon(
-      tooltip: '歌曲操作',
-      onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-      icon: const Icon(Icons.more_horiz),
-    ),
+    // A context below the anchor, whose render object is the card.
+    builder: (context, menu, _) =>
+        Builder(builder: (tile) => builder(tile, menu)),
   );
 }
 

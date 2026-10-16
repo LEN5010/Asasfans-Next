@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_theme.dart';
-import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../library/application/library_providers.dart';
@@ -39,91 +38,80 @@ class MusicFavoritesPage extends ConsumerWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const AppPageBar(title: Text('收藏的歌')),
-      // Left-aligned at the music list's width, as the page it opens from.
-      body: Align(
-        alignment: AlignmentDirectional.topStart,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: AppTokens.readingWidth + 24,
-          ),
-          child: LibraryPagedList<MusicFavorite>(
-            state: state,
-            pager: ref.read(musicFavoritesProvider.notifier),
-            empty: '还没有收藏的歌',
-            emptyHint: '点歌曲旁的心形收藏',
-            header: count == null || count == 0
-                ? null
-                : Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                    child: AppCard(
-                      child: Row(
-                        children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: AppTheme.dianaPink.withValues(alpha: .22),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const SizedBox.square(
-                              dimension: 64,
-                              child: Icon(
-                                Icons.favorite_rounded,
-                                size: 32,
-                                color: AppTheme.dianaPink,
+      body: LibraryPagedList<MusicFavorite>(
+        state: state,
+        pager: ref.read(musicFavoritesProvider.notifier),
+        empty: '还没有收藏的歌',
+        emptyHint: '点歌曲旁的心形收藏',
+        header: count == null || count == 0
+            ? null
+            : Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppTheme.dianaPink.withValues(alpha: .22),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const SizedBox.square(
+                          dimension: 64,
+                          child: Icon(
+                            Icons.favorite_rounded,
+                            size: 32,
+                            color: AppTheme.dianaPink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$count 首',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: AppTheme.tabular,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
-                                Text(
-                                  '$count 首',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontFeatures: AppTheme.tabular,
-                                  ),
+                                AppButton.withIcon(
+                                  selected: true,
+                                  onPressed: () =>
+                                      unawaited(playAll(shuffle: false)),
+                                  icon: const Icon(Icons.play_arrow_rounded),
+                                  label: const Text('播放全部'),
                                 ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    AppButton.withIcon(
-                                      selected: true,
-                                      onPressed: () =>
-                                          unawaited(playAll(shuffle: false)),
-                                      icon: const Icon(
-                                        Icons.play_arrow_rounded,
-                                      ),
-                                      label: const Text('播放全部'),
-                                    ),
-                                    AppButton.withIcon(
-                                      tonal: true,
-                                      onPressed: () =>
-                                          unawaited(playAll(shuffle: true)),
-                                      icon: const Icon(Icons.shuffle_rounded),
-                                      label: const Text('随机播放'),
-                                    ),
-                                  ],
+                                AppButton.withIcon(
+                                  tonal: true,
+                                  onPressed: () =>
+                                      unawaited(playAll(shuffle: true)),
+                                  icon: const Icon(Icons.shuffle_rounded),
+                                  label: const Text('随机播放'),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-            itemBuilder: (context, item) => MusicSongTile(
-              track: item.track,
-              card: false,
-              selected: item.track.id == currentId,
-              onPlay: () => unawaited(
-                ref
-                    .read(musicAudioHandlerProvider)
-                    .playTracks(tracks, start: tracks.indexOf(item.track)),
+                ),
               ),
-            ),
+        itemBuilder: (context, item) => MusicSongTile(
+          track: item.track,
+          card: false,
+          selected: item.track.id == currentId,
+          onPlay: () => unawaited(
+            ref
+                .read(musicAudioHandlerProvider)
+                .playTracks(tracks, start: tracks.indexOf(item.track)),
           ),
         ),
       ),
