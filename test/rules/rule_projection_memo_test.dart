@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
 import 'package:asasfans_next/features/library/application/library_providers.dart';
@@ -13,6 +15,18 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/sqlite_fixture.dart';
 
 int evaluations = 0;
+
+/// Holds a re-read open so the test can look at the frame it produces.
+class _GatedRules extends SqliteRulesRepository {
+  _GatedRules(super.database);
+  Completer<void>? gate;
+
+  @override
+  Future<RulesSnapshot> load() async {
+    await gate?.future;
+    return super.load();
+  }
+}
 
 RuleSubject _subject(String text) {
   evaluations++;
@@ -30,12 +44,12 @@ RuleSubject _subject(String text) {
 
 void main() {
   late MemoryLocalDatabase db;
-  late SqliteRulesRepository rules;
+  late _GatedRules rules;
   late SqliteLibraryRepository library;
   setUp(() {
     evaluations = 0;
     db = MemoryLocalDatabase();
-    rules = SqliteRulesRepository(db);
+    rules = _GatedRules(db);
     library = SqliteLibraryRepository(db, backgroundDecoding: false);
   });
   tearDown(() async {
@@ -91,5 +105,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('乙'), findsNothing);
     expect(find.text('甲'), findsOneWidget);
+  });
+
+  testWidgets('a re-read on resume keeps the list mounted', (tester) async {
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localDatabaseProvider.overrideWithValue(db),
+          rulesRepositoryProvider.overrideWithValue(rules),
+          libraryRepositoryProvider.overrideWithValue(library),
+        ],
+        child: MaterialApp(
+          home: RuleFilterScope<String>(
+            items: [for (var i = 0; i < 60; i++) '$i'],
+            subjectOf: _subject,
+            builder: (visible) => ListView(
+              controller: scroll,
+              children: [
+                for (final item in visible.items)
+                  SizedBox(height: 48, child: Text(item)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    scroll.jumpTo(600);
+    await tester.pump();
+
+    rules.gate = Completer<void>();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ListView)),
+    );
+    unawaited(container.read(rulesControllerProvider.notifier).reload());
+    await tester.pump();
+    expect(container.read(rulesControllerProvider).loading, isTrue);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(scroll.offset, 600);
+
+    rules.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(scroll.offset, 600);
   });
 }

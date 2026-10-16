@@ -60,10 +60,17 @@ class _RuleFilterScopeState<T> extends ConsumerState<RuleFilterScope<T>> {
     return _projection!;
   }
 
+  RulesState? _lastReady;
+
   @override
   Widget build(BuildContext context) {
     final unavailableBuilder = widget.unavailableBuilder;
-    final policy = ref.watch(rulesControllerProvider);
+    final current = ref.watch(rulesControllerProvider);
+    if (current.ready) _lastReady = current;
+    // Every resume re-reads the rules. Keep the list on the rules it already
+    // has meanwhile: swapping it for a spinner unmounts the list, which loses
+    // its scroll position and looks like a refresh.
+    final policy = current.loading ? _lastReady ?? current : current;
     if (policy.loading) {
       const status = Center(
         child: SizedBox.square(
