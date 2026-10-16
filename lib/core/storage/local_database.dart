@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:sqlite3/sqlite3.dart';
 
 import 'storage_failure.dart';
+import 'calendar_schema.dart';
 import 'channel_schema.dart';
 import 'handoff_schema.dart';
 import 'library_schema.dart';
@@ -113,7 +114,7 @@ Future<SqlResults> _runIsolated(
 /// No importer exists: an unknown database identity is rejected, never reset.
 abstract final class SqliteExecutor {
   static const applicationId = 0x4153464E;
-  static const schemaVersion = 9;
+  static const schemaVersion = 10;
 
   static SqlResults openBatch(
     String path,
@@ -221,6 +222,12 @@ abstract final class SqliteExecutor {
             database.execute(statement);
           }
           database.userVersion = 9;
+        }
+        if (database.userVersion == 9) {
+          for (final statement in calendarSchemaV10) {
+            database.execute(statement);
+          }
+          database.userVersion = 10;
         }
         database.execute('COMMIT');
       } catch (_) {

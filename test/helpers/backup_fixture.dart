@@ -9,7 +9,9 @@ const _columnsByVersion = <int, Map<String, List<String>>>{
   2: BackupCodec.columnsV2,
   3: BackupCodec.columnsV3,
   4: BackupCodec.columnsV4,
-  5: BackupCodec.columns,
+  5: BackupCodec.columnsV5,
+  6: BackupCodec.columnsV6,
+  7: BackupCodec.columns,
 };
 
 /// Rewrites a current export as a file the given [version] could really have

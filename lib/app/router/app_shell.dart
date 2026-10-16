@@ -3,13 +3,18 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/music/application/music_providers.dart';
+import '../../features/music/presentation/music_widgets.dart';
+import '../../features/calendar/application/calendar_reminders.dart';
+import '../../features/calendar/presentation/calendar_reminder_settings.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
 import '../../shared/widgets/app_backdrop.dart';
 import '../../shared/widgets/app_motion.dart';
 import '../../shared/widgets/glass/app_glass_navigation.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({
     required this.navigationShell,
     required this.isTabRoot,
@@ -19,11 +24,30 @@ class AppShell extends StatefulWidget {
   final bool isTabRoot;
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   bool toolsOpen = false;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        ref
+            .read(calendarReminderControllerProvider.notifier)
+            .refreshPermissions();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
 
   Future<void> _tools() async {
     if (toolsOpen) return;
@@ -46,101 +70,127 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final wide = constraints.maxWidth >= 840;
+      ref.watch(calendarReminderBootstrapProvider);
+      final hasMusic = ref.watch(
+        musicAudioHandlerProvider.select((handler) => handler.current != null),
+      );
+      final sidebarWidth = hasMusic ? 212.0 : AppSidebar.width;
       final selected = widget.navigationShell.currentIndex;
       final mq = MediaQuery.of(context);
       final showBottom = !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
       final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
-      return AppBackdrop(
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
-          resizeToAvoidBottomInset: false,
-          // The body runs under the dock, and the Scaffold hands it the
-          // dock's height as bottom padding. Always on: switching it would
-          // rebuild the body.
-          extendBody: true,
-          // Here rather than over the body, so a SnackBar sits above it.
-          bottomNavigationBar: showBottom
-              ? Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    12,
-                    12,
-                    12,
-                    mq.padding.bottom + 8,
-                  ),
-                  // The slot's height is loose: as tall as the dock only.
-                  child: Align(
-                    heightFactor: 1,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 520),
-                      child: AppGlassNavigation(
-                        selected: selected,
-                        onSelect: _select,
-                        onTools: _tools,
+      return CalendarReminderListener(
+        child: AppBackdrop(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
+            resizeToAvoidBottomInset: false,
+            // The body runs under the dock, and the Scaffold hands it the
+            // dock's height as bottom padding. Always on: switching it would
+            // rebuild the body.
+            extendBody: true,
+            // Here rather than over the body, so a SnackBar sits above it.
+            bottomNavigationBar: showBottom
+                ? Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      12,
+                      12,
+                      mq.padding.bottom + 8,
+                    ),
+                    // The slot's height is loose: as tall as the dock only.
+                    child: Align(
+                      heightFactor: 1,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (hasMusic) ...[
+                              const MusicMiniPlayer(),
+                              const SizedBox(height: 10),
+                            ],
+                            AppGlassNavigation(
+                              selected: selected,
+                              onSelect: _select,
+                              onTools: _tools,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                )
-              : null,
-          body: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Keep the body at the same element position through breakpoints.
-              SizedBox(
-                width: wide ? AppSidebar.width + 24 : 0,
-                child: wide
-                    ? SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(
-                          12,
-                          mq.padding.top + 10,
-                          12,
-                          12,
-                        ),
-                        child: AppSidebar(
-                          selected: selected,
-                          onSelect: _select,
-                          onTools: _tools,
-                        ),
-                      )
-                    : null,
-              ),
-              Expanded(
-                // Isolate branch ModalRoute semantics from the preceding rail.
-                child: Semantics(
-                  container: true,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      widget.navigationShell,
-                      // A subtle edge fade under the bar, not an opaque footer.
-                      if (showBottom)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          height: mq.padding.bottom + barHeight + 40,
-                          child: IgnorePointer(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Theme.of(context).scaffoldBackgroundColor
-                                        .withValues(alpha: 0),
-                                    Theme.of(context).scaffoldBackgroundColor
-                                        .withValues(alpha: .72),
-                                  ],
+                  )
+                : null,
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Keep the body at the same element position through breakpoints.
+                SizedBox(
+                  width: wide ? sidebarWidth + 24 : 0,
+                  child: wide
+                      ? Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            12,
+                            mq.padding.top + 10,
+                            12,
+                            12,
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  child: AppSidebar(
+                                    selected: selected,
+                                    onSelect: _select,
+                                    onTools: _tools,
+                                  ),
+                                ),
+                              ),
+                              if (hasMusic)
+                                const MusicMiniPlayer(compact: true),
+                            ],
+                          ),
+                        )
+                      : null,
+                ),
+                Expanded(
+                  // Isolate branch ModalRoute semantics from the preceding rail.
+                  child: Semantics(
+                    container: true,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        widget.navigationShell,
+                        // A subtle edge fade under the bar, not an opaque footer.
+                        if (showBottom)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: mq.padding.bottom + barHeight + 40,
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Theme.of(context).scaffoldBackgroundColor
+                                          .withValues(alpha: 0),
+                                      Theme.of(context).scaffoldBackgroundColor
+                                          .withValues(alpha: .72),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );

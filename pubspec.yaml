@@ -20,7 +20,13 @@ dependencies:
   webview_flutter_android: 3.16.9
   webview_flutter_wkwebview: 3.18.5
   url_launcher: 6.3.2
-  timezone: 0.10.1
+  timezone: 0.11.0
+  flutter_local_notifications: 22.3.2
+  just_audio: 0.10.6
+  audio_service: 0.18.19
+  audio_session: 0.2.4
+  just_audio_media_kit: 2.1.0
+  media_kit_libs_windows_audio: 1.0.9
   path: 1.9.1
   path_provider: 2.1.5
   path_provider_windows: 2.3.0

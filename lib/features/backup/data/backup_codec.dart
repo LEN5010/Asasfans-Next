@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../../../core/domain/content_identity.dart';
 import '../../../core/domain/bilibili_id.dart';
 import '../../content/domain/saved_channel.dart';
+import '../../calendar/domain/event_classifier.dart';
 import '../../library/data/library_codec.dart';
 import '../../library/domain/library_models.dart';
 import '../../preferences/domain/app_preferences.dart';
@@ -27,7 +28,7 @@ class ValidatedBackup implements BackupImport {
 /// Neither raw database files nor cache / credential stores are exportable.
 abstract final class BackupCodec {
   /// Version written by [encode]. Older files stay readable; see [columns].
-  static const formatVersion = 6;
+  static const formatVersion = 7;
   static const maxBytes = 32 * 1024 * 1024;
   static const maxRows = 50000;
   static const _maxPlaybackMillis = 1000 * 60 * 60 * 24 * 30;
@@ -120,7 +121,7 @@ abstract final class BackupCodec {
   /// would make a new device believe it had already read a source it has never
   /// contacted, and suppress the very updates the user restored the backup to
   /// keep receiving.
-  static const columns = {
+  static const columnsV6 = {
     ...columnsV5,
     'update_events': [
       'id',
@@ -141,8 +142,15 @@ abstract final class BackupCodec {
       'archived_at',
     ],
   };
+  static const columns = {
+    ...columnsV6,
+    'calendar_member_follows': ['member', 'followed_at'],
+  };
   static final preferenceKeys = {
     'appearance',
+    'music.loudness',
+    'calendar.reminders.enabled',
+    'calendar.reminders.minutes',
     for (final section in HomeSection.values) 'home.${section.name}.visible',
   };
 
@@ -201,7 +209,7 @@ abstract final class BackupCodec {
       ]);
       if (root['format'] != 'asasfans.personal') throw _invalid;
       if (root['version'] is! int ||
-          !const [1, 2, 3, 4, 5, 6].contains(root['version'])) {
+          !const [1, 2, 3, 4, 5, 6, 7].contains(root['version'])) {
         throw const BackupFailure(BackupFailureKind.incompatible);
       }
       final atText = _text(root['exported_at'], 64);
@@ -214,6 +222,7 @@ abstract final class BackupCodec {
         3 => columnsV3,
         4 => columnsV4,
         5 => columnsV5,
+        6 => columnsV6,
         _ => columns,
       };
       final data = _object(root['data'], fields.keys.toList());
@@ -240,6 +249,7 @@ abstract final class BackupCodec {
       result.putIfAbsent('playback_bookmarks', () => []);
       result.putIfAbsent('saved_channels', () => []);
       result.putIfAbsent('update_events', () => []);
+      result.putIfAbsent('calendar_member_follows', () => []);
       _relations(result);
       return ValidatedBackup._(
         BackupSummary(
@@ -279,13 +289,25 @@ abstract final class BackupCodec {
           (row['value'] != 'true' && row['value'] != 'false')) {
         throw _invalid;
       }
+    } else if (table == 'calendar_member_follows') {
+      if (!EventClassifier.memberAliases.containsKey(_text(row['member'], 64))) {
+        throw _invalid;
+      }
     } else if (table == 'preferences') {
       final key = _text(row['key'], 64);
       if (!preferenceKeys.contains(key)) throw _invalid;
       final value = _text(row['value'], 32);
-      if (key == 'appearance'
-          ? !AppAppearance.values.any((e) => e.name == value)
-          : value != 'true' && value != 'false') {
+      final valid = switch (key) {
+        'appearance' => AppAppearance.values.any((e) => e.name == value),
+        'calendar.reminders.minutes' => const [
+          '0',
+          '5',
+          '15',
+          '30',
+        ].contains(value),
+        _ => value == 'true' || value == 'false',
+      };
+      if (!valid) {
         throw _invalid;
       }
     } else if (table == 'collection_folders') {
@@ -467,6 +489,7 @@ abstract final class BackupCodec {
       'content_history': ['source', 'content_id', 'action'],
       'local_subscriptions': ['mid'],
       'calendar_follows': ['source', 'uid', 'recurrence_id'],
+      'calendar_member_follows': ['member'],
       'content_rules': ['id'],
       'rule_settings': ['key'],
       'subscription_reads': ['bvid'],

@@ -13,7 +13,7 @@ import 'app_glass_scope.dart';
 import 'app_glass_style.dart';
 import 'app_glass_surface.dart';
 
-/// The four routes as one capsule, with Tools as a separate round action on
+/// The five routes as one capsule, with Tools as a separate round action on
 /// the same glass layer. Tools is never a tab, so the indicator cannot land
 /// on it. Indices are shell branch indices.
 class AppGlassNavigation extends StatefulWidget {
@@ -22,7 +22,7 @@ class AppGlassNavigation extends StatefulWidget {
     required this.selected,
     required this.onSelect,
     required this.onTools,
-  }) : assert(selected >= 0 && selected < 4);
+  }) : assert(selected >= 0 && selected < 5);
 
   final int selected;
   final ValueChanged<int> onSelect;
@@ -34,16 +34,18 @@ class AppGlassNavigation extends StatefulWidget {
   static const iconSize = 22.0;
 
   /// Shared with the desktop sidebar.
-  static const labels = ['今日', '内容', '日历', '我的'];
+  static const labels = ['今日', '内容', '音乐', '日历', '我的'];
   static const icons = [
     AppIcons.today,
     AppIcons.content,
+    Icons.music_note_outlined,
     AppIcons.calendar,
     AppIcons.mine,
   ];
   static const activeIcons = [
     AppIcons.todaySelected,
     AppIcons.contentSelected,
+    Icons.music_note,
     AppIcons.calendarSelected,
     AppIcons.mineSelected,
   ];
@@ -63,7 +65,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
   bool pendingWhileDown = false;
   int? visual;
   bool scheduled = false;
-  final focus = List.generate(5, (_) => FocusNode());
+  final focus = List.generate(6, (_) => FocusNode());
 
   @override
   void dispose() {
@@ -74,7 +76,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
   }
 
   void _activate(int index) =>
-      index == 4 ? widget.onTools() : widget.onSelect(index);
+      index == labels.length ? widget.onTools() : widget.onSelect(index);
 
   // The package renders the tabs but offers no keyboard focus, so one
   // transparent slot per control owns focus, keys and semantics. The ring is
@@ -85,11 +87,11 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         node.hasFocus &&
         FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
     return Semantics(
-      label: index == 4 ? AppGlassNavigation.toolsLabel : labels[index],
+      label: index == labels.length ? AppGlassNavigation.toolsLabel : labels[index],
       button: true,
       focusable: true,
       focused: node.hasFocus,
-      selected: index == 4 ? null : widget.selected == index,
+      selected: index == labels.length ? null : widget.selected == index,
       onTap: () => _activate(index),
       child: IgnorePointer(
         child: Focus(
@@ -169,7 +171,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
       ),
       const SizedBox(height: 1.5),
       ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: width),
+        constraints: BoxConstraints(maxWidth: width + 8),
         child: Text(
           labels[i],
           maxLines: 1,
@@ -194,8 +196,9 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         final height = AppGlassNavigation.heightFor(
           MediaQuery.textScalerOf(context),
         );
-        final labelWidth = ((constraints.maxWidth - height - 12) / 4 - 8).clamp(
-          24.0,
+        const toolsSize = 56.0;
+        final labelWidth = ((constraints.maxWidth - toolsSize - 12) / labels.length - 8).clamp(
+          0.0,
           double.infinity,
         );
         final Widget bar;
@@ -245,9 +248,9 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
               ),
               const SizedBox(width: 12),
               AppGlassSurface(
-                radius: height / 2,
+                radius: toolsSize / 2,
                 child: SizedBox.square(
-                  dimension: height,
+                  dimension: toolsSize,
                   child: IconButton(
                     onPressed: widget.onTools,
                     icon: const Icon(
@@ -307,7 +310,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
                 ),
                 label: AppGlassNavigation.toolsLabel,
                 onTap: widget.onTools,
-                size: height,
+                size: toolsSize,
                 iconColor: colors.onSurface,
               ),
               spacing: 12,
@@ -333,7 +336,7 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
                   for (var i = 0; i < labels.length; i++)
                     Expanded(child: _slot(i)),
                   const SizedBox(width: 12),
-                  SizedBox(width: height, child: _slot(4)),
+                  SizedBox(width: toolsSize, child: _slot(labels.length)),
                 ],
               ),
             ),

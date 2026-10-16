@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/music/presentation/music_page.dart';
+import '../../features/music/presentation/music_player_page.dart';
 import '../../features/backup/presentation/backup_page.dart';
 import '../../features/content/application/content_providers.dart';
 import '../../features/content/domain/community_video_repository.dart';
@@ -24,6 +26,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/today',
     routes: [
+      GoRoute(
+        path: '/music/player',
+        builder: (context, state) => const MusicPlayerPage(),
+      ),
       StatefulShellRoute(
         navigatorContainerBuilder: (context, shell, children) =>
             FadeThroughBranches(
@@ -39,6 +45,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   isTabRoot: const {
                     '/today',
                     '/calendar',
+                    '/music',
                     '/mine',
                     '/content',
                     '/content/videos',
@@ -89,6 +96,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     videoKind: state.uri.queryParameters['kind'],
                   ),
                 ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/music',
+                builder: (context, state) => const MusicPage(),
               ),
             ],
           ),

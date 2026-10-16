@@ -195,7 +195,7 @@ void main() {
             )
             .first,
       );
-      expect(find.text('当前：实底界面（流畅优先，不采样背景）'), findsOneWidget);
+      expect(find.text('当前：实底界面'), findsOneWidget);
       await tester.ensureVisible(find.text('视觉优先'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('视觉优先'));

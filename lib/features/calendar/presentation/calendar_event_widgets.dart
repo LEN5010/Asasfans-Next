@@ -14,6 +14,8 @@ import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../../core/time/calendar_time.dart';
 import '../../../core/time/shanghai_date_provider.dart';
+import '../application/calendar_follow_selection.dart';
+import '../application/calendar_reminders.dart';
 import '../domain/calendar_agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/event_classifier.dart';
@@ -102,7 +104,7 @@ String? calendarEventTiming(CalendarEvent event, DateTime now) {
 /// in words. [highlight] lifts the line onto a wash of its member's colour
 /// with how soon it starts, for the next thing on a day; given [now], a
 /// line that is over steps back.
-class CalendarAgendaRow extends StatelessWidget {
+class CalendarAgendaRow extends ConsumerWidget {
   const CalendarAgendaRow({
     required this.event,
     this.showDay = false,
@@ -124,7 +126,8 @@ class CalendarAgendaRow extends StatelessWidget {
   final bool highlight;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final followed = ref.watch(isCalendarSelectedProvider(event));
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final (:headline, :subtitle, :label, :live) = calendarEventParts(event);
@@ -293,7 +296,23 @@ class CalendarAgendaRow extends StatelessWidget {
                 padding: lifted
                     ? const EdgeInsets.fromLTRB(10, 10, 10, 10)
                     : const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                child: line,
+                child: Row(
+                  children: [
+                    if (followed) ...[
+                      Container(
+                        width: 3,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: calendarEventColor(event),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                    ],
+                    Expanded(child: line),
+                    CalendarFollowButton(event: event, iconOnly: true),
+                  ],
+                ),
               ),
             ),
           ),
@@ -306,7 +325,7 @@ class CalendarAgendaRow extends StatelessWidget {
 /// One day in a strip or a month: its number in a circle (filled when
 /// selected, ringed when today) and a dot per event in its member's colour.
 /// With [weekday], the day's name sits above, for a strip with no header.
-class CalendarDayCell extends StatelessWidget {
+class CalendarDayCell extends ConsumerWidget {
   const CalendarDayCell({
     required this.day,
     required this.events,
@@ -335,9 +354,14 @@ class CalendarDayCell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final selection = ref.watch(calendarFollowSelectionProvider).valueOrNull;
+    final source = ref.watch(appEnvironmentProvider).calendarUrl;
+    bool followed(CalendarEvent event) =>
+        selection?.contains(event, source) ?? false;
+    final hasFollow = events.any(followed);
     final count = events.length;
     final duration = appMotion(context, AppTokens.controlMotion);
     final number = theme.textTheme.bodyMedium?.copyWith(
@@ -354,7 +378,8 @@ class CalendarDayCell extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isSelected,
-      label: '${day.year} 年 ${CalendarAgenda.date(day)}，$count 项安排',
+      label:
+          '${day.year} 年 ${CalendarAgenda.date(day)}，$count 项安排${hasFollow ? '，有关注场次' : ''}',
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
@@ -376,43 +401,63 @@ class CalendarDayCell extends StatelessWidget {
                 final circle = _circle(
                   MediaQuery.textScalerOf(context),
                 ).clamp(0.0, constraints.maxWidth - 2).toDouble();
-                return AnimatedContainer(
-                  duration: duration,
-                  curve: AppCurves.standard,
-                  width: circle,
-                  height: circle,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected ? AppTheme.dianaPink : Colors.transparent,
-                    border: Border.all(
-                      color: isToday && !isSelected
-                          ? colors.primary.withValues(alpha: .7)
-                          : Colors.transparent,
-                      width: 1.5,
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedContainer(
+                      duration: duration,
+                      curve: AppCurves.standard,
+                      width: circle,
+                      height: circle,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isSelected
+                            ? AppTheme.dianaPink
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: isToday && !isSelected
+                              ? colors.primary.withValues(alpha: .7)
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('${day.day}', maxLines: 1, style: number),
+                      ),
                     ),
-                  ),
-                  alignment: Alignment.center,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text('${day.day}', maxLines: 1, style: number),
-                  ),
+                    if (hasFollow)
+                      Positioned(
+                        right: -3,
+                        top: -2,
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 12,
+                          color: colors.primary,
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
             const SizedBox(height: 4),
             SizedBox(
-              height: 5,
+              height: 7,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // One dot per event in its member's colour.
                   for (final event in events.take(3))
                     Container(
-                      width: 5,
-                      height: 5,
+                      width: followed(event) ? 7 : 5,
+                      height: followed(event) ? 7 : 5,
                       margin: const EdgeInsets.symmetric(horizontal: 1),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
+                        border: followed(event)
+                            ? Border.all(color: colors.onSurface, width: 1)
+                            : null,
                         color: event.isCancelled
                             ? colors.outlineVariant
                             : calendarEventColor(event),
@@ -474,6 +519,17 @@ class CalendarWeekStrip extends StatelessWidget {
   }
 }
 
+String _reminderText(WidgetRef ref, CalendarEvent event) {
+  final state = ref.watch(calendarReminderControllerProvider);
+  if (!state.preferences.enabled || !state.permission) return '通知未开启';
+  if (!state.exactPermission) return '精确定时权限未开启';
+  if (event.isCancelled) return '已取消，不提醒';
+  if (EventClassifier.classify(event) != EventKind.live) return '非直播日程，不提醒';
+  if (!ref.watch(isCalendarSelectedProvider(event))) return '关注成员或星标这场后提醒';
+  if (!event.start.isAfter(ref.watch(currentTimeProvider)())) return '这场已经开始';
+  return state.preferences.timing;
+}
+
 class CalendarEventDetail extends ConsumerStatefulWidget {
   const CalendarEventDetail({required this.event, this.source, super.key});
   final CalendarEvent event;
@@ -513,7 +569,19 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AppPanelHeader(title: '日程详情', closeLabel: '关闭日程'),
+          Row(
+            children: [
+              const Expanded(
+                child: AppPanelHeader(title: '日程详情', closeLabel: '关闭日程'),
+              ),
+              CalendarFollowButton(
+                event: event,
+                source: widget.source,
+                iconOnly: true,
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -549,7 +617,11 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
                       ],
                     ),
                   ),
-                CalendarFollowButton(event: event, source: widget.source),
+                _DetailLine(
+                  icon: Icons.notifications_outlined,
+                  label: '提醒',
+                  value: _reminderText(ref, event),
+                ),
                 _DetailLine(
                   icon: Icons.schedule,
                   label: event.allDay ? '日期' : '时间（上海）',

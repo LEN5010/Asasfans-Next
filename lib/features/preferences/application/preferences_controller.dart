@@ -83,6 +83,9 @@ class PreferencesController extends StateNotifier<PreferencesState> {
   Future<bool> setHomeSection(HomeSection section, bool visible) =>
       _write(() => _repository.setHomeSection(section, visible));
 
+  Future<bool> setMusicLoudnessEnabled(bool value) =>
+      _write(() => _repository.setMusicLoudnessEnabled(value));
+
   Future<bool> acceptDisclaimer() => _write(_repository.acceptDisclaimer);
 
   Future<bool> _write(Future<AppPreferences> Function() action) {

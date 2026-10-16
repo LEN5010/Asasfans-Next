@@ -18,6 +18,19 @@ void main() {
       Uri.parse('bilibili://space/107261543'),
     );
 
+    expect(
+      app('https://live.bilibili.com/22637261'),
+      Uri.parse('bilibili://live/22637261'),
+    );
+    expect(
+      app(
+        'https://search.bilibili.com/all?keyword=%E5%98%89%E7%84%B6%202026.6',
+      ),
+      Uri.parse('bilibili://search?keyword=%E5%98%89%E7%84%B6%202026.6'),
+    );
+    expect(app('https://live.bilibili.com/22637261?from=search'), isNull);
+    expect(app('https://search.bilibili.com/all?keyword=a&duration=4'), isNull);
+
     // Anything else keeps its web link.
     expect(app('https://www.bilibili.com/video/BV1xx411c7mD?p=2'), isNull);
     expect(app('https://www.bilibili.com/video/av170001'), isNull);

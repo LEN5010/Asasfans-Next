@@ -7,8 +7,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers/today_fixture.dart';
+import 'helpers/preferences_fixture.dart';
+import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
 
 void main() {
+  testWidgets('five tabs and tools fit 360px at double text size', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var selected = -1;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [offlinePreferences(const AppPreferences())],
+        child: MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: Scaffold(
+              body: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: AppGlassNavigation(
+                    selected: 0,
+                    onSelect: (i) => selected = i,
+                    onTools: () {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    for (final label in ['今日', '内容', '音乐', '日历', '我的']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    await tester.tap(find.text('音乐'));
+    await tester.pump();
+    expect(selected, 2);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'phone navigation opens tools as an action, not a content branch',
     (tester) async {

@@ -369,6 +369,11 @@ class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
       for (final event in [...?schedule.valueOrNull?.events, ...?week])
         if (seen.add(event.identity)) event,
     ];
+    final nextFollowed = ref
+        .watch(todayFollowedLivesProvider)
+        .valueOrNull
+        ?.where((event) => event.start.isAfter(_now))
+        .firstOrNull;
     final selected = _picked ?? day;
     final isToday = selected == day;
     var next = false;
@@ -408,6 +413,21 @@ class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (nextFollowed != null) ...[
+          const SectionHeading(title: '关注的下一场'),
+          const SizedBox(height: 4),
+          AppCard(
+            padding: const EdgeInsets.all(6),
+            child: CalendarAgendaRow(
+              event: nextFollowed,
+              showDay: true,
+              today: day,
+              now: _now,
+              highlight: true,
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         SectionHeading(
           title: title,
           action: '日历',

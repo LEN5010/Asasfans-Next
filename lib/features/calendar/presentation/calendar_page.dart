@@ -22,6 +22,8 @@ import '../../../core/time/calendar_time.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../application/calendar_providers.dart';
+import '../application/calendar_follow_selection.dart';
+import '../../../app/providers.dart';
 import '../domain/calendar_agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/event_classifier.dart';
@@ -43,6 +45,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   bool _filtersOpen = false;
   Set<String> _members = {};
   bool _week = false;
+  bool _following = false;
   bool _monthExpanded = false;
   bool _refreshing = false;
 
@@ -104,10 +107,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
         );
       }
     });
+    final follows = ref.watch(calendarFollowSelectionProvider).valueOrNull;
+    final source = ref.watch(appEnvironmentProvider).calendarUrl;
     final events = (snapshot.valueOrNull?.events ?? const <CalendarEvent>[])
         .where(
           (event) =>
-              CalendarAgenda.visible(event, filter: _filter, members: _members),
+              CalendarAgenda.visible(
+                event,
+                filter: _filter,
+                members: _members,
+              ) &&
+              (!_following || (follows?.contains(event, source) ?? false)),
         )
         .toList();
     final byDay = CalendarAgenda.group(
@@ -128,10 +138,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
         ),
       ),
     );
-    final filtered = _filter != CalendarFilter.all || _members.isNotEmpty;
+    final filtered =
+        _following || _filter != CalendarFilter.all || _members.isNotEmpty;
     void reset() => setState(() {
       _filter = CalendarFilter.all;
       _members = {};
+      _following = false;
     });
     void toggleMember(String value) => setState(
       () => _members = _members.contains(value)
@@ -139,6 +151,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           : {..._members, value},
     );
     Widget filters() => _CalendarFilters(
+      following: _following,
+      onFollowing: (value) => setState(() => _following = value),
       filter: _filter,
       members: _members,
       onFilter: (value) => setState(() => _filter = value),
@@ -161,7 +175,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
     );
     final heading = RootHeading(
       title: '日历',
-      subtitle: '今天 ${CalendarAgenda.date(today)}',
       actions: [
         AppButton.icon(
           tooltip: '回到今天',
@@ -216,6 +229,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                         ),
                       ),
                       const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: AppChoice(
+                          label: const Text('只看关注'),
+                          selected: _following,
+                          onSelected: (value) =>
+                              setState(() => _following = value),
+                        ),
+                      ),
                       _MonthOverview(
                         events: (snapshot.valueOrNull?.events ?? const [])
                             .where((event) {
@@ -335,7 +357,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                       icon: const Icon(Icons.tune, size: 18),
                       label: Text(
                         filtered
-                            ? '筛选 ${(_filter != CalendarFilter.all ? 1 : 0) + _members.length}'
+                            ? '筛选 ${(_following ? 1 : 0) + (_filter != CalendarFilter.all ? 1 : 0) + _members.length}'
                             : '筛选',
                       ),
                     ),
@@ -361,6 +383,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                         clearTooltip: '清除日历筛选',
                         onClear: reset,
                         applied: [
+                          if (_following)
+                            (
+                              label: '只看关注',
+                              remove: () => setState(() => _following = false),
+                            ),
                           if (_filter != CalendarFilter.all)
                             (
                               label: _filter.label,
@@ -443,11 +470,15 @@ class _MonthHeader extends StatelessWidget {
 class _CalendarFilters extends StatelessWidget {
   const _CalendarFilters({
     required this.filter,
+    required this.following,
+    required this.onFollowing,
     required this.members,
     required this.onFilter,
     required this.onMember,
     required this.onReset,
   });
+  final bool following;
+  final ValueChanged<bool> onFollowing;
   final CalendarFilter filter;
   final Set<String> members;
   final ValueChanged<CalendarFilter> onFilter;
@@ -456,6 +487,11 @@ class _CalendarFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final types = [
+      AppChoice(
+        label: const Text('只看关注', style: _chipText),
+        selected: following,
+        onSelected: onFollowing,
+      ),
       for (final value in CalendarFilter.values)
         AppChoice(
           label: Text(value.label, style: _chipText),
@@ -483,7 +519,7 @@ class _CalendarFilters extends StatelessWidget {
           HorizontalChoices(children: types),
           const SizedBox(height: 4),
           HorizontalChoices(children: roles),
-          if (filter != CalendarFilter.all || members.isNotEmpty)
+          if (following || filter != CalendarFilter.all || members.isNotEmpty)
             AppButton(
               onPressed: onReset,
               child: const Text('重置筛选', style: _chipText),

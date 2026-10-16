@@ -1,6 +1,6 @@
 package com.example.asasfans
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.webkit.CookieManager
@@ -10,7 +10,7 @@ import io.flutter.plugins.webviewflutter.WebViewFlutterPlugin
 import android.os.Build
 import android.os.Bundle
 
-class MainActivity : FlutterActivity() {
+class MainActivity : AudioServiceActivity() {
     companion object {
         private var profileConfigured = false
         private var profileUnavailable = false

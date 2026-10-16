@@ -6,6 +6,7 @@ import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/core/storage/local_database.dart';
 import 'package:asasfans_next/core/storage/storage_failure.dart';
 import 'package:asasfans_next/features/calendar/data/calendar_cache_store.dart';
+import 'package:asasfans_next/features/calendar/data/calendar_event_store.dart';
 import 'package:asasfans_next/features/calendar/data/ics_calendar_repository.dart';
 import 'package:asasfans_next/features/preferences/data/sqlite_preferences_repository.dart';
 import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
@@ -290,6 +291,53 @@ void main() {
       expect(snapshot.events, hasLength(1));
       expect(snapshot.isStale, isFalse);
       expect(snapshot.offlineCacheUnavailable, isTrue);
+    },
+  );
+
+  test(
+    'structured cache transaction failure keeps fresh network data visible',
+    () async {
+      final db = MemoryLocalDatabase();
+      addTearDown(db.close);
+      db.database.execute(
+        "CREATE TRIGGER reject_calendar BEFORE INSERT ON calendar_events BEGIN SELECT RAISE(ABORT,'fixture'); END",
+      );
+      var requests = 0;
+      final repository = IcsCalendarRepository(
+        Dio()
+          ..httpClientAdapter = _Adapter(
+            (options) => switch (++requests) {
+              1 => _ok(_feed),
+              2 => _offline(options),
+              _ => ResponseBody.fromString('', 304),
+            },
+          ),
+        calendarUrl: _url,
+        clock: () => _time,
+        eventStore: SqliteCalendarEventStore(db),
+      );
+      final snapshot = await repository.events(from: _from, until: _until);
+      expect(snapshot.events.single.title, '嘉然歌会');
+      expect(snapshot.offlineCacheUnavailable, isTrue);
+      expect(snapshot.isStale, isFalse);
+      expect(db.database.select('SELECT * FROM calendar_events'), isEmpty);
+      expect(db.database.select('SELECT * FROM calendar_sources'), isEmpty);
+      db.database.execute('DROP TRIGGER reject_calendar');
+      final offline = await repository.events(
+        from: _from,
+        until: _until,
+        forceRefresh: true,
+      );
+      expect(offline.events.single.title, '嘉然歌会');
+      expect(offline.offlineCacheUnavailable, isTrue);
+      final recovered = await repository.events(
+        from: _from,
+        until: _until,
+        forceRefresh: true,
+      );
+      expect(recovered.events.single.title, '嘉然歌会');
+      expect(recovered.offlineCacheUnavailable, isFalse);
+      expect(db.database.select('SELECT * FROM calendar_events'), hasLength(1));
     },
   );
 

@@ -20,6 +20,7 @@ class AppPreferences {
     this.visualGlass = false,
     this.hiddenHomeSections = const {},
     this.disclaimerAccepted = false,
+    this.musicLoudnessEnabled = true,
   });
   final AppAppearance appearance;
   final AppMaterial material;
@@ -29,6 +30,7 @@ class AppPreferences {
   final bool visualGlass;
   final Set<HomeSection> hiddenHomeSections;
   final bool disclaimerAccepted;
+  final bool musicLoudnessEnabled;
 
   GlassChoice get glass => material == AppMaterial.clear
       ? GlassChoice.smooth
@@ -37,6 +39,7 @@ class AppPreferences {
       : GlassChoice.auto;
 
   AppPreferences withGlass(GlassChoice value) => AppPreferences(
+    musicLoudnessEnabled: musicLoudnessEnabled,
     appearance: appearance,
     material: value == GlassChoice.smooth
         ? AppMaterial.clear
@@ -48,6 +51,7 @@ class AppPreferences {
   bool shows(HomeSection section) => !hiddenHomeSections.contains(section);
 
   AppPreferences withAppearance(AppAppearance value) => AppPreferences(
+    musicLoudnessEnabled: musicLoudnessEnabled,
     appearance: value,
     material: material,
     visualGlass: visualGlass,
@@ -55,6 +59,7 @@ class AppPreferences {
     disclaimerAccepted: disclaimerAccepted,
   );
   AppPreferences withMaterial(AppMaterial value) => AppPreferences(
+    musicLoudnessEnabled: musicLoudnessEnabled,
     appearance: appearance,
     material: value,
     visualGlass: visualGlass,
@@ -63,6 +68,7 @@ class AppPreferences {
   );
   AppPreferences withSection(HomeSection section, bool visible) =>
       AppPreferences(
+        musicLoudnessEnabled: musicLoudnessEnabled,
         appearance: appearance,
         material: material,
         visualGlass: visualGlass,
@@ -74,7 +80,17 @@ class AppPreferences {
         ),
       );
 
+  AppPreferences withMusicLoudnessEnabled(bool value) => AppPreferences(
+    appearance: appearance,
+    material: material,
+    visualGlass: visualGlass,
+    hiddenHomeSections: hiddenHomeSections,
+    disclaimerAccepted: disclaimerAccepted,
+    musicLoudnessEnabled: value,
+  );
+
   AppPreferences withDisclaimerAccepted() => AppPreferences(
+    musicLoudnessEnabled: musicLoudnessEnabled,
     appearance: appearance,
     material: material,
     visualGlass: visualGlass,
@@ -94,4 +110,5 @@ abstract interface class PreferencesRepository {
   Future<AppPreferences> setAppearance(AppAppearance appearance);
   Future<AppPreferences> setHomeSection(HomeSection section, bool visible);
   Future<AppPreferences> acceptDisclaimer();
+  Future<AppPreferences> setMusicLoudnessEnabled(bool enabled);
 }

@@ -44,6 +44,9 @@ class SqlitePreferencesRepository implements PreferencesRepository {
   Future<AppPreferences> setHomeSection(HomeSection section, bool visible) =>
       _set('home.${section.name}.visible', '$visible');
   @override
+  Future<AppPreferences> setMusicLoudnessEnabled(bool enabled) =>
+      _set('music.loudness', '$enabled');
+  @override
   Future<AppPreferences> acceptDisclaimer() =>
       _set('app.disclaimer.accepted', 'true');
 
@@ -89,6 +92,7 @@ class SqlitePreferencesRepository implements PreferencesRepository {
       if (visible == 'false') hidden.add(section);
     }
     return AppPreferences(
+      musicLoudnessEnabled: values['music.loudness'] != 'false',
       appearance: matched ?? AppAppearance.system,
       material: matchedMaterial ?? AppMaterial.liquid,
       visualGlass: tier == 'visual',

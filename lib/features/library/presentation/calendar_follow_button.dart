@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
-
-import '../../../shared/widgets/app_controls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/widgets/app_controls.dart';
 import '../../../app/providers.dart';
+import '../../calendar/application/calendar_reminders.dart';
 import '../../calendar/domain/calendar_event.dart';
 import '../application/library_providers.dart';
 import '../domain/library_models.dart';
 import 'library_common.dart';
 
 class CalendarFollowButton extends ConsumerStatefulWidget {
-  const CalendarFollowButton({required this.event, this.source, super.key});
+  const CalendarFollowButton({
+    required this.event,
+    this.source,
+    this.iconOnly = false,
+    super.key,
+  });
   final CalendarEvent event;
   final Uri? source;
+  final bool iconOnly;
   @override
   ConsumerState<CalendarFollowButton> createState() =>
       _CalendarFollowButtonState();
@@ -20,7 +26,6 @@ class CalendarFollowButton extends ConsumerStatefulWidget {
 
 class _CalendarFollowButtonState extends ConsumerState<CalendarFollowButton> {
   bool _busy = false;
-  String? _error;
   @override
   Widget build(BuildContext context) {
     final key = CalendarFollowKey(
@@ -29,56 +34,56 @@ class _CalendarFollowButtonState extends ConsumerState<CalendarFollowButton> {
       recurrenceId: widget.event.recurrenceId,
     );
     final provider = isFollowingCalendarProvider(key);
-    final entries = ref.watch(provider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_error != null)
-          Text(
-            _error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-        entries.when(
-          loading: () => AppButton.withIcon(
-            onPressed: null,
-            icon: Icon(Icons.star_border),
-            label: Text('关注日程'),
-          ),
-          error: (error, _) => AppButton.withIcon(
-            onPressed: () => ref.invalidate(provider),
-            icon: const Icon(Icons.refresh),
-            label: const Text('重试关注状态'),
-          ),
-          data: (followed) {
-            return AppButton.withIcon(
-              icon: Icon(followed ? Icons.star : Icons.star_border),
-              label: Text(followed ? '已关注' : '关注日程'),
-              onPressed: _busy || entries.isLoading
-                  ? null
-                  : () async {
-                      final repository = ref.read(libraryRepositoryProvider);
-                      setState(() {
-                        _busy = true;
-                        _error = null;
-                      });
-                      try {
-                        if (followed) {
-                          await repository.unfollowCalendar(key);
-                        } else {
-                          await repository.followCalendar(key, widget.event);
-                        }
-                      } catch (error) {
-                        if (mounted) {
-                          setState(() => _error = libraryError(error));
-                        }
-                      } finally {
-                        if (mounted) setState(() => _busy = false);
-                      }
-                    },
-            );
-          },
-        ),
-      ],
+    final state = ref.watch(provider);
+    final starred = state.valueOrNull ?? false;
+    final label = state.hasError
+        ? '重试星标状态'
+        : starred
+        ? '取消星标'
+        : '星标这场';
+    final onPressed = _busy || state.isLoading
+        ? null
+        : state.hasError
+        ? () => ref.invalidate(provider)
+        : () async {
+            setState(() => _busy = true);
+            try {
+              final repository = ref.read(libraryRepositoryProvider);
+              if (starred) {
+                await repository.unfollowCalendar(key);
+              } else {
+                await repository.followCalendar(key, widget.event);
+                final reminders = ref.read(calendarReminderControllerProvider);
+                if (reminders.preferences.enabled && !reminders.permission) {
+                  await ref
+                      .read(calendarReminderControllerProvider.notifier)
+                      .requestPermission();
+                }
+              }
+            } catch (error) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(libraryError(error))));
+              }
+            } finally {
+              if (mounted) setState(() => _busy = false);
+            }
+          };
+    final icon = Icon(
+      state.hasError
+          ? Icons.refresh
+          : starred
+          ? Icons.star_rounded
+          : Icons.star_outline_rounded,
+      color: starred ? Theme.of(context).colorScheme.primary : null,
     );
+    return widget.iconOnly
+        ? AppButton.icon(tooltip: label, onPressed: onPressed, icon: icon)
+        : AppButton.withIcon(
+            onPressed: onPressed,
+            icon: icon,
+            label: Text(starred ? '已星标' : '星标这场'),
+          );
   }
 }

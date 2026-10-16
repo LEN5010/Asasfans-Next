@@ -5,6 +5,8 @@ import '../../../shared/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../tools/presentation/tools_sheet.dart';
+import '../../preferences/application/preferences_controller.dart';
+import '../../calendar/presentation/calendar_reminder_settings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -501,6 +503,31 @@ class SettingsPage extends StatelessWidget {
             padding: pageInsets(context, top: 4),
             children: [
               const _Group(title: '外观与首页', children: [PreferencesControls()]),
+              const SizedBox(height: AppTokens.sectionGap),
+              _Group(
+                title: '音乐',
+                children: [
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final state = ref.watch(preferencesControllerProvider);
+                      return SwitchListTile.adaptive(
+                        title: const Text('响度均衡'),
+                        value: state.values.musicLoudnessEnabled,
+                        onChanged: state.canEdit
+                            ? (value) => ref
+                                  .read(preferencesControllerProvider.notifier)
+                                  .setMusicLoudnessEnabled(value)
+                            : null,
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTokens.sectionGap),
+              const _Group(
+                title: '开播提醒',
+                children: [CalendarReminderSettings()],
+              ),
               const SizedBox(height: AppTokens.sectionGap),
               AppCard(
                 padding: EdgeInsets.zero,

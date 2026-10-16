@@ -10,7 +10,6 @@ import 'package:asasfans_next/features/calendar/presentation/calendar_event_widg
 import 'package:asasfans_next/features/library/application/library_providers.dart';
 import 'package:asasfans_next/features/library/data/sqlite_library_repository.dart';
 import 'package:asasfans_next/features/library/domain/library_models.dart';
-import 'package:asasfans_next/features/library/presentation/calendar_follow_button.dart';
 import 'package:asasfans_next/features/library/presentation/calendar_follows.dart';
 import 'package:asasfans_next/features/library/presentation/content_actions.dart';
 import 'package:asasfans_next/features/library/presentation/library_pages.dart';
@@ -286,12 +285,10 @@ void main() {
       await tester.tap(find.text('已关注歌会'));
       await tester.pumpAndSettle();
       expect(find.byType(CalendarEventDetail), findsOneWidget);
-      // The toggle is built with TextButton.icon, whose private widget is not a
-      // TextButton, so anchor on the follow button itself rather than on a
-      // Material internal that can change shape between versions.
+      // Use the detail's star action; the list also exposes its own star.
       final toggle = find.descendant(
-        of: find.byType(CalendarFollowButton),
-        matching: find.text('已关注'),
+        of: find.byType(CalendarEventDetail),
+        matching: find.byTooltip('取消星标'),
       );
       expect(toggle, findsOneWidget);
       await tester.tap(toggle);
@@ -299,8 +296,8 @@ void main() {
       expect(await repository.calendarFollows(), isEmpty);
       expect(
         find.descendant(
-          of: find.byType(CalendarFollowButton),
-          matching: find.text('关注日程'),
+          of: find.byType(CalendarEventDetail),
+          matching: find.byTooltip('星标这场'),
         ),
         findsOneWidget,
       );

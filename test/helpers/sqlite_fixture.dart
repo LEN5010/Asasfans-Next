@@ -1,3 +1,4 @@
+import 'package:asasfans_next/core/storage/calendar_schema.dart';
 import 'package:asasfans_next/core/storage/channel_schema.dart';
 import 'package:asasfans_next/core/storage/handoff_schema.dart';
 import 'package:asasfans_next/core/storage/library_schema.dart';
@@ -49,6 +50,7 @@ Database historicalDatabase(int version) {
       (7, channelSchemaV7),
       (8, handoffSchemaV8),
       (9, updatesSchemaV9),
+      (10, calendarSchemaV10),
     ]) {
       if (version < step.$1) break;
       for (final statement in step.$2) {

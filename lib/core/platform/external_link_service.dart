@@ -42,7 +42,18 @@ class SystemExternalLinkService implements ExternalLinkService {
 /// Derived only from the exact web shapes this app builds, with the id checked
 /// again, so no other https link gains an app-scheme route.
 Uri? bilibiliAppLink(Uri web) {
-  if (web.scheme != 'https' || web.hasQuery || web.hasFragment) return null;
+  if (web.scheme != 'https' || web.userInfo.isNotEmpty || web.hasFragment) {
+    return null;
+  }
+  if (web.host == 'search.bilibili.com' &&
+      web.path == '/all' &&
+      web.queryParameters.length == 1 &&
+      web.queryParameters['keyword']?.isNotEmpty == true) {
+    return Uri.parse(
+      'bilibili://search?keyword=${Uri.encodeComponent(web.queryParameters['keyword']!)}',
+    );
+  }
+  if (web.hasQuery) return null;
   final path = web.pathSegments.where((s) => s.isNotEmpty).toList();
   switch (web.host) {
     case 'www.bilibili.com' || 'm.bilibili.com' || 'bilibili.com'
@@ -51,6 +62,9 @@ Uri? bilibiliAppLink(Uri web) {
     case 't.bilibili.com'
         when path.length == 1 && RegExp(r'^[1-9]\d{0,19}$').hasMatch(path[0]):
       return Uri.parse('bilibili://following/detail/${path[0]}');
+    case 'live.bilibili.com'
+        when path.length == 1 && RegExp(r'^[1-9]\d{0,19}$').hasMatch(path[0]):
+      return Uri.parse('bilibili://live/${path[0]}');
     case 'space.bilibili.com'
         when path.length == 1 && validBilibiliMid(path[0]):
       return Uri.parse('bilibili://space/${path[0]}');

@@ -6,6 +6,7 @@ import '../../../core/network/api_failure.dart';
 import '../domain/calendar_event.dart';
 import 'ics_parser.dart';
 import 'calendar_cache_store.dart';
+import 'calendar_event_store.dart';
 
 /// Independent, credential-free ICS transport with single-flight revalidation.
 class IcsCalendarRepository implements CalendarRepository {
@@ -15,9 +16,11 @@ class IcsCalendarRepository implements CalendarRepository {
     this.ttl = const Duration(minutes: 30),
     DateTime Function()? clock,
     CalendarCacheStore? cacheStore,
+    SqliteCalendarEventStore? eventStore,
     Future<void> Function(List<CalendarEvent>, DateTime)? onSnapshot,
   }) : _clock = clock ?? DateTime.now,
        _cacheStore = cacheStore,
+       _eventStore = eventStore,
        _onSnapshot = onSnapshot;
 
   final Dio _dio;
@@ -25,6 +28,7 @@ class IcsCalendarRepository implements CalendarRepository {
   final Duration ttl;
   final DateTime Function() _clock;
   final CalendarCacheStore? _cacheStore;
+  final SqliteCalendarEventStore? _eventStore;
   final Future<void> Function(List<CalendarEvent>, DateTime)? _onSnapshot;
   bool _hydrated = false;
   String? _body;
@@ -44,15 +48,27 @@ class IcsCalendarRepository implements CalendarRepository {
     bool forceRefresh = false,
   }) async {
     final snapshot = await _load(forceRefresh: forceRefresh);
+    var events = snapshot.events
+        .where((e) => overlaps(e, from, until))
+        .toList();
+    if (_eventStore != null && !snapshot.offlineCacheUnavailable) {
+      try {
+        events = await _eventStore.readEvents(
+          calendarUrl,
+          from: from,
+          until: until,
+        );
+      } catch (_) {
+        _offlineCacheUnavailable = true;
+      }
+    }
     return CalendarSnapshot(
-      events: List.unmodifiable(
-        snapshot.events.where((e) => overlaps(e, from, until)),
-      ),
+      events: List.unmodifiable(events),
       fetchedAt: snapshot.fetchedAt,
       fromCache: snapshot.fromCache,
       isStale: snapshot.isStale,
       expiresAt: snapshot.expiresAt,
-      offlineCacheUnavailable: snapshot.offlineCacheUnavailable,
+      offlineCacheUnavailable: _offlineCacheUnavailable,
       followSyncUnavailable: snapshot.followSyncUnavailable,
     );
   }
@@ -127,6 +143,29 @@ class IcsCalendarRepository implements CalendarRepository {
   Future<void> _hydrate() async {
     if (_hydrated) return;
     _hydrated = true;
+    final eventStore = _eventStore;
+    if (eventStore != null) {
+      var migrated = false;
+      try {
+        migrated = await eventStore.migrateLegacyCache();
+      } catch (_) {
+        _offlineCacheUnavailable = true;
+      }
+      try {
+        final source = await eventStore.readSource(calendarUrl);
+        if (source?.syncedAt != null) {
+          _cached = await eventStore.readEvents(calendarUrl);
+          _fetchedAt = source!.syncedAt;
+          _etag = source.etag;
+          _lastModified = source.lastModified;
+          _revalidationFailed =
+              migrated || source.isStale || source.syncedAt!.isAfter(_clock());
+        }
+      } catch (_) {
+        _offlineCacheUnavailable = true;
+      }
+      return;
+    }
     final store = _cacheStore;
     if (store == null) return;
     try {
@@ -155,7 +194,38 @@ class IcsCalendarRepository implements CalendarRepository {
     }
   }
 
-  Future<void> _persist() async {
+  Future<void> _persist({bool snapshotChanged = false}) async {
+    final eventStore = _eventStore;
+    if (eventStore != null) {
+      try {
+        if (_revalidationFailed) {
+          await eventStore.failed(calendarUrl, _clock());
+          // Recording a failed request cannot make a previously failed event
+          // write durable. Keep serving that good in-memory network snapshot.
+          return;
+        } else if (snapshotChanged) {
+          await eventStore.writeSnapshot(
+            calendarUrl,
+            _cached!,
+            _fetchedAt!,
+            etag: _etag,
+            lastModified: _lastModified,
+          );
+          _cached = await eventStore.readEvents(calendarUrl);
+        } else {
+          await eventStore.validated(
+            calendarUrl,
+            _fetchedAt!,
+            etag: _etag,
+            lastModified: _lastModified,
+          );
+        }
+        _offlineCacheUnavailable = false;
+      } catch (_) {
+        _offlineCacheUnavailable = true;
+      }
+      return;
+    }
     final store = _cacheStore;
     if (store == null || _body == null || _fetchedAt == null) return;
     try {
@@ -216,7 +286,9 @@ class IcsCalendarRepository implements CalendarRepository {
       _fetchedAt = _clock();
       _revalidationFailed = false;
       _retryAt = null;
-      await _persist();
+      await _persist(
+        snapshotChanged: response.statusCode != 304 || _offlineCacheUnavailable,
+      );
       return _snapshot();
     } on FormatException {
       return _fallback(const ApiFailure(ApiFailureKind.invalidResponse));
@@ -228,8 +300,11 @@ class IcsCalendarRepository implements CalendarRepository {
   }
 
   Future<CalendarSnapshot> _fallback(ApiFailure failure) async {
-    if (_cached == null || _fetchedAt == null) throw failure;
     _revalidationFailed = true;
+    if (_cached == null || _fetchedAt == null) {
+      await _persist();
+      throw failure;
+    }
     // Invalidation after a manual refresh must not immediately redownload the
     // same failing source. A later explicit retry can bypass this soft delay.
     _retryAt = _clock().add(const Duration(seconds: 30));

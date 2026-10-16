@@ -8,7 +8,6 @@ import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:asasfans_next/shared/widgets/page_heading.dart';
 
 CalendarEvent _event({
   required String uid,
@@ -272,15 +271,8 @@ void main() {
 
     expect(find.text('2026 年 10 月'), findsOneWidget);
     expect(find.textContaining('10 月'), findsWidgets);
-    // Only the page title still names September: it says what today is.
-    expect(find.textContaining('9 月'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(RootHeading),
-        matching: find.textContaining('9 月'),
-      ),
-      findsOneWidget,
-    );
+    // The heading has no subtitle; changing the month leaves no old date.
+    expect(find.textContaining('9 月'), findsNothing);
   });
 
   testWidgets('manual refresh actually forces source revalidation', (

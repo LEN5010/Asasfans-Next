@@ -121,26 +121,12 @@ class PreferencesControls extends ConsumerWidget {
   };
 }
 
-/// States what is rendered now and why, so a choice that the system or the
-/// renderer overrides never looks as if it silently failed.
-String effectiveGlassLabel(GlassPolicy policy) {
-  final tier = switch (policy.tier) {
-    GlassTier.solid => '实底界面',
-    GlassTier.standard => '标准玻璃',
-    GlassTier.premium => '精细玻璃',
-  };
-  final reason = switch (policy.fallback) {
-    GlassFallback.none => null,
-    GlassFallback.userChoice => '流畅优先，不采样背景',
-    GlassFallback.reducedTransparency => '系统已开启降低透明度',
-    GlassFallback.highContrast => '系统已开启高对比度',
-    GlassFallback.unsupported => '此设备的渲染器不支持玻璃着色器',
-    GlassFallback.failed => '玻璃加载失败，本次运行保持实底',
-    GlassFallback.preparing || GlassFallback.transparencyPending => '玻璃准备中',
-    GlassFallback.inactive => '应用在后台',
-  };
-  return reason == null ? '当前：$tier' : '当前：$tier（$reason）';
-}
+String effectiveGlassLabel(GlassPolicy policy) =>
+    '当前：${switch (policy.tier) {
+      GlassTier.solid => '实底界面',
+      GlassTier.standard => '标准玻璃',
+      GlassTier.premium => '精细玻璃',
+    }}';
 
 /// One tap between light and dark, from whichever is showing now; saved as
 /// the 主题 choice in settings, where following the system is chosen again.
