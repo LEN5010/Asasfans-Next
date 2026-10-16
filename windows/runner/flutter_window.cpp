@@ -7,6 +7,7 @@
 #include <string>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "resource.h"
 
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
@@ -28,7 +29,7 @@ bool FlutterWindow::OnCreate() {
   // application invisible until Flutter's first frame. No timer delays entry.
   startup_label_ = CreateWindow(
       L"STATIC", L"Asasfans Next",
-      WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
+      WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
       0, 0, frame.right, frame.bottom, GetHandle(), nullptr,
       GetModuleHandle(nullptr), nullptr);
   startup_font_ = CreateFont(
@@ -38,6 +39,11 @@ bool FlutterWindow::OnCreate() {
       DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
   SendMessage(startup_label_, WM_SETFONT,
               reinterpret_cast<WPARAM>(startup_font_), TRUE);
+  startup_icon_size_ =
+      MulDiv(80, static_cast<int>(GetDpiForWindow(GetHandle())), 96);
+  startup_icon_ = static_cast<HICON>(LoadImage(
+      GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON), IMAGE_ICON,
+      startup_icon_size_, startup_icon_size_, LR_DEFAULTCOLOR));
   Show();
   UpdateWindow(GetHandle());
   UpdateWindow(startup_label_);
@@ -83,10 +89,7 @@ bool FlutterWindow::OnCreate() {
       });
 
   flutter_controller_->engine()->SetNextFrameCallback([this]() {
-    DestroyWindow(startup_label_);
-    startup_label_ = nullptr;
-    DeleteObject(startup_font_);
-    startup_font_ = nullptr;
+    ClearStartupView();
   });
 
   // Flutter can complete the first frame before the "show window" callback is
@@ -97,14 +100,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
-  if (startup_label_) {
-    DestroyWindow(startup_label_);
-    startup_label_ = nullptr;
-  }
-  if (startup_font_) {
-    DeleteObject(startup_font_);
-    startup_font_ = nullptr;
-  }
+  ClearStartupView();
   // The channel talks through the engine; release it first.
   appearance_channel_ = nullptr;
   if (flutter_controller_) {
@@ -114,16 +110,48 @@ void FlutterWindow::OnDestroy() {
   Win32Window::OnDestroy();
 }
 
+void FlutterWindow::ClearStartupView() {
+  if (startup_label_) {
+    DestroyWindow(startup_label_);
+    startup_label_ = nullptr;
+  }
+  if (startup_font_) {
+    DeleteObject(startup_font_);
+    startup_font_ = nullptr;
+  }
+  if (startup_icon_) {
+    DestroyIcon(startup_icon_);
+    startup_icon_ = nullptr;
+  }
+}
+
 LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  if (message == WM_CTLCOLORSTATIC &&
-      reinterpret_cast<HWND>(lparam) == startup_label_) {
-    HDC dc = reinterpret_cast<HDC>(wparam);
+  if (message == WM_DRAWITEM && startup_label_ &&
+      reinterpret_cast<DRAWITEMSTRUCT*>(lparam)->hwndItem == startup_label_) {
+    const auto* item = reinterpret_cast<DRAWITEMSTRUCT*>(lparam);
+    HDC dc = item->hDC;
+    RECT bounds = item->rcItem;
+    FillRect(dc, &bounds, GetSysColorBrush(COLOR_WINDOW));
+    auto previous_font = SelectObject(dc, startup_font_);
+    TEXTMETRIC metrics;
+    GetTextMetrics(dc, &metrics);
+    const int gap =
+        MulDiv(24, static_cast<int>(GetDpiForWindow(GetHandle())), 96);
+    const int top = (bounds.bottom - startup_icon_size_ - gap -
+                     metrics.tmHeight) / 2;
+    DrawIconEx(dc, (bounds.right - startup_icon_size_) / 2, top,
+               startup_icon_, startup_icon_size_, startup_icon_size_,
+               0, nullptr, DI_NORMAL);
+    bounds.top = top + startup_icon_size_ + gap;
+    bounds.bottom = bounds.top + metrics.tmHeight;
     SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-    SetBkColor(dc, GetSysColor(COLOR_WINDOW));
-    return reinterpret_cast<LRESULT>(GetSysColorBrush(COLOR_WINDOW));
+    SetBkMode(dc, TRANSPARENT);
+    DrawText(dc, L"Asasfans Next", -1, &bounds, DT_CENTER | DT_SINGLELINE);
+    SelectObject(dc, previous_font);
+    return TRUE;
   }
   if (message == WM_SIZE && startup_label_) {
     RECT frame = GetClientArea();

@@ -11,7 +11,7 @@
 
 #include "win32_window.h"
 
-// Hosts Flutter, showing the app name while the engine starts.
+// Hosts Flutter, showing the app icon and name while the engine starts.
 class FlutterWindow : public Win32Window {
  public:
   // Creates a new FlutterWindow hosting a Flutter view running |project|.
@@ -34,6 +34,9 @@ class FlutterWindow : public Win32Window {
 
   HWND startup_label_ = nullptr;
   HFONT startup_font_ = nullptr;
+  HICON startup_icon_ = nullptr;
+  int startup_icon_size_ = 0;
+  void ClearStartupView();
 
   // The title bar is native: the app's light or dark choice reaches it
   // through this channel. No value means the system decides.

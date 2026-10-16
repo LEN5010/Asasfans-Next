@@ -37,7 +37,11 @@ abstract final class CalendarTime {
         value.second != fields.second) {
       throw const FormatException('Calendar time falls in a timezone gap');
     }
-    return value.toUtc();
+    // Return a core UTC value: timezone Location identity is isolate-local.
+    return DateTime.fromMicrosecondsSinceEpoch(
+      value.microsecondsSinceEpoch,
+      isUtc: true,
+    );
   }
 
   static DateTime inShanghai(DateTime instant) =>

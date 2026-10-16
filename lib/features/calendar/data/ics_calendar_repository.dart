@@ -1,3 +1,5 @@
+import 'dart:isolate';
+
 import 'package:dio/dio.dart';
 
 import '../../../core/network/api_failure.dart';
@@ -133,7 +135,7 @@ class IcsCalendarRepository implements CalendarRepository {
       if (entry.body.length > SqliteCalendarCacheStore.maxBodyCharacters) {
         throw const FormatException('cache size');
       }
-      final parsed = IcsParser.parse(entry.body);
+      final parsed = await _parseCalendar(entry.body);
       _body = entry.body;
       _cached = parsed;
       _fetchedAt = entry.fetchedAt;
@@ -203,7 +205,7 @@ class IcsCalendarRepository implements CalendarRepository {
             body.length > SqliteCalendarCacheStore.maxBodyCharacters) {
           throw const ApiFailure(ApiFailureKind.invalidResponse);
         }
-        final parsed = IcsParser.parse(body);
+        final parsed = await _parseCalendar(body);
         // Parsing distinguishes a valid empty calendar from malformed data.
         // Publish data and validators together only after successful decoding.
         _cached = parsed;
@@ -250,6 +252,9 @@ class IcsCalendarRepository implements CalendarRepository {
     return const ApiFailure(ApiFailureKind.invalidResponse);
   }
 }
+
+Future<List<CalendarEvent>> _parseCalendar(String body) =>
+    Isolate.run(() => IcsParser.parse(body));
 
 class _CalendarLoad {
   late final Future<CalendarSnapshot> future;

@@ -2,6 +2,8 @@ name: Flutter Release
 
 # Manual only. Builds the installers for an existing tag and leaves them on a
 # draft GitHub Release; a person publishes it after looking it over.
+# Windows-only rebuilds use the selected workflow ref and leave artifacts for
+# replacing the Windows files after checking them. Published tags stay fixed.
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +12,7 @@ on:
         required: true
         type: string
       windows_only:
-        description: Rebuild Windows attachments on an existing draft
+        description: Build Windows from the selected ref for an existing version
         type: boolean
         default: false
 
@@ -30,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ inputs.windows_only && github.sha || format('refs/tags/{0}', inputs.tag) }}
       - id: check
         env:
           RELEASE_TAG: ${{ inputs.tag }}
@@ -71,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ inputs.windows_only && github.sha || format('refs/tags/{0}', inputs.tag) }}
       - uses: actions/setup-java@v4
         if: matrix.platform == 'android'
         with:
@@ -92,6 +94,10 @@ jobs:
           $env:ASASFANS_FLUTTER_SDK = $env:FLUTTER_ROOT
           ./tool/flutterw.ps1 --verify-sdk
       - run: flutter pub get --enforce-lockfile
+
+      - name: Windows startup regression
+        if: matrix.platform == 'windows'
+        run: flutter test --no-pub test/storage/windows_storage_provider_test.dart test/calendar/calendar_time_test.dart test/calendar/ics_calendar_repository_test.dart test/calendar/calendar_persistence_test.dart
 
       # The production key, as v1.3 and v2.0 were signed: an APK signed with
       # anything else could not upgrade an installed asasfans.next.
@@ -179,6 +185,7 @@ jobs:
 
   draft:
     name: Draft GitHub Release
+    if: ${{ !inputs.windows_only }}
     needs: [verify, build]
     runs-on: ubuntu-latest
     steps:
