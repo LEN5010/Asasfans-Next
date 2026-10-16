@@ -9,7 +9,7 @@ void main() {
     var calls = 0;
     final runtime = GlassRuntime(
       shaderFiltersSupported: false,
-      load: () async {
+      load: (_) async {
         calls++;
       },
     );
@@ -23,7 +23,7 @@ void main() {
     var calls = 0;
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
-      load: () {
+      load: (_) {
         calls++;
         return loading.future;
       },
@@ -46,7 +46,7 @@ void main() {
     var calls = 0;
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
-      load: () async {
+      load: (_) async {
         calls++;
         throw StateError('missing shader');
       },
@@ -62,7 +62,7 @@ void main() {
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
       timeout: Duration.zero,
-      load: () => loading.future,
+      load: (_) => loading.future,
     );
     addTearDown(runtime.dispose);
     await runtime.prepare();
@@ -76,7 +76,7 @@ void main() {
       final loading = Completer<void>();
       final runtime = GlassRuntime(
         shaderFiltersSupported: true,
-        load: () => loading.future,
+        load: (_) => loading.future,
       );
       addTearDown(runtime.dispose);
       final pending = runtime.prepare();
@@ -90,7 +90,7 @@ void main() {
     final loading = Completer<void>();
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
-      load: () => loading.future,
+      load: (_) => loading.future,
     );
     var changes = 0;
     runtime.addListener(() => changes++);

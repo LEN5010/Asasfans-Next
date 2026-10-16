@@ -35,7 +35,7 @@ void main() {
     var loads = 0;
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
-      load: () async {
+      load: (_) async {
         loads++;
       },
     );
@@ -143,7 +143,7 @@ void main() {
       addTearDown(tester.view.reset);
       final runtime = GlassRuntime(
         shaderFiltersSupported: true,
-        load: () async {},
+        load: (_) async {},
       );
       addTearDown(runtime.dispose);
       await tester.pumpWidget(

@@ -11,7 +11,7 @@ import 'glass_policy.dart';
 class GlassRuntime extends ChangeNotifier {
   GlassRuntime({
     required bool shaderFiltersSupported,
-    required Future<void> Function() load,
+    required Future<void> Function(bool premium) load,
     this.timeout = const Duration(seconds: 8),
   }) : _load = load,
        _state = shaderFiltersSupported
@@ -23,14 +23,16 @@ class GlassRuntime extends ChangeNotifier {
     load: _loadDeviceShaders,
   );
 
-  final Future<void> Function() _load;
+  final Future<void> Function(bool premium) _load;
   final Duration timeout;
   GlassRuntimeState _state;
   GlassRuntimeState get state => _state;
   Future<void>? _pending;
   bool _disposed = false;
 
-  Future<void> prepare() {
+  /// [premium] also loads the multi-pass shaders that only the premium tier
+  /// draws.
+  Future<void> prepare({bool premium = false}) {
     if (_disposed || _state != GlassRuntimeState.idle) {
       return _pending ?? Future<void>.value();
     }
@@ -39,13 +41,13 @@ class GlassRuntime extends ChangeNotifier {
     final completion = Completer<void>();
     _pending = completion.future;
     notifyListeners();
-    unawaited(_prepare(completion));
+    unawaited(_prepare(completion, premium));
     return completion.future;
   }
 
-  Future<void> _prepare(Completer<void> completion) async {
+  Future<void> _prepare(Completer<void> completion, bool premium) async {
     try {
-      await Future<void>.sync(_load).timeout(timeout);
+      await Future<void>.sync(() => _load(premium)).timeout(timeout);
       if (!_disposed && _state == GlassRuntimeState.loading) {
         _state = GlassRuntimeState.ready;
         notifyListeners();
@@ -71,20 +73,22 @@ class GlassRuntime extends ChangeNotifier {
     super.dispose();
   }
 
-  static Future<void> _loadDeviceShaders() async {
-    // 0.30.2's premium preloader reports errors but completes successfully.
-    // Verify its required programs ourselves so that missing assets fail closed.
-    for (final asset in [
-      'liquid_glass_geometry_blended.frag',
-      'liquid_glass_final_render.frag',
-    ]) {
-      await ui.FragmentProgram.fromAsset(
-        'packages/liquid_glass_widgets/shaders/$asset',
-      );
+  static Future<void> _loadDeviceShaders(bool premium) async {
+    // Loading a program compiles it on the raster thread. On Windows
+    // (Impeller over ANGLE) the premium geometry pass alone held it for about
+    // eight seconds after the first frame, so only the premium tier pays.
+    if (premium) {
+      // 0.30.2's premium preloader reports errors but completes successfully.
+      // Verify its required programs ourselves so missing assets fail closed.
+      for (final asset in [
+        'liquid_glass_geometry_blended.frag',
+        'liquid_glass_final_render.frag',
+      ]) {
+        await ui.FragmentProgram.fromAsset(
+          'packages/liquid_glass_widgets/shaders/$asset',
+        );
+      }
     }
-    await LiquidGlassWidgets.initialize(
-      enablePerformanceMonitor: false,
-      warmUpMode: GlassWarmUpMode.always,
-    );
+    await LiquidGlassWidgets.initialize(enablePerformanceMonitor: false);
   }
 }

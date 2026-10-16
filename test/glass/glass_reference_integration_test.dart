@@ -34,7 +34,7 @@ void main() {
   ) async {
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
-      load: () async {},
+      load: (_) async {},
     );
     addTearDown(runtime.dispose);
     await runtime.prepare();
@@ -93,7 +93,7 @@ void main() {
     (tester) async {
       final runtime = GlassRuntime(
         shaderFiltersSupported: true,
-        load: () async {},
+        load: (_) async {},
       );
       addTearDown(runtime.dispose);
       await runtime.prepare();
@@ -187,7 +187,7 @@ void main() {
         addTearDown(tester.view.reset);
         final runtime = GlassRuntime(
           shaderFiltersSupported: liquid,
-          load: () async {},
+          load: (_) async {},
         );
         addTearDown(runtime.dispose);
         await runtime.prepare();

@@ -20,7 +20,7 @@ void main() {
   ) async {
     final runtime = GlassRuntime(
       shaderFiltersSupported: false,
-      load: () async {},
+      load: (_) async {},
     );
     addTearDown(runtime.dispose);
     addTearDown(
@@ -58,7 +58,7 @@ void main() {
     final signal = _Signal();
     final runtime = GlassRuntime(
       shaderFiltersSupported: true,
-      load: () async {
+      load: (_) async {
         loads++;
       },
     );
@@ -80,13 +80,44 @@ void main() {
     expect(loads, 0);
     expect(find.byType(BackdropFilter), findsNothing);
   });
+  testWidgets('only the premium tier loads the multi-pass shaders', (
+    tester,
+  ) async {
+    for (final (detail, premium) in [
+      (GlassDetail.platform, false),
+      (GlassDetail.full, true),
+    ]) {
+      final loads = <bool>[];
+      final runtime = GlassRuntime(
+        shaderFiltersSupported: true,
+        load: (value) async => loads.add(value),
+      );
+      addTearDown(runtime.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.windows),
+          builder: (_, child) => AppGlassScope(
+            key: ValueKey(detail),
+            runtime: runtime,
+            mode: GlassMaterialMode.liquid,
+            detail: detail,
+            transparencyOverride: SystemTransparency.allowed,
+            child: child!,
+          ),
+          home: const SizedBox(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(loads, [premium]);
+    }
+  });
   testWidgets(
     'system transparency changes arrive above root dialog without losing input',
     (tester) async {
       final signal = _Signal();
       final runtime = GlassRuntime(
         shaderFiltersSupported: false,
-        load: () async {},
+        load: (_) async {},
       );
       addTearDown(runtime.dispose);
       addTearDown(signal.controller.close);

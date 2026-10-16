@@ -111,9 +111,14 @@ class _AppGlassScopeState extends State<AppGlassScope>
         _prepareScheduled = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _prepareScheduled = false;
-          if (mounted &&
-              _resolve(context).fallback == GlassFallback.preparing) {
-            unawaited(widget.runtime.prepare());
+          if (!mounted) return;
+          final current = _resolve(context);
+          if (current.fallback == GlassFallback.preparing) {
+            unawaited(
+              widget.runtime.prepare(
+                premium: current.glassTier == GlassTier.premium,
+              ),
+            );
           }
         });
       }
