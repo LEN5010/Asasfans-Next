@@ -14,6 +14,7 @@ import '../../library/application/library_providers.dart';
 import '../../updates/application/update_providers.dart';
 import '../data/ics_calendar_repository.dart';
 import '../domain/calendar_event.dart';
+import '../domain/event_classifier.dart';
 
 /// The calendar is a separate source from the metadata API, so it gets its own
 /// client: no shared base URL, no credentials, independent timeouts.
@@ -121,3 +122,50 @@ final refreshCalendarProvider = Provider<Future<void> Function(DateTime)>((
     if (!disposed) ref.invalidate(monthEventsProvider);
   };
 });
+
+/// Everything followed that is still to come within 30 days, members' and
+/// starred alike, soonest first; cancelled ones are left out. Read through
+/// the month views, so a calendar refresh renews it as well.
+final followedUpcomingProvider =
+    FutureProvider.autoDispose<List<CalendarEvent>>((ref) async {
+      final selection = await ref.watch(calendarFollowSelectionProvider.future);
+      final source = ref.watch(appEnvironmentProvider).calendarUrl;
+      final now = ref.read(currentTimeProvider)();
+      final until = now.add(const Duration(days: 30));
+      final last = CalendarTime.inShanghai(until);
+      final months = <DateTime>[];
+      for (
+        var month = DateTime.utc(
+          ref.watch(shanghaiDateProvider).year,
+          ref.watch(shanghaiDateProvider).month,
+        );
+        !month.isAfter(DateTime.utc(last.year, last.month));
+        month = DateTime.utc(month.year, month.month + 1)
+      ) {
+        months.add(month);
+      }
+      final snapshots = await Future.wait([
+        for (final month in months)
+          ref.watch(monthEventsProvider(month).future),
+      ]);
+      final seen = <String>{};
+      return [
+        for (final snapshot in snapshots)
+          for (final event in snapshot.events)
+            if (!event.isCancelled &&
+                event.end.isAfter(now) &&
+                event.start.isBefore(until) &&
+                selection.contains(event, source) &&
+                seen.add(event.identity))
+              event,
+      ]..sort((a, b) => a.start.compareTo(b.start));
+    });
+
+/// The followed lives among them, for the Today page.
+final followedLivesProvider = FutureProvider.autoDispose<List<CalendarEvent>>(
+  (ref) async => [
+    for (final event in await ref.watch(followedUpcomingProvider.future))
+      if (!event.allDay && EventClassifier.classify(event) == EventKind.live)
+        event,
+  ],
+);

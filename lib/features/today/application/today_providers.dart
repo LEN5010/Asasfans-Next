@@ -6,9 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../calendar/application/calendar_providers.dart';
-import '../../calendar/application/calendar_follow_selection.dart';
-import '../../calendar/domain/event_classifier.dart';
-import '../../../app/providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
 import '../../calendar/domain/calendar_event.dart';
 import '../../content/application/community_video_pager.dart';
@@ -51,31 +48,6 @@ final todayWeekProvider = FutureProvider.autoDispose<List<CalendarEvent>>((
         if (seen.add(event.identity)) event,
   ]);
 });
-
-final todayFollowedLivesProvider =
-    FutureProvider.autoDispose<List<CalendarEvent>>((ref) async {
-      final selection = await ref.watch(calendarFollowSelectionProvider.future);
-      await ref.watch(todayScheduleProvider.future);
-      final source = ref.watch(appEnvironmentProvider).calendarUrl;
-      final now = ref.read(currentTimeProvider)();
-      final events = await ref
-          .watch(calendarEventStoreProvider)
-          .readEvents(
-            source,
-            from: now,
-            until: now.add(const Duration(days: 30)),
-          );
-      return events
-          .where(
-            (event) =>
-                !event.isCancelled &&
-                !event.allDay &&
-                EventClassifier.classify(event) == EventKind.live &&
-                selection.contains(event, source),
-          )
-          .toList()
-        ..sort((a, b) => a.start.compareTo(b.start));
-    });
 
 /// A random handful of works: a fresh draw on each load, pull to refresh
 /// and 换一批, not tied to the day. One request brings up to ten from each

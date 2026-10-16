@@ -263,7 +263,9 @@ void main() {
         ..failure = const ApiFailure(ApiFailureKind.offline);
       await tester.pumpWidget(_host(calendar));
       await tester.pumpAndSettle();
-      expect(calendar.forced, [false]);
+      // The followed lives read the months up to 30 days ahead as well.
+      final first = calendar.forced.length;
+      expect(calendar.forced, everyElement(isFalse));
       expect(find.text('网络连接失败'), findsOneWidget);
       expect(find.text('最新二创正文'), findsOneWidget);
       expect(find.text('最新切片标题'), findsOneWidget);
@@ -272,7 +274,8 @@ void main() {
         ..items = [_event('重试后安排', 21)];
       await tester.tap(find.widgetWithText(AppButton, '重试'));
       await tester.pumpAndSettle();
-      expect(calendar.forced, [false, false]);
+      expect(calendar.forced.length, greaterThan(first));
+      expect(calendar.forced, everyElement(isFalse));
       expect(find.text('重试后安排'), findsOneWidget);
       expect(find.text('网络连接失败'), findsNothing);
     },

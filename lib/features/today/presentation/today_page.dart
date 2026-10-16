@@ -370,7 +370,7 @@ class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
         if (seen.add(event.identity)) event,
     ];
     final nextFollowed = ref
-        .watch(todayFollowedLivesProvider)
+        .watch(followedLivesProvider)
         .valueOrNull
         ?.where((event) => event.start.isAfter(_now))
         .firstOrNull;

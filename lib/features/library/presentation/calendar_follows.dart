@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../content/presentation/content_images.dart';
-import '../../../core/time/calendar_time.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../calendar/application/calendar_follow_selection.dart';
 import '../../calendar/application/calendar_providers.dart';
@@ -12,7 +12,6 @@ import '../../calendar/application/calendar_reminders.dart';
 import '../../calendar/domain/event_classifier.dart';
 import '../../calendar/domain/calendar_agenda.dart';
 import '../../calendar/presentation/calendar_event_widgets.dart';
-import '../application/library_pager.dart';
 import '../application/library_providers.dart';
 import '../domain/library_models.dart';
 import 'calendar_follow_button.dart';
@@ -71,28 +70,17 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final follows = ref.watch(calendarFollowSelectionProvider);
-    final state = ref.watch(calendarFollowsProvider);
+    final upcoming = ref.watch(followedUpcomingProvider);
     final now = ref.watch(currentTimeProvider)();
-    bool ended(CalendarFollow follow) => follow.event.allDay
-        ? !CalendarTime.dayOf(now).isBefore(follow.event.end)
-        : !now.isBefore(follow.event.end);
-    final items = [...state.items]
-      ..sort((a, b) {
-        final aEnded = ended(a), bEnded = ended(b);
-        if (aEnded != bEnded) return aEnded ? 1 : -1;
-        final time = a.event.start.compareTo(b.event.start);
-        return aEnded ? -time : time;
-      });
-    final firstUpcoming = items.where((item) => !ended(item)).firstOrNull;
-    final firstEnded = items.where(ended).firstOrNull;
-    final display = LibraryListState<CalendarFollow>(
-      items: items,
-      next: state.next,
-      loading: state.loading,
-      ready: state.ready,
-      failure: state.failure,
-      epoch: state.epoch,
+    final today = ref.watch(shanghaiDateProvider);
+    Widget heading(String text) => Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      child: Text(text, style: theme.textTheme.titleMedium),
+    );
+    final muted = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
     );
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -108,22 +96,25 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
       ),
       body: LibraryBody(
         child: LibraryPagedList<CalendarFollow>(
-          state: display,
+          state: ref.watch(calendarFollowsProvider),
           pager: ref.read(calendarFollowsProvider.notifier),
           empty: '还没有星标场次',
           header: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('成员关注', style: Theme.of(context).textTheme.titleMedium),
+                Text('成员关注', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (follows.hasError) ...[
                   Text(libraryError(follows.error!)),
-                  AppButton(
-                    onPressed: () =>
-                        ref.invalidate(calendarFollowSelectionProvider),
-                    child: const Text('重试'),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: AppButton(
+                      onPressed: () =>
+                          ref.invalidate(calendarFollowSelectionProvider),
+                      child: const Text('重试'),
+                    ),
                   ),
                 ] else
                   Wrap(
@@ -150,52 +141,78 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
                         ),
                     ],
                   ),
-                const SizedBox(height: 24),
-                Text('星标场次', style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-          ),
-          itemBuilder: (context, entry) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (entry == firstUpcoming || entry == firstEnded)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-                  child: Text(
-                    ended(entry) ? '已结束' : '即将开始',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: Text(
-                        entry.event.title.isEmpty ? '未命名安排' : entry.event.title,
-                        style: TextStyle(
-                          decoration: entry.event.isCancelled
-                              ? TextDecoration.lineThrough
-                              : null,
+                // What all of it adds up to: the members' events and the
+                // starred ones, as the calendar draws them.
+                heading('接下来 30 天'),
+                switch (upcoming) {
+                  AsyncValue(valueOrNull: final value?) when value.isEmpty =>
+                    Text('关注的成员和星标场次接下来没有安排', style: muted),
+                  AsyncValue(valueOrNull: final value?) => Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppTokens.readingWidth,
+                      ),
+                      child: AppCard(
+                        padding: const EdgeInsets.all(6),
+                        child: Column(
+                          children: [
+                            for (final event in value)
+                              CalendarAgendaRow(
+                                event: event,
+                                showDay: true,
+                                today: today,
+                                now: now,
+                              ),
+                          ],
                         ),
-                      ),
-                      subtitle: Text(
-                        '${CalendarAgenda.range(entry.event)}${entry.event.isCancelled ? '\n已取消' : ''}',
-                      ),
-                      onTap: () => showCalendarEvent(
-                        context,
-                        entry.event,
-                        source: entry.key.source,
                       ),
                     ),
                   ),
-                  CalendarFollowButton(
-                    event: entry.event,
-                    source: entry.key.source,
-                    iconOnly: true,
+                  AsyncValue(hasError: true) => Row(
+                    children: [
+                      Expanded(child: Text('日历暂时读取失败', style: muted)),
+                      AppButton(
+                        onPressed: () =>
+                            ref.invalidate(followedUpcomingProvider),
+                        child: const Text('重试'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                ],
+                  _ => const LinearProgressIndicator(),
+                },
+                heading('全部星标'),
+              ],
+            ),
+          ),
+          itemBuilder: (context, entry) => Row(
+            children: [
+              Expanded(
+                child: ListTile(
+                  title: Text(
+                    entry.event.title.isEmpty ? '未命名安排' : entry.event.title,
+                    style: TextStyle(
+                      decoration: entry.event.isCancelled
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${CalendarAgenda.range(entry.event)}${entry.event.isCancelled ? '\n已取消' : ''}',
+                  ),
+                  onTap: () => showCalendarEvent(
+                    context,
+                    entry.event,
+                    source: entry.key.source,
+                  ),
+                ),
               ),
+              CalendarFollowButton(
+                event: entry.event,
+                source: entry.key.source,
+                iconOnly: true,
+              ),
+              const SizedBox(width: 8),
             ],
           ),
         ),
