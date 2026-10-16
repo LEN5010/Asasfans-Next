@@ -3,10 +3,19 @@ import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MemoryPreferencesRepository implements PreferencesRepository {
-  MemoryPreferencesRepository([this.values = const AppPreferences()]);
+  MemoryPreferencesRepository([
+    this.values = const AppPreferences(disclaimerAccepted: true),
+  ]);
   AppPreferences values;
   Object? failure;
   int writes = 0;
+  @override
+  Future<AppPreferences> acceptDisclaimer() async {
+    if (failure != null) throw failure!;
+    writes++;
+    return values = values.withDisclaimerAccepted();
+  }
+
   @override
   Future<AppPreferences> load() async {
     if (failure != null) throw failure!;
@@ -47,5 +56,5 @@ class MemoryPreferencesRepository implements PreferencesRepository {
 
 Override offlinePreferences([AppPreferences values = const AppPreferences()]) =>
     preferencesRepositoryProvider.overrideWithValue(
-      MemoryPreferencesRepository(values),
+      MemoryPreferencesRepository(values.withDisclaimerAccepted()),
     );

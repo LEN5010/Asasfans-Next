@@ -43,6 +43,9 @@ class SqlitePreferencesRepository implements PreferencesRepository {
   @override
   Future<AppPreferences> setHomeSection(HomeSection section, bool visible) =>
       _set('home.${section.name}.visible', '$visible');
+  @override
+  Future<AppPreferences> acceptDisclaimer() =>
+      _set('app.disclaimer.accepted', 'true');
 
   Future<AppPreferences> _set(String key, String value) async {
     final results = await _database.batch([
@@ -90,6 +93,7 @@ class SqlitePreferencesRepository implements PreferencesRepository {
       material: matchedMaterial ?? AppMaterial.liquid,
       visualGlass: tier == 'visual',
       hiddenHomeSections: Set.unmodifiable(hidden),
+      disclaimerAccepted: values['app.disclaimer.accepted'] == 'true',
     );
   }
 }

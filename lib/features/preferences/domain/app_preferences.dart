@@ -19,6 +19,7 @@ class AppPreferences {
     this.material = AppMaterial.liquid,
     this.visualGlass = false,
     this.hiddenHomeSections = const {},
+    this.disclaimerAccepted = false,
   });
   final AppAppearance appearance;
   final AppMaterial material;
@@ -27,6 +28,7 @@ class AppPreferences {
   /// liquid/clear still reads this database.
   final bool visualGlass;
   final Set<HomeSection> hiddenHomeSections;
+  final bool disclaimerAccepted;
 
   GlassChoice get glass => material == AppMaterial.clear
       ? GlassChoice.smooth
@@ -41,6 +43,7 @@ class AppPreferences {
         : AppMaterial.liquid,
     visualGlass: value == GlassChoice.visual,
     hiddenHomeSections: hiddenHomeSections,
+    disclaimerAccepted: disclaimerAccepted,
   );
   bool shows(HomeSection section) => !hiddenHomeSections.contains(section);
 
@@ -49,24 +52,35 @@ class AppPreferences {
     material: material,
     visualGlass: visualGlass,
     hiddenHomeSections: hiddenHomeSections,
+    disclaimerAccepted: disclaimerAccepted,
   );
   AppPreferences withMaterial(AppMaterial value) => AppPreferences(
     appearance: appearance,
     material: value,
     visualGlass: visualGlass,
     hiddenHomeSections: hiddenHomeSections,
+    disclaimerAccepted: disclaimerAccepted,
   );
   AppPreferences withSection(HomeSection section, bool visible) =>
       AppPreferences(
         appearance: appearance,
         material: material,
         visualGlass: visualGlass,
+        disclaimerAccepted: disclaimerAccepted,
         hiddenHomeSections: Set.unmodifiable(
           visible
               ? ({...hiddenHomeSections}..remove(section))
               : {...hiddenHomeSections, section},
         ),
       );
+
+  AppPreferences withDisclaimerAccepted() => AppPreferences(
+    appearance: appearance,
+    material: material,
+    visualGlass: visualGlass,
+    hiddenHomeSections: hiddenHomeSections,
+    disclaimerAccepted: true,
+  );
 }
 
 abstract interface class PreferencesRepository {
@@ -79,4 +93,5 @@ abstract interface class PreferencesRepository {
   Future<AppPreferences> setGlass(GlassChoice glass);
   Future<AppPreferences> setAppearance(AppAppearance appearance);
   Future<AppPreferences> setHomeSection(HomeSection section, bool visible);
+  Future<AppPreferences> acceptDisclaimer();
 }

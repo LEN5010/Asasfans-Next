@@ -38,6 +38,16 @@ enum FanartSort { newest, oldest, views, favorites }
 
 enum FanartSource { all, bilibili, douban }
 
+enum FanartFeedbackReason { wrongCharacter, wrongCategory, contentIssue, other }
+
+abstract interface class FanartFeedbackRepository {
+  Future<void> submit({
+    required ContentIdentity identity,
+    required FanartFeedbackReason reason,
+    required String detail,
+  });
+}
+
 class FanartQuery {
   const FanartQuery({
     this.keyword = '',

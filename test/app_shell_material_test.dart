@@ -55,7 +55,10 @@ void main() {
       GlassMaterialMode.clear,
     );
     repository.initial.complete(
-      const AppPreferences(material: AppMaterial.clear),
+      const AppPreferences(
+        material: AppMaterial.clear,
+        disclaimerAccepted: true,
+      ),
     );
     await tester.pumpAndSettle();
     expect(loads, 0);

@@ -56,10 +56,10 @@ void main() {
     );
     expectCreatorBand(tester, find.byType(FanartCard).first);
     // The link is as wide as the name, not the line: the blank end of the
-    // byline, just before the more button, still opens the work.
+    // byline, just before the feedback button, still opens the work.
     final card = find.byType(FanartCard).first;
-    final more = tester.getRect(
-      find.descendant(of: card, matching: find.byType(MediaMoreButton)),
+    final feedback = tester.getRect(
+      find.descendant(of: card, matching: find.byTooltip('反馈问题')),
     );
     final link = tester.getRect(
       find
@@ -69,8 +69,8 @@ void main() {
           )
           .first,
     );
-    expect(link.right, lessThan(more.left - 8));
-    await tester.tapAt(Offset(more.left - 4, more.center.dy));
+    expect(link.right, lessThanOrEqualTo(feedback.left - 8));
+    await tester.tapAt(Offset(feedback.left - 4, feedback.center.dy));
     await settleVisual(tester);
     expect(find.byType(FanartDetailPage), findsOneWidget);
   });

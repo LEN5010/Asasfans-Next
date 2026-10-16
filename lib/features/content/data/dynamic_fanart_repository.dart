@@ -197,3 +197,58 @@ class DynamicFanartRepository implements FanartRepository {
         : null;
   }
 }
+
+/// Anonymous submissions use the site's existing feedback queue.
+class DynamicFanartFeedbackRepository implements FanartFeedbackRepository {
+  DynamicFanartFeedbackRepository(this._dio);
+  final Dio _dio;
+
+  @override
+  Future<void> submit({
+    required ContentIdentity identity,
+    required FanartFeedbackReason reason,
+    required String detail,
+  }) async {
+    final targetId = switch (identity.source) {
+      ContentSource.bilibiliDynamic => identity.value,
+      ContentSource.doubanTopic => 'douban:${identity.value}',
+      ContentSource.bilibiliVideo => throw const ApiFailure(
+        ApiFailureKind.invalidRequest,
+      ),
+    };
+    final note = reason == FanartFeedbackReason.wrongCharacter
+        ? ['人物识别错误', if (detail.trim().isNotEmpty) detail.trim()].join('\n')
+        : detail.trim();
+    if (identity.value.isEmpty || targetId.length > 128 || note.length > 1000) {
+      throw const ApiFailure(ApiFailureKind.invalidRequest);
+    }
+    try {
+      final response = await _dio.post<Object?>(
+        'feedback',
+        data: {
+          'targetType': 'fanart',
+          'targetId': targetId,
+          'reason': switch (reason) {
+            FanartFeedbackReason.wrongCharacter ||
+            FanartFeedbackReason.wrongCategory => 'wrong_category',
+            FanartFeedbackReason.contentIssue => 'content_issue',
+            FanartFeedbackReason.other => 'other',
+          },
+          'detail': note,
+        },
+      );
+      final body = response.data;
+      if (body is! Map ||
+          body['id'] is! String ||
+          (body['id'] as String).isEmpty) {
+        throw const ApiFailure(ApiFailureKind.invalidResponse);
+      }
+    } on DioException catch (error) {
+      throw ApiFailure(
+        error.response?.statusCode == 429
+            ? ApiFailureKind.rateLimited
+            : ApiFailureKind.unavailable,
+      );
+    }
+  }
+}

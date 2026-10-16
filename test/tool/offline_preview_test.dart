@@ -53,6 +53,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 3));
+      await tester.tap(find.text('我已阅读'));
+      await tester.pumpAndSettle();
       for (final label in ['内容', '日历', '我的', '今日']) {
         await tester.tap(
           find.descendant(

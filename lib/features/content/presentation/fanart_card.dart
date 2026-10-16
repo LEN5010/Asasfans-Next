@@ -14,6 +14,7 @@ import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../rules/application/feed_visibility.dart';
 import '../domain/fanart_repository.dart';
+import 'fanart_feedback.dart';
 
 /// A work tile with no card frame, as tall as its own content. An image
 /// work is its art in a stable portrait box (the model carries no image
@@ -333,6 +334,8 @@ class FanartCard extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          FanartFeedbackButton(item: item),
           MediaMoreButton(onPressed: more),
         ],
       ),

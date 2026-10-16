@@ -26,6 +26,23 @@ final fanartRepositoryProvider = Provider<FanartRepository>(
   ),
 );
 
+final fanartFeedbackRepositoryProvider = Provider<FanartFeedbackRepository>((
+  ref,
+) {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: ref.watch(appEnvironmentProvider).dynamicApiBaseUrl.toString(),
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
+      headers: {'Accept': 'application/json', 'User-Agent': appUserAgent},
+      followRedirects: false,
+    ),
+  );
+  ref.onDispose(() => dio.close(force: true));
+  return DynamicFanartFeedbackRepository(dio);
+});
+
 final dynamicRepositoryProvider = Provider<DynamicRepository>(
   (ref) => DynamicPostRepository(
     ref.watch(publicApiClientProvider),

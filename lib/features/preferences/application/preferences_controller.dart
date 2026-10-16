@@ -83,6 +83,8 @@ class PreferencesController extends StateNotifier<PreferencesState> {
   Future<bool> setHomeSection(HomeSection section, bool visible) =>
       _write(() => _repository.setHomeSection(section, visible));
 
+  Future<bool> acceptDisclaimer() => _write(_repository.acceptDisclaimer);
+
   Future<bool> _write(Future<AppPreferences> Function() action) {
     if (!mounted || !state.ready || state.loading) return Future.value(false);
     _pendingWrites++;

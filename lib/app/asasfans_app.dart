@@ -13,6 +13,7 @@ import '../shared/widgets/glass/glass_policy.dart';
 import 'theme/app_theme.dart';
 import '../features/preferences/application/preferences_controller.dart';
 import '../features/preferences/domain/app_preferences.dart';
+import '../features/preferences/presentation/disclaimer_page.dart';
 
 class AsasfansApp extends ConsumerStatefulWidget {
   const AsasfansApp({super.key});
@@ -72,7 +73,7 @@ class _AsasfansAppState extends ConsumerState<AsasfansApp> {
             policy: ReadingOrderTraversalPolicy(
               requestFocusCallback: revealFocusClear,
             ),
-            child: child!,
+            child: StartupDisclaimerGate(child: child!),
           ),
         );
       },

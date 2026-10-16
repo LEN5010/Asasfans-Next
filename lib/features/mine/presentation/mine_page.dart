@@ -493,8 +493,17 @@ class SettingsPage extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 760),
           child: ListView(
             padding: pageInsets(context, top: 4),
-            children: const [
-              _Group(title: '外观与首页', children: [PreferencesControls()]),
+            children: [
+              const _Group(title: '外观与首页', children: [PreferencesControls()]),
+              const SizedBox(height: AppTokens.sectionGap),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: _Link(
+                  label: '免责声明',
+                  icon: Icons.info_outline,
+                  onTap: () => context.go('/mine/settings/disclaimer'),
+                ),
+              ),
             ],
           ),
         ),

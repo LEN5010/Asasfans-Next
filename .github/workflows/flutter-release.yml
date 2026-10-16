@@ -15,6 +15,10 @@ on:
         description: Build Windows from the selected ref for an existing version
         type: boolean
         default: false
+      rebuild_from_ref:
+        description: Rebuild a withdrawn version from the selected workflow ref
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.windows_only && github.sha || format('refs/tags/{0}', inputs.tag) }}
+          ref: ${{ (inputs.windows_only || inputs.rebuild_from_ref) && github.sha || format('refs/tags/{0}', inputs.tag) }}
       - id: check
         env:
           RELEASE_TAG: ${{ inputs.tag }}
@@ -73,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.windows_only && github.sha || format('refs/tags/{0}', inputs.tag) }}
+          ref: ${{ (inputs.windows_only || inputs.rebuild_from_ref) && github.sha || format('refs/tags/{0}', inputs.tag) }}
       - uses: actions/setup-java@v4
         if: matrix.platform == 'android'
         with:
@@ -191,7 +195,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ inputs.rebuild_from_ref && github.sha || format('refs/tags/{0}', inputs.tag) }}
       - uses: actions/download-artifact@v4
         with:
           path: dist

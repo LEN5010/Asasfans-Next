@@ -9,6 +9,7 @@ import '../../features/content/application/content_providers.dart';
 import '../../features/content/domain/community_video_repository.dart';
 import '../../features/content/presentation/content_page.dart';
 import '../../features/mine/presentation/mine_page.dart';
+import '../../features/preferences/presentation/disclaimer_page.dart';
 import '../../features/library/presentation/library_pages.dart';
 import '../../features/library/presentation/playback_pages.dart';
 import '../../features/library/presentation/calendar_follows.dart';
@@ -153,6 +154,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'settings',
                     builder: (_, _) => const SettingsPage(),
+                    routes: [
+                      GoRoute(
+                        path: 'disclaimer',
+                        builder: (_, _) => const DisclaimerPage(),
+                      ),
+                    ],
                   ),
                   GoRoute(path: 'about', builder: (_, _) => const AboutPage()),
                 ],
