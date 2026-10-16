@@ -12,6 +12,7 @@ void main() {
   test(
     'Windows resolves its storage path in a worker and opens the personal DB',
     () async {
+      final expectedFile = await resolvePersonalDatabasePath();
       final container = ProviderContainer();
       final database = container.read(localDatabaseProvider);
       addTearDown(() async {
@@ -24,6 +25,7 @@ void main() {
         SqlStatement('PRAGMA user_version', [], true),
       ]);
       final file = results.first.single['file']! as String;
+      expect(file, expectedFile);
       expect(file, endsWith(path.join('asasfans_flutter', 'personal.sqlite3')));
       expect(results.last.single['user_version'], SqliteExecutor.schemaVersion);
     },

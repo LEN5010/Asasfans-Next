@@ -23,6 +23,7 @@ dependencies:
   timezone: 0.10.1
   path: 1.9.1
   path_provider: 2.1.5
+  path_provider_windows: 2.3.0
   sqlite3: 2.9.0
   sqlite3_flutter_libs: 0.5.39
   file_selector: 1.0.3

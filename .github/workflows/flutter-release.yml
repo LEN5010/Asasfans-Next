@@ -67,7 +67,7 @@ jobs:
     name: ${{ matrix.platform }}
     needs: verify
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         platform: ${{ fromJSON(inputs.windows_only && '["windows"]' || '["android","windows","macos","ios"]') }}
     runs-on: ${{ fromJSON('{"android":"ubuntu-latest","windows":"windows-2022","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}

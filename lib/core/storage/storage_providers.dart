@@ -1,28 +1,27 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:ui' show DartPluginRegistrant;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:path_provider_windows/path_provider_windows.dart';
 
 import 'local_database.dart';
 
 final localDatabaseProvider = Provider<LocalDatabase>((ref) {
-  final database = IsolateLocalDatabase(
-    () => Platform.isWindows
-        ? Isolate.run(_windowsDatabasePath)
-        : _databasePath(),
-  );
+  final database = IsolateLocalDatabase(resolvePersonalDatabasePath);
   ref.onDispose(() => unawaited(database.close()));
   return database;
 });
 
+Future<String> resolvePersonalDatabasePath() =>
+    Platform.isWindows ? Isolate.run(_windowsDatabasePath) : _databasePath();
+
 Future<String> _windowsDatabasePath() {
   // Windows path_provider reads the executable's version resource and calls
   // synchronous shell APIs. Keep those calls off the UI isolate.
-  DartPluginRegistrant.ensureInitialized();
+  PathProviderWindows.registerWith();
   return _databasePath();
 }
 
