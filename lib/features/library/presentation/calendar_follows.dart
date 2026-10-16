@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
-import '../../../shared/widgets/member_tone.dart';
+import '../../content/presentation/content_images.dart';
 import '../../../core/time/calendar_time.dart';
 import '../../../core/time/shanghai_date_provider.dart';
 import '../../calendar/application/calendar_follow_selection.dart';
@@ -131,39 +131,22 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
                     runSpacing: 8,
                     children: [
                       for (final member in EventClassifier.memberAliases.keys)
-                        Builder(
-                          builder: (context) {
-                            final tone = MemberTone.of(
-                              member,
-                              Theme.of(context).brightness,
-                            );
-                            final selected =
-                                follows.valueOrNull?.members.contains(member) ??
-                                false;
-                            return AppChoice(
-                              avatar: CircleAvatar(
-                                radius: 13,
-                                backgroundColor: tone.wash,
-                                child: Text(
-                                  member == 'A-SOUL'
-                                      ? 'A'
-                                      : member.substring(0, 1),
-                                  style: TextStyle(
-                                    color: tone.text,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
+                        MemberChoiceButton(
+                          label: member,
+                          members: [member],
+                          selected:
+                              follows.valueOrNull?.members.contains(member) ??
+                              false,
+                          onPressed:
+                              follows.hasValue &&
+                                  !_changingMembers.contains(member)
+                              ? () => _member(
+                                  member,
+                                  !follows.requireValue.members.contains(
+                                    member,
                                   ),
-                                ),
-                              ),
-                              label: Text(member),
-                              selected: selected,
-                              onSelected:
-                                  follows.hasValue &&
-                                      !_changingMembers.contains(member)
-                                  ? (value) => _member(member, value)
-                                  : null,
-                            );
-                          },
+                                )
+                              : null,
                         ),
                     ],
                   ),

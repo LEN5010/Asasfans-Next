@@ -18,6 +18,7 @@ class AppButton extends StatelessWidget {
     this.tooltip,
     this.leading,
     this.filled = false,
+    this.tonal = false,
   }) : iconOnly = false;
 
   const AppButton.icon({
@@ -30,7 +31,8 @@ class AppButton extends StatelessWidget {
     this.filled = false,
   }) : child = icon,
        leading = null,
-       iconOnly = true;
+       iconOnly = true,
+       tonal = false;
 
   const AppButton.withIcon({
     super.key,
@@ -41,6 +43,7 @@ class AppButton extends StatelessWidget {
     this.radius = 10,
     this.tooltip,
     this.filled = false,
+    this.tonal = false,
   }) : child = label,
        leading = icon,
        iconOnly = false;
@@ -55,6 +58,10 @@ class AppButton extends StatelessWidget {
 
   /// Sits beside a search field: the field's fill, height and corners.
   final bool filled;
+
+  /// One of a set of options: a quiet fill while unselected, so the choices
+  /// read as buttons rather than loose words on the panel.
+  final bool tonal;
 
   @override
   Widget build(BuildContext context) {
@@ -80,13 +87,15 @@ class AppButton extends StatelessWidget {
             ? colors.primaryContainer
             : filled
             ? Theme.of(context).inputDecorationTheme.fillColor
+            : tonal
+            ? colors.surfaceContainerHigh
             : Colors.transparent,
         disabledForegroundColor: colors.onSurface.withValues(alpha: .38),
         // From the theme, so labels keep its typeface and fallbacks.
         textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
           fontSize: 13.5,
           height: 1.3,
-          fontWeight: FontWeight.w500,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
@@ -137,7 +146,8 @@ class AppChoice extends StatelessWidget {
     selected: selected,
     child: AppButton(
       selected: selected,
-      leading: avatar ?? (selected ? const Icon(Icons.check, size: 16) : null),
+      tonal: true,
+      leading: avatar,
       onPressed: onSelected == null ? null : () => onSelected!(!selected),
       child: label,
     ),
@@ -165,7 +175,11 @@ class AppSegments<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      const style = TextStyle(fontSize: 14, fontWeight: FontWeight.w600);
+      // Measured in the face the labels are drawn in.
+      final style = Theme.of(context).textTheme.labelLarge!.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+      );
       var labelWidth = 0.0;
       for (final value in values) {
         final painter = TextPainter(

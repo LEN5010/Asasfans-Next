@@ -40,6 +40,14 @@ void main() {
     expect(tracks.single.duration, const Duration(minutes: 2));
     expect(tracks.single.isLive, isTrue);
     expect(() => parseMusicCsv('id,歌名\n123,歌'), throwsFormatException);
+    // The live catalogue has rows without a title; they drop out alone.
+    final mixed = parseMusicCsv(
+      '$_csv'
+      '125,2024.12.15,225264,,思诺,完整,TRUE\r\n'
+      '126,2024.2.30,225264,坏日期,思诺,完整,TRUE\r\n'
+      '127,2024.12.15,225264,好歌,思诺,完整,TRUE\r\n',
+    );
+    expect(mixed.map((track) => track.id), ['123', '127']);
     expect(
       () => parseMusicCsv(_csv.replaceFirst('2026.10.15', '2026.2.30')),
       throwsFormatException,
@@ -112,6 +120,36 @@ void main() {
       expect(musicVolume(5.3), 1);
     },
   );
+
+  test('a day is one session, in catalogue order, newest day first', () {
+    MusicTrack song(String id, DateTime date, List<String> members) =>
+        MusicTrack(
+          id: id,
+          date: date,
+          title: id,
+          members: members,
+          duration: const Duration(minutes: 3),
+          status: '完整',
+        );
+    final sessions = musicSessions([
+      song('a', DateTime(2026, 9, 5), ['嘉然', '贝拉']),
+      song('b', DateTime(2026, 9, 5), ['乃琳']),
+      song('c', DateTime(2026, 9, 9), ['贝拉']),
+      song('d', DateTime(2026, 9, 5), ['嘉然', '贝拉']),
+    ]);
+    expect(sessions.map((s) => s.tracks.map((t) => t.id).join()), [
+      'c',
+      'abd',
+    ]);
+    expect(sessions.last.members, ['嘉然', '贝拉', '乃琳']);
+    expect(
+      musicSessions(sessions.expand((s) => s.tracks), oldest: true)
+          .first
+          .tracks
+          .map((t) => t.id),
+      ['a', 'b', 'd'],
+    );
+  });
 
   test('studio search rules use new group names and Beijing date bounds', () {
     MusicTrack song(List<String> members) => MusicTrack(

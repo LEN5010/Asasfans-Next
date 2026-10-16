@@ -2,7 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/member_tone.dart';
+import '../../../shared/widgets/app_controls.dart';
 import '../application/music_audio_handler.dart';
 import '../application/music_providers.dart';
 import '../domain/music_track.dart';
@@ -90,70 +90,34 @@ class _PlayerContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final colors = track.members
-        .map((m) => MemberTone.of(m, theme.brightness).color)
-        .toList();
-    if (colors.length == 1) {
-      colors.add(Color.lerp(colors.first, Colors.black, .35)!);
-    }
     final total = handler.duration.inMilliseconds;
     final value = handler.position.inMilliseconds.clamp(0, total).toDouble();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The singers stand in for a cover the catalogue does not have.
         LayoutBuilder(
-          builder: (context, constraints) => ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxWidth / 1.15),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: colors
-                      .map(
-                        (c) => Color.lerp(
-                          c,
-                          const Color(0xFF17121A),
-                          track.members.length > 1 ? .4 : .15,
-                        )!,
-                      )
-                      .toList(),
+          builder: (context, constraints) => Stack(
+            children: [
+              MusicArtwork(
+                members: track.members,
+                size: constraints.maxWidth,
+                radius: 28,
+              ),
+              Positioned(
+                left: 28,
+                right: 28,
+                bottom: 24,
+                child: Text(
+                  track.singers,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.music_note_rounded,
-                      color: Colors.white,
-                      size: 46,
-                    ),
-                    const SizedBox(height: 64),
-                    Text(
-                      track.singers,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      track.dateLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -165,7 +129,7 @@ class _PlayerContent extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '${track.singers} · ${track.dateLabel} · ${track.isLive ? 'Live' : '完整'}',
+          [track.dateLabel, if (track.isLive) 'Live'].join(' · '),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -258,48 +222,47 @@ class _PlayerContent extends ConsumerWidget {
               onPressed: handler.skipToNext,
               icon: const Icon(Icons.skip_next_rounded),
             ),
-            IconButton(
-              tooltip: '播放队列',
-              onPressed: wide
-                  ? null
-                  : () => showModalBottomSheet<void>(
-                      context: context,
-                      isScrollControlled: true,
-                      showDragHandle: true,
-                      builder: (context) => SizedBox(
-                        height: MediaQuery.sizeOf(context).height * .72,
-                        child: Consumer(
-                          builder: (context, ref, _) {
-                            final live = ref.watch(musicAudioHandlerProvider);
-                            return SafeArea(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      8,
-                                      24,
-                                      16,
-                                    ),
-                                    child: Text(
-                                      '播放队列 · ${live.tracks.length}',
-                                      style: const TextStyle(
-                                        fontSize: 19,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
+            if (!wide)
+              IconButton(
+                tooltip: '播放队列',
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  showDragHandle: true,
+                  builder: (context) => SizedBox(
+                    height: MediaQuery.sizeOf(context).height * .72,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final live = ref.watch(musicAudioHandlerProvider);
+                        return SafeArea(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  24,
+                                  8,
+                                  24,
+                                  16,
+                                ),
+                                child: Text(
+                                  '播放队列 · ${live.tracks.length}',
+                                  style: const TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  Expanded(child: MusicQueue(handler: live)),
-                                ],
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ),
+                              Expanded(child: MusicQueue(handler: live)),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-              icon: const Icon(Icons.queue_music_rounded),
-            ),
+                  ),
+                ),
+                icon: const Icon(Icons.queue_music_rounded),
+              ),
           ],
         ),
         const SizedBox(height: 24),
@@ -308,13 +271,13 @@ class _PlayerContent extends ConsumerWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            OutlinedButton.icon(
+            AppButton.withIcon(
               onPressed: () =>
                   openMusicSearch(context, ref, track, replay: false),
               icon: const Icon(Icons.search),
               label: const Text('搜切片'),
             ),
-            OutlinedButton.icon(
+            AppButton.withIcon(
               onPressed: () =>
                   openMusicSearch(context, ref, track, replay: true),
               icon: const Icon(Icons.video_library_outlined),

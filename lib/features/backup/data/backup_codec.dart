@@ -290,7 +290,9 @@ abstract final class BackupCodec {
         throw _invalid;
       }
     } else if (table == 'calendar_member_follows') {
-      if (!EventClassifier.memberAliases.containsKey(_text(row['member'], 64))) {
+      if (!EventClassifier.memberAliases.containsKey(
+        _text(row['member'], 64),
+      )) {
         throw _invalid;
       }
     } else if (table == 'preferences') {

@@ -54,6 +54,122 @@ Future<T?> showAppPanel<T>({
   );
 }
 
+/// Every feed's filter panel, the same in a bottom sheet and inline on a wide
+/// window: the title with 重置 and close, titled [sections] in one column,
+/// then 取消 and 应用筛选. Inline ([embedded]) it is as tall as its content.
+class AppFilterPanel extends StatelessWidget {
+  const AppFilterPanel({
+    super.key,
+    required this.title,
+    required this.sections,
+    required this.onReset,
+    required this.onApply,
+    required this.onClose,
+    this.embedded = false,
+  });
+  final String title;
+  final List<Widget> sections;
+  final VoidCallback onReset;
+  final VoidCallback onApply;
+  final VoidCallback onClose;
+  final bool embedded;
+
+  @override
+  Widget build(BuildContext context) {
+    final fields = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: sections,
+      ),
+    );
+    return Column(
+      mainAxisSize: embedded ? MainAxisSize.min : MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppPanelHeader(
+          title: title,
+          closeLabel: '关闭筛选',
+          onClose: onClose,
+          actions: [AppButton(onPressed: onReset, child: const Text('重置'))],
+        ),
+        if (embedded)
+          fields
+        else
+          Expanded(child: SingleChildScrollView(child: fields)),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Row(
+              children: [
+                AppButton(onPressed: onClose, child: const Text('取消')),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    selected: true,
+                    onPressed: onApply,
+                    child: const Text('应用筛选'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One titled group of an [AppFilterPanel].
+class AppFilterSection extends StatelessWidget {
+  const AppFilterSection({super.key, required this.title, required this.child});
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(top: 18, bottom: 10),
+        child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+      ),
+      child,
+    ],
+  );
+}
+
+/// Single-choice buttons that wrap, for a group with too many options to
+/// sit side by side in [AppSegments].
+class AppChoiceWrap<T> extends StatelessWidget {
+  const AppChoiceWrap({
+    super.key,
+    required this.values,
+    required this.labelOf,
+    required this.selected,
+    required this.onChanged,
+  });
+  final List<T> values;
+  final String Function(T) labelOf;
+  final T selected;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final value in values)
+        AppChoice(
+          selected: value == selected,
+          onSelected: (_) => onChanged(value),
+          label: Text(labelOf(value)),
+        ),
+    ],
+  );
+}
+
 /// Fixed title row; the panel body below it owns scrolling. The panel is a
 /// solid surface, so the header is plain rather than a glass layer on nothing.
 class AppPanelHeader extends StatelessWidget {

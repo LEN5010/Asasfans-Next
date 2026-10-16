@@ -3,11 +3,55 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/app_page_bar.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/app_motion.dart';
+import '../../../shared/widgets/app_panel.dart';
 import '../../../shared/widgets/member_tone.dart';
+import '../../../shared/widgets/page_heading.dart';
+import '../../../shared/widgets/query_summary.dart';
+import '../../content/presentation/content_search_control.dart';
 import '../application/music_providers.dart';
+import '../data/music_catalog_repository.dart';
 import '../domain/music_track.dart';
 import 'music_widgets.dart';
+
+/// What the catalogue is narrowed to. Members are any-of, as in 二创.
+class MusicQuery {
+  const MusicQuery({
+    this.keyword = '',
+    this.members = const {},
+    this.year,
+    this.oldest = false,
+  });
+  final String keyword;
+  final Set<String> members;
+  final int? year;
+  final bool oldest;
+
+  MusicQuery copyWith({
+    String? keyword,
+    Set<String>? members,
+    int? year,
+    bool clearYear = false,
+    bool? oldest,
+  }) => MusicQuery(
+    keyword: keyword ?? this.keyword,
+    members: members ?? this.members,
+    year: clearYear ? null : year ?? this.year,
+    oldest: oldest ?? this.oldest,
+  );
+
+  bool matches(MusicTrack track) =>
+      (keyword.isEmpty ||
+          track.title.toLowerCase().contains(keyword.toLowerCase())) &&
+      (members.isEmpty || track.members.any(members.contains)) &&
+      (year == null || track.date.year == year);
+}
+
+/// Members in the strip, in the order the rest of the app lists them; anyone
+/// else the catalogue names follows.
+const _memberOrder = ['嘉然', '贝拉', '乃琳', '心宜', '思诺', '向晚', '珈乐'];
 
 class MusicPage extends ConsumerStatefulWidget {
   const MusicPage({super.key});
@@ -16,63 +60,30 @@ class MusicPage extends ConsumerStatefulWidget {
 }
 
 class _MusicPageState extends ConsumerState<MusicPage> {
-  String _keyword = '';
-  String? _member;
-  int? _year;
-  bool? _live;
-  bool _oldest = false;
-  bool _filtersOpen = false;
-  final _search = TextEditingController();
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
+  var _query = const MusicQuery();
+  bool _panelOpen = false;
 
-  Widget _filters(List<int> years, VoidCallback update) => Wrap(
-    spacing: 12,
-    runSpacing: 12,
-    crossAxisAlignment: WrapCrossAlignment.center,
-    children: [
-      DropdownButton<int>(
-        value: _year,
-        hint: const Text('全部年份'),
-        items: [
-          const DropdownMenuItem<int>(value: null, child: Text('全部年份')),
-          for (final year in years)
-            DropdownMenuItem(value: year, child: Text('$year')),
-        ],
-        onChanged: (v) {
-          setState(() => _year = v);
-          update();
-        },
-      ),
-      DropdownButton<bool>(
-        value: _live,
-        hint: const Text('全部版本'),
-        items: const [
-          DropdownMenuItem<bool>(value: null, child: Text('全部版本')),
-          DropdownMenuItem(value: false, child: Text('完整')),
-          DropdownMenuItem(value: true, child: Text('Live')),
-        ],
-        onChanged: (v) {
-          setState(() => _live = v);
-          update();
-        },
-      ),
-      DropdownButton<bool>(
-        value: _oldest,
-        items: const [
-          DropdownMenuItem(value: false, child: Text('最新在前')),
-          DropdownMenuItem(value: true, child: Text('最早在前')),
-        ],
-        onChanged: (v) {
-          setState(() => _oldest = v!);
-          update();
-        },
-      ),
-    ],
-  );
+  /// Filtering 5,000 songs is cheap, but not on every rebuild.
+  MusicCatalog? _catalog;
+  MusicQuery? _shownQuery;
+  List<MusicSession> _sessions = const [];
+  List<MusicTrack> _shown = const [];
+
+  void _apply(MusicQuery query) => setState(() {
+    _query = query;
+    _panelOpen = false;
+  });
+
+  void _filter(MusicCatalog catalog) {
+    if (identical(catalog, _catalog) && identical(_query, _shownQuery)) return;
+    _catalog = catalog;
+    _shownQuery = _query;
+    _sessions = musicSessions(
+      catalog.tracks.where(_query.matches),
+      oldest: _query.oldest,
+    );
+    _shown = [for (final session in _sessions) ...session.tracks];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,297 +92,306 @@ class _MusicPageState extends ConsumerState<MusicPage> {
       musicAudioHandlerProvider.select((h) => h.current?.id),
     );
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppPageBar(
-        controlExtent: MediaQuery.textScalerOf(context).scale(28) * 1.3 < 48
-            ? 48
-            : MediaQuery.textScalerOf(context).scale(28) * 1.3,
-        title: const Text(
-          '音乐',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-        ),
-        actions: const [MusicStudioButton()],
-      ),
+      // The shell's backdrop shows through the main pages.
+      backgroundColor: Colors.transparent,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 720;
-          return catalog.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => Center(
+          final gutter = AppTokens.gutter(constraints.maxWidth);
+          final wide = constraints.maxWidth >= 600;
+          final value = catalog.valueOrNull;
+          if (value != null) _filter(value);
+          Widget bounded(Widget child, {double max = AppTokens.readingWidth}) =>
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: max),
+                  child: child,
+                ),
+              );
+          final header = Padding(
+            padding: EdgeInsets.fromLTRB(
+              gutter,
+              MediaQuery.paddingOf(context).top + 16,
+              gutter,
+              0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                bounded(
+                  const RootHeading(
+                    title: '音乐',
+                    actions: [MusicStudioButton()],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                bounded(
+                  max: ContentSearchControl.rowWidth,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ContentSearchControl(
+                      value: _query.keyword,
+                      hint: '搜索歌名',
+                      expanded: true,
+                      onSubmitted: (keyword) =>
+                          _apply(_query.copyWith(keyword: keyword)),
+                      filter: AppButton.icon(
+                        tooltip: '筛选与排序',
+                        selected:
+                            _panelOpen || _query.year != null || _query.oldest,
+                        icon: const Icon(Icons.tune),
+                        onPressed: () async {
+                          if (wide) {
+                            setState(() => _panelOpen = !_panelOpen);
+                            return;
+                          }
+                          final next = await showAppPanel<MusicQuery>(
+                            context: context,
+                            builder: (context) => _MusicFilterPanel(
+                              query: _query,
+                              years: _years(value),
+                              onApply: (next) => Navigator.pop(context, next),
+                              onClose: () => Navigator.pop(context),
+                            ),
+                          );
+                          if (next != null && mounted) _apply(next);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedSize(
+                  duration: appMotion(context, AppTokens.controlMotion),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: !(wide && _panelOpen)
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: bounded(
+                            Card(
+                              child: _MusicFilterPanel(
+                                key: ValueKey(_query),
+                                query: _query,
+                                years: _years(value),
+                                embedded: true,
+                                onApply: _apply,
+                                onClose: () =>
+                                    setState(() => _panelOpen = false),
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          );
+          final members = [
+            for (final name in _memberOrder)
+              if (value?.tracks.any((t) => t.members.contains(name)) ?? true)
+                name,
+          ];
+          final strip = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: gutter),
+            child: Row(
+              spacing: 6,
+              children: [
+                MemberQuickChip(
+                  label: '全部成员',
+                  selected: _query.members.isEmpty,
+                  onTap: () => _apply(_query.copyWith(members: const {})),
+                ),
+                for (final member in members)
+                  MemberQuickChip(
+                    label: member,
+                    members: [member],
+                    selected: _query.members.contains(member),
+                    onTap: () => _apply(
+                      _query.copyWith(
+                        members: _query.members.contains(member)
+                            ? _query.members.difference({member})
+                            : {..._query.members, member},
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+          final summary = QuerySummary(
+            padding: EdgeInsets.fromLTRB(gutter, 0, gutter - 8, 0),
+            status: value == null ? null : '${_shown.length} 首',
+            clearLabel: '清除条件',
+            clearTooltip: '清除条件，成员不变',
+            onClear: () => _apply(MusicQuery(members: _query.members)),
+            applied: [
+              if (_query.keyword.isNotEmpty)
+                (
+                  label: '“${_query.keyword}”',
+                  remove: () => _apply(_query.copyWith(keyword: '')),
+                ),
+              if (_query.year case final year?)
+                (
+                  label: '$year 年',
+                  remove: () => _apply(_query.copyWith(clearYear: true)),
+                ),
+              if (_query.oldest)
+                (
+                  label: '最早在前',
+                  remove: () => _apply(_query.copyWith(oldest: false)),
+                ),
+            ],
+          );
+          final Widget? placeholder = switch (catalog) {
+            AsyncValue(hasValue: true) when _sessions.isEmpty => const Center(
+              child: Text('没有符合条件的歌回'),
+            ),
+            AsyncValue(hasValue: true) => null,
+            AsyncValue(hasError: true) => Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text('暂时无法读取歌单'),
                   const SizedBox(height: 12),
-                  FilledButton(
+                  AppButton(
+                    selected: true,
                     onPressed: () => ref.invalidate(musicCatalogProvider),
                     child: const Text('重试'),
                   ),
                 ],
               ),
             ),
-            data: (value) {
-              final years =
-                  value.tracks.map((t) => t.date.year).toSet().toList()
-                    ..sort((a, b) => b.compareTo(a));
-              final tracks =
-                  value.tracks
-                      .where(
-                        (t) =>
-                            (_keyword.isEmpty ||
-                                t.title.toLowerCase().contains(
-                                  _keyword.toLowerCase(),
-                                )) &&
-                            (_member == null || t.members.contains(_member)) &&
-                            (_year == null || t.date.year == _year) &&
-                            (_live == null || t.isLive == _live),
-                      )
-                      .toList()
-                    ..sort((a, b) {
-                      final date = a.date.compareTo(b.date);
-                      return (_oldest ? date : -date);
-                    });
-              final groups = <String, List<MusicTrack>>{};
-              for (final track in tracks) {
-                groups.putIfAbsent(track.sessionKey, () => []).add(track);
-              }
-              final sessions = groups.values.toList();
-              final entries = <Object>[];
-              for (final session in sessions) {
-                entries.add(session);
-                entries.addAll(session);
-              }
-              final padding = pageInsets(context);
-              return RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(musicCatalogProvider);
-                  await ref.read(musicCatalogProvider.future);
-                },
-                child: CustomScrollView(
-                  key: const PageStorageKey('music-catalog'),
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.fromLTRB(
-                        padding.left,
-                        padding.top,
-                        padding.right,
-                        0,
+            _ => const Center(child: CircularProgressIndicator()),
+          };
+          final handler = ref.read(musicAudioHandlerProvider);
+          return RefreshIndicator(
+            edgeOffset: MediaQuery.paddingOf(context).top,
+            onRefresh: () async {
+              ref.invalidate(musicCatalogProvider);
+              await ref.read(musicCatalogProvider.future);
+            },
+            child: CustomScrollView(
+              key: const PageStorageKey('music-catalog'),
+              slivers: [
+                SliverToBoxAdapter(child: header),
+                SliverToBoxAdapter(child: strip),
+                SliverToBoxAdapter(child: summary),
+                if (value?.warning case final warning?)
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(gutter, 4, gutter, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        warning,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      sliver: SliverToBoxAdapter(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 720),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _search,
-                                        onChanged: (v) =>
-                                            setState(() => _keyword = v.trim()),
-                                        decoration: const InputDecoration(
-                                          hintText: '搜索歌名',
-                                          prefixIcon: Icon(Icons.search),
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    IconButton.filledTonal(
-                                      tooltip: '筛选',
-                                      onPressed: () {
-                                        if (wide) {
-                                          setState(
-                                            () => _filtersOpen = !_filtersOpen,
-                                          );
-                                        } else {
-                                          showModalBottomSheet<void>(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            showDragHandle: true,
-                                            builder: (context) => SafeArea(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.fromLTRB(
-                                                      24,
-                                                      8,
-                                                      24,
-                                                      24,
-                                                    ),
-                                                child: StatefulBuilder(
-                                                  builder: (context, update) =>
-                                                      Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          const Text(
-                                                            '筛选',
-                                                            style: TextStyle(
-                                                              fontSize: 19,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 16,
-                                                          ),
-                                                          _filters(
-                                                            years,
-                                                            () => update(() {}),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      icon: const Icon(Icons.tune),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  children: [
-                                    ChoiceChip(
-                                      label: const Text('全部'),
-                                      selected: _member == null,
-                                      onSelected: (_) =>
-                                          setState(() => _member = null),
-                                    ),
-                                    for (final member in const [
-                                      '贝拉',
-                                      '嘉然',
-                                      '乃琳',
-                                      '向晚',
-                                      '珈乐',
-                                      '心宜',
-                                      '思诺',
-                                    ])
-                                      ChoiceChip(
-                                        avatar: MemberDots(members: [member]),
-                                        label: Text(member),
-                                        selected: _member == member,
-                                        onSelected: (selected) => setState(
-                                          () => _member = selected
-                                              ? member
-                                              : null,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                if (wide && _filtersOpen)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12),
-                                    child: _filters(years, () {}),
-                                  ),
-                                if (value.warning != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12),
-                                    child: Text(
-                                      value.warning!,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ),
-                                const SizedBox(height: 20),
-                                if (tracks.isEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.all(24),
-                                    child: Center(child: Text('没有符合条件的歌回')),
-                                  ),
-                              ],
+                    ),
+                  ),
+                if (placeholder != null)
+                  SliverFillRemaining(hasScrollBody: false, child: placeholder)
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      gutter,
+                      12,
+                      gutter,
+                      MediaQuery.paddingOf(context).bottom + 24,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: _sessions.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppTokens.itemGap),
+                      itemBuilder: (context, index) {
+                        final session = _sessions[index];
+                        return bounded(
+                          MusicSessionCard(
+                            session: session,
+                            currentId: currentId,
+                            onPlayDay: () =>
+                                unawaited(handler.playTracks(session.tracks)),
+                            // A song plays on through the list as shown, into
+                            // the days after it.
+                            onPlayTrack: (at) => unawaited(
+                              handler.playTracks(
+                                _shown,
+                                start: _shown.indexOf(session.tracks[at]),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: padding.left),
-                      sliver: SliverList.builder(
-                        itemCount: entries.length,
-                        itemBuilder: (context, index) {
-                          final entry = entries[index];
-                          return Align(
-                            alignment: Alignment.centerLeft,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 720),
-                              child: entry is List<MusicTrack>
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 16,
-                                        bottom: 8,
-                                      ),
-                                      child: Wrap(
-                                        alignment: WrapAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        spacing: 16,
-                                        children: [
-                                          Text(
-                                            '${entry.first.dateLabel} · ${entry.first.singers} · ${entry.length} 首',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          TextButton.icon(
-                                            onPressed: () => unawaited(
-                                              ref
-                                                  .read(
-                                                    musicAudioHandlerProvider,
-                                                  )
-                                                  .playTracks(entry),
-                                            ),
-                                            icon: const Icon(
-                                              Icons.play_arrow,
-                                              size: 18,
-                                            ),
-                                            label: const Text('播放这场'),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : MusicSurface(
-                                      child: MusicTrackRow(
-                                        track: entry as MusicTrack,
-                                        selected: currentId == entry.id,
-                                        onPlay: () => unawaited(
-                                          ref
-                                              .read(musicAudioHandlerProvider)
-                                              .playTracks(
-                                                tracks,
-                                                start: tracks.indexOf(entry),
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: padding.bottom + 24),
-                    ),
-                  ],
-                ),
-              );
-            },
+                  ),
+              ],
+            ),
           );
         },
       ),
     );
   }
+
+  static List<int> _years(MusicCatalog? catalog) => [
+    ...<int>{
+      for (final track in catalog?.tracks ?? const <MusicTrack>[])
+        track.date.year,
+    },
+  ]..sort((a, b) => b.compareTo(a));
+}
+
+class _MusicFilterPanel extends StatefulWidget {
+  const _MusicFilterPanel({
+    super.key,
+    required this.query,
+    required this.years,
+    required this.onApply,
+    required this.onClose,
+    this.embedded = false,
+  });
+  final MusicQuery query;
+  final List<int> years;
+  final ValueChanged<MusicQuery> onApply;
+  final VoidCallback onClose;
+  final bool embedded;
+  @override
+  State<_MusicFilterPanel> createState() => _MusicFilterPanelState();
+}
+
+class _MusicFilterPanelState extends State<_MusicFilterPanel> {
+  late var _draft = widget.query;
+
+  @override
+  Widget build(BuildContext context) => AppFilterPanel(
+    title: '筛选歌回',
+    embedded: widget.embedded,
+    onReset: () => setState(
+      () =>
+          _draft = MusicQuery(keyword: _draft.keyword, members: _draft.members),
+    ),
+    onApply: () => widget.onApply(_draft),
+    onClose: widget.onClose,
+    sections: [
+      AppFilterSection(
+        title: '年份',
+        child: AppChoiceWrap<int?>(
+          values: [null, ...widget.years],
+          labelOf: (year) => year == null ? '全部年份' : '$year',
+          selected: _draft.year,
+          onChanged: (year) => setState(
+            () => _draft = year == null
+                ? _draft.copyWith(clearYear: true)
+                : _draft.copyWith(year: year),
+          ),
+        ),
+      ),
+      AppFilterSection(
+        title: '排序',
+        child: AppSegments<bool>(
+          values: const [false, true],
+          labelOf: (oldest) => oldest ? '最早在前' : '最新在前',
+          selected: _draft.oldest,
+          onChanged: (oldest) =>
+              setState(() => _draft = _draft.copyWith(oldest: oldest)),
+        ),
+      ),
+    ],
+  );
 }

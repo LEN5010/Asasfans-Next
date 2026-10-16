@@ -13,74 +13,70 @@ class CalendarReminderSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(calendarReminderControllerProvider);
     final controller = ref.read(calendarReminderControllerProvider.notifier);
+    final editable = state.ready && !state.busy;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SwitchListTile(
+        ListTile(
+          leading: const Icon(Icons.notifications_outlined),
           title: const Text('开播提醒'),
-          subtitle: const Text('关注成员和星标场次'),
-          value: state.preferences.enabled,
-          onChanged: state.ready && !state.busy
-              ? (value) => controller.setPreferences(enabled: value)
+          onTap: editable
+              ? () => controller.setPreferences(
+                  enabled: !state.preferences.enabled,
+                )
               : null,
+          trailing: AppSwitch(
+            label: '开播提醒',
+            value: state.preferences.enabled,
+            onChanged: editable
+                ? (value) => controller.setPreferences(enabled: value)
+                : null,
+          ),
         ),
         if (state.preferences.enabled) ...[
+          const ListTile(title: Text('提前多久')),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final minutes in [0, 5, 15, 30])
-                  AppChoice(
-                    label: Text(minutes == 0 ? '准点' : '提前 $minutes 分钟'),
-                    selected: state.preferences.minutes == minutes,
-                    onSelected: state.ready && !state.busy
-                        ? (_) => controller.setPreferences(minutes: minutes)
-                        : null,
-                  ),
-              ],
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: AppSegments<int>(
+              values: const [0, 5, 15, 30],
+              labelOf: (minutes) => minutes == 0 ? '准点' : '$minutes 分钟',
+              selected: state.preferences.minutes,
+              onChanged: editable
+                  ? (minutes) => controller.setPreferences(minutes: minutes)
+                  : null,
             ),
           ),
           if (state.ready && (!state.permission || !state.exactPermission))
             ListTile(
               title: Text(!state.permission ? '通知未开启' : '精确定时权限未开启'),
-              trailing: AppButton(
-                onPressed: state.busy ? null : controller.requestPermission,
-                child: const Text('开启'),
-              ),
-            ),
-          if (state.ready && !state.permission)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AppButton(
-                  onPressed: () =>
-                      ref.read(calendarReminderServiceProvider).openSettings(),
-                  child: const Text('系统通知设置'),
-                ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!state.permission)
+                    AppButton(
+                      onPressed: () => ref
+                          .read(calendarReminderServiceProvider)
+                          .openSettings(),
+                      child: const Text('系统设置'),
+                    ),
+                  AppButton(
+                    selected: true,
+                    onPressed: state.busy ? null : controller.requestPermission,
+                    child: const Text('开启'),
+                  ),
+                ],
               ),
             ),
         ],
         if (state.failure != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    state.failure!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-                AppButton(
-                  onPressed: controller.synchronize,
-                  child: const Text('重试'),
-                ),
-              ],
+          ListTile(
+            title: Text(
+              state.failure!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            trailing: AppButton(
+              onPressed: controller.synchronize,
+              child: const Text('重试'),
             ),
           ),
       ],

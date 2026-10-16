@@ -38,14 +38,14 @@ class AppGlassNavigation extends StatefulWidget {
   static const icons = [
     AppIcons.today,
     AppIcons.content,
-    Icons.music_note_outlined,
+    AppIcons.music,
     AppIcons.calendar,
     AppIcons.mine,
   ];
   static const activeIcons = [
     AppIcons.todaySelected,
     AppIcons.contentSelected,
-    Icons.music_note,
+    AppIcons.musicSelected,
     AppIcons.calendarSelected,
     AppIcons.mineSelected,
   ];
@@ -87,7 +87,9 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         node.hasFocus &&
         FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
     return Semantics(
-      label: index == labels.length ? AppGlassNavigation.toolsLabel : labels[index],
+      label: index == labels.length
+          ? AppGlassNavigation.toolsLabel
+          : labels[index],
       button: true,
       focusable: true,
       focused: node.hasFocus,
@@ -196,11 +198,13 @@ class _AppGlassNavigationState extends State<AppGlassNavigation> {
         final height = AppGlassNavigation.heightFor(
           MediaQuery.textScalerOf(context),
         );
-        const toolsSize = 56.0;
-        final labelWidth = ((constraints.maxWidth - toolsSize - 12) / labels.length - 8).clamp(
-          0.0,
-          double.infinity,
-        );
+        // The round Tools button is as tall as the capsule beside it.
+        final toolsSize = height;
+        final labelWidth =
+            ((constraints.maxWidth - toolsSize - 12) / labels.length - 8).clamp(
+              0.0,
+              double.infinity,
+            );
         final Widget bar;
         if (!policy.usesLiquid) {
           pointer = pending = visual = null;

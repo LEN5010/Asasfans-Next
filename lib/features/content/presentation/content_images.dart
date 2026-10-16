@@ -1,8 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_image_policy.dart';
+import '../application/content_providers.dart';
+import '../domain/dynamic_repository.dart';
 import 'fanart_image_viewer.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/member_tone.dart';
@@ -55,6 +59,86 @@ class ContentAvatar extends StatelessWidget {
                   errorBuilder: (_, _, _) => fallback,
                 ),
         ),
+      ),
+    );
+  }
+}
+
+/// A member as a filter option, as the dynamics panel draws it: her account
+/// picture and a name. [members] are the short names whose pictures to show,
+/// two overlapping for a pair such as 心宜&思诺; the pictures come from the
+/// dynamics roster unless [image] is given, and until it loads each is her
+/// initial in her colour.
+class MemberChoiceButton extends ConsumerWidget {
+  const MemberChoiceButton({
+    super.key,
+    required this.label,
+    required this.members,
+    required this.selected,
+    required this.onPressed,
+    this.image,
+  });
+  final String label;
+  final List<String> members;
+  final bool selected;
+  final VoidCallback? onPressed;
+  final Uri? image;
+
+  static const size = 28.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roster = image != null
+        ? const <DynamicMember>[]
+        : ref.watch(dynamicMembersProvider).valueOrNull ??
+              const <DynamicMember>[];
+    Uri? pictureOf(String member) =>
+        image ??
+        roster
+            .where(
+              (account) =>
+                  account.avatarUrl != null &&
+                  AppTheme.membersIn(account.name).singleOrNull == member,
+            )
+            .firstOrNull
+            ?.avatarUrl;
+    final ring = Theme.of(context).colorScheme.surface;
+    return AppButton(
+      tooltip: label,
+      selected: selected,
+      tonal: true,
+      onPressed: onPressed,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: size + size / 2 * (members.length - 1),
+            height: size,
+            child: Stack(
+              children: [
+                for (final (i, member) in members.indexed)
+                  Positioned(
+                    left: size / 2 * i,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: i == 0
+                            ? null
+                            : Border.all(color: ring, width: 1.5),
+                      ),
+                      child: ContentAvatar(
+                        name: member,
+                        image: pictureOf(member),
+                        size: size,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
       ),
     );
   }

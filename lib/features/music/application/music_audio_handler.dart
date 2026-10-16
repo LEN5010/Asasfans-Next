@@ -38,7 +38,20 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   double _gain = 0;
   int _generation = 0;
   bool _disposed = false;
+
+  /// The latest notice for the user, and a serial that changes with each
+  /// one, so the same words twice in a row still show twice.
   String? message;
+  int messageSerial = 0;
+  void _say(String text) {
+    message = text;
+    messageSerial++;
+    notifyListeners();
+  }
+
+  /// Most songs a queue holds: the platform media session copies the whole
+  /// queue across processes, and the catalogue has thousands.
+  static const maxQueue = 200;
   AudioServiceRepeatMode _repeat = AudioServiceRepeatMode.none;
   AudioServiceRepeatMode get repeat => _repeat;
 
@@ -49,9 +62,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
       }
       _enhancer = Platform.isAndroid ? audio.AndroidLoudnessEnhancer() : null;
       _engine = audio.AudioPlayer(
-        audioPipeline: audio.AudioPipeline(
-          androidAudioEffects: [?_enhancer],
-        ),
+        audioPipeline: audio.AudioPipeline(androidAudioEffects: [?_enhancer]),
       );
       _subscriptions.add(_player.playbackEventStream.listen((_) => _publish()));
       _subscriptions.add(
@@ -86,16 +97,20 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
         session.becomingNoisyEventStream.listen((_) => unawaited(pause())),
       );
     } on Object {
-      message = '音乐播放初始化失败';
-      notifyListeners();
+      _initFailed = true;
       rethrow;
     }
   }
 
+  bool _initFailed = false;
+
+  /// Plays [values] from [start]. A long list is cut to the next
+  /// [maxQueue] songs from the one chosen.
   Future<void> playTracks(List<MusicTrack> values, {int start = 0}) async {
     if (values.isEmpty) return;
-    _tracks = List.of(values);
-    _index = start.clamp(0, values.length - 1);
+    final from = start.clamp(0, values.length - 1);
+    _tracks = values.skip(from).take(maxQueue).toList();
+    _index = 0;
     _publishQueue();
     await _load();
   }
@@ -111,8 +126,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
       _tracks.add(track);
     }
     _publishQueue();
-    message = next ? '已设为下一首' : '已加入队列';
-    notifyListeners();
+    _say(next ? '已设为下一首' : '已加入队列');
   }
 
   Future<void> removeTrack(int at) async {
@@ -132,34 +146,81 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     _publishQueue();
   }
 
+  /// Opens the current song and, unless [resume] is false, plays it. A song
+  /// the service will not serve is skipped, at most twice in a row; a request
+  /// that fails outright stops instead, so an offline queue is not walked.
   Future<void> _load({
     Duration at = Duration.zero,
     bool retry = false,
     bool resume = true,
   }) async {
-    final song = current;
-    if (song == null) return;
     final generation = ++_generation;
-    _loading = true;
     if (!retry) _retried = false;
-    message = null;
-    mediaItem.add(_media(song));
-    _publish();
+    for (var skipped = 0; ; skipped++) {
+      final song = current;
+      if (song == null) return;
+      _loading = true;
+      mediaItem.add(_media(song));
+      _publish();
+      final outcome = await _open(
+        song,
+        generation,
+        at: skipped == 0 ? at : Duration.zero,
+        resume: resume,
+      );
+      if (outcome == null) return;
+      _loading = false;
+      switch (outcome) {
+        case _Open.playing:
+          _publish();
+          return;
+        case _Open.failed:
+          await _engine?.stop();
+          _publish();
+          _say(_initFailed ? '音乐播放初始化失败' : '网络连接失败，「${song.title}」暂时无法播放');
+          return;
+        case _Open.unavailable:
+          if (skipped >= 2 || _index + 1 >= _tracks.length) {
+            await _engine?.stop();
+            _publish();
+            _say('「${song.title}」暂时无法播放');
+            return;
+          }
+          _say('「${song.title}」暂时无法播放，已跳到下一首');
+          _index++;
+      }
+    }
+  }
+
+  /// One song, tried twice. Null when a newer load took over.
+  Future<_Open?> _open(
+    MusicTrack song,
+    int generation, {
+    required Duration at,
+    required bool resume,
+  }) async {
+    bool stale() => generation != _generation || _disposed;
     for (var attempt = 0; attempt < 2; attempt++) {
+      MusicStream? stream;
       try {
         _ready ??= _initialize();
         await _ready;
         await _engine?.pause();
-        if (generation != _generation || _disposed) return;
+        if (stale()) return null;
         await _streams.prefetch(_tracks.skip(_index).take(3).map((s) => s.id));
-        final stream = await _streams.resolve(song.id);
-        if (stream == null) throw const FormatException('这首暂时无法播放');
-        if (generation != _generation || _disposed) return;
+        stream = await _streams.resolve(song.id);
+      } on Object {
+        if (stale()) return null;
+        if (_initFailed || attempt == 1) return _Open.failed;
+        continue;
+      }
+      if (stale()) return null;
+      if (stream == null) return _Open.unavailable;
+      try {
         _gain = stream.gain;
         await _player.setUrl(stream.uri.toString(), initialPosition: at);
-        if (generation != _generation || _disposed) return;
+        if (stale()) return null;
         await _applyLoudness();
-        _loading = false;
         if (resume) {
           unawaited(
             _player.play().catchError((Object _) {
@@ -167,33 +228,13 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
             }),
           );
         }
-        _publish();
-        return;
+        return _Open.playing;
       } on Object {
-        if (generation != _generation || _disposed) return;
+        if (stale()) return null;
         _streams.invalidate(song.id);
-        if (message == '音乐播放初始化失败') {
-          _loading = false;
-          _publish();
-          return;
-        }
-        if (attempt == 0) continue;
       }
     }
-    _loading = false;
-    message = '「${song.title}」暂时无法播放';
-    notifyListeners();
-    // Move forward only, so an unavailable queue cannot loop forever.
-    if (_index + 1 < _tracks.length) {
-      final failure = message;
-      _index++;
-      await _load();
-      message = failure;
-      notifyListeners();
-    } else {
-      await _engine?.stop();
-      _publish();
-    }
+    return _Open.unavailable;
   }
 
   Future<void> _recover() async {
@@ -201,12 +242,14 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     _recovering = true;
     try {
       if (_retried) {
-        message = '「${current!.title}」暂时无法播放';
+        final title = current!.title;
         if (_index + 1 < _tracks.length) {
+          _say('「$title」播放中断，已跳到下一首');
           _index++;
           await _load();
         } else {
           await _engine?.stop();
+          _say('「$title」播放中断');
         }
       } else {
         _retried = true;
@@ -318,10 +361,6 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     _publish();
   }
 
-  void clearMessage() {
-    message = null;
-  }
-
   MediaItem _media(MusicTrack track) => MediaItem(
     id: track.id,
     title: track.title,
@@ -383,3 +422,5 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     super.dispose();
   }
 }
+
+enum _Open { playing, unavailable, failed }

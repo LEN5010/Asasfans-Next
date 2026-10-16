@@ -3,6 +3,7 @@ import 'package:asasfans_next/features/content/application/fanart_filter_rules.d
 import 'package:asasfans_next/features/content/domain/fanart_repository.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_filter_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -12,21 +13,23 @@ void main() {
     query = initial;
     changes = 0;
     return tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: StatefulBuilder(
-            builder: (_, setState) {
-              void apply(FanartQuery value) => setState(() {
-                query = value;
-                changes++;
-              });
-              return Column(
-                children: [
-                  FanartFilterButton(query: query, onChanged: apply),
-                  FanartFilterBar(query: query, onChanged: apply),
-                ],
-              );
-            },
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (_, setState) {
+                void apply(FanartQuery value) => setState(() {
+                  query = value;
+                  changes++;
+                });
+                return Column(
+                  children: [
+                    FanartFilterButton(query: query, onChanged: apply),
+                    FanartFilterBar(query: query, onChanged: apply),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -42,7 +45,10 @@ void main() {
     // Test against the unqualified finder: `.last` on an empty match throws
     // StateError from evaluate(), so the emptiness guard never ran and an
     // option that merely had not been built yet looked like a missing one.
-    final matches = find.widgetWithText(AppChoice, option);
+    final matches = find.descendant(
+      of: find.byType(FanartFilterPanel),
+      matching: find.text(option),
+    );
     if (matches.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
         matches,

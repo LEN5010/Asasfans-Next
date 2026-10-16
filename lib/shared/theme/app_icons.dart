@@ -7,6 +7,8 @@ abstract final class AppIcons {
   static const content = Icons.grid_view_outlined;
   static const contentSelected = Icons.grid_view_rounded;
   static const tools = Icons.workspaces_outline;
+  static const music = Icons.music_note_outlined;
+  static const musicSelected = Icons.music_note;
   static const calendar = Icons.calendar_month_outlined;
   static const calendarSelected = Icons.calendar_month;
   static const mine = Icons.person_outline;

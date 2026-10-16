@@ -545,14 +545,22 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
                     ? const SizedBox(width: double.infinity)
                     : Padding(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        child: Card(
-                          child: FanartFilterPanel(
-                            key: ValueKey(state.query),
-                            query: state.query,
-                            embedded: true,
-                            onApply: _applyQuery,
-                            onClose: () =>
-                                setState(() => _filtersExpanded = false),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: AppTokens.readingWidth,
+                            ),
+                            child: Card(
+                              child: FanartFilterPanel(
+                                key: ValueKey(state.query),
+                                query: state.query,
+                                embedded: true,
+                                onApply: _applyQuery,
+                                onClose: () =>
+                                    setState(() => _filtersExpanded = false),
+                              ),
+                            ),
                           ),
                         ),
                       ),

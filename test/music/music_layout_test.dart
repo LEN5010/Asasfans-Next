@@ -71,11 +71,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sidebar mini player fits 192 wide with 2x text', (tester) async {
+  testWidgets('rail mini player fits the rail with 2x text', (tester) async {
     await tester.pumpWidget(
       _app(
         const Scaffold(
-          body: SizedBox(width: 192, child: MusicMiniPlayer(compact: true)),
+          body: Align(
+            alignment: Alignment.bottomLeft,
+            child: MusicMiniPlayer(rail: true),
+          ),
         ),
       ),
     );

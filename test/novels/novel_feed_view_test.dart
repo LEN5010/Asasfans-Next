@@ -130,12 +130,16 @@ void main() {
     ) async {
       final repository = await pump(tester, width);
       final rating = find.byType(AppSegments<NovelRatingFilter>);
-      final r18 = find.descendant(of: rating, matching: find.text('R18'));
+      final r18 = find.descendant(
+        of: rating,
+        matching: find.textContaining('R18'),
+      );
       expect(rating, findsNothing);
 
       await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
-      expect(find.text('筛选小说'), width < 600 ? findsOneWidget : findsNothing);
+      // The same panel, titled, in a sheet or inline.
+      expect(find.text('筛选小说'), findsOneWidget);
       await tester.tap(find.widgetWithText(AppButton, '嘉然'));
       await tester.tap(r18);
       await tester.pumpAndSettle();
@@ -173,7 +177,10 @@ void main() {
     (tester) async {
       final repository = await pump(tester, 800);
       final rating = find.byType(AppSegments<NovelRatingFilter>);
-      final r18 = find.descendant(of: rating, matching: find.text('R18'));
+      final r18 = find.descendant(
+        of: rating,
+        matching: find.textContaining('R18'),
+      );
       await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
       await tester.tap(r18);

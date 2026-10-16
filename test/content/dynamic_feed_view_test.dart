@@ -173,49 +173,50 @@ void main() {
     },
   );
 
-  testWidgets('more members require acknowledgement and retain the selected filter', (
-    tester,
-  ) async {
-    tester.view
-      ..physicalSize = const Size(390, 844)
-      ..devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    final repository = _StubRepository(
-      members_: const [DynamicMember(id: 'uid:672346917', name: '向晚')],
-    );
-    await tester.pumpWidget(_app(repository));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('筛选与排序'));
-    await tester.pumpAndSettle();
-    expect(find.byTooltip('向晚'), findsNothing);
-    await tester.tap(find.widgetWithText(AppButton, '更多成员'));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.byTooltip('向晚'), findsNothing);
-    await tester.tap(find.text('我已了解，继续'));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsNothing);
-    await tester.tap(find.byTooltip('向晚'));
-    expect(repository.queries.last.memberId, isNull);
-    await tester.ensureVisible(find.text('应用筛选'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('应用筛选'));
-    await tester.pumpAndSettle();
-    expect(repository.queries.last.memberId, 'uid:672346917');
-    await tester.tap(find.byTooltip('筛选与排序'));
-    await tester.pumpAndSettle();
-    expect(find.byTooltip('向晚'), findsOneWidget);
-    expect(
-      tester
-          .widget<AppButton>(
-            find.byWidgetPredicate(
-              (widget) => widget is AppButton && widget.tooltip == '向晚',
-            ),
-          )
-          .selected,
-      isTrue,
-    );
-  });
+  testWidgets(
+    'more members require acknowledgement and retain the selected filter',
+    (tester) async {
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final repository = _StubRepository(
+        members_: const [DynamicMember(id: 'uid:672346917', name: '向晚')],
+      );
+      await tester.pumpWidget(_app(repository));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('筛选与排序'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('向晚'), findsNothing);
+      await tester.tap(find.widgetWithText(AppButton, '更多成员'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byTooltip('向晚'), findsNothing);
+      await tester.tap(find.text('我已了解，继续'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      await tester.tap(find.byTooltip('向晚'));
+      expect(repository.queries.last.memberId, isNull);
+      await tester.ensureVisible(find.text('应用筛选'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('应用筛选'));
+      await tester.pumpAndSettle();
+      expect(repository.queries.last.memberId, 'uid:672346917');
+      await tester.tap(find.byTooltip('筛选与排序'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('向晚'), findsOneWidget);
+      expect(
+        tester
+            .widget<AppButton>(
+              find.byWidgetPredicate(
+                (widget) => widget is AppButton && widget.tooltip == '向晚',
+              ),
+            )
+            .selected,
+        isTrue,
+      );
+    },
+  );
 
   testWidgets('searching applies the keyword on submit', (tester) async {
     final repository = _StubRepository();

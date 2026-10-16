@@ -313,137 +313,81 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final facets = ref.watch(novelFacetsProvider).valueOrNull;
-    Widget group(String title, List<Widget> children) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: theme.textTheme.labelLarge),
-          const SizedBox(height: 8),
-          ...children,
-        ],
-      ),
-    );
-    final groups = [
-      group('角色', [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            AppButton(
-              selected: _draft.characters.isEmpty,
-              onPressed: () => _change(_draft.copyWith(characters: {})),
-              child: const Text('全部'),
-            ),
-            for (final character in NovelCharacter.values)
-              AppButton(
-                selected: _draft.characters.contains(character),
-                onPressed: () => _change(
-                  _draft.copyWith(
-                    characters: _draft.characters.contains(character)
-                        ? ({..._draft.characters}..remove(character))
-                        : {..._draft.characters, character},
+    return AppFilterPanel(
+      title: '筛选小说',
+      embedded: widget.embedded,
+      onReset: () => _change(const NovelQuery()),
+      onApply: () => widget.onApply(_draft),
+      onClose: widget.onClose,
+      sections: [
+        AppFilterSection(
+          title: '角色',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  AppChoice(
+                    selected: _draft.characters.isEmpty,
+                    onSelected: (_) => _change(_draft.copyWith(characters: {})),
+                    label: const Text('全部角色'),
+                  ),
+                  for (final character in NovelCharacter.values)
+                    MemberChoiceButton(
+                      label: character.wire,
+                      members: [character.wire],
+                      selected: _draft.characters.contains(character),
+                      onPressed: () => _change(
+                        _draft.copyWith(
+                          characters: _draft.characters.contains(character)
+                              ? ({..._draft.characters}..remove(character))
+                              : {..._draft.characters, character},
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              if (_draft.characters.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '同时包含所选角色',
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
-                child: Text(character.wire),
-              ),
-          ],
-        ),
-        if (_draft.characters.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text('同时包含所选角色', style: theme.textTheme.bodySmall),
-          ),
-      ]),
-      group('分级', [
-        AppSegments<NovelRatingFilter>(
-          values: NovelRatingFilter.values,
-          selected: _draft.rating,
-          labelOf: (value) => value.label,
-          onChanged: (value) => _change(_draft.copyWith(rating: value)),
-        ),
-        if (facets != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              [
-                for (final rating in NovelRatingFilter.values)
-                  '${rating.label} ${facets.count(rating)}',
-              ].join(' · '),
-              style: theme.textTheme.bodySmall,
-            ),
-          ),
-      ]),
-      group('搜索范围', [
-        AppSegments<NovelSearchScope>(
-          values: NovelSearchScope.values,
-          selected: _draft.scope,
-          labelOf: (value) => value.label,
-          onChanged: (value) => _change(_draft.copyWith(scope: value)),
-        ),
-      ]),
-      group('排序', [
-        AppSegments<NovelSort>(
-          values: NovelSort.values,
-          selected: _draft.sort,
-          labelOf: (value) => value.label,
-          onChanged: (value) => _change(_draft.copyWith(sort: value)),
-        ),
-      ]),
-    ];
-    final fields = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: widget.embedded
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: Column(children: groups.take(2).toList())),
-                const SizedBox(width: 24),
-                Expanded(child: Column(children: groups.skip(2).toList())),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: groups,
-            ),
-    );
-    return Column(
-      mainAxisSize: widget.embedded ? MainAxisSize.min : MainAxisSize.max,
-      children: [
-        if (!widget.embedded)
-          AppPanelHeader(
-            title: '筛选小说',
-            onClose: widget.onClose,
-            actions: [
-              AppButton(
-                onPressed: () => _change(const NovelQuery()),
-                child: const Text('重置'),
-              ),
             ],
           ),
-        if (widget.embedded)
-          fields
-        else
-          Expanded(child: SingleChildScrollView(child: fields)),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Row(
-              children: [
-                AppButton(onPressed: widget.onClose, child: const Text('取消')),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    selected: true,
-                    onPressed: () => widget.onApply(_draft),
-                    child: const Text('应用筛选'),
-                  ),
-                ),
-              ],
-            ),
+        ),
+        AppFilterSection(
+          title: '分级',
+          child: AppSegments<NovelRatingFilter>(
+            values: NovelRatingFilter.values,
+            selected: _draft.rating,
+            labelOf: (value) => facets == null
+                ? value.label
+                : '${value.label} ${facets.count(value)}',
+            onChanged: (value) => _change(_draft.copyWith(rating: value)),
+          ),
+        ),
+        AppFilterSection(
+          title: '搜索范围',
+          child: AppSegments<NovelSearchScope>(
+            values: NovelSearchScope.values,
+            selected: _draft.scope,
+            labelOf: (value) => value.label,
+            onChanged: (value) => _change(_draft.copyWith(scope: value)),
+          ),
+        ),
+        AppFilterSection(
+          title: '排序',
+          child: AppSegments<NovelSort>(
+            values: NovelSort.values,
+            selected: _draft.sort,
+            labelOf: (value) => value.label,
+            onChanged: (value) => _change(_draft.copyWith(sort: value)),
           ),
         ),
       ],

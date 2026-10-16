@@ -510,14 +510,23 @@ class SettingsPage extends StatelessWidget {
                   Consumer(
                     builder: (context, ref, _) {
                       final state = ref.watch(preferencesControllerProvider);
-                      return SwitchListTile.adaptive(
+                      final controller = ref.read(
+                        preferencesControllerProvider.notifier,
+                      );
+                      final on = state.values.musicLoudnessEnabled;
+                      return ListTile(
+                        leading: const Icon(Icons.graphic_eq),
                         title: const Text('响度均衡'),
-                        value: state.values.musicLoudnessEnabled,
-                        onChanged: state.canEdit
-                            ? (value) => ref
-                                  .read(preferencesControllerProvider.notifier)
-                                  .setMusicLoudnessEnabled(value)
+                        onTap: state.canEdit
+                            ? () => controller.setMusicLoudnessEnabled(!on)
                             : null,
+                        trailing: AppSwitch(
+                          label: '响度均衡',
+                          value: on,
+                          onChanged: state.canEdit
+                              ? controller.setMusicLoudnessEnabled
+                              : null,
+                        ),
                       );
                     },
                   ),
@@ -525,7 +534,7 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.sectionGap),
               const _Group(
-                title: '开播提醒',
+                title: '日历',
                 children: [CalendarReminderSettings()],
               ),
               const SizedBox(height: AppTokens.sectionGap),

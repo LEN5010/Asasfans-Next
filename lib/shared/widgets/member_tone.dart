@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_theme.dart';
+import '../../app/theme/app_tokens.dart';
+import 'app_motion.dart';
 
 /// A member's support colour as it reads on this page: the colour itself for
 /// dots and bars, a pale wash of it behind a label, and a deeper (or, on a
@@ -183,6 +185,101 @@ class ToneBadge extends StatelessWidget {
             icon,
             size: (size * .56).roundToDouble(),
             color: tone?.text ?? theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A filter strip's member pill, 30px tall; the transparent band around it widens the touch area without
+/// making the strip taller to the eye (48 dp on touch platforms).
+class MemberQuickChip extends StatelessWidget {
+  const MemberQuickChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.members = const [],
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// Who the chip stands for: a dot each, and, once chosen, a wash of the
+  /// first one's colour instead of the generic pink.
+  final List<String> members;
+
+  Widget _withDots(Widget label) => members.isEmpty
+      ? label
+      : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MemberDots(members: members, size: 6),
+            const SizedBox(width: 6),
+            label,
+          ],
+        );
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final duration = appMotion(context, AppTokens.controlMotion);
+    final tone = members.isEmpty
+        ? null
+        : MemberTone.of(members.first, colors.brightness);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: (AppTokens.touchTarget(context) - 30) / 2,
+          ),
+          child: AnimatedContainer(
+            duration: duration,
+            curve: Curves.easeOutCubic,
+            constraints: const BoxConstraints(minHeight: 30),
+            decoration: ShapeDecoration(
+              shape: const StadiumBorder(),
+              color: selected
+                  ? tone?.wash ?? colors.primaryContainer
+                  : colors.surfaceContainerHigh,
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                customBorder: const StadiumBorder(),
+                onTap: onTap,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    members.isEmpty ? 12 : 10,
+                    5,
+                    12,
+                    5,
+                  ),
+                  child: _withDots(
+                    AnimatedDefaultTextStyle(
+                      duration: duration,
+                      curve: AppCurves.standard,
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                        fontSize: 13,
+                        height: 1.3,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: selected
+                            ? tone?.text ?? colors.onPrimaryContainer
+                            : colors.onSurfaceVariant,
+                      ),
+                      child: Text(label),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

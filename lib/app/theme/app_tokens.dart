@@ -8,7 +8,7 @@ abstract final class AppTokens {
   static const pageDark = Color(0xFF131215);
   static const contentLight = Colors.white;
   static const contentDark = Color(0xFF1D1C20);
-  static const controlLight = Color(0xFFF1ECEF);
+  static const controlLight = Color(0xFFE9E2E7);
   static const controlDark = Color(0xFF29272D);
   static const textLight = Color(0xFF1F1D24);
   static const textDark = Color(0xFFF2F0F4);
@@ -16,7 +16,7 @@ abstract final class AppTokens {
   static const secondaryDark = Color(0xFFB8B1BC);
   static const dividerLight = Color(0xFFECE6EA);
   static const dividerDark = Color(0xFF322F36);
-  static const selectedLight = Color(0xFFFBE3EB);
+  static const selectedLight = Color(0xFFF5C7D6);
   static const selectedDark = Color(0xFF4A2938);
   // Compact controls in LoveIwara's proportions: 40 on touch widths, 34 on
   // wide desktop windows; wide rows keep their larger hit area by width.

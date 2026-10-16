@@ -229,16 +229,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: AppChoice(
-                          label: const Text('只看关注'),
-                          selected: _following,
-                          onSelected: (value) =>
-                              setState(() => _following = value),
-                        ),
-                      ),
                       _MonthOverview(
+                        following: _following,
+                        isFollowed: (event) =>
+                            follows?.contains(event, source) ?? false,
+                        onFollowing: (value) =>
+                            setState(() => _following = value),
                         events: (snapshot.valueOrNull?.events ?? const [])
                             .where((event) {
                               final start = CalendarTime.dayOf(
@@ -538,6 +534,9 @@ const _chipText = TextStyle(fontSize: 13);
 /// agenda to them, and tapping again lets go.
 class _MonthOverview extends StatelessWidget {
   const _MonthOverview({
+    required this.following,
+    required this.isFollowed,
+    required this.onFollowing,
     required this.events,
     required this.filter,
     required this.members,
@@ -545,6 +544,10 @@ class _MonthOverview extends StatelessWidget {
     required this.onMember,
     required this.onReset,
   });
+
+  final bool following;
+  final bool Function(CalendarEvent) isFollowed;
+  final ValueChanged<bool> onFollowing;
 
   /// The month's events that are going ahead, whatever the filters.
   final List<CalendarEvent> events;
@@ -559,7 +562,11 @@ class _MonthOverview extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final ofKind = events
-        .where((event) => CalendarAgenda.visible(event, filter: filter))
+        .where(
+          (event) =>
+              CalendarAgenda.visible(event, filter: filter) &&
+              (!following || isFollowed(event)),
+        )
         .toList();
     final shown = ofKind
         .where((event) => CalendarAgenda.visible(event, members: members))
@@ -571,7 +578,8 @@ class _MonthOverview extends StatelessWidget {
             .length,
     };
     final most = counts.values.fold(1, math.max);
-    final filtered = filter != CalendarFilter.all || members.isNotEmpty;
+    final filtered =
+        following || filter != CalendarFilter.all || members.isNotEmpty;
     return AppCard(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       child: Column(
@@ -604,6 +612,18 @@ class _MonthOverview extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: AppButton.withIcon(
+              selected: following,
+              onPressed: () => onFollowing(!following),
+              icon: Icon(
+                following ? Icons.star_rounded : Icons.star_outline_rounded,
+              ),
+              label: const Text('只看关注'),
+            ),
+          ),
+          const SizedBox(height: 8),
           AppSegments<CalendarFilter>(
             values: CalendarFilter.values,
             labelOf: (value) => value.label,

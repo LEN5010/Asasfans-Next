@@ -67,135 +67,156 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final wide = constraints.maxWidth >= 840;
-      ref.watch(calendarReminderBootstrapProvider);
-      final hasMusic = ref.watch(
-        musicAudioHandlerProvider.select((handler) => handler.current != null),
-      );
-      final sidebarWidth = hasMusic ? 212.0 : AppSidebar.width;
-      final selected = widget.navigationShell.currentIndex;
-      final mq = MediaQuery.of(context);
-      final showBottom = !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
-      final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
-      return CalendarReminderListener(
-        child: AppBackdrop(
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
-            resizeToAvoidBottomInset: false,
-            // The body runs under the dock, and the Scaffold hands it the
-            // dock's height as bottom padding. Always on: switching it would
-            // rebuild the body.
-            extendBody: true,
-            // Here rather than over the body, so a SnackBar sits above it.
-            bottomNavigationBar: showBottom
-                ? Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      12,
-                      12,
-                      12,
-                      mq.padding.bottom + 8,
-                    ),
-                    // The slot's height is loose: as tall as the dock only.
-                    child: Align(
-                      heightFactor: 1,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (hasMusic) ...[
-                              const MusicMiniPlayer(),
-                              const SizedBox(height: 10),
+  Widget build(BuildContext context) {
+    // Playback notices from wherever the user is, not only from a page that
+    // happens to show the player.
+    ref.listen(
+      musicAudioHandlerProvider.select((handler) => handler.messageSerial),
+      (_, _) {
+        final message = ref.read(musicAudioHandlerProvider).message;
+        if (message == null) return;
+        ScaffoldMessenger.maybeOf(context)
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(message)));
+      },
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 840;
+        ref.watch(calendarReminderBootstrapProvider);
+        final hasMusic = ref.watch(
+          musicAudioHandlerProvider.select(
+            (handler) => handler.current != null,
+          ),
+        );
+        final selected = widget.navigationShell.currentIndex;
+        final mq = MediaQuery.of(context);
+        final showBottom =
+            !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
+        final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
+        return CalendarReminderListener(
+          child: AppBackdrop(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
+              resizeToAvoidBottomInset: false,
+              // The body runs under the dock, and the Scaffold hands it the
+              // dock's height as bottom padding. Always on: switching it would
+              // rebuild the body.
+              extendBody: true,
+              // Here rather than over the body, so a SnackBar sits above it.
+              bottomNavigationBar: showBottom
+                  ? Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        12,
+                        12,
+                        mq.padding.bottom + 8,
+                      ),
+                      // The slot's height is loose: as tall as the dock only.
+                      child: Align(
+                        heightFactor: 1,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (hasMusic) ...[
+                                const MusicMiniPlayer(),
+                                const SizedBox(height: 10),
+                              ],
+                              AppGlassNavigation(
+                                selected: selected,
+                                onSelect: _select,
+                                onTools: _tools,
+                              ),
                             ],
-                            AppGlassNavigation(
-                              selected: selected,
-                              onSelect: _select,
-                              onTools: _tools,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : null,
-            body: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Keep the body at the same element position through breakpoints.
-                SizedBox(
-                  width: wide ? sidebarWidth + 24 : 0,
-                  child: wide
-                      ? Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            12,
-                            mq.padding.top + 10,
-                            12,
-                            12,
-                          ),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  child: AppSidebar(
-                                    selected: selected,
-                                    onSelect: _select,
-                                    onTools: _tools,
+                    )
+                  : null,
+              body: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Keep the body at the same element position through breakpoints.
+                  SizedBox(
+                    width: wide ? AppSidebar.width + 24 : 0,
+                    child: wide
+                        ? Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              12,
+                              mq.padding.top + 10,
+                              12,
+                              12,
+                            ),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: AppSidebar(
+                                      selected: selected,
+                                      onSelect: _select,
+                                      onTools: _tools,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (hasMusic)
-                                const MusicMiniPlayer(compact: true),
-                            ],
-                          ),
-                        )
-                      : null,
-                ),
-                Expanded(
-                  // Isolate branch ModalRoute semantics from the preceding rail.
-                  child: Semantics(
-                    container: true,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        widget.navigationShell,
-                        // A subtle edge fade under the bar, not an opaque footer.
-                        if (showBottom)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            height: mq.padding.bottom + barHeight + 40,
-                            child: IgnorePointer(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Theme.of(context).scaffoldBackgroundColor
-                                          .withValues(alpha: 0),
-                                      Theme.of(context).scaffoldBackgroundColor
-                                          .withValues(alpha: .72),
-                                    ],
+                                if (hasMusic) const MusicMiniPlayer(rail: true),
+                              ],
+                            ),
+                          )
+                        : null,
+                  ),
+                  Expanded(
+                    // Isolate branch ModalRoute semantics from the preceding rail.
+                    child: Semantics(
+                      container: true,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          widget.navigationShell,
+                          // A subtle edge fade under the bar, not an opaque footer.
+                          if (showBottom)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height:
+                                  mq.padding.bottom +
+                                  barHeight +
+                                  (hasMusic ? 72 : 0) +
+                                  40,
+                              child: IgnorePointer(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Theme.of(context)
+                                            .scaffoldBackgroundColor
+                                            .withValues(alpha: 0),
+                                        Theme.of(context)
+                                            .scaffoldBackgroundColor
+                                            .withValues(alpha: .72),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }
 
 /// Keyboard focus scrolls its item into the part of the window nothing

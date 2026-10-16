@@ -19,7 +19,39 @@ class MusicTrack {
   String get singers => members.join('、');
   String get dateLabel =>
       '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
-  String get sessionKey => '$dateLabel/$singers';
+}
+
+/// One day's 歌回, songs in catalogue order. A group stream has songs sung
+/// by different sets of members, so the day, not the singers, is the unit.
+class MusicSession {
+  const MusicSession(this.date, this.tracks);
+  final DateTime date;
+  final List<MusicTrack> tracks;
+
+  /// Everyone who sang that day, in the order they first appear.
+  List<String> get members => [
+    ...{for (final track in tracks) ...track.members},
+  ];
+}
+
+/// [tracks] grouped by day, newest day first or, with [oldest], oldest
+/// first; within a day the catalogue's own order is kept.
+List<MusicSession> musicSessions(
+  Iterable<MusicTrack> tracks, {
+  bool oldest = false,
+}) {
+  final days = <DateTime, List<MusicTrack>>{};
+  for (final track in tracks) {
+    days.putIfAbsent(track.date, () => []).add(track);
+  }
+  final sessions =
+      [
+        for (final MapEntry(:key, :value) in days.entries)
+          MusicSession(key, value),
+      ]..sort(
+        (a, b) => oldest ? a.date.compareTo(b.date) : b.date.compareTo(a.date),
+      );
+  return sessions;
 }
 
 String musicDuration(Duration value) =>

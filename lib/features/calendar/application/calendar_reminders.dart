@@ -292,9 +292,14 @@ class CalendarReminderController extends StateNotifier<CalendarReminderState> {
           );
         }
       }
-      await store.replaceReminders(calendar, [
-        for (final item in desired) item.record,
-      ]);
+      // Any library change lands here, a history entry included; most leave
+      // the plan as it was, and then nothing is written.
+      final kept = {for (final item in old) item.notificationId};
+      if (kept.length != wanted.length || !kept.containsAll(wanted)) {
+        await store.replaceReminders(calendar, [
+          for (final item in desired) item.record,
+        ]);
+      }
       if (mounted && state.failure != null) {
         state = CalendarReminderState(
           preferences: state.preferences,

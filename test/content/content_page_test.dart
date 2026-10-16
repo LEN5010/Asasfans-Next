@@ -120,7 +120,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<AppChoice>(video).selected, isFalse);
       await tester.tap(video);
-      await tester.tap(find.widgetWithText(AppChoice, '播放最多'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(FanartFilterPanel),
+          matching: find.text('播放最多'),
+        ),
+      );
       await tester.tap(find.widgetWithText(AppButton, '应用筛选'));
       await tester.pumpAndSettle();
       expect(repository.requests, calls + 1);

@@ -155,8 +155,10 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
     listenable: _controller,
     builder: (context, _) {
       final state = _controller.state;
-      // The controls sit over the reading column they filter.
-      final filters = Center(
+      // The controls sit over the reading column they filter, from the same
+      // left edge as every other channel.
+      final filters = Align(
+        alignment: AlignmentDirectional.centerStart,
         child: ConstrainedBox(
           constraints: const BoxConstraints(
             maxWidth: AppTokens.readingWidth + 32,
@@ -230,18 +232,15 @@ class _DynamicFeedViewState extends ConsumerState<DynamicFeedView>
       placeholder: placeholder,
       slivers: [
         // One reading column: a comfortable line length on wide windows
-        // rather than a wall of cards.
+        // rather than a wall of cards, left-aligned like the other channels.
         SliverLayoutBuilder(
           builder: (context, constraints) => SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              math.max(
-                16,
-                (constraints.crossAxisExtent - AppTokens.readingWidth) / 2,
-              ),
+            padding: EdgeInsetsDirectional.fromSTEB(
+              16,
               0,
               math.max(
                 16,
-                (constraints.crossAxisExtent - AppTokens.readingWidth) / 2,
+                constraints.crossAxisExtent - AppTokens.readingWidth - 16,
               ),
               0,
             ),
@@ -560,7 +559,6 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final members = ref.watch(dynamicMembersProvider);
     final roster = members.valueOrNull ?? const <DynamicMember>[];
     final primary = [
@@ -568,109 +566,103 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
         ...roster.where((member) => member.id == id),
     ];
     final other = roster.where((member) => !_primaryIds.contains(member.id));
-    Widget heading(String text) => Padding(
-      padding: const EdgeInsets.only(top: 18, bottom: 10),
-      child: Text(text, style: theme.textTheme.titleSmall),
-    );
-    Widget memberButton(DynamicMember member) => AppButton(
-      tooltip: member.name,
+    Widget memberButton(DynamicMember member) => MemberChoiceButton(
+      label: member.name,
+      members: [member.name],
+      image: member.avatarUrl,
       selected: _draft.memberId == member.id,
       onPressed: () =>
           setState(() => _draft = _draft.copyWith(memberId: member.id)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ContentAvatar(name: member.name, image: member.avatarUrl, size: 28),
-          const SizedBox(width: 8),
-          Text(member.name),
-        ],
-      ),
     );
-    final fields = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          heading('成员'),
-          if (members.isLoading) const LinearProgressIndicator(),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+    return AppFilterPanel(
+      title: '筛选动态',
+      embedded: widget.embedded,
+      onReset: () => setState(() => _draft = const DynamicQuery()),
+      onApply: () => widget.onApply(_draft),
+      onClose: widget.onClose,
+      sections: [
+        AppFilterSection(
+          title: '成员',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppButton(
-                selected: _draft.memberId == null,
-                onPressed: () =>
-                    setState(() => _draft = _draft.copyWith(clearMember: true)),
-                child: const Text('全部成员'),
-              ),
-              for (final member in primary) memberButton(member),
-            ],
-          ),
-          if (members.hasError)
-            Row(
-              children: [
-                const Expanded(child: Text('成员暂时加载失败')),
-                AppButton(
-                  onPressed: () => ref.invalidate(dynamicMembersProvider),
-                  child: const Text('重试'),
-                ),
-              ],
-            ),
-          if (other.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            AppButton(
-              onPressed: _toggleMore,
-              child: Row(
+              if (members.isLoading) const LinearProgressIndicator(),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  const Expanded(child: Text('更多成员')),
-                  AnimatedRotation(
-                    turns: _moreOpen ? .5 : 0,
-                    duration: appMotion(context, AppTokens.controlMotion),
-                    child: const Icon(Icons.expand_more),
+                  AppChoice(
+                    selected: _draft.memberId == null,
+                    onSelected: (_) => setState(
+                      () => _draft = _draft.copyWith(clearMember: true),
+                    ),
+                    label: const Text('全部成员'),
                   ),
+                  for (final member in primary) memberButton(member),
                 ],
               ),
-            ),
-            AnimatedSize(
-              duration: appMotion(context, AppTokens.controlMotion),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: !_moreOpen
-                  ? const SizedBox(width: double.infinity)
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final member in other) memberButton(member),
-                        ],
-                      ),
+              if (members.hasError)
+                Row(
+                  children: [
+                    const Expanded(child: Text('成员暂时加载失败')),
+                    AppButton(
+                      onPressed: () => ref.invalidate(dynamicMembersProvider),
+                      child: const Text('重试'),
                     ),
-            ),
-          ],
-          heading('动态类型'),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              AppButton(
-                selected: _draft.type == null,
-                onPressed: () =>
-                    setState(() => _draft = _draft.copyWith(clearType: true)),
-                child: const Text('全部'),
-              ),
-              for (final type in DynamicType.values)
-                AppButton(
-                  selected: _draft.type == type,
-                  onPressed: () =>
-                      setState(() => _draft = _draft.copyWith(type: type)),
-                  child: Text(dynamicTypeLabel(type)),
+                  ],
                 ),
+              if (other.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                AppButton(
+                  onPressed: _toggleMore,
+                  child: Row(
+                    children: [
+                      const Expanded(child: Text('更多成员')),
+                      AnimatedRotation(
+                        turns: _moreOpen ? .5 : 0,
+                        duration: appMotion(context, AppTokens.controlMotion),
+                        child: const Icon(Icons.expand_more),
+                      ),
+                    ],
+                  ),
+                ),
+                AnimatedSize(
+                  duration: appMotion(context, AppTokens.controlMotion),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: !_moreOpen
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final member in other) memberButton(member),
+                            ],
+                          ),
+                        ),
+                ),
+              ],
             ],
           ),
-          heading('发布日期'),
-          Wrap(
+        ),
+        AppFilterSection(
+          title: '动态类型',
+          child: AppChoiceWrap<DynamicType?>(
+            values: const [null, ...DynamicType.values],
+            labelOf: (type) => type == null ? '全部' : dynamicTypeLabel(type),
+            selected: _draft.type,
+            onChanged: (type) => setState(
+              () => _draft = type == null
+                  ? _draft.copyWith(clearType: true)
+                  : _draft.copyWith(type: type),
+            ),
+          ),
+        ),
+        AppFilterSection(
+          title: '发布日期',
+          child: Wrap(
             spacing: 8,
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
@@ -700,52 +692,15 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
                 ),
             ],
           ),
-          heading('排序'),
-          AppSegments<DynamicSort>(
+        ),
+        AppFilterSection(
+          title: '排序',
+          child: AppSegments<DynamicSort>(
             values: DynamicSort.values,
             labelOf: _sortLabel,
             selected: _draft.sort,
             onChanged: (sort) =>
                 setState(() => _draft = _draft.copyWith(sort: sort)),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-    return Column(
-      mainAxisSize: widget.embedded ? MainAxisSize.min : MainAxisSize.max,
-      children: [
-        AppPanelHeader(
-          title: '筛选动态',
-          onClose: widget.onClose,
-          actions: [
-            AppButton(
-              onPressed: () => setState(() => _draft = const DynamicQuery()),
-              child: const Text('重置'),
-            ),
-          ],
-        ),
-        if (widget.embedded)
-          fields
-        else
-          Expanded(child: SingleChildScrollView(child: fields)),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Row(
-              children: [
-                AppButton(onPressed: widget.onClose, child: const Text('取消')),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    selected: true,
-                    onPressed: () => widget.onApply(_draft),
-                    child: const Text('应用筛选'),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ],

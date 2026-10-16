@@ -227,6 +227,16 @@ class CalendarAgendaRow extends ConsumerWidget {
           TextSpan(
             children: [
               if (state.isNotEmpty) TextSpan(text: state, style: stateStyle),
+              // A followed member's or a starred event, in words; the star
+              // at the end of the line is this one event's own.
+              if (followed && !muted)
+                TextSpan(
+                  text: state.isEmpty ? '已关注' : ' · 已关注',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               if (subtitle.isNotEmpty)
                 TextSpan(
                   text: state.isEmpty ? subtitle : ' · $subtitle',
@@ -298,17 +308,6 @@ class CalendarAgendaRow extends ConsumerWidget {
                     : const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 child: Row(
                   children: [
-                    if (followed) ...[
-                      Container(
-                        width: 3,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: calendarEventColor(event),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 7),
-                    ],
                     Expanded(child: line),
                     CalendarFollowButton(event: event, iconOnly: true),
                   ],
@@ -443,21 +442,18 @@ class CalendarDayCell extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             SizedBox(
-              height: 7,
+              height: 5,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // One dot per event in its member's colour.
                   for (final event in events.take(3))
                     Container(
-                      width: followed(event) ? 7 : 5,
-                      height: followed(event) ? 7 : 5,
+                      width: 5,
+                      height: 5,
                       margin: const EdgeInsets.symmetric(horizontal: 1),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: followed(event)
-                            ? Border.all(color: colors.onSurface, width: 1)
-                            : null,
                         color: event.isCancelled
                             ? colors.outlineVariant
                             : calendarEventColor(event),
@@ -519,14 +515,20 @@ class CalendarWeekStrip extends StatelessWidget {
   }
 }
 
-String _reminderText(WidgetRef ref, CalendarEvent event) {
+/// When this event will be announced, for a followed live that has not
+/// started; null for anything that never gets a reminder.
+String? _reminderText(WidgetRef ref, CalendarEvent event) {
+  if (event.isCancelled ||
+      event.allDay ||
+      EventClassifier.classify(event) != EventKind.live ||
+      !event.start.isAfter(ref.watch(currentTimeProvider)()) ||
+      !ref.watch(isCalendarSelectedProvider(event))) {
+    return null;
+  }
   final state = ref.watch(calendarReminderControllerProvider);
-  if (!state.preferences.enabled || !state.permission) return '通知未开启';
+  if (!state.preferences.enabled) return '开播提醒已关闭';
+  if (!state.permission) return '通知未开启';
   if (!state.exactPermission) return '精确定时权限未开启';
-  if (event.isCancelled) return '已取消，不提醒';
-  if (EventClassifier.classify(event) != EventKind.live) return '非直播日程，不提醒';
-  if (!ref.watch(isCalendarSelectedProvider(event))) return '关注成员或星标这场后提醒';
-  if (!event.start.isAfter(ref.watch(currentTimeProvider)())) return '这场已经开始';
   return state.preferences.timing;
 }
 
@@ -569,17 +571,15 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: AppPanelHeader(title: '日程详情', closeLabel: '关闭日程'),
-              ),
+          AppPanelHeader(
+            title: '日程详情',
+            closeLabel: '关闭日程',
+            actions: [
               CalendarFollowButton(
                 event: event,
                 source: widget.source,
                 iconOnly: true,
               ),
-              const SizedBox(width: 12),
             ],
           ),
           Expanded(
@@ -617,11 +617,12 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
                       ],
                     ),
                   ),
-                _DetailLine(
-                  icon: Icons.notifications_outlined,
-                  label: '提醒',
-                  value: _reminderText(ref, event),
-                ),
+                if (_reminderText(ref, event) case final reminder?)
+                  _DetailLine(
+                    icon: Icons.notifications_outlined,
+                    label: '提醒',
+                    value: reminder,
+                  ),
                 _DetailLine(
                   icon: Icons.schedule,
                   label: event.allDay ? '日期' : '时间（上海）',

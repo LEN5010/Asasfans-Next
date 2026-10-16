@@ -76,7 +76,7 @@ class MusicCatalogRepository {
         await temporary.writeAsString(payload, flush: true);
         await temporary.rename(file.path);
       } on FileSystemException {
-        return MusicCatalog(tracks, warning: '歌单已更新，本次未能写入缓存');
+        // Only the next offline start loses out; this list is current.
       }
       return MusicCatalog(tracks);
     } on Object {
@@ -135,40 +135,39 @@ List<MusicTrack> parseMusicCsv(String raw) {
   final columns = {for (final name in required) name: header.indexOf(name)};
   final tracks = <MusicTrack>[];
   final ids = <String>{};
+  // The catalogue is kept by hand: a row with a missing title or a bad date
+  // is left out on its own instead of failing the whole list.
   for (final row in rows.skip(1)) {
     String value(String name) =>
         columns[name]! < row.length ? row[columns[name]!].trim() : '';
     if (value('有没有音频').toUpperCase() != 'TRUE') continue;
     final id = value('id');
-    final parts = value('日期').split(RegExp(r'[./-]'));
+    final title = value('歌名');
     final duration = double.tryParse(value('结束时间点'));
-    if (!RegExp(r'^\d+$').hasMatch(id) ||
-        parts.length != 3 ||
-        duration == null ||
-        duration <= 0 ||
-        value('歌名').isEmpty) {
-      throw const FormatException('歌单字段不完整');
-    }
-    final numbers = parts.map(int.tryParse).toList();
-    if (numbers.contains(null)) throw const FormatException('歌单日期无效');
-    final date = DateTime(numbers[0]!, numbers[1]!, numbers[2]!);
-    if (date.year != numbers[0] ||
-        date.month != numbers[1] ||
-        date.day != numbers[2]) {
-      throw const FormatException('歌单日期无效');
-    }
+    final numbers = value('日期').split(RegExp(r'[./-]')).map(int.tryParse);
     final members = value('演唱者')
         .split(RegExp(r'[,，、]'))
         .map((v) => v.trim())
         .where((v) => v.isNotEmpty)
         .toList();
-    if (members.isEmpty) throw const FormatException('歌单缺少演唱者');
+    if (!RegExp(r'^\d+$').hasMatch(id) ||
+        title.isEmpty ||
+        duration == null ||
+        duration <= 0 ||
+        members.isEmpty ||
+        numbers.length != 3 ||
+        numbers.contains(null)) {
+      continue;
+    }
+    final [year!, month!, day!] = numbers.toList();
+    final date = DateTime(year, month, day);
+    if (date.year != year || date.month != month || date.day != day) continue;
     if (ids.add(id)) {
       tracks.add(
         MusicTrack(
           id: id,
           date: date,
-          title: value('歌名'),
+          title: title,
           members: List.unmodifiable(members),
           duration: Duration(milliseconds: duration.round()),
           status: value('演唱状态'),
@@ -176,5 +175,6 @@ List<MusicTrack> parseMusicCsv(String raw) {
       );
     }
   }
+  if (tracks.isEmpty) throw const FormatException('歌单没有可播放的歌回');
   return List.unmodifiable(tracks);
 }
