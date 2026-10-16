@@ -24,6 +24,24 @@ bool FlutterWindow::OnCreate() {
 
   RECT frame = GetClientArea();
 
+  // Paint before engine/plugin initialization, rather than leaving the entire
+  // application invisible until Flutter's first frame. No timer delays entry.
+  startup_label_ = CreateWindow(
+      L"STATIC", L"Asasfans Next",
+      WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
+      0, 0, frame.right, frame.bottom, GetHandle(), nullptr,
+      GetModuleHandle(nullptr), nullptr);
+  startup_font_ = CreateFont(
+      -MulDiv(24, static_cast<int>(GetDpiForWindow(GetHandle())), 96),
+      0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+      DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+  SendMessage(startup_label_, WM_SETFONT,
+              reinterpret_cast<WPARAM>(startup_font_), TRUE);
+  Show();
+  UpdateWindow(GetHandle());
+  UpdateWindow(startup_label_);
+
   // The size here must match the window dimensions to avoid unnecessary surface
   // creation / destruction in the startup path.
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
@@ -34,6 +52,8 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  SetWindowPos(startup_label_, HWND_TOP, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
   // Same channel as macOS: "light" or "dark" as the app chose, anything
   // else hands the title bar back to the system.
@@ -62,19 +82,29 @@ bool FlutterWindow::OnCreate() {
         result->Success();
       });
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+  flutter_controller_->engine()->SetNextFrameCallback([this]() {
+    DestroyWindow(startup_label_);
+    startup_label_ = nullptr;
+    DeleteObject(startup_font_);
+    startup_font_ = nullptr;
   });
 
   // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
+  // registered. Ensure one is pending to remove the startup label even then.
   flutter_controller_->ForceRedraw();
 
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
+  if (startup_label_) {
+    DestroyWindow(startup_label_);
+    startup_label_ = nullptr;
+  }
+  if (startup_font_) {
+    DeleteObject(startup_font_);
+    startup_font_ = nullptr;
+  }
   // The channel talks through the engine; release it first.
   appearance_channel_ = nullptr;
   if (flutter_controller_) {
@@ -88,6 +118,17 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (message == WM_CTLCOLORSTATIC &&
+      reinterpret_cast<HWND>(lparam) == startup_label_) {
+    HDC dc = reinterpret_cast<HDC>(wparam);
+    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+    SetBkColor(dc, GetSysColor(COLOR_WINDOW));
+    return reinterpret_cast<LRESULT>(GetSysColorBrush(COLOR_WINDOW));
+  }
+  if (message == WM_SIZE && startup_label_) {
+    RECT frame = GetClientArea();
+    MoveWindow(startup_label_, 0, 0, frame.right, frame.bottom, TRUE);
+  }
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =
@@ -100,7 +141,9 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 
   switch (message) {
     case WM_FONTCHANGE:
-      flutter_controller_->engine()->ReloadSystemFonts();
+      if (flutter_controller_) {
+        flutter_controller_->engine()->ReloadSystemFonts();
+      }
       break;
   }
 

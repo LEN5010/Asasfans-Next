@@ -140,6 +140,7 @@ jobs:
           flutter build windows --release --no-pub
           New-Item -ItemType Directory -Force dist | Out-Null
           Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "dist/$env:NAME-windows-x64.zip"
+          ./tool/package_windows.ps1
 
       # Ad-hoc signed, not notarized: the notes say how to open it.
       # keychain-access-groups is a restricted entitlement: without a

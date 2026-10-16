@@ -25,7 +25,12 @@ class _ReleaseNoticeState extends ConsumerState<ReleaseNotice> {
   @override
   void initState() {
     super.initState();
-    if (!kDebugMode) unawaited(_check());
+    // Update networking is background work, after the first frame is submitted.
+    if (!kDebugMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_check());
+      });
+    }
   }
 
   Future<void> _check() async {
@@ -88,6 +93,9 @@ class _ReleaseDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final date = release.publishedAt?.toLocal();
     final notes = plainNotes(release.notes);
+    final installer = defaultTargetPlatform == TargetPlatform.windows
+        ? release.windowsInstaller
+        : null;
     return AlertDialog(
       icon: const Icon(Icons.system_update_outlined),
       title: Text('新版本 ${release.version}'),
@@ -123,28 +131,33 @@ class _ReleaseDialog extends ConsumerWidget {
           onPressed: () => Navigator.pop(context),
           child: const Text('稍后'),
         ),
+        if (installer != null)
+          AppButton(
+            onPressed: () => _open(context, ref, release.page),
+            child: const Text('发布页面'),
+          ),
         AppButton(
           selected: true,
-          onPressed: () async {
-            final opened = await ref
-                .read(externalLinkServiceProvider)
-                .open(release.page);
-            if (!context.mounted) return;
-            if (opened) {
-              Navigator.pop(context);
-            } else {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('无法打开 ${release.page}')));
-            }
-          },
-          child: const Text('前往下载'),
+          onPressed: () => _open(context, ref, installer ?? release.page),
+          child: Text(installer == null ? '前往下载' : '下载安装包'),
         ),
       ],
     );
   }
 
   static String _two(int value) => value.toString().padLeft(2, '0');
+
+  Future<void> _open(BuildContext context, WidgetRef ref, Uri uri) async {
+    final opened = await ref.read(externalLinkServiceProvider).open(uri);
+    if (!context.mounted) return;
+    if (opened) {
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('无法打开 $uri')));
+    }
+  }
 }
 
 /// Release notes are Markdown; without a renderer, the marks come off and

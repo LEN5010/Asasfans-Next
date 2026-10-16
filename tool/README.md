@@ -26,6 +26,19 @@ ASASFANS_FLUTTER_SDK=/Users/len5010/flutter tool/flutterw --dart format --langua
 
 参考适配许可见 `third_party/README.md`。
 
+## Windows 安装器
+
+Windows 上安装 Inno Setup 6.5+（默认路径），执行：
+
+```powershell
+./tool/flutterw.ps1 build windows --release --no-pub
+./tool/package_windows.ps1
+```
+
+安装器输出到 `dist/Asasfans-Next-v<版本>-windows-x64-setup.exe`，版本取自 pubspec；整个 Flutter bundle 和 MSVC 运行库一起打包。AppId 固定，新版覆盖原安装目录；个人数据仍保存在应用支持目录。简体中文翻译随源码提供，不在构建时下载。
+
+手动 `Flutter Development Validation` 选择 `windows`，只构建 Windows 开发安装器；`Flutter Release` 同时提供安装器和 ZIP，并生成 sha256。安装器没有 Authenticode 签名。
+
 ## 性能测量包（asasfans.next.perf）
 
 体积与帧耗时只能在 AOT（release/profile）产物上测量，而正式 release 在没有原签名时会（正确地）拒绝构建。性能包是一个独立应用：包名 `asasfans.next.perf`、版本名后缀 `-perf`，可与正式版并存且无法覆盖或读取正式版数据。正式 `asasfans.next` 的签名闸门不变，测试签名永远不会落到正式包名上。

@@ -1,13 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:asasfans_next/core/config/app_version.dart';
+import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/network/public_api_client.dart';
+import 'package:asasfans_next/core/platform/external_link_service.dart';
 import 'package:asasfans_next/features/release/data/release_source.dart';
 import 'package:asasfans_next/features/release/domain/app_release.dart';
 import 'package:asasfans_next/features/release/presentation/release_check.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AppVersion _v(String text) => AppVersion.tryParse(text)!;
@@ -51,6 +55,16 @@ class _Server implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+class _Links implements ExternalLinkService {
+  final opened = <Uri>[];
+
+  @override
+  Future<bool> open(Uri uri) async {
+    opened.add(uri);
+    return true;
+  }
 }
 
 void main() {
@@ -158,4 +172,56 @@ void main() {
     final release = ReleaseSource.decodeGithub([_json('v3.0.0')]).single;
     expect(plainNotes(release.notes), '更新\n\n• 新功能');
   });
+
+  test(
+    'Windows installer URLs match release asset names and preserve tags',
+    () {
+      for (final tag in ['v3.0.1', 'v3.1.0-beta.1']) {
+        final release = ReleaseSource.decodeGithub([_json(tag)]).single;
+        expect(
+          release.windowsInstaller.toString(),
+          'https://github.com/LEN5010/Asasfans-Next/releases/download/'
+          '$tag/Asasfans-Next-$tag-windows-x64-setup.exe',
+        );
+        final fromFeed = ReleaseSource.decodeFeed({
+          'releases': [
+            {'version': tag, 'page': release.page.toString()},
+          ],
+        }).single;
+        expect(fromFeed.windowsInstaller, release.windowsInstaller);
+      }
+    },
+  );
+
+  for (final platform in [TargetPlatform.windows, TargetPlatform.macOS]) {
+    testWidgets('$platform update opens its download destination', (
+      tester,
+    ) async {
+      final release = ReleaseSource.decodeGithub([_json('v3.0.1')]).single;
+      final links = _Links();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [externalLinkServiceProvider.overrideWithValue(links)],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  onPressed: () => showReleaseDialog(context, release),
+                  child: const Text('更新'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('更新'));
+      await tester.pumpAndSettle();
+      final windows = platform == TargetPlatform.windows;
+      expect(find.text('发布页面'), windows ? findsOneWidget : findsNothing);
+      await tester.tap(find.text(windows ? '下载安装包' : '前往下载'));
+      await tester.pumpAndSettle();
+      expect(links.opened, [windows ? release.windowsInstaller : release.page]);
+      expect(find.byType(AlertDialog), findsNothing);
+    }, variant: TargetPlatformVariant({platform}));
+  }
 }

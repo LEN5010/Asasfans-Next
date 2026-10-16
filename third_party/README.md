@@ -1,5 +1,9 @@
 # Reference implementation notices
 
+The Windows installer's `windows/packaging/ChineseSimplified.isl` is the
+Simplified Chinese translation from the [Inno Setup repository](https://github.com/jrsoftware/issrc/blob/main/Files/Languages/ChineseSimplified.isl),
+retrieved 2026-10-16. Its maintainer notices are retained in the file.
+
 The glass chrome integration and release-to-commit navigation handling in
 `lib/shared/widgets/glass/` are adapted from LoveIwara, revision
 `888d4b95ff052299c11151b9013605955a776ccc`:
