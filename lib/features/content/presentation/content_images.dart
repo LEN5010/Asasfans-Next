@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_image_policy.dart';
 import '../application/content_providers.dart';
-import '../domain/dynamic_repository.dart';
 import 'fanart_image_viewer.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/member_tone.dart';
@@ -64,6 +63,41 @@ class ContentAvatar extends StatelessWidget {
   }
 }
 
+/// Asked once per launch before members who have left are shown: their
+/// content is an archive, and some of it may upset people.
+Future<bool> confirmMoreMembers(BuildContext context) async {
+  if (_moreMembersAccepted) return true;
+  final accepted = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(Icons.info_outline),
+      title: const Text('查看更多成员'),
+      content: const Text(
+        '以下成员不属于 A-SOUL 现役成员，相关内容仅作为公开内容的存档展示，'
+        '部分内容可能引起不适，请谨慎查看。\n\n'
+        '免责声明：Asasfans Next 是非官方粉丝项目，与 A-SOUL 及相关公司无关。'
+        '内容版权归原作者所有，展示不代表本应用立场；'
+        '如有不当内容，请通过 GitHub Issues 反馈处理。',
+      ),
+      actions: [
+        AppButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('取消'),
+        ),
+        AppButton(
+          selected: true,
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('我已了解，继续'),
+        ),
+      ],
+    ),
+  );
+  if (accepted == true) _moreMembersAccepted = true;
+  return _moreMembersAccepted;
+}
+
+var _moreMembersAccepted = false;
+
 /// A member as a filter option, as the dynamics panel draws it: her account
 /// picture and a name. [members] are the short names whose pictures to show,
 /// two overlapping for a pair such as 心宜&思诺; the pictures come from the
@@ -88,20 +122,10 @@ class MemberChoiceButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final roster = image != null
-        ? const <DynamicMember>[]
-        : ref.watch(dynamicMembersProvider).valueOrNull ??
-              const <DynamicMember>[];
-    Uri? pictureOf(String member) =>
-        image ??
-        roster
-            .where(
-              (account) =>
-                  account.avatarUrl != null &&
-                  AppTheme.membersIn(account.name).singleOrNull == member,
-            )
-            .firstOrNull
-            ?.avatarUrl;
+    final avatars = image != null
+        ? const <String, Uri>{}
+        : ref.watch(memberAvatarsProvider);
+    Uri? pictureOf(String member) => image ?? avatars[member];
     final ring = Theme.of(context).colorScheme.surface;
     return AppButton(
       tooltip: label,

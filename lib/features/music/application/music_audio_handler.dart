@@ -104,13 +104,15 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
 
   bool _initFailed = false;
 
-  /// Plays [values] from [start]. A long list is cut to the next
+  /// Plays [values] from [start]. A short list such as a day is queued
+  /// whole, so 上一首 reaches the songs before; a long one is cut to the next
   /// [maxQueue] songs from the one chosen.
   Future<void> playTracks(List<MusicTrack> values, {int start = 0}) async {
     if (values.isEmpty) return;
     final from = start.clamp(0, values.length - 1);
-    _tracks = values.skip(from).take(maxQueue).toList();
-    _index = 0;
+    final window = values.length <= maxQueue ? 0 : from;
+    _tracks = values.skip(window).take(maxQueue).toList();
+    _index = from - window;
     _publishQueue();
     await _load();
   }

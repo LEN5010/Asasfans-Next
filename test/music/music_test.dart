@@ -86,7 +86,7 @@ void main() {
   );
 
   test(
-    'stream requests batch ids with os=pc and cache only valid HTTPS URLs',
+    'stream requests batch ids, read the text/plain JSON and keep HTTPS URLs',
     () async {
       final adapter = _Adapter([
         ResponseBody.fromString(
@@ -102,8 +102,9 @@ void main() {
             ],
           }),
           200,
+          // As the service really sends it.
           headers: {
-            'content-type': ['application/json'],
+            'content-type': ['text/plain;charset=UTF-8'],
           },
         ),
       ]);
@@ -114,7 +115,10 @@ void main() {
       final stream = await repository.resolve('123');
       expect(stream!.uri.scheme, 'https');
       expect(stream.gain, -6);
-      expect(adapter.requests.single.headers['Cookie'], 'os=pc');
+      expect(
+        adapter.requests.single.headers['Cookie'],
+        'os=pc; appver=2.10.13',
+      );
       expect(adapter.requests.single.queryParameters['ids'], '[123,124]');
       expect(musicVolume(-6), closeTo(.5012, .001));
       expect(musicVolume(5.3), 1);
@@ -137,16 +141,13 @@ void main() {
       song('c', DateTime(2026, 9, 9), ['贝拉']),
       song('d', DateTime(2026, 9, 5), ['嘉然', '贝拉']),
     ]);
-    expect(sessions.map((s) => s.tracks.map((t) => t.id).join()), [
-      'c',
-      'abd',
-    ]);
+    expect(sessions.map((s) => s.tracks.map((t) => t.id).join()), ['c', 'abd']);
     expect(sessions.last.members, ['嘉然', '贝拉', '乃琳']);
     expect(
-      musicSessions(sessions.expand((s) => s.tracks), oldest: true)
-          .first
-          .tracks
-          .map((t) => t.id),
+      musicSessions(
+        sessions.expand((s) => s.tracks),
+        oldest: true,
+      ).first.tracks.map((t) => t.id),
       ['a', 'b', 'd'],
     );
   });

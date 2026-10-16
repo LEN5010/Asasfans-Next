@@ -488,40 +488,9 @@ class _DynamicFilterPanelState extends ConsumerState<_DynamicFilterPanel> {
   late bool _moreOpen =
       _draft.memberId != null && !_primaryIds.contains(_draft.memberId);
 
-  /// Accepted once per launch, so reopening the panel does not ask again.
-  static bool _moreAccepted = false;
-
   Future<void> _toggleMore() async {
-    if (!_moreOpen && !_moreAccepted) {
-      final accepted = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          icon: const Icon(Icons.info_outline),
-          title: const Text('查看更多成员'),
-          content: const Text(
-            '以下账号不属于 A-SOUL 现役成员，相关动态仅作为公开内容的存档展示，'
-            '部分内容可能引起不适，请谨慎查看。\n\n'
-            '免责声明：Asasfans Next 是非官方粉丝项目，与 A-SOUL 及相关公司无关。'
-            '动态版权归原作者所有，展示不代表本应用立场；'
-            '如有不当内容，请通过 GitHub Issues 反馈处理。',
-          ),
-          actions: [
-            AppButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
-            AppButton(
-              selected: true,
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('我已了解，继续'),
-            ),
-          ],
-        ),
-      );
-      if (accepted != true || !mounted) return;
-      _moreAccepted = true;
-    }
-    setState(() => _moreOpen = !_moreOpen);
+    if (!_moreOpen && !await confirmMoreMembers(context)) return;
+    if (mounted) setState(() => _moreOpen = !_moreOpen);
   }
 
   static const _primaryIds = [

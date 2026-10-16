@@ -91,9 +91,13 @@ class _AppShellState extends ConsumerState<AppShell> {
         );
         final selected = widget.navigationShell.currentIndex;
         final mq = MediaQuery.of(context);
-        final showBottom =
-            !wide && widget.isTabRoot && mq.viewInsets.bottom == 0;
-        final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
+        final typing = mq.viewInsets.bottom > 0;
+        // A phone has the dock on the main pages and the song that is
+        // playing on every page; a wide window has its player bar along the
+        // foot, under the rail and the page.
+        final showDock = !wide && widget.isTabRoot && !typing;
+        final showMini = !wide && hasMusic && !typing;
+        final showBar = wide && hasMusic;
         return CalendarReminderListener(
           child: AppBackdrop(
             child: Scaffold(
@@ -105,7 +109,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               // rebuild the body.
               extendBody: true,
               // Here rather than over the body, so a SnackBar sits above it.
-              bottomNavigationBar: showBottom
+              bottomNavigationBar: showDock || showMini
                   ? Padding(
                       padding: EdgeInsets.fromLTRB(
                         12,
@@ -121,100 +125,129 @@ class _AppShellState extends ConsumerState<AppShell> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (hasMusic) ...[
-                                const MusicMiniPlayer(),
+                              if (showMini) const MusicMiniPlayer(),
+                              if (showMini && showDock)
                                 const SizedBox(height: 10),
-                              ],
-                              AppGlassNavigation(
-                                selected: selected,
-                                onSelect: _select,
-                                onTools: _tools,
-                              ),
+                              if (showDock)
+                                AppGlassNavigation(
+                                  selected: selected,
+                                  onSelect: _select,
+                                  onTools: _tools,
+                                ),
                             ],
                           ),
                         ),
                       ),
                     )
-                  : null,
-              body: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Keep the body at the same element position through breakpoints.
-                  SizedBox(
-                    width: wide ? AppSidebar.width + 24 : 0,
-                    child: wide
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              12,
-                              mq.padding.top + 10,
-                              12,
-                              12,
-                            ),
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    child: AppSidebar(
-                                      selected: selected,
-                                      onSelect: _select,
-                                      onTools: _tools,
-                                    ),
-                                  ),
-                                ),
-                                if (hasMusic) const MusicMiniPlayer(rail: true),
-                              ],
-                            ),
-                          )
-                        : null,
-                  ),
-                  Expanded(
-                    // Isolate branch ModalRoute semantics from the preceding rail.
-                    child: Semantics(
-                      container: true,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          widget.navigationShell,
-                          // A subtle edge fade under the bar, not an opaque footer.
-                          if (showBottom)
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height:
-                                  mq.padding.bottom +
-                                  barHeight +
-                                  (hasMusic ? 72 : 0) +
-                                  40,
-                              child: IgnorePointer(
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Theme.of(context)
-                                            .scaffoldBackgroundColor
-                                            .withValues(alpha: 0),
-                                        Theme.of(context)
-                                            .scaffoldBackgroundColor
-                                            .withValues(alpha: .72),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+                  : showBar
+                  ? Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        0,
+                        12,
+                        mq.padding.bottom + 12,
                       ),
-                    ),
+                      child: const MusicPlayerBar(),
+                    )
+                  : null,
+              // On a wide window the rail and the page end above the player
+              // bar instead of running under it.
+              body: Builder(
+                builder: (context) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: showBar ? MediaQuery.paddingOf(context).bottom : 0,
                   ),
-                ],
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeBottom: showBar,
+                    child: _body(context, wide, selected, showDock, showMini),
+                  ),
+                ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    bool wide,
+    int selected,
+    bool showDock,
+    bool showMini,
+  ) {
+    final mq = MediaQuery.of(context);
+    final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Keep the body at the same element position through breakpoints.
+        SizedBox(
+          width: wide ? AppSidebar.width + 24 : 0,
+          child: wide
+              ? Padding(
+                  padding: EdgeInsets.fromLTRB(12, mq.padding.top + 10, 12, 12),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: AppSidebar(
+                            selected: selected,
+                            onSelect: _select,
+                            onTools: _tools,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : null,
+        ),
+        Expanded(
+          // Isolate branch ModalRoute semantics from the preceding rail.
+          child: Semantics(
+            container: true,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                widget.navigationShell,
+                // A subtle edge fade under the bar, not an opaque footer.
+                if (showDock || showMini)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height:
+                        mq.padding.bottom +
+                        (showDock ? barHeight : 0) +
+                        (showMini ? 72 : 0) +
+                        40,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(
+                                context,
+                              ).scaffoldBackgroundColor.withValues(alpha: 0),
+                              Theme.of(
+                                context,
+                              ).scaffoldBackgroundColor.withValues(alpha: .72),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,8 +11,9 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_controls.dart';
-import '../../../shared/widgets/glass/app_glass_navigation.dart';
+import '../../../shared/widgets/media_image_policy.dart';
 import '../../../shared/widgets/member_tone.dart';
+import '../../content/application/content_providers.dart';
 import '../application/music_audio_handler.dart';
 import '../application/music_providers.dart';
 import '../domain/music_track.dart';
@@ -53,162 +56,302 @@ class MusicStudioButton extends ConsumerWidget {
   );
 }
 
-/// A song's stand-in cover: its singers' colours as a gradient, with the
-/// play state on top when [icon] is given.
-class MusicArtwork extends StatelessWidget {
-  const MusicArtwork({
+/// A song's or a day's cover, made of its singers' account pictures the way
+/// a streaming app makes a playlist's: one fills it, two split it, three or
+/// more tile it. Until a picture loads its tile is the member's initial in
+/// her colour.
+class MusicCover extends ConsumerWidget {
+  const MusicCover({
     super.key,
     required this.members,
     required this.size,
-    this.radius = 12,
-    this.icon,
+    this.radius = 10,
   });
   final List<String> members;
   final double size;
   final double radius;
-  final IconData? icon;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = [
-      for (final member in members)
-        AppTheme.memberColors[member] ?? AppTheme.dianaPink,
-    ];
-    if (colors.length == 1) {
-      colors.add(Color.lerp(colors.first, Colors.black, .3)!);
-    }
-    return SizedBox.square(
-      dimension: size,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              for (final color in colors)
-                Color.lerp(color, const Color(0xFF17121A), .18)!,
-            ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatars = ref.watch(memberAvatarsProvider);
+    final brightness = Theme.of(context).brightness;
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    Widget tile(String member, double width) {
+      final tone = MemberTone.of(member, brightness);
+      final fallback = ColoredBox(
+        color: Color.alphaBlend(
+          tone.color.withValues(alpha: .3),
+          brightness == Brightness.dark ? Colors.black : Colors.white,
+        ),
+        child: Center(
+          child: Text(
+            member.characters.first,
+            style: TextStyle(
+              color: tone.text,
+              fontSize: width * .4,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        child: icon == null
-            ? null
-            : Icon(icon, color: Colors.white, size: size * .5),
+      );
+      final url = avatars[member];
+      return url == null
+          ? fallback
+          : Image(
+              image: MediaImagePolicy.preview(
+                url,
+                logicalWidth: width,
+                devicePixelRatio: ratio,
+              ),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => fallback,
+            );
+    }
+
+    final half = size / 2;
+    Widget split(Axis axis, List<Widget> children) => Flex(
+      direction: axis,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [for (final child in children) Expanded(child: child)],
+    );
+    final Widget body = switch (members) {
+      [] => tile('A-SOUL', size),
+      [final one] => tile(one, size),
+      [final a, final b] => split(Axis.horizontal, [
+        tile(a, half),
+        tile(b, half),
+      ]),
+      [final a, final b, final c] => split(Axis.horizontal, [
+        tile(a, size),
+        split(Axis.vertical, [tile(b, half), tile(c, half)]),
+      ]),
+      [final a, final b, final c, final d, ...] => split(Axis.vertical, [
+        split(Axis.horizontal, [tile(a, half), tile(b, half)]),
+        split(Axis.horizontal, [tile(c, half), tile(d, half)]),
+      ]),
+    };
+    return ExcludeSemantics(
+      child: SizedBox.square(
+        dimension: size,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: body,
+        ),
       ),
     );
   }
 }
 
-/// The song that is playing, under the pages: above the dock on a phone, at
-/// the foot of the rail on a wide window ([rail]), where it keeps the rail's
-/// width so starting a song never moves the page. A tap opens the player.
+/// Where the song is, draggable. The thumb follows the finger and the song
+/// seeks once, on release, rather than on every frame of the drag.
+class MusicProgress extends StatefulWidget {
+  const MusicProgress({super.key, required this.handler, this.dense = false});
+  final MusicAudioHandler handler;
+
+  /// The times beside the track rather than under it, for the desktop bar.
+  final bool dense;
+
+  @override
+  State<MusicProgress> createState() => _MusicProgressState();
+}
+
+class _MusicProgressState extends State<MusicProgress> {
+  double? _dragging;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final handler = widget.handler;
+    final total = handler.duration.inMilliseconds.toDouble();
+    final value =
+        _dragging ??
+        handler.position.inMilliseconds.clamp(0, math.max(total, 0)).toDouble();
+    final time = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontFeatures: AppTheme.tabular,
+    );
+    final slider = SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        trackHeight: 4,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+        inactiveTrackColor: theme.colorScheme.surfaceContainerHigh,
+      ),
+      child: Slider(
+        value: math.min(value, total > 0 ? total : 1),
+        max: total > 0 ? total : 1,
+        onChanged: total > 0
+            ? (value) => setState(() => _dragging = value)
+            : null,
+        onChangeEnd: total > 0
+            ? (value) {
+                setState(() => _dragging = null);
+                unawaited(handler.seek(Duration(milliseconds: value.round())));
+              }
+            : null,
+      ),
+    );
+    final position = Text(
+      musicDuration(Duration(milliseconds: value.round())),
+      style: time,
+    );
+    final length = Text(musicDuration(handler.duration), style: time);
+    if (widget.dense) {
+      return Row(
+        children: [
+          position,
+          Expanded(child: slider),
+          length,
+        ],
+      );
+    }
+    return Column(
+      children: [
+        slider,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [position, length],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The round play button music apps lead their controls with.
+class MusicPlayButton extends StatelessWidget {
+  const MusicPlayButton({super.key, required this.handler, this.size = 40});
+  final MusicAudioHandler handler;
+  final double size;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox.square(
+      dimension: size,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: Size.square(size),
+          shape: const CircleBorder(),
+          backgroundColor: colors.onSurface,
+          foregroundColor: colors.surface,
+          disabledBackgroundColor: colors.onSurface.withValues(alpha: .6),
+        ),
+        onPressed: handler.loading
+            ? null
+            : () => handler.playing ? handler.pause() : handler.play(),
+        child: handler.loading
+            ? SizedBox.square(
+                dimension: size * .4,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colors.surface,
+                ),
+              )
+            : Icon(
+                handler.playing
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                size: size * .58,
+                semanticLabel: handler.playing ? '暂停' : '播放',
+              ),
+      ),
+    );
+  }
+}
+
+class MusicRepeatButton extends StatelessWidget {
+  const MusicRepeatButton({super.key, required this.handler});
+  final MusicAudioHandler handler;
+  @override
+  Widget build(BuildContext context) => AppButton.icon(
+    tooltip: switch (handler.repeat) {
+      AudioServiceRepeatMode.none => '顺序播放',
+      AudioServiceRepeatMode.one => '单曲循环',
+      _ => '列表循环',
+    },
+    selected: handler.repeat != AudioServiceRepeatMode.none,
+    onPressed: () => handler.setRepeatMode(switch (handler.repeat) {
+      AudioServiceRepeatMode.none => AudioServiceRepeatMode.all,
+      AudioServiceRepeatMode.all => AudioServiceRepeatMode.one,
+      _ => AudioServiceRepeatMode.none,
+    }),
+    icon: Icon(
+      handler.repeat == AudioServiceRepeatMode.one
+          ? Icons.repeat_one_rounded
+          : Icons.repeat_rounded,
+    ),
+  );
+}
+
+/// The playing song's cover, title and who sang, as the players lead.
+class _NowPlaying extends StatelessWidget {
+  const _NowPlaying({required this.track, required this.cover});
+  final MusicTrack track;
+  final double cover;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        MusicCover(members: track.members, size: cover, radius: 8),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                track.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${track.singers} · ${track.dateLabel}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The song that is playing, above the dock on a phone. A tap opens the
+/// player.
 class MusicMiniPlayer extends ConsumerWidget {
-  const MusicMiniPlayer({super.key, this.rail = false});
-  final bool rail;
+  const MusicMiniPlayer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final handler = ref.watch(musicAudioHandlerProvider);
     final track = handler.current;
     if (track == null) return const SizedBox.shrink();
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final duration = handler.duration.inMilliseconds;
-    final progress = duration == 0
-        ? 0.0
-        : (handler.position.inMilliseconds / duration).clamp(0.0, 1.0);
-    final playPause = AppButton.icon(
-      tooltip: handler.playing ? '暂停' : '播放',
-      onPressed: () => handler.playing ? handler.pause() : handler.play(),
-      icon: Icon(
-        handler.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-        size: 26,
-      ),
-    );
-    void open() => unawaited(context.push('/music/player'));
-    final bar = LinearProgressIndicator(
-      value: progress,
-      minHeight: 2,
-      backgroundColor: colors.outlineVariant.withValues(alpha: .5),
-    );
-    final Widget body;
-    if (rail) {
-      body = SizedBox(
-        width: AppSidebar.width,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Tooltip(
-                message: '${track.title} · ${track.singers}',
-                child: InkWell(
-                  onTap: open,
-                  borderRadius: BorderRadius.circular(14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Column(
-                      children: [
-                        MusicArtwork(members: track.members, size: 44),
-                        const SizedBox(height: 6),
-                        SizedBox(width: 44, child: bar),
-                        const SizedBox(height: 6),
-                        Text(
-                          track.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              playPause,
-            ],
-          ),
-        ),
-      );
-    } else {
-      body = InkWell(
-        onTap: open,
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () => unawaited(context.push('/music/player')),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
+              padding: const EdgeInsets.fromLTRB(8, 8, 4, 6),
               child: Row(
                 children: [
-                  MusicArtwork(members: track.members, size: 40, radius: 10),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          track.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${track.singers} · ${track.dateLabel}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  playPause,
+                  Expanded(child: _NowPlaying(track: track, cover: 44)),
+                  const SizedBox(width: 8),
+                  MusicPlayButton(handler: handler, size: 38),
                   AppButton.icon(
                     tooltip: '下一首',
                     onPressed: handler.skipToNext,
@@ -217,115 +360,191 @@ class MusicMiniPlayer extends ConsumerWidget {
                 ],
               ),
             ),
-            bar,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: LinearProgressIndicator(
+                  value: duration == 0
+                      ? 0
+                      : (handler.position.inMilliseconds / duration).clamp(
+                          0.0,
+                          1.0,
+                        ),
+                  minHeight: 2,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHigh,
+                ),
+              ),
+            ),
           ],
         ),
-      );
-    }
-    return AppCard(padding: EdgeInsets.zero, child: body);
-  }
-}
-
-/// One day's 歌回 as a card: the date and who sang, a way to play the day,
-/// then its songs.
-class MusicSessionCard extends StatelessWidget {
-  const MusicSessionCard({
-    super.key,
-    required this.session,
-    required this.currentId,
-    required this.onPlayDay,
-    required this.onPlayTrack,
-  });
-  final MusicSession session;
-  final String? currentId;
-  final VoidCallback onPlayDay;
-
-  /// Plays from the day's song at that index.
-  final ValueChanged<int> onPlayTrack;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final members = session.members;
-    final mixed = session.tracks.any(
-      (track) => track.singers != session.tracks.first.singers,
-    );
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 8, 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        session.tracks.first.dateLabel,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontFeatures: AppTheme.tabular,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          MemberDots(members: members),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              '${members.join('、')} · ${session.tracks.length} 首',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                AppButton.withIcon(
-                  onPressed: onPlayDay,
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('播放这天'),
-                ),
-              ],
-            ),
-          ),
-          for (final (index, track) in session.tracks.indexed) ...[
-            const Divider(height: 1, indent: 16, endIndent: 16),
-            MusicTrackRow(
-              track: track,
-              number: index + 1,
-              showSingers: mixed,
-              selected: track.id == currentId,
-              onPlay: () => onPlayTrack(index),
-            ),
-          ],
-        ],
       ),
     );
   }
 }
 
+/// A wide window's player along its foot, as on desktop music apps: the
+/// song on the left, the controls and progress in the middle, the player
+/// page on the right.
+class MusicPlayerBar extends ConsumerWidget {
+  const MusicPlayerBar({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final handler = ref.watch(musicAudioHandlerProvider);
+    final track = handler.current;
+    if (track == null) return const SizedBox.shrink();
+    void open() => unawaited(context.push('/music/player'));
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = math.min(300.0, constraints.maxWidth * .28);
+          return Row(
+            children: [
+              SizedBox(
+                width: side,
+                child: Tooltip(
+                  message: '打开播放页',
+                  child: InkWell(
+                    onTap: open,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: _NowPlaying(track: track, cover: 48),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 8,
+                      children: [
+                        AppButton.icon(
+                          tooltip: '上一首',
+                          onPressed: handler.skipToPrevious,
+                          icon: const Icon(Icons.skip_previous_rounded),
+                        ),
+                        MusicPlayButton(handler: handler, size: 36),
+                        AppButton.icon(
+                          tooltip: '下一首',
+                          onPressed: handler.skipToNext,
+                          icon: const Icon(Icons.skip_next_rounded),
+                        ),
+                      ],
+                    ),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: MusicProgress(handler: handler, dense: true),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: side,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    MusicRepeatButton(handler: handler),
+                    AppButton.icon(
+                      tooltip: '播放队列',
+                      onPressed: open,
+                      icon: const Icon(Icons.queue_music_rounded),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// One day's 歌回 as an album: its cover, the date, who sang and how many.
+class MusicDayCard extends StatelessWidget {
+  const MusicDayCard({super.key, required this.session, required this.onOpen});
+  final MusicSession session;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final date = session.tracks.first.dateLabel;
+    final detail = '${session.members.join('、')} · ${session.tracks.length} 首';
+    return Semantics(
+      button: true,
+      label: '$date，$detail',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: LayoutBuilder(
+                  builder: (context, constraints) => MusicCover(
+                    members: session.members,
+                    size: constraints.maxWidth,
+                    radius: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                date,
+                maxLines: 1,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: AppTheme.tabular,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                detail,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A song in a list. In a day it leads with its place in the day; in search
+/// results, with its cover, and says when it was sung.
 class MusicTrackRow extends ConsumerWidget {
   const MusicTrackRow({
     super.key,
     required this.track,
-    required this.number,
     required this.onPlay,
+    this.number,
     this.showSingers = false,
     this.selected = false,
   });
   final MusicTrack track;
-  final int number;
   final VoidCallback onPlay;
+
+  /// Its place in the day; null for a cover and the date instead.
+  final int? number;
   final bool showSingers;
   final bool selected;
 
@@ -337,61 +556,57 @@ class MusicTrackRow extends ConsumerWidget {
       color: colors.onSurfaceVariant,
       fontFeatures: AppTheme.tabular,
     );
-    return Material(
-      color: selected
-          ? colors.primaryContainer.withValues(alpha: .45)
-          : Colors.transparent,
-      child: InkWell(
-        onTap: onPlay,
+    final detail = [
+      if (number == null || showSingers) track.singers,
+      if (number == null) track.dateLabel,
+      if (track.isLive) 'Live',
+    ].join(' · ');
+    return InkWell(
+      onTap: onPlay,
+      borderRadius: BorderRadius.circular(12),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
+          padding: const EdgeInsets.fromLTRB(8, 6, 0, 6),
           child: Row(
             children: [
-              SizedBox(
-                width: 28,
-                child: selected
-                    ? Icon(Icons.graphic_eq, size: 18, color: colors.primary)
-                    : Text('$number', style: muted),
-              ),
-              const SizedBox(width: 8),
+              if (number case final number?)
+                SizedBox(
+                  width: 32,
+                  child: selected
+                      ? Icon(Icons.graphic_eq, size: 18, color: colors.primary)
+                      : Text(
+                          '$number',
+                          textAlign: TextAlign.center,
+                          style: muted,
+                        ),
+                )
+              else
+                MusicCover(members: track.members, size: 44, radius: 8),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       track.title,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                         color: selected ? colors.primary : null,
                       ),
                     ),
-                    if (showSingers)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Row(
-                          children: [
-                            MemberDots(members: track.members, size: 6),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                track.singers,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: muted,
-                              ),
-                            ),
-                          ],
-                        ),
+                    if (detail.isNotEmpty)
+                      Text(
+                        detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: muted,
                       ),
                   ],
                 ),
               ),
-              if (track.isLive) ...[
-                const SizedBox(width: 8),
-                Text('Live', style: muted),
-              ],
               const SizedBox(width: 8),
               Text(musicDuration(track.duration), style: muted),
               MenuAnchor(
@@ -446,46 +661,25 @@ class MusicQueue extends StatelessWidget {
   final MusicAudioHandler handler;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = Theme.of(context).colorScheme;
     return ListView.builder(
       itemCount: handler.tracks.length,
       itemBuilder: (context, index) {
-        final track = handler.tracks[index];
         final selected = index == handler.index;
         return Material(
           color: selected
-              ? theme.colorScheme.primaryContainer.withValues(alpha: .45)
+              ? colors.primaryContainer.withValues(alpha: .45)
               : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           child: InkWell(
             onTap: () => handler.skipToQueueItem(index),
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+              padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
               child: Row(
                 children: [
-                  MusicArtwork(members: track.members, size: 36, radius: 8),
-                  const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          track.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${track.singers} · ${track.dateLabel}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: _NowPlaying(track: handler.tracks[index], cover: 40),
                   ),
                   AppButton.icon(
                     tooltip: '移出队列',

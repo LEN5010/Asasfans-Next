@@ -79,6 +79,36 @@ final dynamicMembersProvider = FutureProvider<List<DynamicMember>>(
   (ref) => ref.watch(dynamicRepositoryProvider).members(),
 );
 
+/// Each member's own account, by short name, so a picture can stand for her
+/// anywhere: filter buttons, song covers.
+const memberAccounts = {
+  '嘉然': '672328094',
+  '贝拉': '672353429',
+  '乃琳': '672342685',
+  '心宜': '3537115310721181',
+  '思诺': '3537115310721781',
+  'A-SOUL': '703007996',
+  '向晚': '672346917',
+  '珈乐': '351609538',
+};
+
+/// Members' account pictures from the dynamics roster; empty until it loads
+/// or when it fails, and then pictures fall back to a member's initial.
+final memberAvatarsProvider = Provider<Map<String, Uri>>((ref) {
+  final roster =
+      ref.watch(dynamicMembersProvider).valueOrNull ?? const <DynamicMember>[];
+  Uri? avatarOf(String uid) => roster
+      .where(
+        (account) => account.bilibiliUid == uid || account.id == 'uid:$uid',
+      )
+      .firstOrNull
+      ?.avatarUrl;
+  return {
+    for (final MapEntry(key: name, value: uid) in memberAccounts.entries)
+      name: ?avatarOf(uid),
+  };
+});
+
 final savedChannelRepositoryProvider = Provider<SavedChannelRepository>((ref) {
   final repository = SqliteChannelRepository(ref.watch(localDatabaseProvider));
   ref.onDispose(() => unawaited(repository.close()));

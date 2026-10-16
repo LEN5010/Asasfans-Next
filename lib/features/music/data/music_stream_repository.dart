@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 class MusicStream {
@@ -18,12 +20,19 @@ class MusicStreamRepository {
     _cache.removeWhere((_, item) => !item.expiresAt.isAfter(now));
     final missing = ids.where((id) => !_cache.containsKey(id)).toSet().toList();
     if (missing.isEmpty) return;
-    final response = await dio.get<Map<String, dynamic>>(
+    // The answer is JSON served as text/plain, so it is decoded here rather
+    // than left to the client's content-type sniffing. Without appver the
+    // service reports every gain as 0 and loudness matching does nothing.
+    final response = await dio.get<String>(
       'https://music.163.com/api/song/enhance/player/url',
       queryParameters: {'ids': '[${missing.join(',')}]', 'br': 320000},
-      options: Options(headers: {'Cookie': 'os=pc'}),
+      options: Options(
+        responseType: ResponseType.plain,
+        headers: {'Cookie': 'os=pc; appver=2.10.13'},
+      ),
     );
-    final data = response.data?['data'];
+    final body = jsonDecode(response.data ?? '');
+    final data = body is Map<String, dynamic> ? body['data'] : null;
     if (data is! List<dynamic>) throw const FormatException('无法读取播放地址');
     for (final value in data) {
       if (value is! Map<String, dynamic> ||
