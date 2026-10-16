@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/platform/return_entry_service.dart';
 import '../../../shared/widgets/app_controls.dart';
+import '../../../shared/widgets/member_tone.dart';
 import '../application/handoff_providers.dart';
 
 /// The opt-in for the floating return entry.
@@ -12,10 +13,8 @@ import '../application/handoff_providers.dart';
 /// an unsupported platform renders nothing here rather than a disabled control
 /// implying it is on the way.
 ///
-/// The copy states the limit the first version genuinely has — the entry stays
-/// up until the user comes back or ends it, and the app cannot tell which app
-/// is in front, because finding that out would mean watching what the user is
-/// doing.
+/// A row of the Mine page rather than a buried setting: users who never find
+/// it cannot get back from Bilibili with one tap.
 class ReturnEntryTile extends ConsumerStatefulWidget {
   const ReturnEntryTile({super.key});
 
@@ -39,42 +38,58 @@ class _ReturnEntryTileState extends ConsumerState<ReturnEntryTile> {
   Widget build(BuildContext context) {
     final controller = ref.watch(returnEntryControllerProvider);
     final capability = controller.capability;
-    if (capability == null) return const SizedBox.shrink();
-    if (capability.block == ReturnEntryBlock.unsupported) {
+    if (capability?.block == ReturnEntryBlock.unsupported) {
       return const SizedBox.shrink();
     }
-    final tooOld = capability.block == ReturnEntryBlock.osTooOld;
-    return ListTile(
-      title: const Text('悬浮返回入口'),
-      subtitle: Text(
-        tooOld
-            // Not a failure and not something to fix: the rest of the app,
-            // including the ordinary handoff and return, works as it does
-            // everywhere else.
-            ? '当前系统版本不支持悬浮入口。去 B 站看和返回继续挑选仍然可用，用系统返回或多任务切回即可'
-            : '去 B 站看之后，屏幕上留一颗球，点它回到刚才的列表。'
-                  '这颗球会一直显示到你点它返回或手动结束，应用不会去检测你当前在用哪个程序',
-      ),
-      trailing: AppSwitch(
-        label: '悬浮返回入口',
-        value: controller.enabled,
-        onChanged: tooOld
-            ? null
-            : (value) async {
-                final controller = ref.read(returnEntryControllerProvider);
-                if (!value) {
-                  controller.disable();
-                  return;
-                }
-                final granted = await controller.enable();
-                if (granted || !context.mounted) return;
-                // enable() returns false both for a refusal and for a permission
-                // request still in flight; the message says what is true in
-                // either case without claiming the request failed.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('需要在系统设置里允许显示悬浮窗，授权后回到这里再打开一次')),
-                );
-              },
+    final tooOld = capability?.block == ReturnEntryBlock.osTooOld;
+    Future<void> toggle(bool value) async {
+      if (!value) {
+        controller.disable();
+        return;
+      }
+      final granted = await controller.enable();
+      if (granted || !context.mounted) return;
+      // enable() returns false both for a refusal and for a permission request
+      // still in flight; the permission screen's return settles the switch.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请在系统设置里允许显示在其他应用上层，回来后会自动打开')),
+      );
+    }
+
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: tooOld ? null : () => toggle(!controller.enabled),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 54),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            children: [
+              const ToneBadge(icon: Icons.u_turn_left, member: '贝拉'),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('悬浮返回球', style: theme.textTheme.bodyLarge),
+                    Text(
+                      tooOld ? '需要 Android 8.0 以上' : '看 B 站时点球回到刚才的列表',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppSwitch(
+                label: '悬浮返回球',
+                value: controller.enabled,
+                onChanged: tooOld ? null : toggle,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

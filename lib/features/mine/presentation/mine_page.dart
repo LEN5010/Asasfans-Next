@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import '../../../shared/theme/app_icons.dart';
 
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ import '../../library/application/library_providers.dart';
 import '../../library/domain/library_models.dart';
 import '../../library/domain/library_page.dart';
 import '../../library/presentation/saved_content_page.dart';
+import '../../handoff/presentation/return_entry_tile.dart';
 import '../../preferences/presentation/preferences_controls.dart';
 import '../../account/application/account_providers.dart';
 import '../../account/presentation/local_login_cleanup_tile.dart';
@@ -84,6 +87,9 @@ class MinePage extends ConsumerWidget {
           final app = _Group(
             title: '应用',
             children: [
+              // Only Android has the floating ball; elsewhere the row would be
+              // an empty slot between dividers.
+              if (Platform.isAndroid) const ReturnEntryTile(),
               _Link(
                 label: '设置',
                 icon: Icons.tune,

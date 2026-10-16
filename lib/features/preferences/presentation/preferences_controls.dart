@@ -3,7 +3,6 @@ import '../../../shared/widgets/glass/glass_policy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../handoff/presentation/return_entry_tile.dart';
 import '../../../shared/theme/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
@@ -98,10 +97,6 @@ class PreferencesControls extends ConsumerWidget {
                     : null,
               ),
             ),
-          // Device-local: the permission and the running service belong to this
-          // installation, so the choice is not something a backup carries to
-          // another phone.
-          const ReturnEntryTile(),
         ],
       ],
     );
