@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../../core/domain/content_identity.dart';
 import '../../../core/storage/storage_failure.dart';
 import '../../calendar/domain/calendar_event.dart';
+import '../../music/domain/music_track.dart';
 import '../domain/library_models.dart';
 
 abstract final class LibraryCodec {
@@ -200,6 +201,58 @@ abstract final class LibraryCodec {
         categories: _strings(raw['categories'], 100, 1000),
         members: _strings(raw['members'], 100, 1000),
         sourceUrl: publicUri(raw['url']),
+      );
+    } catch (_) {
+      throw _invalid;
+    }
+  }
+
+  /// A kept song as the catalogue listed it: no stream address, which is
+  /// temporary and fetched again on play.
+  static String encodeSong(MusicTrack track) {
+    final encoded = _encode({
+      'v': 1,
+      'id': track.id,
+      'title': track.title,
+      'members': track.members,
+      'date':
+          '${track.date.year.toString().padLeft(4, '0')}-${track.date.month.toString().padLeft(2, '0')}-${track.date.day.toString().padLeft(2, '0')}',
+      'durationMs': track.duration.inMilliseconds,
+      'status': track.status,
+    });
+    decodeSong(encoded);
+    return encoded;
+  }
+
+  static MusicTrack decodeSong(String json) {
+    try {
+      final raw = _object(json);
+      final id = _text(raw['id'], 20);
+      final date = _text(raw['date'], 10);
+      final [year, month, day] = date.split('-').map(int.parse).toList();
+      final day0 = DateTime(year, month, day);
+      final duration = raw['durationMs'];
+      final members = _strings(raw['members'], 20, 64);
+      if (!RegExp(r'^\d+$').hasMatch(id) ||
+          !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date) ||
+          day0.month != month ||
+          day0.day != day ||
+          duration is! int ||
+          duration <= 0 ||
+          duration > 1000 * 60 * 60 * 24 ||
+          members.isEmpty ||
+          members.any((member) => member.trim().isEmpty)) {
+        throw _invalid;
+      }
+      final title = _text(raw['title'], 1000);
+      if (title.trim().isEmpty) throw _invalid;
+      return MusicTrack(
+        id: id,
+        date: day0,
+        title: title,
+        members: members,
+        duration: Duration(milliseconds: duration),
+        status: _text(raw['status'], 64),
       );
     } catch (_) {
       throw _invalid;

@@ -8,6 +8,7 @@ import 'calendar_schema.dart';
 import 'channel_schema.dart';
 import 'handoff_schema.dart';
 import 'library_schema.dart';
+import 'music_schema.dart';
 import 'playback_schema.dart';
 import 'rules_schema.dart';
 import 'subscription_schema.dart';
@@ -114,7 +115,7 @@ Future<SqlResults> _runIsolated(
 /// No importer exists: an unknown database identity is rejected, never reset.
 abstract final class SqliteExecutor {
   static const applicationId = 0x4153464E;
-  static const schemaVersion = 10;
+  static const schemaVersion = 11;
 
   static SqlResults openBatch(
     String path,
@@ -228,6 +229,12 @@ abstract final class SqliteExecutor {
             database.execute(statement);
           }
           database.userVersion = 10;
+        }
+        if (database.userVersion == 10) {
+          for (final statement in musicSchemaV11) {
+            database.execute(statement);
+          }
+          database.userVersion = 11;
         }
         database.execute('COMMIT');
       } catch (_) {

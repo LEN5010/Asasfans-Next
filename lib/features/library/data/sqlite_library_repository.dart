@@ -7,6 +7,7 @@ import '../../../core/domain/content_identity.dart';
 import '../../../core/storage/local_database.dart';
 import '../../../core/storage/storage_failure.dart';
 import '../../calendar/domain/calendar_event.dart';
+import '../../music/domain/music_track.dart';
 import '../domain/library_models.dart';
 import '../domain/library_page.dart';
 import 'library_codec.dart';
@@ -963,6 +964,66 @@ class SqliteLibraryRepository implements LibraryRepository {
     }
     if (commands.isNotEmpty) await _write(commands);
   }
+
+  @override
+  Future<LibraryPage<MusicFavorite>> musicFavoritePage({
+    LibraryCursor? cursor,
+    int limit = 40,
+  }) => _page(
+    query: 'music_favorites',
+    select: 'i.song_id,i.snapshot,i.added_at',
+    from: 'music_favorites i',
+    order: ['-i.added_at', 'i.song_id'],
+    decode: _musicFavorite,
+    cursor: cursor,
+    limit: limit,
+  );
+
+  @override
+  Future<Set<String>> musicFavoriteIds() async => {
+    for (final row in (await _batch([
+      const SqlStatement('SELECT song_id FROM music_favorites', [], true),
+    ])).single)
+      row['song_id'] as String,
+  };
+
+  @override
+  Future<List<MusicTrack>> musicFavorites({int limit = 200}) async {
+    final rows = (await _batch([
+      SqlStatement(
+        'SELECT song_id,snapshot,added_at FROM music_favorites ORDER BY added_at DESC,song_id LIMIT ?',
+        [limit],
+        true,
+      ),
+    ])).single;
+    return [for (final row in rows) _musicFavorite(row).track];
+  }
+
+  static MusicFavorite _musicFavorite(SqlRow row) {
+    final track = LibraryCodec.decodeSong(row['snapshot'] as String);
+    if (track.id != row['song_id']) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    return MusicFavorite(
+      track: track,
+      addedAt: DateTime.fromMillisecondsSinceEpoch(
+        row['added_at'] as int,
+        isUtc: true,
+      ),
+    );
+  }
+
+  @override
+  Future<void> setMusicFavorite(MusicTrack track, bool favorite) => _write([
+    favorite
+        ? SqlStatement(
+            'INSERT INTO music_favorites VALUES(?,?,?) ON CONFLICT DO NOTHING',
+            [track.id, LibraryCodec.encodeSong(track), _now],
+          )
+        : SqlStatement('DELETE FROM music_favorites WHERE song_id=?', [
+            track.id,
+          ]),
+  ]);
 }
 
 // Only send detached rows and static decoders, never the repository/Future

@@ -28,7 +28,7 @@ class ValidatedBackup implements BackupImport {
 /// Neither raw database files nor cache / credential stores are exportable.
 abstract final class BackupCodec {
   /// Version written by [encode]. Older files stay readable; see [columns].
-  static const formatVersion = 7;
+  static const formatVersion = 8;
   static const maxBytes = 32 * 1024 * 1024;
   static const maxRows = 50000;
   static const _maxPlaybackMillis = 1000 * 60 * 60 * 24 * 30;
@@ -142,9 +142,15 @@ abstract final class BackupCodec {
       'archived_at',
     ],
   };
-  static const columns = {
+  static const columnsV7 = {
     ...columnsV6,
     'calendar_member_follows': ['member', 'followed_at'],
+  };
+
+  /// Version 8 adds kept songs, with the song as the catalogue listed it.
+  static const columns = {
+    ...columnsV7,
+    'music_favorites': ['song_id', 'snapshot', 'added_at'],
   };
   static final preferenceKeys = {
     'appearance',
@@ -178,6 +184,12 @@ abstract final class BackupCodec {
                   LibraryCodec.decodeEvent(row['snapshot'] as String),
                 ),
               ),
+            if (entry.key == 'music_favorites')
+              'snapshot': jsonDecode(
+                LibraryCodec.encodeSong(
+                  LibraryCodec.decodeSong(row['snapshot'] as String),
+                ),
+              ),
           },
       ];
     }
@@ -209,7 +221,7 @@ abstract final class BackupCodec {
       ]);
       if (root['format'] != 'asasfans.personal') throw _invalid;
       if (root['version'] is! int ||
-          !const [1, 2, 3, 4, 5, 6, 7].contains(root['version'])) {
+          !const [1, 2, 3, 4, 5, 6, 7, 8].contains(root['version'])) {
         throw const BackupFailure(BackupFailureKind.incompatible);
       }
       final atText = _text(root['exported_at'], 64);
@@ -223,6 +235,7 @@ abstract final class BackupCodec {
         4 => columnsV4,
         5 => columnsV5,
         6 => columnsV6,
+        7 => columnsV7,
         _ => columns,
       };
       final data = _object(root['data'], fields.keys.toList());
@@ -250,6 +263,7 @@ abstract final class BackupCodec {
       result.putIfAbsent('saved_channels', () => []);
       result.putIfAbsent('update_events', () => []);
       result.putIfAbsent('calendar_member_follows', () => []);
+      result.putIfAbsent('music_favorites', () => []);
       _relations(result);
       return ValidatedBackup._(
         BackupSummary(
@@ -289,6 +303,19 @@ abstract final class BackupCodec {
           (row['value'] != 'true' && row['value'] != 'false')) {
         throw _invalid;
       }
+    } else if (table == 'music_favorites') {
+      final snapshot = _object(row['snapshot'], [
+        'v',
+        'id',
+        'title',
+        'members',
+        'date',
+        'durationMs',
+        'status',
+      ]);
+      final track = LibraryCodec.decodeSong(jsonEncode(snapshot));
+      if (track.id != _text(row['song_id'], 20)) throw _invalid;
+      return {...row, 'snapshot': LibraryCodec.encodeSong(track)};
     } else if (table == 'calendar_member_follows') {
       if (!EventClassifier.memberAliases.containsKey(
         _text(row['member'], 64),
@@ -492,6 +519,7 @@ abstract final class BackupCodec {
       'local_subscriptions': ['mid'],
       'calendar_follows': ['source', 'uid', 'recurrence_id'],
       'calendar_member_follows': ['member'],
+      'music_favorites': ['song_id'],
       'content_rules': ['id'],
       'rule_settings': ['key'],
       'subscription_reads': ['bvid'],

@@ -183,7 +183,7 @@ void main() {
   });
 
   test(
-    'v7 backup preserves member follows and reminder choices, excludes device calendar history',
+    'backup preserves member follows and reminder choices, excludes device calendar history',
     () async {
       await store.setMemberFollow('嘉然', true, at: _now);
       await store.writeSnapshot(_calendar, [
@@ -203,7 +203,7 @@ void main() {
       final backups = SqliteBackupRepository(db, onCommitted: () {});
       final bytes = await backups.export();
       final raw = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-      expect(raw['version'], 7);
+      expect(raw['version'], BackupCodec.formatVersion);
       final data = raw['data'] as Map<String, dynamic>;
       expect(data.containsKey('calendar_events'), isFalse);
       expect(data.containsKey('calendar_reminders'), isFalse);

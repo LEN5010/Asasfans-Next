@@ -9,11 +9,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
-import '../../../shared/theme/app_icons.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/media_image_policy.dart';
 import '../../../shared/widgets/member_tone.dart';
+import '../../../shared/widgets/glass/app_glass_navigation.dart';
 import '../../content/application/content_providers.dart';
+import '../../library/application/library_providers.dart';
+import '../../library/presentation/library_common.dart';
 import '../application/music_audio_handler.dart';
 import '../application/music_providers.dart';
 import '../domain/music_track.dart';
@@ -37,11 +39,14 @@ Future<void> openMusicSearch(
   }
 }
 
+/// The studio the catalogue comes from; [compact] is its icon alone, for a
+/// phone's title row.
 class MusicStudioButton extends ConsumerWidget {
-  const MusicStudioButton({super.key});
+  const MusicStudioButton({super.key, this.compact = false});
+  final bool compact;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AppButton.withIcon(
-    onPressed: () async {
+  Widget build(BuildContext context, WidgetRef ref) {
+    Future<void> open() async {
       final opened = await ref
           .read(externalLinkServiceProvider)
           .open(Uri.https('studio.asoul.us.kg'));
@@ -50,13 +55,20 @@ class MusicStudioButton extends ConsumerWidget {
           context,
         ).showSnackBar(const SnackBar(content: Text('暂时无法打开录音棚')));
       }
-    },
-    icon: const Icon(Icons.open_in_new, size: 18),
-    label: const Text('录音棚'),
-  );
+    }
+
+    const icon = Icon(Icons.open_in_new, size: 18);
+    return compact
+        ? AppButton.icon(tooltip: '打开录音棚', onPressed: open, icon: icon)
+        : AppButton.withIcon(
+            onPressed: open,
+            icon: icon,
+            label: const Text('录音棚'),
+          );
+  }
 }
 
-/// A song's or a day's cover, made of its singers' account pictures the way
+/// A song's cover, made of its singers' account pictures the way
 /// a streaming app makes a playlist's: one fills it, two split it, three or
 /// more tile it. Until a picture loads its tile is the member's initial in
 /// her colour.
@@ -387,9 +399,11 @@ class MusicMiniPlayer extends ConsumerWidget {
 
 /// A wide window's player along its foot, as on desktop music apps: the
 /// song on the left, the controls and progress in the middle, the player
-/// page on the right.
+/// page on the right. [bare] leaves out the card, for the shell to draw one
+/// round it while the bar folds into the rail.
 class MusicPlayerBar extends ConsumerWidget {
-  const MusicPlayerBar({super.key});
+  const MusicPlayerBar({super.key, this.bare = false});
+  final bool bare;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -397,263 +411,348 @@ class MusicPlayerBar extends ConsumerWidget {
     final track = handler.current;
     if (track == null) return const SizedBox.shrink();
     void open() => unawaited(context.push('/music/player'));
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final side = math.min(300.0, constraints.maxWidth * .28);
-          return Row(
-            children: [
-              SizedBox(
-                width: side,
-                child: Tooltip(
-                  message: '打开播放页',
-                  child: InkWell(
-                    onTap: open,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: _NowPlaying(track: track, cover: 48),
-                    ),
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final side = math.min(300.0, constraints.maxWidth * .28);
+        return Row(
+          children: [
+            SizedBox(
+              width: side,
+              child: Tooltip(
+                message: '打开播放页',
+                child: InkWell(
+                  onTap: open,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: _NowPlaying(track: track, cover: 48),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 8,
-                      children: [
-                        AppButton.icon(
-                          tooltip: '上一首',
-                          onPressed: handler.skipToPrevious,
-                          icon: const Icon(Icons.skip_previous_rounded),
-                        ),
-                        MusicPlayButton(handler: handler, size: 36),
-                        AppButton.icon(
-                          tooltip: '下一首',
-                          onPressed: handler.skipToNext,
-                          icon: const Icon(Icons.skip_next_rounded),
-                        ),
-                      ],
-                    ),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 560),
-                      child: MusicProgress(handler: handler, dense: true),
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 8,
+                    children: [
+                      AppButton.icon(
+                        tooltip: '上一首',
+                        onPressed: handler.skipToPrevious,
+                        icon: const Icon(Icons.skip_previous_rounded),
+                      ),
+                      MusicPlayButton(handler: handler, size: 36),
+                      AppButton.icon(
+                        tooltip: '下一首',
+                        onPressed: handler.skipToNext,
+                        icon: const Icon(Icons.skip_next_rounded),
+                      ),
+                    ],
+                  ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: MusicProgress(handler: handler, dense: true),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: side,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    MusicRepeatButton(handler: handler),
-                    AppButton.icon(
-                      tooltip: '播放队列',
-                      onPressed: open,
-                      icon: const Icon(Icons.queue_music_rounded),
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: side,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  MusicFavoriteButton(track: track),
+                  MusicRepeatButton(handler: handler),
+                  AppButton.icon(
+                    tooltip: '播放队列',
+                    onPressed: open,
+                    icon: const Icon(Icons.queue_music_rounded),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
+    const padding = EdgeInsets.all(8);
+    return bare
+        ? Padding(padding: padding, child: content)
+        : AppCard(padding: padding, child: content);
   }
 }
 
-/// One day's 歌回 as an album: its cover, the date, who sang and how many.
-class MusicDayCard extends StatelessWidget {
-  const MusicDayCard({super.key, required this.session, required this.onOpen});
-  final MusicSession session;
-  final VoidCallback onOpen;
+/// The player folded into the rail's free space on every page but 音乐:
+/// the cover opens the player, and the song pauses without leaving.
+class MusicDockPlayer extends ConsumerWidget {
+  const MusicDockPlayer({super.key, this.bare = false});
+  final bool bare;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final handler = ref.watch(musicAudioHandlerProvider);
+    final track = handler.current;
+    if (track == null) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    final date = session.tracks.first.dateLabel;
-    final detail = '${session.members.join('、')} · ${session.tracks.length} 首';
-    return Semantics(
-      button: true,
-      label: '$date，$detail',
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onOpen,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
-                aspectRatio: 1,
-                child: LayoutBuilder(
-                  builder: (context, constraints) => MusicCover(
-                    members: session.members,
-                    size: constraints.maxWidth,
-                    radius: 12,
-                  ),
+    final duration = handler.duration.inMilliseconds;
+    final content = Padding(
+      padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: '${track.title} · ${track.singers}',
+            child: InkWell(
+              onTap: () => unawaited(context.push('/music/player')),
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Column(
+                  children: [
+                    MusicCover(members: track.members, size: 48, radius: 10),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      width: 48,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: duration == 0
+                              ? 0
+                              : (handler.position.inMilliseconds / duration)
+                                    .clamp(0.0, 1.0),
+                          minHeight: 2,
+                          backgroundColor:
+                              theme.colorScheme.surfaceContainerHigh,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      track.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                date,
-                maxLines: 1,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: AppTheme.tabular,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                detail,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: 4),
+          MusicPlayButton(handler: handler, size: 36),
+        ],
+      ),
+    );
+    return SizedBox(
+      width: AppSidebar.width,
+      child: bare ? content : AppCard(padding: EdgeInsets.zero, child: content),
+    );
+  }
+}
+
+/// The heart beside a song: kept songs are listed under 收藏的歌.
+class MusicFavoriteButton extends ConsumerWidget {
+  const MusicFavoriteButton({super.key, required this.track});
+  final MusicTrack track;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ids = ref.watch(musicFavoriteIdsProvider);
+    final kept = ids.valueOrNull?.contains(track.id) ?? false;
+    return AppButton.icon(
+      tooltip: kept ? '取消收藏' : '收藏',
+      onPressed: ids.hasValue
+          ? () => unawaited(
+              libraryAction(
+                context,
+                () => ref
+                    .read(libraryRepositoryProvider)
+                    .setMusicFavorite(track, !kept),
+              ),
+            )
+          : null,
+      icon: Icon(
+        kept ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        color: kept ? AppTheme.dianaPink : null,
       ),
     );
   }
 }
 
-/// A song in a list. In a day it leads with its place in the day; in search
-/// results, with its cover, and says when it was sung.
-class MusicTrackRow extends ConsumerWidget {
-  const MusicTrackRow({
+/// A song as a long card: its singers' cover, the title, who sang it and
+/// when, the heart and the way to B 站. A tap plays from it. Inside a list
+/// that is itself a card, [card] is false.
+class MusicSongTile extends ConsumerWidget {
+  const MusicSongTile({
     super.key,
     required this.track,
     required this.onPlay,
-    this.number,
-    this.showSingers = false,
     this.selected = false,
+    this.card = true,
   });
   final MusicTrack track;
   final VoidCallback onPlay;
-
-  /// Its place in the day; null for a cover and the date instead.
-  final int? number;
-  final bool showSingers;
   final bool selected;
+  final bool card;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final muted = theme.textTheme.bodySmall?.copyWith(
-      color: colors.onSurfaceVariant,
-      fontFeatures: AppTheme.tabular,
-    );
-    final detail = [
-      if (number == null || showSingers) track.singers,
-      if (number == null) track.dateLabel,
-      if (track.isLive) 'Live',
-    ].join(' · ');
-    return InkWell(
-      onTap: onPlay,
-      borderRadius: BorderRadius.circular(12),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 56),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 6, 0, 6),
-          child: Row(
-            children: [
-              if (number case final number?)
-                SizedBox(
-                  width: 32,
-                  child: selected
-                      ? Icon(Icons.graphic_eq, size: 18, color: colors.primary)
-                      : Text(
-                          '$number',
-                          textAlign: TextAlign.center,
-                          style: muted,
-                        ),
-                )
-              else
-                MusicCover(members: track.members, size: 44, radius: 8),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      track.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: selected ? colors.primary : null,
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final roomy = constraints.maxWidth >= 480;
+        // A phone keeps the date whole and leaves out the length.
+        final detail = [
+          track.singers,
+          track.dateLabel,
+          if (roomy) musicDuration(track.duration),
+          if (track.isLive) 'Live',
+        ].join(' · ');
+        return InkWell(
+          onTap: onPlay,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+            child: Row(
+              children: [
+                MusicCover(members: track.members, size: 48, radius: 10),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (selected) ...[
+                            Icon(
+                              Icons.graphic_eq,
+                              size: 16,
+                              color: colors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Flexible(
+                            child: Text(
+                              track.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: selected ? colors.primary : null,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    if (detail.isNotEmpty)
+                      const SizedBox(height: 2),
                       Text(
                         detail,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: muted,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                          fontFeatures: AppTheme.tabular,
+                        ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(musicDuration(track.duration), style: muted),
-              MenuAnchor(
-                menuChildren: [
-                  MenuItemButton(
-                    leadingIcon: const Icon(Icons.playlist_play),
-                    onPressed: () => unawaited(
-                      ref
-                          .read(musicAudioHandlerProvider)
-                          .enqueue(track, next: true),
-                    ),
-                    child: const Text('下一首播放'),
-                  ),
-                  MenuItemButton(
-                    leadingIcon: const Icon(Icons.playlist_add),
-                    onPressed: () => unawaited(
-                      ref.read(musicAudioHandlerProvider).enqueue(track),
-                    ),
-                    child: const Text('加入队列'),
-                  ),
-                  MenuItemButton(
-                    leadingIcon: const Icon(AppIcons.search),
-                    onPressed: () => unawaited(
-                      openMusicSearch(context, ref, track, replay: false),
-                    ),
-                    child: const Text('搜切片'),
-                  ),
-                  MenuItemButton(
-                    leadingIcon: const Icon(Icons.video_library_outlined),
-                    onPressed: () => unawaited(
-                      openMusicSearch(context, ref, track, replay: true),
-                    ),
-                    child: const Text('搜录播'),
-                  ),
-                ],
-                builder: (context, menu, _) => AppButton.icon(
-                  tooltip: '歌曲操作',
-                  onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-                  icon: const Icon(Icons.more_horiz),
-                ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                MusicFavoriteButton(track: track),
+                roomy
+                    ? AppButton.withIcon(
+                        onPressed: () => unawaited(
+                          openMusicSearch(context, ref, track, replay: false),
+                        ),
+                        icon: const Icon(Icons.open_in_new, size: 16),
+                        label: const Text('去 B 站'),
+                      )
+                    : AppButton(
+                        tonal: true,
+                        tooltip: '去 B 站搜这首',
+                        onPressed: () => unawaited(
+                          openMusicSearch(context, ref, track, replay: false),
+                        ),
+                        child: const Text('B 站'),
+                      ),
+                _SongMenu(track: track),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
+    );
+    if (!card) return content;
+    return AppCard(
+      padding: EdgeInsets.zero,
+      color: selected
+          ? Color.alphaBlend(
+              colors.primaryContainer.withValues(alpha: .35),
+              colors.surfaceContainerLow,
+            )
+          : null,
+      child: content,
     );
   }
+}
+
+class _SongMenu extends ConsumerWidget {
+  const _SongMenu({required this.track});
+  final MusicTrack track;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => MenuAnchor(
+    menuChildren: [
+      MenuItemButton(
+        leadingIcon: const Icon(Icons.playlist_play),
+        onPressed: () => unawaited(
+          ref.read(musicAudioHandlerProvider).enqueue(track, next: true),
+        ),
+        child: const Text('下一首播放'),
+      ),
+      MenuItemButton(
+        leadingIcon: const Icon(Icons.playlist_add),
+        onPressed: () =>
+            unawaited(ref.read(musicAudioHandlerProvider).enqueue(track)),
+        child: const Text('加入队列'),
+      ),
+      MenuItemButton(
+        leadingIcon: const Icon(Icons.today_outlined),
+        // The day as the catalogue lists it, starting from this song.
+        onPressed: () {
+          final day = [
+            for (final song
+                in ref.read(musicCatalogProvider).valueOrNull?.tracks ??
+                    <MusicTrack>[track])
+              if (song.date == track.date) song,
+          ];
+          unawaited(
+            ref
+                .read(musicAudioHandlerProvider)
+                .playTracks(day, start: math.max(0, day.indexOf(track))),
+          );
+        },
+        child: const Text('播放这天'),
+      ),
+      MenuItemButton(
+        leadingIcon: const Icon(Icons.video_library_outlined),
+        onPressed: () =>
+            unawaited(openMusicSearch(context, ref, track, replay: true)),
+        child: const Text('搜这天的录播'),
+      ),
+    ],
+    builder: (context, menu, _) => AppButton.icon(
+      tooltip: '歌曲操作',
+      onPressed: () => menu.isOpen ? menu.close() : menu.open(),
+      icon: const Icon(Icons.more_horiz),
+    ),
+  );
 }
 
 class MusicQueue extends StatelessWidget {

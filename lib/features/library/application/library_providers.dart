@@ -119,3 +119,21 @@ final isFollowingCalendarProvider = FutureProvider.autoDispose
       _watchChanges(ref);
       return ref.watch(libraryRepositoryProvider).isFollowingCalendar(key);
     });
+
+final musicFavoritesProvider =
+    StateNotifierProvider.autoDispose<
+      LibraryPager<MusicFavorite>,
+      LibraryListState<MusicFavorite>
+    >((ref) {
+      final repository = ref.watch(libraryRepositoryProvider);
+      return LibraryPager(
+        (cursor) => repository.musicFavoritePage(cursor: cursor),
+        repository.changes,
+      );
+    });
+
+/// The kept songs' ids; every song row reads its heart from here.
+final musicFavoriteIdsProvider = FutureProvider<Set<String>>((ref) {
+  _watchChanges(ref);
+  return ref.watch(libraryRepositoryProvider).musicFavoriteIds();
+});

@@ -10,6 +10,8 @@ import '../../features/calendar/application/calendar_reminders.dart';
 import '../../features/calendar/presentation/calendar_reminder_settings.dart';
 
 import '../../features/tools/presentation/tools_sheet.dart';
+import '../theme/app_tokens.dart';
+import '../../shared/widgets/app_controls.dart';
 import '../../shared/widgets/app_backdrop.dart';
 import '../../shared/widgets/app_motion.dart';
 import '../../shared/widgets/glass/app_glass_navigation.dart';
@@ -27,9 +29,120 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with SingleTickerProviderStateMixin {
   bool toolsOpen = false;
   late final AppLifecycleListener _lifecycle;
+
+  /// On a wide window the player is a bar along the foot of 音乐 and folds
+  /// into the rail's free space on every other page. A switch flies a card
+  /// from one place to the other while the player that has arrived waits
+  /// hidden underneath.
+  static const _musicBranch = 2;
+  final _stackKey = GlobalKey();
+  final _barKey = GlobalKey();
+  final _dockKey = GlobalKey();
+  late final _flight = AnimationController(vsync: this);
+  Rect? _from;
+  Rect? _to;
+  bool _toDock = false;
+  bool _wide = false;
+  bool _hasMusic = false;
+
+  Rect? _rectOf(GlobalKey key) {
+    final box = key.currentContext?.findRenderObject();
+    final stack = _stackKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || stack is! RenderBox || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero, ancestor: stack) & box.size;
+  }
+
+  Rect? get _flightRect => _from == null
+      ? null
+      : Rect.lerp(
+          _from,
+          _to ?? _from,
+          AppCurves.standard.transform(_flight.value),
+        );
+
+  @override
+  void didUpdateWidget(AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final wasDocked = oldWidget.navigationShell.currentIndex != _musicBranch;
+    final docked = widget.navigationShell.currentIndex != _musicBranch;
+    if (wasDocked == docked || !_wide || !_hasMusic) return;
+    final duration = appMotion(context, AppTokens.emphasisMotion);
+    final from = _flightRect ?? _rectOf(wasDocked ? _dockKey : _barKey);
+    if (duration == Duration.zero || from == null) return;
+    _flight
+      ..stop()
+      ..duration = duration
+      ..value = 0;
+    _from = from;
+    _to = null;
+    _toDock = docked;
+    // The new place is laid out in the coming frame; until then the card
+    // waits where the player was.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _from == null || _toDock != docked) return;
+      final to = _rectOf(docked ? _dockKey : _barKey);
+      setState(() => to == null ? _from = null : _to = to);
+      if (to == null) return;
+      _flight.forward(from: 0).whenCompleteOrCancel(() {
+        if (mounted && _flight.isCompleted) {
+          setState(() => _from = _to = null);
+        }
+      });
+    });
+  }
+
+  Widget _flightCard() => AnimatedBuilder(
+    animation: _flight,
+    builder: (context, _) {
+      final t = _flight.value;
+      final from = _from!;
+      final to = _to ?? from;
+      final bar = _toDock ? from : to;
+      final dock = _toDock ? to : from;
+      // The leaving player fades in the first part, the arriving one in the
+      // last, both pinned to the corner they share.
+      final leaving = 1 - (t / .6).clamp(0.0, 1.0);
+      final arriving = ((t - .4) / .6).clamp(0.0, 1.0);
+      Widget layer(Rect size, double opacity, Widget child) => Opacity(
+        opacity: opacity,
+        child: OverflowBox(
+          alignment: AlignmentDirectional.bottomStart,
+          minWidth: size.width,
+          maxWidth: size.width,
+          minHeight: size.height,
+          maxHeight: size.height,
+          child: child,
+        ),
+      );
+      return Positioned.fromRect(
+        rect: _flightRect!,
+        child: IgnorePointer(
+          child: AppCard(
+            padding: EdgeInsets.zero,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                layer(
+                  bar,
+                  _toDock ? leaving : arriving,
+                  const MusicPlayerBar(bare: true),
+                ),
+                layer(
+                  dock,
+                  _toDock ? arriving : leaving,
+                  const MusicDockPlayer(bare: true),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 
   @override
   void initState() {
@@ -46,6 +159,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    _flight.dispose();
     super.dispose();
   }
 
@@ -97,73 +211,101 @@ class _AppShellState extends ConsumerState<AppShell> {
         // foot, under the rail and the page.
         final showDock = !wide && widget.isTabRoot && !typing;
         final showMini = !wide && hasMusic && !typing;
-        final showBar = wide && hasMusic;
+        final showBar = wide && hasMusic && selected == _musicBranch;
+        final showRailPlayer = wide && hasMusic && selected != _musicBranch;
+        _wide = wide;
+        _hasMusic = hasMusic;
+        final flying = _from != null;
         return CalendarReminderListener(
           child: AppBackdrop(
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
-              resizeToAvoidBottomInset: false,
-              // The body runs under the dock, and the Scaffold hands it the
-              // dock's height as bottom padding. Always on: switching it would
-              // rebuild the body.
-              extendBody: true,
-              // Here rather than over the body, so a SnackBar sits above it.
-              bottomNavigationBar: showDock || showMini
-                  ? Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        12,
-                        12,
-                        12,
-                        mq.padding.bottom + 8,
-                      ),
-                      // The slot's height is loose: as tall as the dock only.
-                      child: Align(
-                        heightFactor: 1,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 520),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (showMini) const MusicMiniPlayer(),
-                              if (showMini && showDock)
-                                const SizedBox(height: 10),
-                              if (showDock)
-                                AppGlassNavigation(
-                                  selected: selected,
-                                  onSelect: _select,
-                                  onTools: _tools,
-                                ),
-                            ],
+            child: Stack(
+              key: _stackKey,
+              fit: StackFit.expand,
+              children: [
+                Scaffold(
+                  backgroundColor: Colors.transparent,
+                  // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
+                  resizeToAvoidBottomInset: false,
+                  // The body runs under the dock, and the Scaffold hands it the
+                  // dock's height as bottom padding. Always on: switching it would
+                  // rebuild the body.
+                  extendBody: true,
+                  // Here rather than over the body, so a SnackBar sits above it.
+                  bottomNavigationBar: showDock || showMini
+                      ? Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            12,
+                            12,
+                            12,
+                            mq.padding.bottom + 8,
                           ),
+                          // The slot's height is loose: as tall as the dock only.
+                          child: Align(
+                            heightFactor: 1,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 520),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (showMini) const MusicMiniPlayer(),
+                                  if (showMini && showDock)
+                                    const SizedBox(height: 10),
+                                  if (showDock)
+                                    AppGlassNavigation(
+                                      selected: selected,
+                                      onSelect: _select,
+                                      onTools: _tools,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      : showBar
+                      ? Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            12,
+                            0,
+                            12,
+                            mq.padding.bottom + 12,
+                          ),
+                          child: Opacity(
+                            opacity: flying && !_toDock ? 0 : 1,
+                            child: MusicPlayerBar(key: _barKey),
+                          ),
+                        )
+                      : null,
+                  // On a wide window the rail and the page end above the player
+                  // bar instead of running under it.
+                  body: Builder(
+                    builder: (context) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: showBar
+                            ? MediaQuery.paddingOf(context).bottom
+                            : 0,
+                      ),
+                      child: MediaQuery.removePadding(
+                        context: context,
+                        removeBottom: showBar,
+                        child: _body(
+                          context,
+                          wide,
+                          selected,
+                          showDock,
+                          showMini,
+                          railPlayer: !showRailPlayer
+                              ? null
+                              : Opacity(
+                                  opacity: flying && _toDock ? 0 : 1,
+                                  child: MusicDockPlayer(key: _dockKey),
+                                ),
                         ),
                       ),
-                    )
-                  : showBar
-                  ? Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        12,
-                        0,
-                        12,
-                        mq.padding.bottom + 12,
-                      ),
-                      child: const MusicPlayerBar(),
-                    )
-                  : null,
-              // On a wide window the rail and the page end above the player
-              // bar instead of running under it.
-              body: Builder(
-                builder: (context) => Padding(
-                  padding: EdgeInsets.only(
-                    bottom: showBar ? MediaQuery.paddingOf(context).bottom : 0,
-                  ),
-                  child: MediaQuery.removePadding(
-                    context: context,
-                    removeBottom: showBar,
-                    child: _body(context, wide, selected, showDock, showMini),
+                    ),
                   ),
                 ),
-              ),
+                if (flying) _flightCard(),
+              ],
             ),
           ),
         );
@@ -176,8 +318,9 @@ class _AppShellState extends ConsumerState<AppShell> {
     bool wide,
     int selected,
     bool showDock,
-    bool showMini,
-  ) {
+    bool showMini, {
+    Widget? railPlayer,
+  }) {
     final mq = MediaQuery.of(context);
     final barHeight = AppGlassNavigation.heightFor(mq.textScaler);
     return Row(
@@ -200,6 +343,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                           ),
                         ),
                       ),
+                      ?railPlayer,
                     ],
                   ),
                 )

@@ -1,6 +1,7 @@
 import '../../../core/domain/content_identity.dart';
 import '../../../core/domain/bilibili_id.dart';
 import '../../calendar/domain/calendar_event.dart';
+import '../../music/domain/music_track.dart';
 
 enum LibraryMediaKind { image, video, text }
 
@@ -223,4 +224,11 @@ class CalendarFollow {
   final CalendarEvent event;
   final DateTime followedAt;
   final DateTime? observedAt;
+}
+
+/// A song the user keeps, newest kept first.
+class MusicFavorite {
+  const MusicFavorite({required this.track, required this.addedAt});
+  final MusicTrack track;
+  final DateTime addedAt;
 }

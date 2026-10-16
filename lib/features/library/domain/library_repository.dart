@@ -1,5 +1,6 @@
 import '../../../core/domain/content_identity.dart';
 import '../../calendar/domain/calendar_event.dart';
+import '../../music/domain/music_track.dart';
 import 'library_models.dart';
 import 'library_page.dart';
 
@@ -117,5 +118,17 @@ abstract interface class LibraryRepository {
     List<CalendarEvent> events,
     DateTime observedAt,
   );
+
+  Future<LibraryPage<MusicFavorite>> musicFavoritePage({
+    LibraryCursor? cursor,
+    int limit = 40,
+  });
+
+  /// Which songs are kept, for the heart beside every song in a list.
+  Future<Set<String>> musicFavoriteIds();
+
+  /// The most recently kept songs, for playing the whole list.
+  Future<List<MusicTrack>> musicFavorites({int limit = 200});
+  Future<void> setMusicFavorite(MusicTrack track, bool favorite);
   Future<void> close();
 }

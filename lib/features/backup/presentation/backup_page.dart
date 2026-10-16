@@ -177,6 +177,7 @@ class _ImportPreview extends StatelessWidget {
                 'local_subscriptions': '本地订阅',
                 'calendar_follows': '星标场次',
                 'calendar_member_follows': '成员关注',
+                'music_favorites': '收藏的歌',
                 'preferences': '偏好设置',
                 'content_rules': '内容规则',
                 'rule_settings': '规则设置',

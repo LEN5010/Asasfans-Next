@@ -32,22 +32,6 @@ class MusicSession {
   List<String> get members => [
     ...{for (final track in tracks) ...track.members},
   ];
-
-  Duration get duration =>
-      tracks.fold(Duration.zero, (sum, track) => sum + track.duration);
-
-  /// The day in a route, `2026-10-15`; [musicDay] reads it back.
-  String get key =>
-      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-}
-
-/// The day a [MusicSession.key] names, as the catalogue dates its songs.
-DateTime? musicDay(String key) {
-  final parts = key.split('-').map(int.tryParse).toList();
-  if (parts case [final year?, final month?, final day?]) {
-    return DateTime(year, month, day);
-  }
-  return null;
 }
 
 /// [tracks] grouped by day, newest day first or, with [oldest], oldest

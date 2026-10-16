@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,7 @@ import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/page_heading.dart';
 import '../../content/presentation/content_images.dart';
 import '../../content/presentation/content_search_control.dart';
+import '../../library/application/library_providers.dart';
 import '../application/music_providers.dart';
 import '../data/music_catalog_repository.dart';
 import '../domain/music_track.dart';
@@ -51,8 +51,8 @@ class MusicQuery {
       (year == null || track.date.year == year);
 }
 
-/// Members in the avatar row. Those who have left wait behind 更多, as in
-/// the dynamics filter; their songs stay in 全部.
+/// Members as the dynamics filter lists them. Those who have left wait
+/// behind 更多成员; their songs stay in 全部成员.
 const _members = ['嘉然', '贝拉', '乃琳', '心宜', '思诺'];
 const _moreMembers = ['向晚', '珈乐'];
 
@@ -69,7 +69,6 @@ class _MusicPageState extends ConsumerState<MusicPage> {
   /// Filtering 5,000 songs is cheap, but not on every rebuild.
   MusicCatalog? _catalog;
   MusicQuery? _shownQuery;
-  List<MusicSession> _sessions = const [];
   List<MusicTrack> _shown = const [];
 
   void _apply(MusicQuery query) => setState(() => _query = query);
@@ -78,11 +77,14 @@ class _MusicPageState extends ConsumerState<MusicPage> {
     if (identical(catalog, _catalog) && identical(_query, _shownQuery)) return;
     _catalog = catalog;
     _shownQuery = _query;
-    _sessions = musicSessions(
-      catalog.tracks.where(_query.matches),
-      oldest: _query.oldest,
-    );
-    _shown = [for (final session in _sessions) ...session.tracks];
+    // Newest day first; within a day, the catalogue's own order.
+    _shown = [
+      for (final session in musicSessions(
+        catalog.tracks.where(_query.matches),
+        oldest: _query.oldest,
+      ))
+        ...session.tracks,
+    ];
   }
 
   Future<void> _toggleMore() async {
@@ -102,6 +104,7 @@ class _MusicPageState extends ConsumerState<MusicPage> {
     final currentId = ref.watch(
       musicAudioHandlerProvider.select((h) => h.current?.id),
     );
+    final kept = ref.watch(musicFavoriteIdsProvider).valueOrNull?.length;
     final theme = Theme.of(context);
     return Scaffold(
       // The shell's backdrop shows through the main pages.
@@ -109,11 +112,10 @@ class _MusicPageState extends ConsumerState<MusicPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final gutter = AppTokens.gutter(constraints.maxWidth);
-          final width = math.min(constraints.maxWidth, AppTokens.pageWidth);
+          final narrow = constraints.maxWidth < 600;
           final value = catalog.valueOrNull;
           if (value != null) _filter(value);
-          final searching = _query.keyword.isNotEmpty;
-          Widget bounded(Widget child, {double max = AppTokens.pageWidth}) =>
+          Widget bounded(Widget child, {double max = AppTokens.readingWidth}) =>
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: ConstrainedBox(
@@ -132,9 +134,18 @@ class _MusicPageState extends ConsumerState<MusicPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 bounded(
-                  const RootHeading(
+                  RootHeading(
                     title: '音乐',
-                    actions: [MusicStudioButton()],
+                    actions: [
+                      AppButton.withIcon(
+                        onPressed: () => context.go('/music/favorites'),
+                        icon: const Icon(Icons.favorite_rounded, size: 18),
+                        label: Text(
+                          [narrow ? '收藏' : '收藏的歌', ?kept?.toString()].join(' '),
+                        ),
+                      ),
+                      MusicStudioButton(compact: narrow),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -157,67 +168,67 @@ class _MusicPageState extends ConsumerState<MusicPage> {
           bool sang(String member) =>
               value?.tracks.any((t) => t.members.contains(member)) ?? true;
           final hidden = _moreMembers.where(sang).toList();
+          Widget member(String name) => MemberChoiceButton(
+            label: name,
+            members: [name],
+            selected: _query.member == name,
+            onPressed: () => _apply(
+              _query.member == name
+                  ? _query.copyWith(clearMember: true)
+                  : _query.copyWith(member: name),
+            ),
+          );
           final members = SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.fromLTRB(gutter - 6, 16, gutter - 6, 0),
+            padding: EdgeInsets.fromLTRB(gutter, 12, gutter, 0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 8,
               children: [
-                _MemberOption(
-                  label: '全部',
+                AppChoice(
                   selected: _query.member == null,
-                  onTap: () => _apply(_query.copyWith(clearMember: true)),
-                  icon: Icons.library_music_rounded,
+                  onSelected: (_) => _apply(_query.copyWith(clearMember: true)),
+                  label: const Text('全部成员'),
                 ),
-                for (final member in [
-                  ..._members.where(sang),
-                  if (_moreOpen) ...hidden,
-                ])
-                  _MemberOption(
-                    label: member,
-                    member: member,
-                    selected: _query.member == member,
-                    onTap: () => _apply(
-                      _query.member == member
-                          ? _query.copyWith(clearMember: true)
-                          : _query.copyWith(member: member),
-                    ),
-                  ),
+                for (final name in _members.where(sang)) member(name),
+                if (_moreOpen)
+                  for (final name in hidden) member(name),
                 if (hidden.isNotEmpty)
-                  _MemberOption(
-                    label: _moreOpen ? '收起' : '更多',
-                    selected: false,
-                    onTap: _toggleMore,
-                    icon: _moreOpen
-                        ? Icons.chevron_left_rounded
-                        : Icons.more_horiz_rounded,
+                  AppButton(
+                    onPressed: _toggleMore,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_moreOpen ? '收起' : '更多成员'),
+                        const SizedBox(width: 2),
+                        AnimatedRotation(
+                          turns: _moreOpen ? .5 : 0,
+                          duration: appMotion(context, AppTokens.controlMotion),
+                          child: const Icon(Icons.expand_more, size: 18),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
           );
           final years = _years(value);
-          final count = value == null
-              ? null
-              : searching
-              ? '${_shown.length} 首'
-              : '${_sessions.length} 天 · ${_shown.length} 首';
           final sectionHeader = Padding(
-            padding: EdgeInsets.fromLTRB(gutter, 20, gutter - 6, 4),
+            padding: EdgeInsets.fromLTRB(gutter, 16, gutter, 8),
             child: bounded(
               Row(
                 children: [
                   Expanded(
                     child: Text.rich(
                       TextSpan(
-                        text: searching ? '搜索结果' : '歌回',
+                        text: _query.keyword.isEmpty ? '歌曲' : '搜索结果',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontSize: 19,
                           fontWeight: FontWeight.w700,
                         ),
                         children: [
-                          if (count != null)
+                          if (value != null)
                             TextSpan(
-                              text: '  $count',
+                              text: '  ${_shown.length} 首',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                                 fontFeatures: AppTheme.tabular,
@@ -272,8 +283,8 @@ class _MusicPageState extends ConsumerState<MusicPage> {
             ),
           );
           final Widget? placeholder = switch (catalog) {
-            AsyncValue(hasValue: true) when _sessions.isEmpty => Center(
-              child: Text(searching ? '没有找到这首歌' : '没有符合条件的歌回'),
+            AsyncValue(hasValue: true) when _shown.isEmpty => Center(
+              child: Text(_query.keyword.isEmpty ? '没有符合条件的歌' : '没有找到这首歌'),
             ),
             AsyncValue(hasValue: true) => null,
             AsyncValue(hasError: true) => Center(
@@ -292,73 +303,7 @@ class _MusicPageState extends ConsumerState<MusicPage> {
             ),
             _ => const Center(child: CircularProgressIndicator()),
           };
-          final bottom = MediaQuery.paddingOf(context).bottom + 24;
-          final Widget results;
-          if (placeholder != null) {
-            results = SliverFillRemaining(
-              hasScrollBody: false,
-              child: placeholder,
-            );
-          } else if (searching) {
-            final handler = ref.read(musicAudioHandlerProvider);
-            results = SliverPadding(
-              padding: EdgeInsets.fromLTRB(gutter - 8, 0, gutter - 8, bottom),
-              sliver: SliverList.builder(
-                itemCount: _shown.length,
-                itemBuilder: (context, index) => bounded(
-                  max: AppTokens.readingWidth,
-                  MusicTrackRow(
-                    track: _shown[index],
-                    selected: _shown[index].id == currentId,
-                    // On through the results, as they are listed.
-                    onPlay: () =>
-                        unawaited(handler.playTracks(_shown, start: index)),
-                  ),
-                ),
-              ),
-            );
-          } else {
-            // Album tiles about 180 wide: two across a phone, more as the
-            // window grows. A tile's height is its square cover and two
-            // lines at the current text size.
-            final columns = math.max(
-              2,
-              ((width - 2 * gutter + 12) / 192).floor(),
-            );
-            final tile = (width - 2 * gutter + 12) / columns;
-            final scaler = MediaQuery.textScalerOf(context);
-            double line(TextStyle? style) =>
-                scaler.scale(style?.fontSize ?? 14) * (style?.height ?? 1.5);
-            final extent =
-                tile +
-                8 +
-                line(theme.textTheme.titleSmall) +
-                2 +
-                line(theme.textTheme.bodySmall) +
-                6;
-            results = SliverPadding(
-              padding: EdgeInsetsDirectional.fromSTEB(
-                gutter - 6,
-                0,
-                constraints.maxWidth - width + gutter - 6,
-                bottom,
-              ),
-              sliver: SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  mainAxisExtent: extent,
-                ),
-                itemCount: _sessions.length,
-                itemBuilder: (context, index) {
-                  final session = _sessions[index];
-                  return MusicDayCard(
-                    session: session,
-                    onOpen: () => context.go('/music/day/${session.key}'),
-                  );
-                },
-              ),
-            );
-          }
+          final handler = ref.read(musicAudioHandlerProvider);
           return RefreshIndicator(
             edgeOffset: MediaQuery.paddingOf(context).top,
             onRefresh: () async {
@@ -378,7 +323,31 @@ class _MusicPageState extends ConsumerState<MusicPage> {
                       child: Text(warning, style: theme.textTheme.bodySmall),
                     ),
                   ),
-                results,
+                if (placeholder != null)
+                  SliverFillRemaining(hasScrollBody: false, child: placeholder)
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      gutter,
+                      0,
+                      gutter,
+                      MediaQuery.paddingOf(context).bottom + 24,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: _shown.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) => bounded(
+                        MusicSongTile(
+                          track: _shown[index],
+                          selected: _shown[index].id == currentId,
+                          // On through the list as it is shown.
+                          onPlay: () => unawaited(
+                            handler.playTracks(_shown, start: index),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           );
@@ -393,97 +362,4 @@ class _MusicPageState extends ConsumerState<MusicPage> {
         track.date.year,
     },
   ]..sort((a, b) => b.compareTo(a));
-}
-
-/// A singer as a round picture with her name under it, as music apps list
-/// artists; chosen, it gains a ring in her colour. Without [member] it is
-/// [icon] on a plain disc, for 全部 and 更多.
-class _MemberOption extends StatelessWidget {
-  const _MemberOption({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.member,
-    this.icon,
-  });
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final String? member;
-  final IconData? icon;
-
-  static const size = 56.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final ring = member == null
-        ? colors.primary
-        : AppTheme.memberColors[member] ?? colors.primary;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          width: 76,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Column(
-              children: [
-                AnimatedContainer(
-                  duration: appMotion(context, AppTokens.controlMotion),
-                  curve: AppCurves.standard,
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: selected ? ring : Colors.transparent,
-                      width: 2.5,
-                    ),
-                  ),
-                  child: member == null
-                      ? DecoratedBox(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colors.surfaceContainerHigh,
-                          ),
-                          child: SizedBox.square(
-                            dimension: size,
-                            child: Icon(
-                              icon,
-                              color: colors.onSurfaceVariant,
-                              size: 26,
-                            ),
-                          ),
-                        )
-                      : MusicCover(
-                          members: [member!],
-                          size: size,
-                          radius: size / 2,
-                        ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected
-                        ? colors.onSurface
-                        : colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
