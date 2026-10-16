@@ -74,7 +74,7 @@ set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}")
 
 # Ship the MSVC runtime beside the app so a clean Windows install needs no
 # separate administrator-level redistributable installation.
-set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ".")
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${INSTALL_BUNDLE_LIB_DIR}")
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT Runtime)
 include(InstallRequiredSystemLibraries)
 

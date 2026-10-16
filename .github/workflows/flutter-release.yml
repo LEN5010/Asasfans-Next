@@ -9,6 +9,10 @@ on:
         description: "Existing release tag, for example v3.0.0"
         required: true
         type: string
+      windows_only:
+        description: Rebuild Windows attachments on an existing draft
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -59,16 +63,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        include:
-          - platform: android
-            os: ubuntu-latest
-          - platform: windows
-            os: windows-2022
-          - platform: macos
-            os: macos-latest
-          - platform: ios
-            os: macos-latest
-    runs-on: ${{ matrix.os }}
+        platform: ${{ fromJSON(inputs.windows_only && '["windows"]' || '["android","windows","macos","ios"]') }}
+    runs-on: ${{ fromJSON('{"android":"ubuntu-latest","windows":"windows-2022","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
     timeout-minutes: 45
     env:
       NAME: Asasfans-Next-${{ inputs.tag }}
@@ -138,6 +134,7 @@ jobs:
         shell: pwsh
         run: |
           flutter build windows --release --no-pub
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force dist | Out-Null
           Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "dist/$env:NAME-windows-x64.zip"
           ./tool/package_windows.ps1
