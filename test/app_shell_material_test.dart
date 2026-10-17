@@ -297,4 +297,53 @@ void main() {
     expect(find.byType(AppGlassNavigation), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('back goes to 今日 from another section before leaving', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var left = false;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'SystemNavigator.pop') left = true;
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: offlineTodayOverrides(),
+        child: const AsasfansApp(),
+      ),
+    );
+    final router = ProviderScope.containerOf(
+      tester.element(find.byType(AsasfansApp)),
+      listen: false,
+    ).read(appRouterProvider);
+    String path() => router.routerDelegate.currentConfiguration.uri.path;
+    await tester.pumpAndSettle();
+    router.go('/mine/backup');
+    await tester.pumpAndSettle();
+
+    // A page inside a section closes first, as always.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(path(), '/mine');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(path(), '/today');
+    expect(left, isFalse);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(left, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 }

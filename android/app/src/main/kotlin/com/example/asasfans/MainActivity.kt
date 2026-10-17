@@ -21,6 +21,7 @@ class MainActivity : AudioServiceActivity() {
     /// with the login browser's cookie store, and the login channel has no
     /// business starting services.
     private var returnEntry: ReturnEntryBridge? = null
+    private var bilibiliApp: BilibiliAppBridge? = null
     private val navOrigin = "https://api.bilibili.com/x/web-interface/nav"
     private val allowedCookies = setOf("SESSDATA", "bili_jct", "DedeUserID", "DedeUserID__ckMd5", "sid")
 
@@ -39,6 +40,7 @@ class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         returnEntry = ReturnEntryBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        bilibiliApp = BilibiliAppBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         loginCookies = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "asasfans.next/bilibili_login_cookies").also { channel ->
             channel.setMethodCallHandler { call, result ->
                 val available = !profileUnavailable && (Build.VERSION.SDK_INT >= 28 || packageName != "asasfans.next")
@@ -116,6 +118,8 @@ class MainActivity : AudioServiceActivity() {
         loginCookies = null
         returnEntry?.dispose()
         returnEntry = null
+        bilibiliApp?.dispose()
+        bilibiliApp = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

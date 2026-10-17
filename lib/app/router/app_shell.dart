@@ -216,96 +216,106 @@ class _AppShellState extends ConsumerState<AppShell>
         _wide = wide;
         _hasMusic = hasMusic;
         final flying = _from != null;
-        return CalendarReminderListener(
-          child: AppBackdrop(
-            child: Stack(
-              key: _stackKey,
-              fit: StackFit.expand,
-              children: [
-                Scaffold(
-                  backgroundColor: Colors.transparent,
-                  // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
-                  resizeToAvoidBottomInset: false,
-                  // The body runs under the dock, and the Scaffold hands it the
-                  // dock's height as bottom padding. Always on: switching it would
-                  // rebuild the body.
-                  extendBody: true,
-                  // Here rather than over the body, so a SnackBar sits above it.
-                  bottomNavigationBar: showDock || showMini
-                      ? Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            12,
-                            12,
-                            12,
-                            mq.padding.bottom + 8,
-                          ),
-                          // The slot's height is loose: as tall as the dock only.
-                          child: Align(
-                            heightFactor: 1,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 520),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (showMini) const MusicMiniPlayer(),
-                                  if (showMini && showDock)
-                                    const SizedBox(height: 10),
-                                  if (showDock)
-                                    AppGlassNavigation(
-                                      selected: selected,
-                                      onSelect: _select,
-                                      onTools: _tools,
-                                    ),
-                                ],
+        // Back on another section's own page goes to 今日, the main page,
+        // rather than out of the app; only there does it leave.
+        return PopScope(
+          canPop: selected == 0 || !widget.isTabRoot,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _select(0);
+          },
+          child: CalendarReminderListener(
+            child: AppBackdrop(
+              child: Stack(
+                key: _stackKey,
+                fit: StackFit.expand,
+                children: [
+                  Scaffold(
+                    backgroundColor: Colors.transparent,
+                    // Nested branch Scaffolds own the keyboard resize; never subtract it twice.
+                    resizeToAvoidBottomInset: false,
+                    // The body runs under the dock, and the Scaffold hands it the
+                    // dock's height as bottom padding. Always on: switching it would
+                    // rebuild the body.
+                    extendBody: true,
+                    // Here rather than over the body, so a SnackBar sits above it.
+                    bottomNavigationBar: showDock || showMini
+                        ? Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              12,
+                              12,
+                              12,
+                              mq.padding.bottom + 8,
+                            ),
+                            // The slot's height is loose: as tall as the dock only.
+                            child: Align(
+                              heightFactor: 1,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 520,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (showMini) const MusicMiniPlayer(),
+                                    if (showMini && showDock)
+                                      const SizedBox(height: 10),
+                                    if (showDock)
+                                      AppGlassNavigation(
+                                        selected: selected,
+                                        onSelect: _select,
+                                        onTools: _tools,
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
+                          )
+                        : showBar
+                        ? Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              12,
+                              0,
+                              12,
+                              mq.padding.bottom + 12,
+                            ),
+                            child: Opacity(
+                              opacity: flying && !_toDock ? 0 : 1,
+                              child: MusicPlayerBar(key: _barKey),
+                            ),
+                          )
+                        : null,
+                    // On a wide window the rail and the page end above the player
+                    // bar instead of running under it.
+                    body: Builder(
+                      builder: (context) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: showBar
+                              ? MediaQuery.paddingOf(context).bottom
+                              : 0,
+                        ),
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeBottom: showBar,
+                          child: _body(
+                            context,
+                            wide,
+                            selected,
+                            showDock,
+                            showMini,
+                            railPlayer: !showRailPlayer
+                                ? null
+                                : Opacity(
+                                    opacity: flying && _toDock ? 0 : 1,
+                                    child: MusicDockPlayer(key: _dockKey),
+                                  ),
                           ),
-                        )
-                      : showBar
-                      ? Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            12,
-                            0,
-                            12,
-                            mq.padding.bottom + 12,
-                          ),
-                          child: Opacity(
-                            opacity: flying && !_toDock ? 0 : 1,
-                            child: MusicPlayerBar(key: _barKey),
-                          ),
-                        )
-                      : null,
-                  // On a wide window the rail and the page end above the player
-                  // bar instead of running under it.
-                  body: Builder(
-                    builder: (context) => Padding(
-                      padding: EdgeInsets.only(
-                        bottom: showBar
-                            ? MediaQuery.paddingOf(context).bottom
-                            : 0,
-                      ),
-                      child: MediaQuery.removePadding(
-                        context: context,
-                        removeBottom: showBar,
-                        child: _body(
-                          context,
-                          wide,
-                          selected,
-                          showDock,
-                          showMini,
-                          railPlayer: !showRailPlayer
-                              ? null
-                              : Opacity(
-                                  opacity: flying && _toDock ? 0 : 1,
-                                  child: MusicDockPlayer(key: _dockKey),
-                                ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                if (flying) _flightCard(),
-              ],
+                  if (flying) _flightCard(),
+                ],
+              ),
             ),
           ),
         );
