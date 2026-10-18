@@ -907,6 +907,22 @@ class SqliteLibraryRepository implements LibraryRepository {
     ),
   ]);
   @override
+  Future<void> expireCalendarFollows(DateTime now) async {
+    final rows = (await _batch([
+      const SqlStatement('SELECT * FROM calendar_follows', [], true),
+    ])).single;
+    final commands = [
+      for (final row in rows)
+        if (_follow(row).event.hasEnded(now))
+          SqlStatement(
+            'DELETE FROM calendar_follows WHERE source=? AND uid=? AND recurrence_id=? AND snapshot=?',
+            [row['source'], row['uid'], row['recurrence_id'], row['snapshot']],
+          ),
+    ];
+    if (commands.isNotEmpty) await _write(commands);
+  }
+
+  @override
   Future<void> synchronizeCalendar(
     Uri source,
     List<CalendarEvent> events,

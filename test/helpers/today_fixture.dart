@@ -1,4 +1,4 @@
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/community_video_repository.dart';
@@ -23,11 +23,13 @@ List<Override> offlineTodayOverrides({
     offlinePreferences()
   else
     preferencesRepositoryProvider.overrideWithValue(preferences),
-  currentTimeProvider.overrideWithValue(() => DateTime.utc(2026, 9, 21, 4)),
+  currentTimeProvider.overrideWithValue(
+    () => DateTime(2026, 9, 21, 12).toUtc(),
+  ),
   todayScheduleProvider.overrideWith(
     (ref) async => CalendarSnapshot(
       events: events,
-      fetchedAt: DateTime.utc(2026, 9, 21, 4),
+      fetchedAt: DateTime(2026, 9, 21, 12).toUtc(),
     ),
   ),
   todayFanartProvider.overrideWith((ref) async => fanart),

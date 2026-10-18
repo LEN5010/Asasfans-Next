@@ -15,6 +15,7 @@ class MusicTrack {
   final List<String> members;
   final Duration duration;
   final String status;
+  bool get hasMoreMembers => members.any(const {'向晚', '珈乐'}.contains);
   bool get isLive => status.toLowerCase().contains('live');
   String get singers => members.join('、');
   String get dateLabel =>

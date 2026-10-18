@@ -10,10 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_failure.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
-import '../../../core/time/calendar_time.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/resume_when_visible.dart';
@@ -74,7 +73,7 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
   /// Opens the calendar on [picked], or on today (with no selection of its
   /// own, so it keeps following the date) when nothing else was picked.
   void _calendar([DateTime? picked]) {
-    final DateTime day = picked ?? ref.read(shanghaiDateProvider);
+    final DateTime day = picked ?? ref.read(localDateProvider);
     ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
       day.year,
       day.month,
@@ -97,7 +96,7 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
     final showClips = settings.shows(HomeSection.clips);
     final calendar = settings.shows(HomeSection.calendar);
     final history = settings.shows(HomeSection.history);
-    final day = ref.watch(shanghaiDateProvider);
+    final day = ref.watch(localDateProvider);
     final heading = RootHeading(
       title: '${day.month}月${day.day}日 星期${'一二三四五六日'[day.weekday - 1]}',
       subtitle: _TodaySummary(day: day, calendar: calendar),
@@ -264,7 +263,7 @@ class _TodaySummary extends ConsumerWidget {
   final bool calendar;
 
   static String greeting(DateTime now) {
-    final hour = CalendarTime.inShanghai(now).hour;
+    final hour = now.toLocal().hour;
     return switch (hour) {
       < 5 => '夜深了',
       < 11 => '早上好',
@@ -477,7 +476,7 @@ class _ScheduleSectionState extends ConsumerState<_ScheduleSection> {
                             event: event,
                             showDay: next,
                             today: day,
-                            now: isToday ? _now : null,
+                            now: _now,
                             highlight:
                                 isToday && event == entries[first] && lift >= 0,
                           ),

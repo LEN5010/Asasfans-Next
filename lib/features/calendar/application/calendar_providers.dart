@@ -4,8 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/time/calendar_time.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../data/calendar_cache_store.dart';
 import 'calendar_follow_selection.dart';
@@ -58,7 +57,7 @@ final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
 
 /// The month currently shown, as its first day.
 final visibleMonthProvider = StateProvider<DateTime>((ref) {
-  final now = CalendarTime.inShanghai(ref.read(currentTimeProvider)());
+  final now = ref.read(currentTimeProvider)().toLocal();
   return DateTime.utc(now.year, now.month);
 });
 
@@ -132,12 +131,12 @@ final followedUpcomingProvider =
       final source = ref.watch(appEnvironmentProvider).calendarUrl;
       final now = ref.read(currentTimeProvider)();
       final until = now.add(const Duration(days: 30));
-      final last = CalendarTime.inShanghai(until);
+      final last = until.toLocal();
       final months = <DateTime>[];
       for (
         var month = DateTime.utc(
-          ref.watch(shanghaiDateProvider).year,
-          ref.watch(shanghaiDateProvider).month,
+          ref.watch(localDateProvider).year,
+          ref.watch(localDateProvider).month,
         );
         !month.isAfter(DateTime.utc(last.year, last.month));
         month = DateTime.utc(month.year, month.month + 1)

@@ -44,10 +44,10 @@ void main() {
   });
 
   test(
-    'Shanghai grouping uses the source instant, all-day dates do not shift',
+    'Local grouping uses the source instant, all-day dates do not shift',
     () {
       expect(
-        CalendarTime.dayOf(DateTime.utc(2026, 9, 21, 18)),
+        CalendarTime.dayOf(DateTime(2026, 9, 22, 2).toUtc()),
         DateTime.utc(2026, 9, 22),
       );
       expect(

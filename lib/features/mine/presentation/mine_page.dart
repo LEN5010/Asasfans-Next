@@ -1,3 +1,4 @@
+import '../../music/presentation/music_widgets.dart';
 import 'dart:io' show Platform;
 
 import '../../../shared/theme/app_icons.dart';
@@ -507,6 +508,10 @@ class SettingsPage extends StatelessWidget {
               _Group(
                 title: '音乐',
                 children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: MusicVolumeControl(),
+                  ),
                   Consumer(
                     builder: (context, ref, _) {
                       final state = ref.watch(preferencesControllerProvider);
@@ -533,10 +538,7 @@ class SettingsPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppTokens.sectionGap),
-              const _Group(
-                title: '日历',
-                children: [CalendarReminderSettings()],
-              ),
+              const _Group(title: '日历', children: [CalendarReminderSettings()]),
               const SizedBox(height: AppTokens.sectionGap),
               AppCard(
                 padding: EdgeInsets.zero,

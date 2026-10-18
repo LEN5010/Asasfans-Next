@@ -1,7 +1,7 @@
 import 'package:timezone/data/latest.dart' as data;
 import 'package:timezone/timezone.dart' as tz;
 
-/// All conversions are source-zone based, never based on the host's timezone.
+/// Source timestamps keep their zone; presentation follows the device zone.
 abstract final class CalendarTime {
   static const scheduleZone = 'Asia/Shanghai';
   static bool _initialized = false;
@@ -44,12 +44,9 @@ abstract final class CalendarTime {
     );
   }
 
-  static DateTime inShanghai(DateTime instant) =>
-      tz.TZDateTime.from(instant.toUtc(), location(scheduleZone));
-
   /// UTC is only a carrier for pure Y/M/D values here, not an instant.
   static DateTime dayOf(DateTime value, {bool allDay = false}) {
-    final day = allDay ? value : inShanghai(value);
+    final day = allDay ? value : value.toLocal();
     return DateTime.utc(day.year, day.month, day.day);
   }
 

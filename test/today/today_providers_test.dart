@@ -2,7 +2,7 @@ import '../helpers/library_fixture.dart';
 import 'dart:async';
 
 import 'package:asasfans_next/core/domain/content_identity.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
@@ -77,7 +77,7 @@ class _Calendar implements CalendarRepository {
     calls++;
     return CalendarSnapshot(
       events: const [],
-      fetchedAt: DateTime.utc(2026, 9, 21, 4),
+      fetchedAt: DateTime(2026, 9, 21, 12).toUtc(),
     );
   }
 }
@@ -91,7 +91,7 @@ void main() {
         overrides: [
           ...offlineLibrary(),
           currentTimeProvider.overrideWithValue(
-            () => DateTime.utc(2026, 9, 21, 4),
+            () => DateTime(2026, 9, 21, 12).toUtc(),
           ),
           calendarRepositoryProvider.overrideWithValue(repository),
         ],
@@ -102,7 +102,7 @@ void main() {
       expect(repository.calls, 1);
       expect(container.read(todayScheduleProvider).hasValue, isTrue);
       // Dispose inside the body: the day clock arms a timer until the next
-      // Shanghai midnight, and addTearDown runs after the binding has already
+      // Local midnight, and addTearDown runs after the binding has already
       // checked for pending timers.
       container.dispose();
       await tester.pump(const Duration(milliseconds: 1));
@@ -113,7 +113,7 @@ void main() {
     'today clips use three OR lanes and show one deduplicated result',
     (tester) async {
       final repository = _Community();
-      final now = DateTime.utc(2026, 9, 21, 4);
+      final now = DateTime(2026, 9, 21, 12).toUtc();
       final container = ProviderContainer(
         overrides: [
           ...offlineLibrary(),
@@ -149,7 +149,7 @@ void main() {
         overrides: [
           ...offlineLibrary(),
           currentTimeProvider.overrideWithValue(
-            () => DateTime.utc(2026, 9, 21, 4),
+            () => DateTime(2026, 9, 21, 12).toUtc(),
           ),
           fanartRepositoryProvider.overrideWithValue(repository),
         ],

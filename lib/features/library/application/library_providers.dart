@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/content_identity.dart';
 import '../../../core/storage/storage_providers.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../data/sqlite_library_repository.dart';
 import '../domain/library_models.dart';
 import '../domain/library_page.dart';

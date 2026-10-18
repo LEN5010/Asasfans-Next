@@ -11,36 +11,38 @@ final currentTimeProvider = Provider<DateTime Function()>(
 
 /// One application-scope day clock, rather than a polling timer per feature.
 /// A sleeping desktop may skip midnight timers; resume recomputes today's key.
-final shanghaiDateProvider =
-    StateNotifierProvider<ShanghaiDateController, DateTime>((ref) {
-      final controller = ShanghaiDateController(ref.watch(currentTimeProvider));
-      final lifecycle = AppLifecycleListener(onResume: controller.resync);
-      ref.onDispose(lifecycle.dispose);
-      return controller;
-    });
+final localDateProvider = StateNotifierProvider<LocalDateController, DateTime>((
+  ref,
+) {
+  final controller = LocalDateController(ref.watch(currentTimeProvider));
+  final lifecycle = AppLifecycleListener(onResume: controller.resync);
+  ref.onDispose(lifecycle.dispose);
+  return controller;
+});
 
-class ShanghaiDateController extends StateNotifier<DateTime> {
-  ShanghaiDateController(this._clock) : super(CalendarTime.dayOf(_clock())) {
+class LocalDateController extends StateNotifier<DateTime> {
+  LocalDateController(this._clock) : super(CalendarTime.dayOf(_clock())) {
+    _offset = _clock().toLocal().timeZoneOffset;
     _arm();
   }
   final DateTime Function() _clock;
+  late Duration _offset;
   Timer? _timer;
 
   void resync() {
     if (!mounted) return;
-    final day = CalendarTime.dayOf(_clock());
-    if (day != state) state = day;
+    final now = _clock().toLocal();
+    final day = CalendarTime.dayOf(now);
+    if (day != state || now.timeZoneOffset != _offset) state = day;
+    _offset = now.timeZoneOffset;
     _arm();
   }
 
   void _arm() {
     _timer?.cancel();
     final now = _clock();
-    final local = CalendarTime.inShanghai(now);
-    final next = CalendarTime.wallTimeToUtc(
-      DateTime.utc(local.year, local.month, local.day + 1),
-      CalendarTime.scheduleZone,
-    );
+    final local = now.toLocal();
+    final next = DateTime(local.year, local.month, local.day + 1);
     final remaining = next.difference(now.toUtc());
     _timer = Timer(
       remaining > Duration.zero ? remaining : const Duration(seconds: 1),

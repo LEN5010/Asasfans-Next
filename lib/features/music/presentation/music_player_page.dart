@@ -150,13 +150,20 @@ class _PlayerContent extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 28),
-        Text(
-          track.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                track.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            MusicFavoriteButton(track: track),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -212,6 +219,8 @@ class _PlayerContent extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 24),
+        const MusicVolumeControl(),
+        const SizedBox(height: 16),
         Row(
           spacing: 12,
           children: [

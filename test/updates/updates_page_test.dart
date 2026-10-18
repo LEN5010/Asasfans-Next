@@ -1,6 +1,6 @@
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/library/domain/library_models.dart';
 import 'package:asasfans_next/features/updates/application/update_providers.dart';
 import 'package:asasfans_next/features/updates/domain/update_event.dart';

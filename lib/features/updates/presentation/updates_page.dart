@@ -13,10 +13,6 @@ import '../domain/update_repository.dart';
 import 'update_card.dart';
 
 /// The in-app inbox.
-///
-/// It is explicitly an in-app record: the app collected these while it was
-/// running and the user is reading them here. Nothing on this screen was
-/// delivered by the system, and the wording does not suggest otherwise.
 class UpdatesPage extends ConsumerStatefulWidget {
   const UpdatesPage({super.key});
   @override
@@ -25,9 +21,6 @@ class UpdatesPage extends ConsumerStatefulWidget {
 
 class _UpdatesPageState extends ConsumerState<UpdatesPage> {
   UpdateFilter _filter = UpdateFilter.inbox;
-
-  /// The two things the app records (the line above the list says when).
-  static const _scope = '关注的日程改期或取消、订阅的 UP 主发了新视频，会记在这里';
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +48,6 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
             UpdateFilter.unread => '没有未读更新',
             UpdateFilter.archived => '没有归档的更新',
           },
-          emptyHint: _filter == UpdateFilter.inbox ? _scope : null,
           header: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -80,16 +72,6 @@ class _UpdatesPageState extends ConsumerState<UpdatesPage> {
                   selected: {_filter},
                   onSelectionChanged: (value) =>
                       setState(() => _filter = value.first),
-                ),
-              ),
-              // What this inbox is, in one quiet line: nothing here is a
-              // system notification, and nothing arrives while the app is
-              // not running.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
-                child: Text(
-                  '由应用运行时检查得到，不是系统推送',
-                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
               const UpdateStatusBanner(),

@@ -7,7 +7,7 @@ import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/dynamic_repository.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/today/presentation/on_this_day_section.dart';
 import 'package:asasfans_next/shared/widgets/app_controls.dart';
 import 'package:flutter/material.dart';
@@ -111,7 +111,7 @@ void main() {
     );
   });
 
-  testWidgets('UI UX: history cards retain original body and Shanghai year', (
+  testWidgets('UI UX: history cards retain original body and local year', (
     tester,
   ) async {
     await tester.pumpWidget(_app(_StubRepository(posts: [_post('1')])));
@@ -119,7 +119,7 @@ void main() {
 
     expect(find.text('历史上的今天'), findsOneWidget);
     expect(find.text('往年正文'), findsOneWidget);
-    // The year label uses the source's Shanghai calendar.
+    // The year label follows the device timezone.
     expect(find.textContaining('2021 年'), findsOneWidget);
   });
 

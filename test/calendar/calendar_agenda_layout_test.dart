@@ -2,7 +2,7 @@ import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
 import 'package:asasfans_next/core/platform/external_link_service.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_event_widgets.dart';

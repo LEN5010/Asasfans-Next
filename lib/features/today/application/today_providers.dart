@@ -4,7 +4,7 @@ import '../../rules/application/rules_providers.dart';
 import '../../../core/domain/content_identity.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/domain/calendar_agenda.dart';
 import '../../calendar/domain/calendar_event.dart';
@@ -18,7 +18,7 @@ import '../../preferences/domain/app_preferences.dart';
 final todayScheduleProvider = FutureProvider.autoDispose<CalendarSnapshot>((
   ref,
 ) {
-  final day = ref.watch(shanghaiDateProvider);
+  final day = ref.watch(localDateProvider);
   return ref.watch(
     monthEventsProvider(DateTime.utc(day.year, day.month)).future,
   );
@@ -31,7 +31,7 @@ final todayScheduleProvider = FutureProvider.autoDispose<CalendarSnapshot>((
 final todayWeekProvider = FutureProvider.autoDispose<List<CalendarEvent>>((
   ref,
 ) async {
-  final day = ref.watch(shanghaiDateProvider);
+  final day = ref.watch(localDateProvider);
   final monday = CalendarAgenda.weekStart(day);
   final sunday = monday.add(const Duration(days: 6));
   final months = {
@@ -89,7 +89,7 @@ const todayFanartCount = 10;
 final todayClipsProvider = FutureProvider.autoDispose<List<CommunityVideo>>((
   ref,
 ) async {
-  ref.watch(shanghaiDateProvider);
+  ref.watch(localDateProvider);
   final cancellation = RequestCancellation();
   ref.onDispose(cancellation.cancel);
   final pager = CommunityVideoPager(
@@ -124,7 +124,7 @@ final refreshTodayProvider = Provider<Future<void> Function(bool)>((ref) {
     final preferences = ref.read(preferencesControllerProvider);
     if (preferences.loading && !preferences.ready) return;
     final settings = preferences.values;
-    final day = ref.read(shanghaiDateProvider);
+    final day = ref.read(localDateProvider);
     final month = DateTime.utc(day.year, day.month);
     Future<void> calendar() async {
       if (forceCalendar) {

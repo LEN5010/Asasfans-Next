@@ -86,6 +86,9 @@ class PreferencesController extends StateNotifier<PreferencesState> {
   Future<bool> setMusicLoudnessEnabled(bool value) =>
       _write(() => _repository.setMusicLoudnessEnabled(value));
 
+  Future<bool> setMusicVolume(double value) =>
+      _write(() => _repository.setMusicVolume(value));
+
   Future<bool> acceptDisclaimer() => _write(_repository.acceptDisclaimer);
 
   Future<bool> _write(Future<AppPreferences> Function() action) {

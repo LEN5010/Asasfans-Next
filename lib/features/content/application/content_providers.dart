@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/config/app_version.dart';
 import '../../../core/storage/storage_providers.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../data/community_video_source.dart';
 import '../data/dynamic_fanart_repository.dart';
 import '../data/dynamic_post_repository.dart';
@@ -50,9 +50,9 @@ final dynamicRepositoryProvider = Provider<DynamicRepository>(
   ),
 );
 
-/// Historical posts for today's Shanghai month-day.
+/// Historical posts for today's local month-day.
 ///
-/// Cache by the full Shanghai date. Midnight and resume update the key without
+/// Cache by the full local date. Midnight and resume update the key without
 /// refetching on every widget rebuild; a late yesterday response is discarded
 /// by Riverpod's provider generation when the dependency changes.
 final onThisDaySortProvider = StateProvider<OnThisDaySort>(
@@ -60,7 +60,7 @@ final onThisDaySortProvider = StateProvider<OnThisDaySort>(
 );
 
 final onThisDayProvider = FutureProvider.autoDispose<List<DynamicPost>>((ref) {
-  final day = ref.watch(shanghaiDateProvider);
+  final day = ref.watch(localDateProvider);
   final monthDay =
       '${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
   return ref

@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:asasfans_next/app/theme/app_tokens.dart';
 import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_page.dart';
@@ -68,7 +68,7 @@ class _Calendar implements CalendarRepository {
     if (failure != null) throw failure!;
     return CalendarSnapshot(
       events: items,
-      fetchedAt: DateTime.utc(2026, 9, 21, 4),
+      fetchedAt: DateTime(2026, 9, 21, 12).toUtc(),
     );
   }
 }
@@ -80,8 +80,8 @@ CalendarEvent _event(
 }) => CalendarEvent(
   uid: title,
   title: title,
-  start: DateTime.utc(2026, 9, day, 12),
-  end: DateTime.utc(2026, 9, day, 14),
+  start: DateTime(2026, 9, day, 20).toUtc(),
+  end: DateTime(2026, 9, day, 22).toUtc(),
   allDay: false,
   status: status,
 );
@@ -104,7 +104,7 @@ Widget _host(
       ...offlineLibrary(),
       offlinePreferences(),
       currentTimeProvider.overrideWithValue(
-        clock ?? () => DateTime.utc(2026, 9, 21, 4),
+        clock ?? () => DateTime(2026, 9, 21, 12).toUtc(),
       ),
       calendarRepositoryProvider.overrideWithValue(calendar),
       todayFanartProvider.overrideWith(
@@ -338,10 +338,10 @@ void main() {
   );
 
   testWidgets(
-    'Shanghai rollover replaces the schedule date and monthly dependency',
+    'Local rollover replaces the schedule date and monthly dependency',
     (tester) async {
       _size(tester, const Size(1280, 1100));
-      var now = DateTime.utc(2026, 9, 30, 15, 59, 59);
+      var now = DateTime(2026, 9, 30, 23, 59, 59);
       final calendar = _Calendar()
         ..items = [_event('九月安排', 30), _event('十月安排', 31)];
       await tester.pumpWidget(_host(calendar, clock: () => now));
@@ -352,7 +352,7 @@ void main() {
         tester.element(find.byType(TodayPage)),
       );
       now = now.add(const Duration(seconds: 2));
-      container.read(shanghaiDateProvider.notifier).resync();
+      container.read(localDateProvider.notifier).resync();
       await tester.pumpAndSettle();
       expect(find.text('10月1日'), findsOneWidget);
       expect(find.text('星期四'), findsOneWidget);

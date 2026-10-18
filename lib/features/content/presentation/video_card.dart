@@ -10,8 +10,7 @@ import '../../library/application/content_snapshots.dart';
 import '../../library/presentation/content_actions.dart';
 import '../../../core/domain/content_identity.dart';
 import '../../library/presentation/library_common.dart';
-import '../../../core/time/calendar_time.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../../../shared/widgets/media_cover.dart';
 import '../../../shared/widgets/media_card_surface.dart';
 import '../../../core/domain/video_summary.dart';
@@ -178,15 +177,15 @@ class VideoCard extends ConsumerWidget {
   static String _count(int value) =>
       value >= 10000 ? '${(value / 10000).toStringAsFixed(1)}万' : '$value';
   static String _date(DateTime value) {
-    final date = CalendarTime.inShanghai(value);
+    final date = value.toLocal();
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   /// A short date for a crowded line: 今天, 昨天, 9-24, or 2025-9-24 for an
   /// earlier year. The full date stays in [fullDate] for assistive text.
   static String compactDate(DateTime value, DateTime now) {
-    final date = CalendarTime.inShanghai(value);
-    final today = CalendarTime.inShanghai(now);
+    final date = value.toLocal();
+    final today = now.toLocal();
     final day = DateTime.utc(date.year, date.month, date.day);
     final days = DateTime.utc(
       today.year,
@@ -200,7 +199,7 @@ class VideoCard extends ConsumerWidget {
   }
 
   static String fullDate(DateTime value) {
-    final date = CalendarTime.inShanghai(value);
+    final date = value.toLocal();
     return '${date.year}年${date.month}月${date.day}日';
   }
 }

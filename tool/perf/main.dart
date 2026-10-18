@@ -12,7 +12,7 @@ import 'package:asasfans_next/core/config/app_environment.dart';
 import 'package:asasfans_next/core/platform/external_link_service.dart';
 import 'package:asasfans_next/core/platform/return_entry_service.dart';
 import 'package:asasfans_next/features/account/application/account_providers.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/presentation/fanart_card.dart';

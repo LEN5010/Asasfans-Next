@@ -73,7 +73,7 @@ abstract final class CalendarAgenda {
   ).subtract(Duration(days: day.weekday - 1));
   static String date(DateTime day) => '${day.month} 月 ${day.day} 日';
   static String time(DateTime instant) {
-    final time = CalendarTime.inShanghai(instant);
+    final time = instant.toLocal();
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 

@@ -29,7 +29,7 @@ String dynamicTypeLabel(DynamicType type) => switch (type) {
 };
 
 String dynamicTime(DateTime value) {
-  final date = value.toUtc().add(const Duration(hours: 8));
+  final date = value.toLocal();
   String pad(int n) => n.toString().padLeft(2, '0');
   return '${date.year}-${pad(date.month)}-${pad(date.day)} ${pad(date.hour)}:${pad(date.minute)}';
 }
@@ -215,7 +215,7 @@ class DynamicCard extends ConsumerWidget {
                   if (historyPreview)
                     post.publishedAt == null
                         ? '往年的今天'
-                        : '${post.publishedAt!.toUtc().add(const Duration(hours: 8)).year} 年的今天'
+                        : '${post.publishedAt!.toLocal().year} 年的今天'
                   else if (post.publishedAt != null)
                     dynamicTime(post.publishedAt!),
                   dynamicTypeLabel(post.type),

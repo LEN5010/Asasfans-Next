@@ -26,6 +26,8 @@ final musicCatalogRepositoryProvider = Provider(
 final musicCatalogProvider = FutureProvider<MusicCatalog>(
   (ref) => ref.watch(musicCatalogRepositoryProvider).load(),
 );
+final musicMoreMembersProvider = StateProvider<bool>((ref) => false);
+
 final musicAudioHandlerProvider = ChangeNotifierProvider<MusicAudioHandler>((
   ref,
 ) {
@@ -37,6 +39,11 @@ final musicAudioHandlerProvider = ChangeNotifierProvider<MusicAudioHandler>((
     (_, enabled) {
       unawaited(handler.setLoudnessEnabled(enabled));
     },
+    fireImmediately: true,
+  );
+  ref.listen(
+    preferencesControllerProvider.select((s) => s.values.musicVolume),
+    (_, volume) => unawaited(handler.setVolume(volume)),
     fireImmediately: true,
   );
   return handler;

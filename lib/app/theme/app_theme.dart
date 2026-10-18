@@ -8,7 +8,7 @@ abstract final class AppTheme {
   static const deepRose = Color(0xFF8A3E59);
   static const ink = Color(0xFF451E2C);
 
-  /// Official support colours, keyed by the calendar's member names.
+  /// Member colours, keyed by the calendar's member names.
   static const memberColors = <String, Color>{
     'A-SOUL': Color(0xFFFC966E),
     '嘉然': Color(0xFFE799B0),
@@ -16,6 +16,8 @@ abstract final class AppTheme {
     '贝拉': Color(0xFFDB7D74),
     '心宜': Color(0xFFC93773),
     '思诺': Color(0xFF7252C0),
+    '向晚': Color(0xFF5B9BD5),
+    '珈乐': Color(0xFF9B72CF),
   };
 
   /// Names a member goes by in account names and tags, longest first so

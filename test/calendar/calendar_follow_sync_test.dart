@@ -1,9 +1,10 @@
+import 'package:asasfans_next/features/calendar/application/calendar_follow_selection.dart';
 import 'dart:typed_data';
 
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/core/config/app_environment.dart';
 import 'package:asasfans_next/core/storage/storage_providers.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/data/ics_calendar_repository.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
@@ -31,6 +32,45 @@ class _Feed implements HttpClientAdapter {
 }
 
 void main() {
+  testWidgets('a star expires while the application stays open', (
+    tester,
+  ) async {
+    final db = MemoryLocalDatabase();
+    var now = DateTime(2026, 9, 21, 12);
+    final container = ProviderContainer(
+      overrides: [
+        localDatabaseProvider.overrideWithValue(db),
+        currentTimeProvider.overrideWithValue(() => now),
+      ],
+    );
+    final library = container.read(libraryRepositoryProvider);
+    final key = CalendarFollowKey(
+      source: Uri.https('calendar.example', '/feed.ics'),
+      uid: 'ending',
+    );
+    await library.followCalendar(
+      key,
+      CalendarEvent(
+        uid: key.uid,
+        title: '即将结束',
+        start: now.subtract(const Duration(hours: 1)),
+        end: now.add(const Duration(seconds: 2)),
+        allDay: false,
+      ),
+    );
+    final sub = container.listen(calendarFollowSelectionProvider, (_, _) {});
+    await tester.pumpAndSettle();
+    expect(await library.isFollowingCalendar(key), isTrue);
+    now = now.add(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(await library.isFollowingCalendar(key), isFalse);
+    sub.close();
+    container.dispose();
+    await db.close();
+    await tester.pump();
+  });
+
   test(
     'full-source observer updates followed events even if they moved outside the visible month',
     () async {

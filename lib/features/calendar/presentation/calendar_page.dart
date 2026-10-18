@@ -19,7 +19,7 @@ import '../../../shared/widgets/resume_when_visible.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../core/time/calendar_time.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../../../shared/widgets/retry_button.dart';
 import '../application/calendar_providers.dart';
 import '../application/calendar_follow_selection.dart';
@@ -63,7 +63,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   }
 
   void _today() {
-    final day = ref.read(shanghaiDateProvider);
+    final day = ref.read(localDateProvider);
     ref.read(selectedCalendarDayProvider.notifier).state = null;
     ref.read(visibleMonthProvider.notifier).state = DateTime.utc(
       day.year,
@@ -90,13 +90,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   @override
   Widget build(BuildContext context) {
     final month = ref.watch(visibleMonthProvider);
-    final today = ref.watch(shanghaiDateProvider);
+    final today = ref.watch(localDateProvider);
     final selected = CalendarTime.selectDayInMonth(
       month,
       ref.watch(selectedCalendarDayProvider) ?? today,
     );
     final snapshot = ref.watch(monthEventsProvider(month));
-    ref.listen(shanghaiDateProvider, (previous, next) {
+    ref.listen(localDateProvider, (previous, next) {
       if (previous != null &&
           ref.read(selectedCalendarDayProvider) == null &&
           month.year == previous.year &&
@@ -1000,7 +1000,7 @@ class _Agenda extends StatelessWidget {
                     for (final event in entry.value)
                       CalendarAgendaRow(
                         event: event,
-                        now: entry.key == today ? now : null,
+                        now: now,
                         highlight:
                             entry.key == today &&
                             event == nextToday(entry.value),
@@ -1039,7 +1039,11 @@ class _Agenda extends StatelessWidget {
                       _AgendaCard(
                         children: [
                           for (final event in later.take(3))
-                            CalendarAgendaRow(event: event, showDay: true),
+                            CalendarAgendaRow(
+                              event: event,
+                              showDay: true,
+                              now: now,
+                            ),
                         ],
                       ),
                     ],

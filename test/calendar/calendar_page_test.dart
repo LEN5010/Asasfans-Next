@@ -1,6 +1,6 @@
 import '../helpers/library_fixture.dart';
 import 'package:asasfans_next/core/network/api_failure.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/calendar/domain/calendar_event.dart';
 import 'package:asasfans_next/features/calendar/presentation/calendar_page.dart';
@@ -51,7 +51,7 @@ class _StubRepository implements CalendarRepository {
     if (failure != null) throw failure!;
     return CalendarSnapshot(
       events: events_,
-      fetchedAt: DateTime.utc(2026, 9, 21, 4),
+      fetchedAt: DateTime(2026, 9, 21, 12).toUtc(),
       fromCache: fromCache,
       isStale: fromCache,
       expiresAt: expiresAt,
@@ -62,7 +62,9 @@ class _StubRepository implements CalendarRepository {
 Widget _app(CalendarRepository repository, {DateTime? month}) => ProviderScope(
   overrides: [
     ...offlineLibrary(),
-    currentTimeProvider.overrideWithValue(() => DateTime.utc(2026, 9, 21, 4)),
+    currentTimeProvider.overrideWithValue(
+      () => DateTime(2026, 9, 21, 12).toUtc(),
+    ),
     calendarRepositoryProvider.overrideWithValue(repository),
     if (month != null) visibleMonthProvider.overrideWith((ref) => month),
   ],
@@ -93,7 +95,11 @@ void main() {
   testWidgets('selecting a day lists that day\'s events', (tester) async {
     final repository = _StubRepository(
       events_: [
-        _event(uid: '1', start: DateTime.utc(2026, 9, 21, 12), title: '嘉然杂谈'),
+        _event(
+          uid: '1',
+          start: DateTime(2026, 9, 21, 20).toUtc(),
+          title: '嘉然杂谈',
+        ),
       ],
     );
     await tester.pumpWidget(_app(repository, month: september));
@@ -103,7 +109,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('嘉然杂谈'), findsOneWidget);
-    // 12:00 UTC is 20:00 on the Shanghai calendar the schedule uses.
+    // Source instants are displayed in the device timezone.
     expect(find.text('20:00'), findsOneWidget);
   });
 
@@ -158,8 +164,12 @@ void main() {
   testWidgets('the live filter hides non-broadcast entries', (tester) async {
     final repository = _StubRepository(
       events_: [
-        _event(uid: '1', start: DateTime.utc(2026, 9, 21, 12), title: '嘉然杂谈'),
-        _event(uid: '2', start: DateTime.utc(2026, 9, 21, 13), title: '周边首发'),
+        _event(
+          uid: '1',
+          start: DateTime(2026, 9, 21, 20).toUtc(),
+          title: '嘉然杂谈',
+        ),
+        _event(uid: '2', start: DateTime(2026, 9, 21, 21).toUtc(), title: '周边首发'),
       ],
     );
     await tester.pumpWidget(_app(repository, month: september));
@@ -189,7 +199,7 @@ void main() {
       events_: [
         _event(
           uid: '1',
-          start: DateTime.utc(2026, 9, 21, 12),
+          start: DateTime(2026, 9, 21, 20).toUtc(),
           title: '取消的直播',
           status: EventStatus.cancelled,
         ),
@@ -250,7 +260,9 @@ void main() {
       await tester.pumpWidget(
         _app(
           _StubRepository(
-            events_: [_event(uid: '1', start: DateTime.utc(2026, 9, 21, 12))],
+            events_: [
+              _event(uid: '1', start: DateTime(2026, 9, 21, 20).toUtc()),
+            ],
           ),
           month: september,
         ),
@@ -294,7 +306,7 @@ void main() {
         events_: [
           _event(
             uid: 'stable',
-            start: DateTime.utc(2026, 9, 21, 12),
+            start: DateTime(2026, 9, 21, 20).toUtc(),
             title: '原安排',
           ),
         ],
@@ -307,7 +319,7 @@ void main() {
       repository.events_ = [
         _event(
           uid: 'stable',
-          start: DateTime.utc(2026, 9, 21, 13),
+          start: DateTime(2026, 9, 21, 21).toUtc(),
           title: '改期安排',
         ),
       ];
@@ -324,7 +336,12 @@ void main() {
     tester,
   ) async {
     final repository = _StubRepository(
-      expiresAt: DateTime.utc(2026, 9, 21, 4).add(const Duration(seconds: 2)),
+      expiresAt: DateTime(
+        2026,
+        9,
+        21,
+        12,
+      ).toUtc().add(const Duration(seconds: 2)),
     );
     await tester.pumpWidget(_app(repository, month: september));
     await tester.pumpAndSettle();
@@ -343,7 +360,7 @@ void main() {
   ) async {
     final repository = _StubRepository(
       fromCache: true,
-      expiresAt: DateTime.utc(2026, 9, 21, 4),
+      expiresAt: DateTime(2026, 9, 21, 12).toUtc(),
     );
     await tester.pumpWidget(_app(repository, month: september));
     await tester.pumpAndSettle();

@@ -47,6 +47,14 @@ class SqlitePreferencesRepository implements PreferencesRepository {
   Future<AppPreferences> setMusicLoudnessEnabled(bool enabled) =>
       _set('music.loudness', '$enabled');
   @override
+  Future<AppPreferences> setMusicVolume(double volume) {
+    if (!volume.isFinite || volume < 0 || volume > 1) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
+    return _set('music.volume', '$volume');
+  }
+
+  @override
   Future<AppPreferences> acceptDisclaimer() =>
       _set('app.disclaimer.accepted', 'true');
 
@@ -91,7 +99,12 @@ class SqlitePreferencesRepository implements PreferencesRepository {
       }
       if (visible == 'false') hidden.add(section);
     }
+    final volume = double.tryParse(values['music.volume'] ?? '1');
+    if (volume == null || !volume.isFinite || volume < 0 || volume > 1) {
+      throw const StorageFailure(StorageFailureKind.invalidData);
+    }
     return AppPreferences(
+      musicVolume: volume,
       musicLoudnessEnabled: values['music.loudness'] != 'false',
       appearance: matched ?? AppAppearance.system,
       material: matchedMaterial ?? AppMaterial.liquid,

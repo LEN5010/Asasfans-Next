@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:flutter/widgets.dart';
+import '../../../core/time/local_date_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -32,10 +35,29 @@ class CalendarFollowSelection {
 final calendarFollowSelectionProvider = FutureProvider<CalendarFollowSelection>(
   (ref) async {
     ref.watch(calendarLibraryChangesProvider);
-    final members = await ref
-        .watch(calendarEventStoreProvider)
-        .readMemberFollows();
-    final stars = await ref.watch(libraryRepositoryProvider).calendarFollows();
+    ref.watch(localDateProvider);
+    Timer? expiry;
+    var disposed = false;
+    final lifecycle = AppLifecycleListener(onResume: ref.invalidateSelf);
+    ref.onDispose(() {
+      disposed = true;
+      expiry?.cancel();
+      lifecycle.dispose();
+    });
+    final library = ref.watch(libraryRepositoryProvider);
+    final clock = ref.watch(currentTimeProvider);
+    final store = ref.watch(calendarEventStoreProvider);
+    await library.expireCalendarFollows(clock());
+    final members = await store.readMemberFollows();
+    final stars = await library.calendarFollows();
+    final ends = [for (final star in stars) star.event.endsAt]..sort();
+    if (!disposed && ends.isNotEmpty) {
+      final delay = ends.first.difference(clock());
+      expiry = Timer(
+        delay.isNegative ? Duration.zero : delay,
+        ref.invalidateSelf,
+      );
+    }
     return CalendarFollowSelection(members: members, stars: stars);
   },
 );

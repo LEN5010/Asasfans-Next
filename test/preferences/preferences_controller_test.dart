@@ -34,11 +34,14 @@ void main() {
       addTearDown(controller.dispose);
       await Future<void>.delayed(Duration.zero);
       repository.failure = const StorageFailure(StorageFailureKind.unavailable);
-      expect(await controller.setAppearance(AppAppearance.dark), isFalse);
+      expect(await controller.setMusicVolume(.4), isFalse);
+      expect(controller.state.values.musicVolume, 1);
       expect(controller.state.values.appearance, AppAppearance.system);
       expect(controller.state.failure, isNotNull);
       expect(controller.state.canEdit, isTrue);
       repository.failure = null;
+      expect(await controller.setMusicVolume(.4), isTrue);
+      expect(controller.state.values.musicVolume, .4);
       expect(await controller.setAppearance(AppAppearance.dark), isTrue);
       expect(controller.state.values.appearance, AppAppearance.dark);
       expect(controller.state.failure, isNull);

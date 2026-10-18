@@ -155,6 +155,7 @@ abstract final class BackupCodec {
   static final preferenceKeys = {
     'appearance',
     'music.loudness',
+    'music.volume',
     'calendar.reminders.enabled',
     'calendar.reminders.minutes',
     for (final section in HomeSection.values) 'home.${section.name}.visible',
@@ -328,6 +329,10 @@ abstract final class BackupCodec {
       final value = _text(row['value'], 32);
       final valid = switch (key) {
         'appearance' => AppAppearance.values.any((e) => e.name == value),
+        'music.volume' => switch (double.tryParse(value)) {
+          final volume? => volume.isFinite && volume >= 0 && volume <= 1,
+          null => false,
+        },
         'calendar.reminders.minutes' => const [
           '0',
           '5',

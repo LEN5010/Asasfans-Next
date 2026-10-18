@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/content/domain/dynamic_repository.dart';
 import 'package:flutter/widgets.dart';
@@ -36,9 +36,9 @@ class _Repository implements DynamicRepository {
 
 void main() {
   testWidgets(
-    'Shanghai midnight changes the full date key and refetches once, not on every read',
+    'Local midnight changes the full date key and refetches once, not on every read',
     (tester) async {
-      var now = DateTime.utc(2026, 9, 21, 15, 59, 59);
+      var now = DateTime(2026, 9, 21, 23, 59, 59);
       final repository = _Repository();
       final container = ProviderContainer(
         overrides: [
@@ -54,7 +54,7 @@ void main() {
       now = now.add(const Duration(seconds: 2));
       await tester.pump(const Duration(seconds: 2));
       await tester.pump();
-      expect(container.read(shanghaiDateProvider), DateTime.utc(2026, 9, 22));
+      expect(container.read(localDateProvider), DateTime.utc(2026, 9, 22));
       expect(repository.days, ['09-21', '09-22']);
       sub.close();
       container.dispose();
@@ -66,7 +66,7 @@ void main() {
   testWidgets(
     'resume after sleep recomputes the day, including a year boundary',
     (tester) async {
-      var now = DateTime.utc(2026, 12, 31, 15);
+      var now = DateTime(2026, 12, 31, 23);
       final repository = _Repository();
       final container = ProviderContainer(
         overrides: [
@@ -79,7 +79,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      now = DateTime.utc(2027, 1, 2);
+      now = DateTime(2027, 1, 2, 12);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -89,7 +89,7 @@ void main() {
       // the next day timer and leave a freshly armed one behind.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1));
-      expect(container.read(shanghaiDateProvider), DateTime.utc(2027, 1, 2));
+      expect(container.read(localDateProvider), DateTime.utc(2027, 1, 2));
       expect(repository.days, ['12-31', '01-02']);
       sub.close();
       container.dispose();
@@ -104,7 +104,7 @@ void main() {
   testWidgets('yesterday finishing after rollover does not replace today', (
     tester,
   ) async {
-    var now = DateTime.utc(2026, 9, 21, 15, 59, 59);
+    var now = DateTime(2026, 9, 21, 23, 59, 59);
     final repository = _Repository()..delayed = true;
     final container = ProviderContainer(
       overrides: [
@@ -115,7 +115,7 @@ void main() {
     final sub = container.listen(onThisDayProvider, (_, _) {});
     await tester.pump();
     now = now.add(const Duration(seconds: 2));
-    container.read(shanghaiDateProvider.notifier).resync();
+    container.read(localDateProvider.notifier).resync();
     // The new day's request is dispatched by a rebuild on a later microtask, so
     // advance fake time. Asserting inside the frame left one pending request,
     // making `first` and `last` the same completer.

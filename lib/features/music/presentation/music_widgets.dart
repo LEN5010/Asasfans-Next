@@ -14,6 +14,7 @@ import '../../../shared/widgets/member_tone.dart';
 import '../../../shared/widgets/glass/app_glass_navigation.dart';
 import '../../library/application/library_providers.dart';
 import '../../library/presentation/library_common.dart';
+import '../../preferences/application/preferences_controller.dart';
 import '../application/music_audio_handler.dart';
 import '../application/music_providers.dart';
 import '../domain/music_track.dart';
@@ -322,6 +323,7 @@ class MusicMiniPlayer extends ConsumerWidget {
                 children: [
                   Expanded(child: _NowPlaying(track: track, cover: 44)),
                   const SizedBox(width: 8),
+                  MusicFavoriteButton(track: track),
                   MusicPlayButton(handler: handler, size: 38),
                   AppButton.icon(
                     tooltip: '下一首',
@@ -506,6 +508,7 @@ class MusicDockPlayer extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           MusicPlayButton(handler: handler, size: 36),
+          MusicFavoriteButton(track: track),
         ],
       ),
     );
@@ -589,7 +592,7 @@ class MusicSongTile extends ConsumerWidget {
           onLongPress: () => openMenu(null),
           onSecondaryTapUp: (details) => openMenu(details.localPosition),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+            padding: const EdgeInsets.fromLTRB(14, 5, 10, 5),
             child: Row(
               children: [
                 MemberBar(
@@ -777,7 +780,9 @@ class _SongMenu extends ConsumerWidget {
             for (final song
                 in ref.read(musicCatalogProvider).valueOrNull?.tracks ??
                     <MusicTrack>[track])
-              if (song.date == track.date) song,
+              if (song.date == track.date &&
+                  (ref.read(musicMoreMembersProvider) || !song.hasMoreMembers))
+                song,
           ];
           unawaited(
             ref
@@ -836,6 +841,67 @@ class MusicQueue extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// App volume, committed with the other music preferences on release.
+class MusicVolumeControl extends ConsumerStatefulWidget {
+  const MusicVolumeControl({super.key});
+
+  @override
+  ConsumerState<MusicVolumeControl> createState() => _MusicVolumeControlState();
+}
+
+class _MusicVolumeControlState extends ConsumerState<MusicVolumeControl> {
+  double? _dragging;
+
+  Future<void> _save(double value) async {
+    final saved = await ref
+        .read(preferencesControllerProvider.notifier)
+        .setMusicVolume(value);
+    if (!mounted) return;
+    setState(() => _dragging = null);
+    if (!saved) {
+      final failure = ref.read(preferencesControllerProvider).failure;
+      if (failure != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(preferencesControllerProvider);
+    final volume = _dragging ?? state.values.musicVolume;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(
+              volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: Text('音量')),
+            Text(
+              '${(volume * 100).round()}%',
+              style: const TextStyle(fontFeatures: AppTheme.tabular),
+            ),
+          ],
+        ),
+        Slider(
+          value: volume,
+          label: '${(volume * 100).round()}%',
+          semanticFormatterCallback: (value) => '${(value * 100).round()}%',
+          onChanged: state.canEdit
+              ? (value) => setState(() => _dragging = value)
+              : null,
+          onChangeEnd: state.canEdit ? _save : null,
+        ),
+      ],
     );
   }
 }

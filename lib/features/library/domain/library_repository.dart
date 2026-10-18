@@ -113,6 +113,7 @@ abstract interface class LibraryRepository {
   Future<List<CalendarFollow>> calendarFollows();
   Future<void> followCalendar(CalendarFollowKey key, CalendarEvent event);
   Future<void> unfollowCalendar(CalendarFollowKey key);
+  Future<void> expireCalendarFollows(DateTime now);
   Future<void> synchronizeCalendar(
     Uri source,
     List<CalendarEvent> events,

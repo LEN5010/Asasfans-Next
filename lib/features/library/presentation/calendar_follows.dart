@@ -5,7 +5,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_page_bar.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../content/presentation/content_images.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../../calendar/application/calendar_follow_selection.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../calendar/application/calendar_reminders.dart';
@@ -32,7 +32,7 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
   Future<void> _refresh() async {
     if (_refreshing) return;
     setState(() => _refreshing = true);
-    final day = ref.read(shanghaiDateProvider);
+    final day = ref.read(localDateProvider);
     try {
       await ref.read(refreshCalendarProvider)(
         DateTime.utc(day.year, day.month),
@@ -74,7 +74,7 @@ class _CalendarFollowsPageState extends ConsumerState<CalendarFollowsPage> {
     final follows = ref.watch(calendarFollowSelectionProvider);
     final upcoming = ref.watch(followedUpcomingProvider);
     final now = ref.watch(currentTimeProvider)();
-    final today = ref.watch(shanghaiDateProvider);
+    final today = ref.watch(localDateProvider);
     Widget heading(String text) => Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 8),
       child: Text(text, style: theme.textTheme.titleMedium),

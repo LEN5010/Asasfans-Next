@@ -13,7 +13,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/app_motion.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../../core/time/calendar_time.dart';
-import '../../../core/time/shanghai_date_provider.dart';
+import '../../../core/time/local_date_provider.dart';
 import '../application/calendar_follow_selection.dart';
 import '../application/calendar_reminders.dart';
 import '../domain/calendar_agenda.dart';
@@ -118,7 +118,7 @@ class CalendarAgendaRow extends ConsumerWidget {
   /// Show which day, for an event that is not on the list's own day.
   final bool showDay;
 
-  /// The Shanghai day the list is anchored to, for 今天/明天 labels.
+  /// The local day the list is anchored to, for 今天/明天 labels.
   final DateTime? today;
 
   /// The present moment, when the line should say where it stands.
@@ -146,21 +146,25 @@ class CalendarAgendaRow extends ConsumerWidget {
         : label;
     final muted = event.isCancelled;
     final timing = now == null ? null : calendarEventTiming(event, now!);
-    final over = timing == '已结束';
+    final over = now != null && event.hasEnded(now!);
     // The kind is said in the member's own colour; the group's is warm.
     final tone = MemberTone.of(
       cast.length == 1 ? cast.single : 'A-SOUL',
       theme.brightness,
     );
     final stateStyle = theme.textTheme.labelMedium?.copyWith(
-      color: muted ? colors.error : tone.text,
+      color: muted
+          ? colors.error
+          : over
+          ? colors.onSurfaceVariant
+          : tone.text,
     );
     final lifted = highlight && !muted && !over;
     final timeStyle = theme.textTheme.titleMedium?.copyWith(
       fontSize: 16,
       fontWeight: FontWeight.w700,
       fontFeatures: AppTheme.tabular,
-      color: muted ? colors.onSurfaceVariant : null,
+      color: muted || over ? colors.onSurfaceVariant : null,
     );
     // The column is as wide as its widest words at this text size, so a
     // time never breaks across lines when the type is large.
@@ -192,8 +196,10 @@ class CalendarAgendaRow extends ConsumerWidget {
     final dayLabel = Text(day, maxLines: 1, style: theme.textTheme.bodySmall);
     // Who appears: one segment per member.
     final bar = MemberBar(
-      members: muted ? const [] : cast,
-      fallback: muted ? colors.outlineVariant : calendarEventColor(event),
+      members: muted || over ? const [] : cast,
+      fallback: muted || over
+          ? colors.outlineVariant
+          : calendarEventColor(event),
       length: 38,
     );
     final words = Column(
@@ -218,7 +224,7 @@ class CalendarAgendaRow extends ConsumerWidget {
             height: 1.35,
             fontWeight: FontWeight.w600,
             decoration: muted ? TextDecoration.lineThrough : null,
-            color: muted ? colors.onSurfaceVariant : null,
+            color: muted || over ? colors.onSurfaceVariant : null,
           ),
         ),
         // What kind of event, beside what it is about: the state never
@@ -229,7 +235,7 @@ class CalendarAgendaRow extends ConsumerWidget {
               if (state.isNotEmpty) TextSpan(text: state, style: stateStyle),
               // A followed member's or a starred event, in words; the star
               // at the end of the line is this one event's own.
-              if (followed && !muted)
+              if (followed && !muted && !over)
                 TextSpan(
                   text: state.isEmpty ? '已关注' : ' · 已关注',
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -358,8 +364,9 @@ class CalendarDayCell extends ConsumerWidget {
     final colors = theme.colorScheme;
     final selection = ref.watch(calendarFollowSelectionProvider).valueOrNull;
     final source = ref.watch(appEnvironmentProvider).calendarUrl;
+    final now = ref.watch(currentTimeProvider)();
     bool followed(CalendarEvent event) =>
-        selection?.contains(event, source) ?? false;
+        !event.hasEnded(now) && (selection?.contains(event, source) ?? false);
     final hasFollow = events.any(followed);
     final count = events.length;
     final duration = appMotion(context, AppTokens.controlMotion);
@@ -454,7 +461,7 @@ class CalendarDayCell extends ConsumerWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 1),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: event.isCancelled
+                        color: event.isCancelled || event.hasEnded(now)
                             ? colors.outlineVariant
                             : calendarEventColor(event),
                       ),
@@ -625,7 +632,7 @@ class _CalendarEventDetailState extends ConsumerState<CalendarEventDetail> {
                   ),
                 _DetailLine(
                   icon: Icons.schedule,
-                  label: event.allDay ? '日期' : '时间（上海）',
+                  label: event.allDay ? '日期' : '时间',
                   value: CalendarAgenda.range(event),
                 ),
                 _DetailLine(
@@ -734,7 +741,7 @@ class CalendarStaleBanner extends StatelessWidget {
   final DateTime fetchedAt;
   @override
   Widget build(BuildContext context) {
-    final local = CalendarTime.inShanghai(fetchedAt);
+    final local = fetchedAt.toLocal();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Text(

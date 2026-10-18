@@ -52,6 +52,9 @@ class CalendarEvent {
   final List<String> members;
   final Uri? sourceUrl;
 
+  DateTime get endsAt => allDay ? DateTime(end.year, end.month, end.day) : end;
+  bool hasEnded(DateTime now) => !now.isBefore(endsAt);
+
   bool get isCancelled => status == EventStatus.cancelled;
 
   /// Stable key for an occurrence. Rescheduling changes the start time but not

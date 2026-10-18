@@ -36,6 +36,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   bool _retried = false;
   bool _loudness = true;
   double _gain = 0;
+  double _volume = 1;
   int _generation = 0;
   bool _disposed = false;
 
@@ -284,9 +285,14 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     await _applyLoudness();
   }
 
+  Future<void> setVolume(double volume) async {
+    _volume = volume;
+    await _applyLoudness();
+  }
+
   Future<void> _applyLoudness() async {
     if (_engine == null) return;
-    await _player.setVolume(_loudness ? musicVolume(_gain) : 1);
+    await _player.setVolume(_volume * (_loudness ? musicVolume(_gain) : 1));
     if (_enhancer != null) {
       await _enhancer!.setEnabled(_loudness && _gain > 0);
       if (_loudness && _gain > 0) await _enhancer!.setTargetGain(_gain);

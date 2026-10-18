@@ -230,6 +230,45 @@ void main() {
   );
 
   test(
+    'expired stars are removed at the end and rescheduled stars remain',
+    () async {
+      final source = Uri.https('calendar.example', '/feed.ics');
+      for (final event in [
+        _event('past'),
+        _event('moved'),
+        CalendarEvent(
+          uid: 'all-day',
+          title: '全天',
+          allDay: true,
+          start: DateTime.utc(2026, 9, 21),
+          end: DateTime.utc(2026, 9, 22),
+        ),
+      ]) {
+        await repository.followCalendar(
+          CalendarFollowKey(source: source, uid: event.uid),
+          event,
+        );
+      }
+      await repository.synchronizeCalendar(source, [
+        _event('moved', sequence: 1, day: 25),
+      ], DateTime.utc(2026, 9, 21, 13));
+      await repository.expireCalendarFollows(DateTime.utc(2026, 9, 21, 14));
+      expect(
+        (await repository.calendarFollows()).map((star) => star.event.uid),
+        containsAll(['moved', 'all-day']),
+      );
+      expect(
+        await repository.isFollowingCalendar(
+          CalendarFollowKey(source: source, uid: 'past'),
+        ),
+        isFalse,
+      );
+      await repository.expireCalendarFollows(DateTime(2026, 9, 22));
+      expect((await repository.calendarFollows()).single.event.uid, 'moved');
+    },
+  );
+
+  test(
     'closed repositories reject new work and default folder cannot be removed',
     () async {
       await expectLater(

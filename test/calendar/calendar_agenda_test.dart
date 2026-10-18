@@ -18,11 +18,11 @@ CalendarEvent event(
 );
 
 void main() {
-  test('timed events use Shanghai dates and exclude the ending midnight', () {
+  test('timed events use device dates and exclude the ending midnight', () {
     final e = event(
       'overnight',
-      DateTime.utc(2026, 9, 21, 15),
-      DateTime.utc(2026, 9, 22, 16),
+      DateTime(2026, 9, 21, 23).toUtc(),
+      DateTime(2026, 9, 23).toUtc(),
     );
     expect(CalendarAgenda.occursOn(e, DateTime.utc(2026, 9, 21)), isTrue);
     expect(CalendarAgenda.occursOn(e, DateTime.utc(2026, 9, 22)), isTrue);
@@ -75,7 +75,7 @@ void main() {
 
   test('all-day entries precede timed events and ties have a stable order', () {
     final day = DateTime.utc(2026, 9, 21);
-    final timed = day.add(const Duration(hours: 4));
+    final timed = DateTime(2026, 9, 21, 12).toUtc();
     final a = event('a', timed, timed.add(const Duration(hours: 1)));
     final b = event('b', timed, timed.add(const Duration(hours: 1)));
     final all = event(

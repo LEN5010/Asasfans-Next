@@ -8,7 +8,7 @@ import 'package:asasfans_next/app/asasfans_app.dart';
 import 'package:asasfans_next/app/providers.dart';
 import 'package:asasfans_next/app/router/app_router.dart';
 import 'package:asasfans_next/core/platform/external_link_service.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/calendar/application/calendar_providers.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/novels/application/novel_providers.dart';

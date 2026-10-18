@@ -24,6 +24,13 @@ class MemoryPreferencesRepository implements PreferencesRepository {
   }
 
   @override
+  Future<AppPreferences> setMusicVolume(double volume) async {
+    if (failure != null) throw failure!;
+    writes++;
+    return values = values.withMusicVolume(volume);
+  }
+
+  @override
   Future<AppPreferences> load() async {
     if (failure != null) throw failure!;
     return values;

@@ -17,29 +17,28 @@ import '../data/music_catalog_repository.dart';
 import '../domain/music_track.dart';
 import 'music_widgets.dart';
 
-/// What the catalogue is narrowed to: one singer, one year, a title.
+/// What the catalogue is narrowed to: singers together, a year, a title.
 class MusicQuery {
   const MusicQuery({
     this.keyword = '',
-    this.member,
+    this.members = const {},
     this.year,
     this.oldest = false,
   });
   final String keyword;
-  final String? member;
+  final Set<String> members;
   final int? year;
   final bool oldest;
 
   MusicQuery copyWith({
     String? keyword,
-    String? member,
-    bool clearMember = false,
+    Set<String>? members,
     int? year,
     bool clearYear = false,
     bool? oldest,
   }) => MusicQuery(
     keyword: keyword ?? this.keyword,
-    member: clearMember ? null : member ?? this.member,
+    members: members ?? this.members,
     year: clearYear ? null : year ?? this.year,
     oldest: oldest ?? this.oldest,
   );
@@ -47,12 +46,12 @@ class MusicQuery {
   bool matches(MusicTrack track) =>
       (keyword.isEmpty ||
           track.title.toLowerCase().contains(keyword.toLowerCase())) &&
-      (member == null || track.members.contains(member)) &&
+      members.every(track.members.contains) &&
       (year == null || track.date.year == year);
 }
 
 /// Members as the dynamics filter lists them. Those who have left wait
-/// behind 更多成员; their songs stay in 全部成员.
+/// behind 更多成员, including their songs.
 const _members = ['嘉然', '贝拉', '乃琳', '心宜', '思诺'];
 const _moreMembers = ['向晚', '珈乐'];
 
@@ -64,7 +63,8 @@ class MusicPage extends ConsumerStatefulWidget {
 
 class _MusicPageState extends ConsumerState<MusicPage> {
   var _query = const MusicQuery();
-  bool _moreOpen = false;
+  bool get _moreOpen => ref.read(musicMoreMembersProvider);
+  bool? _shownMore;
 
   /// Filtering 5,000 songs is cheap, but not on every rebuild.
   MusicCatalog? _catalog;
@@ -74,13 +74,21 @@ class _MusicPageState extends ConsumerState<MusicPage> {
   void _apply(MusicQuery query) => setState(() => _query = query);
 
   void _filter(MusicCatalog catalog) {
-    if (identical(catalog, _catalog) && identical(_query, _shownQuery)) return;
+    if (identical(catalog, _catalog) &&
+        identical(_query, _shownQuery) &&
+        _shownMore == _moreOpen) {
+      return;
+    }
     _catalog = catalog;
     _shownQuery = _query;
+    _shownMore = _moreOpen;
     // Newest day first; within a day, the catalogue's own order.
     _shown = [
       for (final session in musicSessions(
-        catalog.tracks.where(_query.matches),
+        catalog.tracks.where(
+          (track) =>
+              (_moreOpen || !track.hasMoreMembers) && _query.matches(track),
+        ),
         oldest: _query.oldest,
       ))
         ...session.tracks,
@@ -91,9 +99,11 @@ class _MusicPageState extends ConsumerState<MusicPage> {
     if (!_moreOpen && !await confirmMoreMembers(context)) return;
     if (!mounted) return;
     setState(() {
-      _moreOpen = !_moreOpen;
-      if (!_moreOpen && _moreMembers.contains(_query.member)) {
-        _query = _query.copyWith(clearMember: true);
+      ref.read(musicMoreMembersProvider.notifier).state = !_moreOpen;
+      if (!_moreOpen) {
+        _query = _query.copyWith(
+          members: _query.members.difference(_moreMembers.toSet()),
+        );
       }
     });
   }
@@ -101,6 +111,7 @@ class _MusicPageState extends ConsumerState<MusicPage> {
   @override
   Widget build(BuildContext context) {
     final catalog = ref.watch(musicCatalogProvider);
+    ref.watch(musicMoreMembersProvider);
     final currentId = ref.watch(
       musicAudioHandlerProvider.select((h) => h.current?.id),
     );
@@ -166,11 +177,13 @@ class _MusicPageState extends ConsumerState<MusicPage> {
           Widget member(String name) => MemberChoiceButton(
             label: name,
             members: [name],
-            selected: _query.member == name,
+            selected: _query.members.contains(name),
             onPressed: () => _apply(
-              _query.member == name
-                  ? _query.copyWith(clearMember: true)
-                  : _query.copyWith(member: name),
+              _query.copyWith(
+                members: _query.members.contains(name)
+                    ? ({..._query.members}..remove(name))
+                    : {..._query.members, name},
+              ),
             ),
           );
           final members = SingleChildScrollView(
@@ -179,11 +192,6 @@ class _MusicPageState extends ConsumerState<MusicPage> {
             child: Row(
               spacing: 8,
               children: [
-                AppChoice(
-                  selected: _query.member == null,
-                  onSelected: (_) => _apply(_query.copyWith(clearMember: true)),
-                  label: const Text('全部成员'),
-                ),
                 for (final name in _members.where(sang)) member(name),
                 if (_moreOpen)
                   for (final name in hidden) member(name),
@@ -344,10 +352,10 @@ class _MusicPageState extends ConsumerState<MusicPage> {
     );
   }
 
-  static List<int> _years(MusicCatalog? catalog) => [
+  List<int> _years(MusicCatalog? catalog) => [
     ...<int>{
       for (final track in catalog?.tracks ?? const <MusicTrack>[])
-        track.date.year,
+        if (_moreOpen || !track.hasMoreMembers) track.date.year,
     },
   ]..sort((a, b) => b.compareTo(a));
 }

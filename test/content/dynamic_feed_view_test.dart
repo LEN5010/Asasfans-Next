@@ -21,7 +21,7 @@ DynamicPost _post(String id, {String? text, ForwardedPost? forwarded}) =>
       type: forwarded == null ? DynamicType.text : DynamicType.forward,
       text: text ?? '动态 $id',
       images: const [],
-      publishedAt: DateTime.utc(2021, 8, 15, 20),
+      publishedAt: DateTime(2021, 8, 16, 4).toUtc(),
       forwardedFrom: forwarded,
     );
 
@@ -129,7 +129,7 @@ void main() {
 
     expect(find.text('即将开放'), findsNothing);
     expect(find.text('动态 p0i0'), findsOneWidget);
-    // Timestamps are labelled on the Shanghai calendar the archive uses.
+    // Timestamps are labelled in the device timezone.
     expect(find.textContaining('2021-08-16 04:00'), findsWidgets);
   });
 

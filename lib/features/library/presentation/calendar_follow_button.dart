@@ -1,3 +1,4 @@
+import '../../../core/time/local_date_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,6 +29,9 @@ class _CalendarFollowButtonState extends ConsumerState<CalendarFollowButton> {
   bool _busy = false;
   @override
   Widget build(BuildContext context) {
+    if (widget.event.hasEnded(ref.watch(currentTimeProvider)())) {
+      return const SizedBox.shrink();
+    }
     final key = CalendarFollowKey(
       source: widget.source ?? ref.watch(appEnvironmentProvider).calendarUrl,
       uid: widget.event.uid,

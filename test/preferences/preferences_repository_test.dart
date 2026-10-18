@@ -16,12 +16,19 @@ void main() {
       final repository = SqlitePreferencesRepository(db);
       final defaults = await repository.load();
       expect(defaults.appearance, AppAppearance.system);
+      expect(defaults.musicVolume, 1);
+      await repository.setMusicVolume(.35);
+      expect((await repository.load()).musicVolume, .35);
       expect(defaults.hiddenHomeSections, isEmpty);
-      expect(db.database.select('SELECT * FROM preferences'), isEmpty);
+      expect(
+        db.database.select('SELECT key FROM preferences').single['key'],
+        'music.volume',
+      );
       await repository.setAppearance(AppAppearance.dark);
       await repository.setHomeSection(HomeSection.fanart, false);
       final result = await repository.setHomeSection(HomeSection.clips, false);
       expect(result.appearance, AppAppearance.dark);
+      expect(result.musicVolume, .35);
       expect(result.hiddenHomeSections, {
         HomeSection.fanart,
         HomeSection.clips,

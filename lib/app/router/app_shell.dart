@@ -1,3 +1,4 @@
+import '../../features/calendar/application/calendar_follow_selection.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -182,6 +183,7 @@ class _AppShellState extends ConsumerState<AppShell>
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(calendarFollowSelectionProvider);
     // Playback notices from wherever the user is, not only from a page that
     // happens to show the player.
     ref.listen(

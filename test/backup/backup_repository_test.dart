@@ -84,6 +84,7 @@ void main() {
     await library.followCalendar(key, event(1));
     await library.synchronizeCalendar(source, [event(1)], at);
     await SqlitePreferencesRepository(db).setAppearance(AppAppearance.dark);
+    await SqlitePreferencesRepository(db).setMusicVolume(.4);
     await db.batch([
       const SqlStatement(
         "INSERT INTO calendar_cache VALUES('https://cache.example','PRIVATE_CACHE',1,NULL,NULL,0)",
@@ -136,6 +137,10 @@ void main() {
       expect(
         (await SqlitePreferencesRepository(targetDb).load()).appearance,
         AppAppearance.dark,
+      );
+      expect(
+        (await SqlitePreferencesRepository(targetDb).load()).musicVolume,
+        .4,
       );
       expect(targetDb.database.select('SELECT * FROM calendar_cache'), isEmpty);
       expect(commits, 1);

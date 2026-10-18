@@ -17,6 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/library_fixture.dart';
+import '../helpers/preferences_fixture.dart';
+import 'package:asasfans_next/features/preferences/application/preferences_controller.dart';
+import 'package:asasfans_next/app/theme/app_theme.dart';
 
 final _track = MusicTrack(
   id: '123',
@@ -30,6 +33,12 @@ final _track = MusicTrack(
 /// Metadata only: never initializes AudioPlayer, AudioService or a network call.
 class _QueueFixture extends MusicAudioHandler {
   _QueueFixture() : super(MusicStreamRepository(Dio()));
+  List<MusicTrack> played = [];
+  @override
+  Future<void> playTracks(List<MusicTrack> values, {int start = 0}) async {
+    played = values;
+  }
+
   @override
   MusicTrack get current => _track;
   @override
@@ -38,12 +47,15 @@ class _QueueFixture extends MusicAudioHandler {
   int get index => 0;
 }
 
-Widget _app(Widget home) => ProviderScope(
+Widget _app(Widget home, {List<MusicTrack>? tracks}) => ProviderScope(
   // A fresh scope and navigator for each pumped app.
   key: UniqueKey(),
   overrides: [
     ...offlineLibrary(),
-    musicCatalogProvider.overrideWith((ref) async => MusicCatalog([_track])),
+    offlinePreferences(),
+    musicCatalogProvider.overrideWith(
+      (ref) async => MusicCatalog(tracks ?? [_track]),
+    ),
     musicAudioHandlerProvider.overrideWith((ref) => _QueueFixture()),
     memberAvatarsProvider.overrideWithValue(const {}),
   ],
@@ -107,6 +119,104 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('member choices intersect and more members stay opt-in', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    MusicTrack song(String id, List<String> members) => MusicTrack(
+      id: id,
+      title: id,
+      members: members,
+      date: DateTime(2026, 10, 15),
+      duration: const Duration(minutes: 3),
+      status: 'Live',
+    );
+    await tester.pumpWidget(
+      _app(
+        const MusicPage(),
+        tracks: [
+          song('嘉然独唱', ['嘉然']),
+          song('双人合唱', ['嘉然', '贝拉']),
+          song('向晚独唱', ['向晚']),
+          song('珈乐合唱', ['嘉然', '珈乐']),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('全部成员'), findsNothing);
+    expect(find.text('嘉然独唱'), findsOneWidget);
+    expect(find.text('向晚独唱'), findsNothing);
+    expect(find.text('珈乐合唱'), findsNothing);
+    await tester.tap(find.byTooltip('嘉然'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('贝拉'));
+    await tester.pumpAndSettle();
+    expect(find.text('双人合唱'), findsOneWidget);
+    expect(find.text('嘉然独唱'), findsNothing);
+    await tester.tap(find.byTooltip('嘉然'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('贝拉'));
+    await tester.pumpAndSettle();
+    final tile = find.ancestor(
+      of: find.text('嘉然独唱'),
+      matching: find.byType(MusicSongTile),
+    );
+    await tester.longPress(tile);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('播放这天'));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MusicPage)),
+    );
+    final handler = container.read(musicAudioHandlerProvider) as _QueueFixture;
+    expect(handler.played.map((song) => song.id), ['嘉然独唱', '双人合唱']);
+    await tester.tap(find.text('更多成员'));
+    await tester.pumpAndSettle();
+    if (find.text('我已了解，继续').evaluate().isNotEmpty) {
+      await tester.tap(find.text('我已了解，继续'));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('向晚独唱'), findsOneWidget);
+    expect(find.text('珈乐合唱'), findsOneWidget);
+    expect(AppTheme.memberColors['向晚'], const Color(0xFF5B9BD5));
+    expect(AppTheme.memberColors['珈乐'], const Color(0xFF9B72CF));
+    await tester.tap(find.text('收起'));
+    await tester.pumpAndSettle();
+    expect(find.text('向晚独唱'), findsNothing);
+  });
+
+  testWidgets('player volume and hearts save through the personal library', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(const MusicPlayerPage()));
+    await tester.pumpAndSettle();
+    final volume = find.descendant(
+      of: find.byType(MusicVolumeControl),
+      matching: find.byType(Slider),
+    );
+    await tester.ensureVisible(volume);
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(volume));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MusicPlayerPage)),
+    );
+    expect(
+      container.read(preferencesControllerProvider).values.musicVolume,
+      closeTo(.5, .05),
+    );
+    await tester.ensureVisible(find.byTooltip('收藏'));
+    await tester.tap(find.byTooltip('收藏'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('取消收藏'), findsOneWidget);
+    expect(await container.read(musicFavoriteIdsProvider.future), {_track.id});
   });
 
   testWidgets('players fit a phone, the rail and a wide window at 2x text', (

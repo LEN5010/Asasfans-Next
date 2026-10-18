@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:asasfans_next/app/asasfans_app.dart';
 import 'package:asasfans_next/core/storage/storage_failure.dart';
-import 'package:asasfans_next/core/time/shanghai_date_provider.dart';
+import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/preferences/application/preferences_controller.dart';
 import 'package:asasfans_next/features/preferences/domain/app_preferences.dart';
