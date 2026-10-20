@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/member_tone.dart';
 import '../../../shared/widgets/glass/app_glass_navigation.dart';
@@ -194,41 +195,51 @@ class _MusicProgressState extends State<MusicProgress> {
 
 /// The round play button music apps lead their controls with.
 class MusicPlayButton extends StatelessWidget {
-  const MusicPlayButton({super.key, required this.handler, this.size = 40});
+  const MusicPlayButton({super.key, required this.handler, this.size = 30});
   final MusicAudioHandler handler;
   final double size;
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return SizedBox.square(
-      dimension: size,
+      dimension: math.max(size, math.max(42, AppTokens.touchTarget(context))),
       child: FilledButton(
         style: FilledButton.styleFrom(
           padding: EdgeInsets.zero,
-          minimumSize: Size.square(size),
+          minimumSize: Size.zero,
           shape: const CircleBorder(),
-          backgroundColor: colors.onSurface,
+          backgroundColor: Colors.transparent,
           foregroundColor: colors.surface,
-          disabledBackgroundColor: colors.onSurface.withValues(alpha: .6),
+          disabledBackgroundColor: Colors.transparent,
         ),
         onPressed: handler.loading
             ? null
             : () => handler.playing ? handler.pause() : handler.play(),
-        child: handler.loading
-            ? SizedBox.square(
-                dimension: size * .4,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.surface,
-                ),
-              )
-            : Icon(
-                handler.playing
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-                size: size * .58,
-                semanticLabel: handler.playing ? '暂停' : '播放',
-              ),
+        child: Ink(
+          width: size,
+          height: size,
+          decoration: ShapeDecoration(
+            shape: const CircleBorder(),
+            color: colors.onSurface.withValues(alpha: handler.loading ? .6 : 1),
+          ),
+          child: Center(
+            child: handler.loading
+                ? SizedBox.square(
+                    dimension: size * .4,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colors.surface,
+                    ),
+                  )
+                : Icon(
+                    handler.playing
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    size: size * .58,
+                    semanticLabel: handler.playing ? '暂停' : '播放',
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -324,7 +335,7 @@ class MusicMiniPlayer extends ConsumerWidget {
                   Expanded(child: _NowPlaying(track: track, cover: 44)),
                   const SizedBox(width: 8),
                   MusicFavoriteButton(track: track),
-                  MusicPlayButton(handler: handler, size: 38),
+                  MusicPlayButton(handler: handler),
                   AppButton.icon(
                     tooltip: '下一首',
                     onPressed: handler.skipToNext,
@@ -405,7 +416,7 @@ class MusicPlayerBar extends ConsumerWidget {
                         onPressed: handler.skipToPrevious,
                         icon: const Icon(Icons.skip_previous_rounded),
                       ),
-                      MusicPlayButton(handler: handler, size: 36),
+                      MusicPlayButton(handler: handler),
                       AppButton.icon(
                         tooltip: '下一首',
                         onPressed: handler.skipToNext,
@@ -507,7 +518,7 @@ class MusicDockPlayer extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 4),
-          MusicPlayButton(handler: handler, size: 36),
+          MusicPlayButton(handler: handler),
           MusicFavoriteButton(track: track),
         ],
       ),
@@ -720,25 +731,28 @@ class _SongPlayButton extends ConsumerWidget {
       );
       return MusicPlayButton(
         handler: ref.read(musicAudioHandlerProvider),
-        size: 42,
+        size: 28,
       );
     }
     final colors = Theme.of(context).colorScheme;
     return SizedBox.square(
-      dimension: 42,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          padding: EdgeInsets.zero,
-          minimumSize: const Size.square(42),
-          shape: const CircleBorder(),
-          backgroundColor: colors.onSurface,
-          foregroundColor: colors.surface,
-        ),
+      dimension: math.max(42, AppTokens.touchTarget(context)),
+      child: AppButton.icon(
+        tooltip: null,
         onPressed: onPlay,
-        child: const Icon(
-          Icons.play_arrow_rounded,
-          size: 24,
-          semanticLabel: '播放',
+        icon: Ink(
+          width: 28,
+          height: 28,
+          decoration: ShapeDecoration(
+            color: colors.onSurface,
+            shape: const CircleBorder(),
+          ),
+          child: Icon(
+            Icons.play_arrow_rounded,
+            color: colors.surface,
+            size: 16,
+            semanticLabel: '播放',
+          ),
         ),
       ),
     );
