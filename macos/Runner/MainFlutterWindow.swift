@@ -31,6 +31,7 @@ class MainFlutterWindow: NSWindow {
     }
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    MusicAudioPlugin.register(with: flutterViewController.registrar(forPlugin: "MusicAudioPlugin"))
     transparencyPreference = TransparencyPreferenceBridge(
       messenger: flutterViewController.engine.binaryMessenger
     )

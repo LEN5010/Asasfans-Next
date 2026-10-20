@@ -19,6 +19,7 @@ import webview_flutter_wkwebview
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    MusicAudioPlugin.register(with: engineBridge.pluginRegistry.registrar(forPlugin: "MusicAudioPlugin")!)
     transparencyPreference?.dispose()
     transparencyPreference = TransparencyPreferenceBridge(
       messenger: engineBridge.applicationRegistrar.messenger()

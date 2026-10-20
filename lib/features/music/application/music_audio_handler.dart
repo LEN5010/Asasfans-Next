@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
@@ -36,7 +37,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   bool _retried = false;
   bool _loudness = true;
   double _gain = 0;
-  double _volume = 1;
+  double _volume = .6;
   int _generation = 0;
   bool _disposed = false;
 
@@ -292,10 +293,17 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
 
   Future<void> _applyLoudness() async {
     if (_engine == null) return;
-    await _player.setVolume(_volume * (_loudness ? musicVolume(_gain) : 1));
+    final gain = _loudness ? _gain : 0.0;
     if (_enhancer != null) {
-      await _enhancer!.setEnabled(_loudness && _gain > 0);
-      if (_loudness && _gain > 0) await _enhancer!.setTargetGain(_gain);
+      final level = musicVolume(gain, volume: _volume);
+      // ExoPlayer's volume stops at 1. Positive gain goes through its DSP.
+      await _player.setVolume(level.clamp(0.0, 1.0));
+      await _enhancer!.setEnabled(level > 1);
+      if (level > 1) {
+        await _enhancer!.setTargetGain(20 * math.log(level) / math.ln10);
+      }
+    } else {
+      await _player.setVolume(musicVolume(gain, volume: _volume));
     }
   }
 

@@ -16,7 +16,7 @@ void main() {
       final repository = SqlitePreferencesRepository(db);
       final defaults = await repository.load();
       expect(defaults.appearance, AppAppearance.system);
-      expect(defaults.musicVolume, 1);
+      expect(defaults.musicVolume, .6);
       await repository.setMusicVolume(.35);
       expect((await repository.load()).musicVolume, .35);
       expect(defaults.hiddenHomeSections, isEmpty);

@@ -21,7 +21,7 @@ class AppPreferences {
     this.hiddenHomeSections = const {},
     this.disclaimerAccepted = false,
     this.musicLoudnessEnabled = true,
-    this.musicVolume = 1,
+    this.musicVolume = .6,
   });
   final AppAppearance appearance;
   final AppMaterial material;

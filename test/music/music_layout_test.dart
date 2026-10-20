@@ -47,28 +47,29 @@ class _QueueFixture extends MusicAudioHandler {
   int get index => 0;
 }
 
-Widget _app(Widget home, {List<MusicTrack>? tracks}) => ProviderScope(
-  // A fresh scope and navigator for each pumped app.
-  key: UniqueKey(),
-  overrides: [
-    ...offlineLibrary(),
-    offlinePreferences(),
-    musicCatalogProvider.overrideWith(
-      (ref) async => MusicCatalog(tracks ?? [_track]),
-    ),
-    musicAudioHandlerProvider.overrideWith((ref) => _QueueFixture()),
-    memberAvatarsProvider.overrideWithValue(const {}),
-  ],
-  child: MaterialApp(
-    builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(
-        context,
-      ).copyWith(textScaler: const TextScaler.linear(2)),
-      child: child!,
-    ),
-    home: home,
-  ),
-);
+Widget _app(Widget home, {List<MusicTrack>? tracks, double textScale = 2}) =>
+    ProviderScope(
+      // A fresh scope and navigator for each pumped app.
+      key: UniqueKey(),
+      overrides: [
+        ...offlineLibrary(),
+        offlinePreferences(),
+        musicCatalogProvider.overrideWith(
+          (ref) async => MusicCatalog(tracks ?? [_track]),
+        ),
+        musicAudioHandlerProvider.overrideWith((ref) => _QueueFixture()),
+        memberAvatarsProvider.overrideWithValue(const {}),
+      ],
+      child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: home,
+      ),
+    );
 
 void main() {
   testWidgets('music page, favorites and player fit 360 wide at 2x text', (
@@ -120,6 +121,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'short desktop player keeps controls visible and scales its cover',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      var lastCoverSize = 0.0;
+      for (final height in [560.0, 680.0, 820.0]) {
+        tester.view.physicalSize = Size(1100, height);
+        await tester.pumpWidget(_app(const MusicPlayerPage(), textScale: 1));
+        await tester.pumpAndSettle();
+        final cover = find.byType(MusicCover).first;
+        final size = tester.getSize(cover).width;
+        expect(size, greaterThan(lastCoverSize));
+        lastCoverSize = size;
+        expect(tester.getTopLeft(cover).dy, greaterThanOrEqualTo(56));
+        expect(
+          tester.getBottomRight(find.text('搜录播')).dy,
+          lessThanOrEqualTo(height),
+        );
+        expect(
+          tester.getSize(find.byType(MusicPlayButton)),
+          const Size(48, 48),
+        );
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
 
   testWidgets('member choices intersect and more members stay opt-in', (
     tester,

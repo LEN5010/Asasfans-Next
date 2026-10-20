@@ -57,8 +57,10 @@ List<MusicSession> musicSessions(
 
 String musicDuration(Duration value) =>
     '${value.inMinutes}:${(value.inSeconds % 60).toString().padLeft(2, '0')}';
-double musicVolume(double gain) =>
-    math.min(1.0, math.pow(10, gain / 20).toDouble());
+
+/// 60% is the unattenuated reference; the upper range gives extra gain.
+double musicVolume(double gain, {double volume = .6}) =>
+    volume / .6 * math.pow(10, gain / 20).toDouble();
 
 /// The studio's search vocabulary changes when the group expands.
 String musicSearchMembers(MusicTrack track) {

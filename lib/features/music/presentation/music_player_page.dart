@@ -52,15 +52,18 @@ class MusicPlayerPage extends ConsumerWidget {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final wide = constraints.maxWidth >= 900;
-                    final player = Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 480),
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                          child: _PlayerContent(
-                            handler: handler,
-                            track: track,
-                            wide: wide,
+                    final player = LayoutBuilder(
+                      builder: (context, bounds) => Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 480),
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                            child: _PlayerContent(
+                              handler: handler,
+                              track: track,
+                              wide: wide,
+                              availableHeight: bounds.maxHeight - 32,
+                            ),
                           ),
                         ),
                       ),
@@ -114,10 +117,12 @@ class _PlayerContent extends ConsumerWidget {
     required this.handler,
     required this.track,
     required this.wide,
+    required this.availableHeight,
   });
   final MusicAudioHandler handler;
   final MusicTrack track;
   final bool wide;
+  final double availableHeight;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -126,9 +131,16 @@ class _PlayerContent extends ConsumerWidget {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final size = math.min(constraints.maxWidth, 400.0);
+            // Reserve room for the controls before giving space to the cover.
+            // Large text can still scroll without reducing its scale.
+            final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+            final controlsHeight = 400 + 120 * (textScale - 1);
+            final size = math.min(
+              math.min(constraints.maxWidth, 360.0),
+              math.max(96.0, availableHeight - controlsHeight),
+            );
             return Align(
-              alignment: AlignmentDirectional.centerStart,
+              alignment: Alignment.center,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
@@ -149,7 +161,7 @@ class _PlayerContent extends ConsumerWidget {
             );
           },
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
@@ -188,7 +200,7 @@ class _PlayerContent extends ConsumerWidget {
               onPressed: handler.skipToPrevious,
               icon: const Icon(Icons.skip_previous_rounded, size: 36),
             ),
-            MusicPlayButton(handler: handler, size: 68),
+            MusicPlayButton(handler: handler, size: 48),
             AppButton.icon(
               tooltip: '下一首',
               onPressed: handler.skipToNext,
@@ -218,7 +230,7 @@ class _PlayerContent extends ConsumerWidget {
               ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         const MusicVolumeControl(),
         const SizedBox(height: 16),
         Row(

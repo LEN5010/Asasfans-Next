@@ -99,7 +99,7 @@ class SqlitePreferencesRepository implements PreferencesRepository {
       }
       if (visible == 'false') hidden.add(section);
     }
-    final volume = double.tryParse(values['music.volume'] ?? '1');
+    final volume = double.tryParse(values['music.volume'] ?? '.6');
     if (volume == null || !volume.isFinite || volume < 0 || volume > 1) {
       throw const StorageFailure(StorageFailureKind.invalidData);
     }

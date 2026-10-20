@@ -121,9 +121,18 @@ void main() {
       );
       expect(adapter.requests.single.queryParameters['ids'], '[123,124]');
       expect(musicVolume(-6), closeTo(.5012, .001));
-      expect(musicVolume(5.3), 1);
     },
   );
+
+  test('60% is the reference and positive loudness gain stays effective', () {
+    expect(musicVolume(0), 1);
+    expect(musicVolume(0, volume: .3), .5);
+    expect(musicVolume(0, volume: 1), closeTo(1 / .6, .0001));
+    expect(musicVolume(6), closeTo(1.9953, .001));
+    expect(musicVolume(6, volume: 0), 0);
+    // Equally loud sources after their respective corrections.
+    expect(.1 * musicVolume(6), closeTo(.4 * musicVolume(-6), .001));
+  });
 
   test('a day is one session, in catalogue order, newest day first', () {
     MusicTrack song(String id, DateTime date, List<String> members) =>
