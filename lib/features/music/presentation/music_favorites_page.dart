@@ -31,8 +31,9 @@ class MusicFavoritesPage extends ConsumerWidget {
           final tracks = await ref
               .read(libraryRepositoryProvider)
               .musicFavorites();
-          if (shuffle) tracks.shuffle();
-          await ref.read(musicAudioHandlerProvider).playTracks(tracks);
+          await ref
+              .read(musicAudioHandlerProvider)
+              .playTracks(tracks, shuffle: shuffle);
         });
     final tracks = [for (final item in state.items) item.track];
     return Scaffold(

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:asasfans_next/features/content/application/content_providers.dart';
 import 'package:asasfans_next/features/library/application/library_providers.dart';
 import 'package:asasfans_next/features/music/application/music_audio_handler.dart';
@@ -35,8 +36,17 @@ class _QueueFixture extends MusicAudioHandler {
   _QueueFixture() : super(MusicStreamRepository(Dio()));
   List<MusicTrack> played = [];
   @override
-  Future<void> playTracks(List<MusicTrack> values, {int start = 0}) async {
+  Future<void> playTracks(
+    List<MusicTrack> values, {
+    int start = 0,
+    bool? shuffle,
+  }) async {
     played = values;
+    if (shuffle != null) {
+      await setShuffleMode(
+        shuffle ? AudioServiceShuffleMode.all : AudioServiceShuffleMode.none,
+      );
+    }
   }
 
   @override
@@ -45,6 +55,9 @@ class _QueueFixture extends MusicAudioHandler {
   List<MusicTrack> get tracks => [_track];
   @override
   int get index => 0;
+
+  @override
+  List<int> get playOrder => [0];
 }
 
 Widget _app(Widget home, {List<MusicTrack>? tracks, double textScale = 2}) =>
@@ -203,6 +216,10 @@ void main() {
     );
     final handler = container.read(musicAudioHandlerProvider) as _QueueFixture;
     expect(handler.played.map((song) => song.id), ['嘉然独唱', '双人合唱']);
+    await tester.tap(find.text('随机播放'));
+    await tester.pumpAndSettle();
+    expect(handler.played.map((song) => song.id), ['嘉然独唱', '双人合唱']);
+    expect(handler.shuffled, isTrue);
     await tester.tap(find.text('更多成员'));
     await tester.pumpAndSettle();
     if (find.text('我已了解，继续').evaluate().isNotEmpty) {
@@ -246,6 +263,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('取消收藏'), findsOneWidget);
     expect(await container.read(musicFavoriteIdsProvider.future), {_track.id});
+    await tester.ensureVisible(find.byTooltip('随机播放'));
+    await tester.tap(find.byTooltip('随机播放'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('关闭随机播放'), findsOneWidget);
+    expect(container.read(musicAudioHandlerProvider).shuffled, isTrue);
+    await tester.tap(find.byTooltip('关闭随机播放'));
+    await tester.pumpAndSettle();
+    expect(container.read(musicAudioHandlerProvider).shuffled, isFalse);
   });
 
   testWidgets('players fit a phone, the rail and a wide window at 2x text', (

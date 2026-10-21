@@ -217,66 +217,84 @@ class _MusicPageState extends ConsumerState<MusicPage> {
           final years = _years(value);
           final sectionHeader = Padding(
             padding: EdgeInsets.fromLTRB(gutter, 16, gutter, 8),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: _query.keyword.isEmpty ? '歌曲' : '搜索结果',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w700,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          text: _query.keyword.isEmpty ? '歌曲' : '搜索结果',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          children: [
+                            if (value != null)
+                              TextSpan(
+                                text: '  ${_shown.length} 首',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontFeatures: AppTheme.tabular,
+                                ),
+                              ),
+                          ],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      children: [
-                        if (value != null)
-                          TextSpan(
-                            text: '  ${_shown.length} 首',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontFeatures: AppTheme.tabular,
+                    ),
+                    MenuAnchor(
+                      menuChildren: [
+                        for (final year in [null, ...years])
+                          MenuItemButton(
+                            trailingIcon: year == _query.year
+                                ? const Icon(Icons.check, size: 18)
+                                : null,
+                            onPressed: () => _apply(
+                              year == null
+                                  ? _query.copyWith(clearYear: true)
+                                  : _query.copyWith(year: year),
                             ),
+                            child: Text(year == null ? '全部年份' : '$year 年'),
                           ),
                       ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                MenuAnchor(
-                  menuChildren: [
-                    for (final year in [null, ...years])
-                      MenuItemButton(
-                        trailingIcon: year == _query.year
-                            ? const Icon(Icons.check, size: 18)
-                            : null,
-                        onPressed: () => _apply(
-                          year == null
-                              ? _query.copyWith(clearYear: true)
-                              : _query.copyWith(year: year),
+                      builder: (context, menu, _) => AppButton(
+                        selected: _query.year != null,
+                        onPressed: years.isEmpty
+                            ? null
+                            : () => menu.isOpen ? menu.close() : menu.open(),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _query.year == null ? '全部年份' : '${_query.year} 年',
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(Icons.expand_more, size: 18),
+                          ],
                         ),
-                        child: Text(year == null ? '全部年份' : '$year 年'),
                       ),
-                  ],
-                  builder: (context, menu, _) => AppButton(
-                    selected: _query.year != null,
-                    onPressed: years.isEmpty
-                        ? null
-                        : () => menu.isOpen ? menu.close() : menu.open(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_query.year == null ? '全部年份' : '${_query.year} 年'),
-                        const SizedBox(width: 2),
-                        const Icon(Icons.expand_more, size: 18),
-                      ],
                     ),
-                  ),
+                    AppButton.withIcon(
+                      onPressed: () =>
+                          _apply(_query.copyWith(oldest: !_query.oldest)),
+                      icon: const Icon(Icons.swap_vert_rounded),
+                      label: Text(_query.oldest ? '最早在前' : '最新在前'),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
                 AppButton.withIcon(
-                  onPressed: () =>
-                      _apply(_query.copyWith(oldest: !_query.oldest)),
-                  icon: const Icon(Icons.swap_vert_rounded),
-                  label: Text(_query.oldest ? '最早在前' : '最新在前'),
+                  tonal: true,
+                  onPressed: _shown.isEmpty
+                      ? null
+                      : () => ref
+                            .read(musicAudioHandlerProvider)
+                            .playTracks(_shown, shuffle: true),
+                  icon: const Icon(Icons.shuffle_rounded),
+                  label: const Text('随机播放'),
                 ),
               ],
             ),

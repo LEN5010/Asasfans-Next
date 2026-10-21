@@ -1,12 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:asasfans_next/features/music/application/music_audio_handler.dart';
 import 'package:asasfans_next/features/music/data/music_catalog_repository.dart';
 import 'package:asasfans_next/features/music/data/music_stream_repository.dart';
 import 'package:asasfans_next/features/music/domain/music_track.dart';
 import 'package:dio/dio.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+// AudioService initializes its transitive artwork-cache plugin in this test.
+// ignore: depend_on_referenced_packages
+import 'package:sqflite/sqflite.dart';
+// ignore: depend_on_referenced_packages
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 const _csv =
     'id,日期,结束时间点,歌名,演唱者,演唱状态,有没有音频\r\n'
@@ -31,7 +38,161 @@ class _Adapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+class _StreamsFixture extends MusicStreamRepository {
+  _StreamsFixture() : super(Dio());
+  List<String> prefetched = [];
+
+  @override
+  Future<void> prefetch(Iterable<String> ids) async {
+    prefetched = ids.toList();
+  }
+
+  @override
+  Future<MusicStream?> resolve(String id) async =>
+      MusicStream(Uri.parse('https://example.com/$id.mp3'), 0, DateTime(2100));
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('shuffle drives navigation, prefetch, edits and completion', () async {
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    void mock(String name, Future<Object?> Function(MethodCall) callback) {
+      final channel = MethodChannel(name);
+      messenger.setMockMethodCallHandler(channel, callback);
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+    }
+
+    var events = '';
+    final cache = await Directory.systemTemp.createTemp('asasfans-queue-');
+    addTearDown(() => cache.delete(recursive: true));
+    mock('plugins.flutter.io/path_provider', (_) async => cache.path);
+    databaseFactory = databaseFactorySqflitePlugin;
+    mock(
+      'com.tekartik.sqflite',
+      (call) async => switch (call.method) {
+        'getDatabasesPath' => cache.path,
+        'openDatabase' => {'id': 1},
+        'query' =>
+          (call.arguments as Map<Object?, Object?>)['sql'] ==
+                  'PRAGMA user_version'
+              ? [
+                  {'user_version': 3},
+                ]
+              : <Map<String, Object?>>[],
+        _ => null,
+      },
+    );
+    Future<void> emit(int state) async {
+      await messenger.handlePlatformMessage(
+        events,
+        const StandardMethodCodec().encodeSuccessEnvelope({
+          'processingState': state,
+          'updatePosition': 0,
+          'updateTime': DateTime.now().millisecondsSinceEpoch,
+          'bufferedPosition': 0,
+          'duration': 180000000,
+          'currentIndex': 0,
+        }),
+        (_) {},
+      );
+    }
+
+    mock('com.ryanheise.audio_session', (_) async => null);
+    mock('com.ryanheise.audio_service.client.methods', (_) async => null);
+    mock('com.ryanheise.audio_service.handler.methods', (_) async => null);
+    mock('com.ryanheise.just_audio.methods', (call) async {
+      if (call.method == 'init') {
+        final id = (call.arguments as Map<Object?, Object?>)['id'];
+        events = 'com.ryanheise.just_audio.events.$id';
+        mock(events, (_) async => null);
+        mock('com.ryanheise.just_audio.data.$id', (_) async => null);
+        mock('com.ryanheise.just_audio.methods.$id', (call) async {
+          if (call.method == 'load') {
+            await emit(3); // ready
+            return {'duration': 180000000};
+          }
+          return <String, Object?>{};
+        });
+      }
+      return <String, Object?>{};
+    });
+    final streams = _StreamsFixture();
+    final handler = MusicAudioHandler(streams);
+    final songs = List.generate(
+      8,
+      (i) => MusicTrack(
+        id: '$i',
+        title: 'song $i',
+        members: const ['嘉然'],
+        date: DateTime(2026, 10, 15),
+        duration: const Duration(minutes: 3),
+        status: '完整',
+      ),
+    );
+    await handler.playTracks(songs, start: 3);
+    expect(handler.message, isNull);
+    await handler.setShuffleMode(AudioServiceShuffleMode.all);
+    final order = handler.playOrder;
+    expect(order.first, 3);
+    expect(order.toSet(), List.generate(8, (i) => i).toSet());
+    expect(handler.current, songs[3]);
+    expect(
+      handler.playbackState.value.shuffleMode,
+      AudioServiceShuffleMode.all,
+    );
+    await handler.skipToNext();
+    expect(handler.index, order[1]);
+    expect(streams.prefetched, order.skip(1).take(3).map((i) => songs[i].id));
+    await handler.skipToPrevious();
+    expect(handler.index, 3);
+
+    await handler.enqueue(songs.first, next: true);
+    await handler.skipToNext();
+    expect(handler.current, songs.first);
+    await handler.removeTrack(handler.index);
+    expect(handler.current, songs[order[1]]);
+    await handler.removeTrack(0);
+    expect(handler.playOrder.toSet(), List.generate(7, (i) => i).toSet());
+    final current = handler.current;
+    await handler.setShuffleMode(AudioServiceShuffleMode.none);
+    expect(handler.current, current);
+    expect(handler.playOrder, List.generate(7, (i) => i));
+
+    await handler.playTracks(songs, shuffle: true);
+    final shuffled = handler.playOrder;
+    final visited = <int>{handler.index};
+    final advanced = handler.playbackState.firstWhere(
+      (s) =>
+          s.queueIndex == shuffled[1] &&
+          s.processingState == AudioProcessingState.ready,
+    );
+    await emit(4); // completed: follows the same order as the next button.
+    await advanced;
+    visited.add(handler.index);
+    for (var i = 2; i < songs.length; i++) {
+      await handler.skipToNext();
+      expect(visited.add(handler.index), isTrue);
+    }
+    expect(visited, List.generate(8, (i) => i).toSet());
+    await handler.skipToNext();
+    expect(handler.index, shuffled.last);
+    await handler.setRepeatMode(AudioServiceRepeatMode.all);
+    await handler.skipToNext();
+    expect(handler.index, shuffled.first);
+    final large = List.generate(250, (i) => songs[i % songs.length]);
+    await handler.playTracks(large, shuffle: true);
+    expect(handler.tracks.length, MusicAudioHandler.maxQueue);
+    expect(handler.playOrder.toSet(), List.generate(200, (i) => i).toSet());
+    await handler.stop();
+    handler.dispose();
+    streams.dio.close();
+    await DefaultCacheManager().getFileFromCache('unused');
+    await DefaultCacheManager().dispose();
+    await Future<void>.delayed(Duration.zero);
+  });
+
   test('CSV preserves quoted values and admits only audio rows', () {
     final tracks = parseMusicCsv('\uFEFF$_csv');
     expect(tracks, hasLength(1));

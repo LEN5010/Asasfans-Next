@@ -56,6 +56,24 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   static const maxQueue = 200;
   AudioServiceRepeatMode _repeat = AudioServiceRepeatMode.none;
   AudioServiceRepeatMode get repeat => _repeat;
+  bool _shuffled = false;
+  bool get shuffled => _shuffled;
+  List<int> _order = [];
+  List<int> get playOrder => _shuffled
+      ? List.unmodifiable(_order)
+      : List.generate(tracks.length, (i) => i);
+
+  void _shuffleOrder() {
+    _order = List.generate(_tracks.length, (i) => i)..remove(_index);
+    _order.shuffle();
+    if (_index >= 0) _order.insert(0, _index);
+  }
+
+  int? get _nextIndex {
+    final order = playOrder;
+    final at = order.indexOf(_index) + 1;
+    return at < order.length ? order[at] : null;
+  }
 
   Future<void> _initialize() async {
     try {
@@ -108,13 +126,30 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
 
   /// Plays [values] from [start]. A short list such as a day is queued
   /// whole, so 上一首 reaches the songs before; a long one is cut to the next
-  /// [maxQueue] songs from the one chosen.
-  Future<void> playTracks(List<MusicTrack> values, {int start = 0}) async {
+  /// [maxQueue] songs from the one chosen. Explicit [shuffle] samples the
+  /// whole list; otherwise the current shuffle mode stays in effect.
+  Future<void> playTracks(
+    List<MusicTrack> values, {
+    int start = 0,
+    bool? shuffle,
+  }) async {
     if (values.isEmpty) return;
-    final from = start.clamp(0, values.length - 1);
-    final window = values.length <= maxQueue ? 0 : from;
-    _tracks = values.skip(window).take(maxQueue).toList();
-    _index = from - window;
+    if (shuffle != null) _shuffled = shuffle;
+    if (shuffle == true) {
+      // Sample the whole filtered list before applying the queue limit.
+      final candidates = List.generate(values.length, (i) => i)..shuffle();
+      final chosen = candidates.take(maxQueue).toList();
+      final first = chosen.first;
+      chosen.sort();
+      _tracks = [for (final i in chosen) values[i]];
+      _index = chosen.indexOf(first);
+    } else {
+      final from = start.clamp(0, values.length - 1);
+      final window = values.length <= maxQueue ? 0 : from;
+      _tracks = values.skip(window).take(maxQueue).toList();
+      _index = from - window;
+    }
+    if (_shuffled) _shuffleOrder();
     _publishQueue();
     await _load();
   }
@@ -124,10 +159,11 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
       await playTracks([track]);
       return;
     }
-    if (next) {
-      _tracks.insert(_index + 1, track);
-    } else {
-      _tracks.add(track);
+    final insert = next ? _index + 1 : _tracks.length;
+    _tracks.insert(insert, track);
+    if (_shuffled) {
+      _order = [for (final i in _order) i >= insert ? i + 1 : i];
+      _order.insert(next ? _order.indexOf(_index) + 1 : _order.length, insert);
     }
     _publishQueue();
     _say(next ? '已设为下一首' : '已加入队列');
@@ -136,7 +172,18 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   Future<void> removeTrack(int at) async {
     if (at < 0 || at >= _tracks.length) return;
     final wasCurrent = at == _index;
+    final order = playOrder;
+    final position = order.indexOf(at);
+    final successor = wasCurrent && order.length > 1
+        ? order[position + 1 < order.length ? position + 1 : position - 1]
+        : _index;
     _tracks.removeAt(at);
+    if (_shuffled) {
+      _order = [
+        for (final i in _order)
+          if (i != at) i > at ? i - 1 : i,
+      ];
+    }
     if (_tracks.isEmpty) {
       _index = -1;
       await stop();
@@ -144,7 +191,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     } else if (at < _index) {
       _index--;
     } else if (wasCurrent) {
-      if (_index >= _tracks.length) _index = _tracks.length - 1;
+      _index = successor > at ? successor - 1 : successor;
       await _load();
     }
     _publishQueue();
@@ -184,14 +231,14 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
           _say(_initFailed ? '音乐播放初始化失败' : '网络连接失败，「${song.title}」暂时无法播放');
           return;
         case _Open.unavailable:
-          if (skipped >= 2 || _index + 1 >= _tracks.length) {
+          if (skipped >= 2 || _nextIndex == null) {
             await _engine?.stop();
             _publish();
             _say('「${song.title}」暂时无法播放');
             return;
           }
           _say('「${song.title}」暂时无法播放，已跳到下一首');
-          _index++;
+          _index = _nextIndex!;
       }
     }
   }
@@ -211,7 +258,10 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
         await _ready;
         await _engine?.pause();
         if (stale()) return null;
-        await _streams.prefetch(_tracks.skip(_index).take(3).map((s) => s.id));
+        final order = playOrder;
+        await _streams.prefetch(
+          order.skip(order.indexOf(_index)).take(3).map((i) => _tracks[i].id),
+        );
         stream = await _streams.resolve(song.id);
       } on Object {
         if (stale()) return null;
@@ -247,9 +297,9 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     try {
       if (_retried) {
         final title = current!.title;
-        if (_index + 1 < _tracks.length) {
+        if (_nextIndex != null) {
           _say('「$title」播放中断，已跳到下一首');
-          _index++;
+          _index = _nextIndex!;
           await _load();
         } else {
           await _engine?.stop();
@@ -272,10 +322,10 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     if (_repeat == AudioServiceRepeatMode.one) {
       await seek(Duration.zero);
       await play();
-    } else if (_index + 1 < _tracks.length) {
+    } else if (_nextIndex != null) {
       await skipToNext();
     } else if (_repeat == AudioServiceRepeatMode.all && _tracks.isNotEmpty) {
-      await skipToQueueItem(0);
+      await skipToQueueItem(playOrder.first);
     } else {
       await pause();
     }
@@ -337,11 +387,10 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
 
   @override
   Future<void> skipToNext() async {
-    if (_index + 1 < _tracks.length) {
-      _index++;
-      await _load();
-    } else if (_repeat == AudioServiceRepeatMode.all) {
-      await skipToQueueItem(0);
+    if (_nextIndex case final next?) {
+      await skipToQueueItem(next);
+    } else if (_repeat == AudioServiceRepeatMode.all && _tracks.isNotEmpty) {
+      await skipToQueueItem(playOrder.first);
     }
   }
 
@@ -349,9 +398,10 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   Future<void> skipToPrevious() async {
     if (position > const Duration(seconds: 3)) {
       await seek(Duration.zero);
-    } else if (_index > 0) {
-      _index--;
-      await _load();
+    } else {
+      final order = playOrder;
+      final at = order.indexOf(_index);
+      if (at > 0) await skipToQueueItem(order[at - 1]);
     }
   }
 
@@ -365,6 +415,15 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
     _repeat = repeatMode;
+    _publish();
+  }
+
+  @override
+  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
+    final enabled = shuffleMode != AudioServiceShuffleMode.none;
+    if (_shuffled == enabled) return;
+    _shuffled = enabled;
+    if (enabled) _shuffleOrder();
     _publish();
   }
 
@@ -387,7 +446,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   );
   void _publishQueue() {
     queue.add(_tracks.map(_media).toList());
-    notifyListeners();
+    _publish();
   }
 
   void _publish() {
@@ -404,6 +463,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
           MediaAction.seek,
           MediaAction.seekForward,
           MediaAction.seekBackward,
+          MediaAction.setShuffleMode,
         },
         androidCompactActionIndices: const [0, 1, 2],
         processingState: _loading
@@ -421,6 +481,9 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
         updatePosition: position,
         bufferedPosition: _engine?.bufferedPosition ?? Duration.zero,
         repeatMode: _repeat,
+        shuffleMode: _shuffled
+            ? AudioServiceShuffleMode.all
+            : AudioServiceShuffleMode.none,
         queueIndex: _index < 0 ? null : _index,
       ),
     );

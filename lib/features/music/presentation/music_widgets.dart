@@ -245,6 +245,23 @@ class MusicPlayButton extends StatelessWidget {
   }
 }
 
+class MusicShuffleButton extends StatelessWidget {
+  const MusicShuffleButton({super.key, required this.handler});
+  final MusicAudioHandler handler;
+
+  @override
+  Widget build(BuildContext context) => AppButton.icon(
+    tooltip: handler.shuffled ? '关闭随机播放' : '随机播放',
+    selected: handler.shuffled,
+    onPressed: () => handler.setShuffleMode(
+      handler.shuffled
+          ? AudioServiceShuffleMode.none
+          : AudioServiceShuffleMode.all,
+    ),
+    icon: const Icon(Icons.shuffle_rounded),
+  );
+}
+
 class MusicRepeatButton extends StatelessWidget {
   const MusicRepeatButton({super.key, required this.handler});
   final MusicAudioHandler handler;
@@ -438,6 +455,7 @@ class MusicPlayerBar extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   MusicFavoriteButton(track: track),
+                  MusicShuffleButton(handler: handler),
                   MusicRepeatButton(handler: handler),
                   AppButton.icon(
                     tooltip: '播放队列',
@@ -825,9 +843,11 @@ class MusicQueue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final order = handler.playOrder;
     return ListView.builder(
-      itemCount: handler.tracks.length,
-      itemBuilder: (context, index) {
+      itemCount: order.length,
+      itemBuilder: (context, at) {
+        final index = order[at];
         final selected = index == handler.index;
         return Material(
           color: selected

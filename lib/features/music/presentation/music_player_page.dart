@@ -194,6 +194,7 @@ class _PlayerContent extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            MusicShuffleButton(handler: handler),
             MusicRepeatButton(handler: handler),
             AppButton.icon(
               tooltip: '上一首',
