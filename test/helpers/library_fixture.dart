@@ -7,9 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'sqlite_fixture.dart';
 import 'account_fixture.dart';
+import 'operations_fixture.dart';
 
 /// Personal features share one disposable DB, never the application directory.
 List<Override> offlineLibrary({Override? account}) => [
+  offlineOperations(),
   account ?? offlineAccount(),
   localDatabaseProvider.overrideWith((ref) {
     final database = MemoryLocalDatabase();

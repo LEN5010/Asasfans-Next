@@ -7,6 +7,8 @@ import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/music/presentation/music_favorites_page.dart';
 import '../../features/music/presentation/music_page.dart';
 import '../../features/music/presentation/music_player_page.dart';
+import '../../features/operations/presentation/collection_page.dart';
+import '../../features/operations/presentation/support_page.dart';
 import '../../features/backup/presentation/backup_page.dart';
 import '../../features/content/application/content_providers.dart';
 import '../../features/content/domain/community_video_repository.dart';
@@ -18,7 +20,6 @@ import '../../features/library/presentation/playback_pages.dart';
 import '../../features/library/presentation/calendar_follows.dart';
 import '../../features/handoff/presentation/return_restorer.dart';
 import '../../features/today/presentation/today_page.dart';
-import '../../features/release/presentation/release_check.dart';
 import '../../features/updates/presentation/updates_page.dart';
 import '../../shared/widgets/app_page_bar.dart';
 import 'app_shell.dart';
@@ -27,6 +28,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/today',
     routes: [
+      GoRoute(
+        path: '/collections/:id',
+        builder: (context, state) =>
+            FanartCollectionPage(collectionId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/music/player',
         builder: (context, state) => const MusicPlayerPage(),
@@ -40,21 +46,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             // Wraps the shell so a return lands before any branch is chosen.
             ReturnRestorer(
-              child: ReleaseNotice(
-                child: AppShell(
-                  navigationShell: navigationShell,
-                  isTabRoot: const {
-                    '/today',
-                    '/calendar',
-                    '/music',
-                    '/mine',
-                    '/content',
-                    '/content/videos',
-                    '/content/fanart',
-                    '/content/dynamics',
-                    '/content/novels',
-                  }.contains(state.uri.path),
-                ),
+              child: AppShell(
+                navigationShell: navigationShell,
+                isTabRoot: const {
+                  '/today',
+                  '/calendar',
+                  '/music',
+                  '/mine',
+                  '/content',
+                  '/content/videos',
+                  '/content/fanart',
+                  '/content/dynamics',
+                  '/content/novels',
+                }.contains(state.uri.path),
               ),
             ),
         branches: [
@@ -184,6 +188,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ],
                   ),
                   GoRoute(path: 'about', builder: (_, _) => const AboutPage()),
+                  GoRoute(
+                    path: 'support',
+                    builder: (_, _) => const SupportPage(),
+                  ),
                 ],
               ),
             ],

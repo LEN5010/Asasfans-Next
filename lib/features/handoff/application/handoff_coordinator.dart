@@ -131,7 +131,9 @@ class HandoffCoordinator extends ChangeNotifier {
         );
       }
       await _entry?.dispatched(sessionId);
-      if (target == ReturnTarget.contentChannel && channel != null) {
+      if (target == ReturnTarget.contentChannel &&
+          channel != null &&
+          query?['collectionId'] == null) {
         _browsing = BrowseSnapshot(
           channel: channel,
           query: query,

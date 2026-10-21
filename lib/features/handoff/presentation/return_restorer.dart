@@ -128,6 +128,14 @@ class _ReturnRestorerState extends ConsumerState<ReturnRestorer>
     final router = GoRouter.of(this.context);
     switch (context.target) {
       case ReturnTarget.contentChannel:
+        final collection = context.query?['collectionId'];
+        if (context.channel == 'fanart' &&
+            collection is String &&
+            RegExp(r'^[a-z0-9-]+$').hasMatch(collection)) {
+          router.go('/today');
+          unawaited(router.push<void>('/collections/$collection'));
+          return;
+        }
         // Resolve the slug through the enum rather than interpolating it: a
         // return composes a route from known values only, so a corrupted or
         // renamed row lands on the channel list instead of a bad path.

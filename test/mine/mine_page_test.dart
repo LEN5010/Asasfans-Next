@@ -105,12 +105,12 @@ void main() {
     expect(manage.top, app.top);
     expect(app.left, greaterThan(manage.right));
     expect(tester.getRect(find.text('备份与恢复')).left, lessThan(app.left - 200));
-    // Every block shares one right edge, and the two groups end level.
+    // Every block shares one right edge, and the two groups start level.
     Rect card(String label) => tester.getRect(
       find.ancestor(of: find.text(label), matching: find.byType(AppCard)).first,
     );
     expect(card('应用内更新').right, closeTo(card('设置').right, 1));
-    expect(card('备份与恢复').bottom, closeTo(card('关于').bottom, 1));
+    expect(card('备份与恢复').top, closeTo(card('关于').top, 1));
 
     // 关于 holds the version and the licences.
     await tester.pumpWidget(

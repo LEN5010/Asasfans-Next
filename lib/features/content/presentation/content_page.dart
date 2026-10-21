@@ -39,6 +39,7 @@ import 'fanart_filter_bar.dart';
 import 'fanart_grid.dart';
 import 'random_fanart_page.dart';
 import 'saved_channel_bar.dart';
+import '../../operations/presentation/operation_widgets.dart';
 
 class ContentPage extends ConsumerStatefulWidget {
   const ContentPage({this.channel = 'fanart', this.videoKind, super.key});
@@ -492,6 +493,10 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: CampaignCards(compact: true),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                 child: Align(

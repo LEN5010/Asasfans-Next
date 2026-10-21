@@ -35,6 +35,8 @@ import '../../updates/presentation/updates_bell_button.dart';
 import '../application/today_providers.dart';
 import 'on_this_day_section.dart';
 import '../../handoff/presentation/continue_browsing.dart';
+import '../../operations/application/operations_controller.dart';
+import '../../operations/presentation/operation_widgets.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
@@ -64,7 +66,10 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
     setState(() => _refreshing = true);
     _lastRefresh = ref.read(currentTimeProvider)();
     try {
-      await ref.read(refreshTodayProvider)(forceCalendar);
+      await Future.wait([
+        ref.read(refreshTodayProvider)(forceCalendar),
+        ref.read(operationsProvider.notifier).refresh(),
+      ]);
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }
@@ -149,6 +154,8 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
               slivers: [
                 SliverToBoxAdapter(child: SizedBox(height: padding.top + 16)),
                 box(AppEntrance(child: heading), spaced: false),
+                box(const CampaignCards(), spaced: false),
+                box(const AnnouncementCards(), spaced: false),
                 // What today holds, as a compact card at the top: a few
                 // lines, never a column beside the works for the whole page.
                 // Then the one optional task slot, back to where picking

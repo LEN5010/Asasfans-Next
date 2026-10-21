@@ -14,6 +14,7 @@ import 'theme/app_theme.dart';
 import '../features/preferences/application/preferences_controller.dart';
 import '../features/preferences/domain/app_preferences.dart';
 import '../features/preferences/presentation/disclaimer_page.dart';
+import '../features/operations/presentation/operations_host.dart';
 
 class AsasfansApp extends ConsumerStatefulWidget {
   const AsasfansApp({super.key});
@@ -73,7 +74,7 @@ class _AsasfansAppState extends ConsumerState<AsasfansApp> {
             policy: ReadingOrderTraversalPolicy(
               requestFocusCallback: revealFocusClear,
             ),
-            child: StartupDisclaimerGate(child: child!),
+            child: StartupDisclaimerGate(child: OperationsHost(child: child!)),
           ),
         );
       },

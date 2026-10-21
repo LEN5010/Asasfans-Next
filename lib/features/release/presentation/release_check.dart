@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,53 +7,6 @@ import '../../../core/network/api_failure.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../application/release_providers.dart';
 import '../domain/app_release.dart';
-
-/// Checks for a newer release once per launch and mentions it in a
-/// SnackBar. A failed check stays quiet here: it proves nothing either way,
-/// and 检查更新 in 我的 reports it. Debug builds never check on their own.
-class ReleaseNotice extends ConsumerStatefulWidget {
-  const ReleaseNotice({required this.child, super.key});
-  final Widget child;
-
-  @override
-  ConsumerState<ReleaseNotice> createState() => _ReleaseNoticeState();
-}
-
-class _ReleaseNoticeState extends ConsumerState<ReleaseNotice> {
-  @override
-  void initState() {
-    super.initState();
-    // Update networking is background work, after the first frame is submitted.
-    if (!kDebugMode) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_check());
-      });
-    }
-  }
-
-  Future<void> _check() async {
-    final AppRelease? release;
-    try {
-      release = await ref.read(releaseCheckProvider.notifier).check();
-    } on Object {
-      return;
-    }
-    if (release == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('发现新版本 ${release.version}'),
-        duration: const Duration(seconds: 8),
-        action: SnackBarAction(
-          label: '查看',
-          onPressed: () => showReleaseDialog(context, release!),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
-}
 
 /// 检查更新 from 我的: the newer release in a dialog, or a line saying this
 /// build is the newest or why the check failed.
@@ -80,7 +31,6 @@ Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
 
 /// The site's download page with this platform picked; it offers mirrors
 /// for networks that cannot reach GitHub.
-@visibleForTesting
 Uri downloadPage(TargetPlatform platform) =>
     Uri.https('len5010.top', '/download', {'p': platform.name.toLowerCase()});
 

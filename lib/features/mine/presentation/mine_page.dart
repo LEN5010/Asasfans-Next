@@ -106,6 +106,12 @@ class MinePage extends ConsumerWidget {
                 onTap: () => showToolsSheet(context),
               ),
               const _ReleaseLink(),
+              _Link(
+                label: '反馈与帮助',
+                icon: Icons.feedback_outlined,
+                tone: '乃琳',
+                onTap: () => context.go('/mine/support'),
+              ),
               // Who made it, whom it thanks, and the licences, on one page.
               _Link(
                 label: '关于',

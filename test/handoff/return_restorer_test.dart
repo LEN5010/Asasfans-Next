@@ -3,6 +3,8 @@ import 'package:asasfans_next/core/domain/content_identity.dart';
 import 'package:asasfans_next/features/handoff/application/handoff_providers.dart';
 import 'package:asasfans_next/features/handoff/data/sqlite_return_store.dart';
 import 'package:asasfans_next/features/handoff/domain/return_context.dart';
+import 'package:asasfans_next/features/operations/data/collection_repository.dart';
+import 'package:asasfans_next/features/operations/domain/fanart_collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,20 +32,24 @@ void main() {
     required ReturnTarget target,
     String? channel,
     bool consumed = false,
+    Map<String, Object?> query = const {'keyword': '生日'},
   }) => store.save(
     ReturnContext(
       sessionId: 'session-1',
       target: target,
       channel: channel,
       createdAt: DateTime.utc(2026, 9, 22),
-      query: const {'keyword': '生日'},
+      query: query,
       anchor: const ReturnAnchor(identity: _video, offset: 900),
       openedContent: _video,
       consumed: consumed,
     ),
   );
 
-  Future<void> start(WidgetTester tester) async {
+  Future<void> start(
+    WidgetTester tester, {
+    List<Override> overrides = const [],
+  }) async {
     tester.view
       ..physicalSize = const Size(1280, 900)
       ..devicePixelRatio = 1;
@@ -53,6 +59,7 @@ void main() {
         overrides: [
           ...offlineTodayOverrides(),
           returnStoreProvider.overrideWithValue(store),
+          ...overrides,
         ],
         child: const AsasfansApp(),
       ),
@@ -87,6 +94,43 @@ void main() {
       reason: 'a repeated cold start must not navigate again',
     );
   });
+
+  testWidgets(
+    'a cold collection return keeps Today underneath and consumes its session',
+    (tester) async {
+      const id = 'cijian-gongming-2026';
+      await seed(
+        target: ReturnTarget.contentChannel,
+        channel: 'fanart',
+        query: const {'collectionId': id},
+      );
+      await start(
+        tester,
+        overrides: [
+          collectionProvider(id).overrideWith(
+            (ref) async => FanartCollection(
+              id: id,
+              title: '此间共鸣 · 2026 线下物料',
+              dates: '2026.10.24 — 10.25',
+              venue: '上海',
+              sourceUrl: Uri.parse('https://www.bilibili.com/opus/123'),
+              sourceAuthor: '一个魂儿周报',
+              groups: const [],
+              entries: const [],
+            ),
+          ),
+        ],
+      );
+      expect(find.text('此间共鸣 · 2026 线下物料'), findsOneWidget);
+      expect((await store.read())!.consumed, isTrue);
+      expect(find.byTooltip('返回'), findsOneWidget);
+      await tester.tap(find.byTooltip('返回'));
+      await tester.pumpAndSettle();
+      expect(find.text('此间共鸣 · 2026 线下物料'), findsNothing);
+      expect(find.byTooltip('刷新今日'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('an already-consumed session leaves the landing page alone', (
     tester,
