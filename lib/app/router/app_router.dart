@@ -8,6 +8,7 @@ import '../../features/music/presentation/music_favorites_page.dart';
 import '../../features/music/presentation/music_page.dart';
 import '../../features/music/presentation/music_player_page.dart';
 import '../../features/operations/presentation/collection_page.dart';
+import '../../features/operations/presentation/operation_widgets.dart';
 import '../../features/operations/presentation/support_page.dart';
 import '../../features/backup/presentation/backup_page.dart';
 import '../../features/content/application/content_providers.dart';
@@ -191,6 +192,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'support',
                     builder: (_, _) => const SupportPage(),
+                  ),
+                  GoRoute(
+                    path: 'announcements',
+                    builder: (_, _) => const AnnouncementsPage(),
                   ),
                 ],
               ),

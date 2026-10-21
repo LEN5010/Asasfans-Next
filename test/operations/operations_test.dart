@@ -20,19 +20,44 @@ Map<String, dynamic> _campaign() => {
   'id': 'concert',
   'title': '此间共鸣',
   'body': '10.24—25 · 上海',
-  'enabled': true,
   'startsAt': '2026-10-20T00:00:00+08:00',
   'endsAt': '2026-11-01T00:00:00+08:00',
-  'bannerImageUrl': null,
-  'splashImageUrl': null,
-  'splashEnabled': false,
+  'platforms': <String>[],
   'buttonLabel': '查看物料',
   'action': {'type': 'collection', 'value': 'cijian-gongming-2026'},
+  'strip': true,
+  'splash': null,
 };
+
+Map<String, dynamic> _poster() => {
+  ..._campaign(),
+  'splash': {
+    'portrait': {
+      'url': 'https://len5010.top/dynamics/api/app/media/a.webp',
+      'width': 1080,
+      'height': 1920,
+    },
+    'landscape': null,
+    'seconds': 5,
+  },
+};
+
+Map<String, dynamic> _notice(String id, {List<String> platforms = const []}) =>
+    {
+      'id': id,
+      'title': '公告 $id',
+      'body': '正文 $id',
+      'startsAt': '2026-10-20T00:00:00+08:00',
+      'endsAt': '2026-11-01T00:00:00+08:00',
+      'platforms': platforms,
+      'important': false,
+      'image': null,
+      'buttonLabel': '',
+      'action': null,
+    };
 
 Map<String, dynamic> _policy([String platform = 'android']) => {
   'platform': platform,
-  'enabled': true,
   'recommendedVersion': '3.1.4',
   'minimumVersion': '3.1.4',
   'message': '更新后继续使用',
@@ -64,11 +89,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('更新至 3.1.4'), findsOneWidget);
+      expect(find.text('发现新版本 3.1.4'), findsOneWidget);
       await tester.tap(find.text('稍后'));
       await tester.pumpAndSettle();
-      expect(find.text('更新至 3.1.4'), findsNothing);
+      expect(find.text('发现新版本 3.1.4'), findsNothing);
       expect(find.text('更新偏好保存失败'), findsOneWidget);
+      expect(repository.events, [
+        'update:android:impression',
+        'update:android:dismiss',
+      ]);
       expect(find.byTooltip('刷新今日'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();
@@ -79,14 +108,7 @@ void main() {
     'a ready launch poster can be skipped and is shown only once per day',
     (tester) async {
       final db = MemoryLocalDatabase();
-      final config = emptyOperations()
-        ..['campaigns'] = [
-          {
-            ..._campaign(),
-            'splashEnabled': true,
-            'splashImageUrl': 'https://len5010.top/poster.png',
-          },
-        ];
+      final config = emptyOperations()..['campaigns'] = [_poster()];
       final repository = OperationsFixture(db, value: config)
         ..splashFile = File('assets/brand/asasfans.png').absolute;
       await tester.runAsync(
@@ -120,14 +142,18 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 50)),
       );
       await tester.pumpAndSettle();
-      expect(find.text('跳过'), findsOneWidget);
-      await tester.tap(find.text('跳过'));
+      expect(find.text('跳过 5'), findsOneWidget);
+      await tester.tap(find.text('跳过 5'));
       await tester.pumpAndSettle();
-      expect(find.text('跳过'), findsNothing);
+      expect(find.textContaining('跳过'), findsNothing);
+      expect(repository.events, [
+        'splash:concert:impression',
+        'splash:concert:dismiss',
+      ]);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
-      expect(find.text('跳过'), findsNothing);
+      expect(find.textContaining('跳过'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();
     },
@@ -137,14 +163,7 @@ void main() {
     tester,
   ) async {
     final db = MemoryLocalDatabase();
-    final config = emptyOperations()
-      ..['campaigns'] = [
-        {
-          ..._campaign(),
-          'splashEnabled': true,
-          'splashImageUrl': 'https://len5010.top/poster.png',
-        },
-      ];
+    final config = emptyOperations()..['campaigns'] = [_poster()];
     final repository = OperationsFixture(db, value: config)
       ..splashFile = File('assets/brand/asasfans.png').absolute;
     await tester.runAsync(
@@ -173,11 +192,12 @@ void main() {
     expect(find.text('不再提醒'), findsOneWidget);
     await tester.tap(find.text('不再提醒'));
     await tester.pumpAndSettle();
-    expect(find.text('跳过'), findsNothing);
+    expect(find.textContaining('跳过'), findsNothing);
+    expect(repository.events.last, 'splash:concert:mute');
     await tester.pumpWidget(const SizedBox.shrink());
     now = DateTime.utc(2026, 10, 23, 4);
     await launch();
-    expect(find.text('跳过'), findsNothing);
+    expect(find.textContaining('跳过'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     await db.close();
   });
@@ -192,9 +212,7 @@ void main() {
     );
     Widget app() => ProviderScope(
       overrides: [
-        currentTimeProvider.overrideWithValue(
-          () => DateTime.utc(2026, 10, 21),
-        ),
+        currentTimeProvider.overrideWithValue(() => DateTime.utc(2026, 10, 21)),
         operationsRepositoryProvider.overrideWithValue(repository),
       ],
       child: const MaterialApp(
@@ -217,6 +235,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('查看物料'), findsNothing);
     expect(find.byTooltip('此间共鸣'), findsOneWidget);
+    expect(repository.events, [
+      'strip:concert:impression',
+      'strip:concert:dismiss',
+    ]);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(app());
     await tester.runAsync(
@@ -243,6 +265,98 @@ void main() {
       expect(policy.requires(AppVersion.tryParse('3.2.0')!), isFalse);
     },
   );
+
+  test('a poster fits the window shape and falls back to the other one', () {
+    final splash = AppOperation.fromJson(_poster()).splash!;
+    expect(splash.pick(tall: true)!.width, 1080);
+    expect(splash.pick(tall: false)!.width, 1080);
+    expect(
+      AppOperation.fromJson({..._campaign(), 'splash': null}).splash,
+      isNull,
+    );
+  });
+
+  testWidgets('entries for other platforms are left out', (tester) async {
+    final db = MemoryLocalDatabase();
+    final repository = OperationsFixture(
+      db,
+      value: emptyOperations()
+        ..['campaigns'] = [
+          {
+            ..._campaign(),
+            'platforms': ['ios'],
+          },
+        ]
+        ..['announcements'] = [
+          _notice('everywhere'),
+          _notice('android', platforms: ['android']),
+          _notice('windows', platforms: ['windows']),
+        ],
+    );
+    final controller = OperationsController(
+      repository,
+      () => DateTime.utc(2026, 10, 21),
+    );
+    await tester.runAsync(() async {
+      await controller.initialized;
+      await controller.refresh();
+    });
+    expect(controller.state.campaigns, isEmpty);
+    expect(controller.state.announcements.map((item) => item.id), [
+      'everywhere',
+      'android',
+    ]);
+    controller.dispose();
+    await db.close();
+  });
+
+  testWidgets('opening an announcement marks it read on this device', (
+    tester,
+  ) async {
+    final db = MemoryLocalDatabase();
+    final repository = OperationsFixture(
+      db,
+      value: emptyOperations()..['announcements'] = [_notice('n1')],
+    );
+    late WidgetRef widgetRef;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          currentTimeProvider.overrideWithValue(
+            () => DateTime.utc(2026, 10, 21),
+          ),
+          operationsRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (_, ref, _) {
+                widgetRef = ref;
+                return const AnnouncementCards();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
+    final controller = widgetRef.read(operationsProvider.notifier);
+    expect(controller.unread, 1);
+    await tester.runAsync(() async {
+      await tester.tap(find.text('公告 n1'));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('正文 n1'), findsWidgets);
+    expect(controller.read('n1'), isTrue);
+    expect(controller.unread, 0);
+    expect(repository.events, ['announcement:n1:impression']);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await db.close();
+  });
 
   testWidgets(
     'cached campaigns expire and offline cached policies never become fresh',
@@ -342,13 +456,13 @@ void main() {
         () => widgetRef.read(operationsProvider.notifier).refresh(),
       );
       await tester.pumpAndSettle();
-      expect(find.text('请更新至 3.1.4'), findsOneWidget);
+      expect(find.text('发现新版本 3.1.4'), findsOneWidget);
       repository.value = config;
       await tester.runAsync(
         () => widgetRef.read(operationsProvider.notifier).refresh(),
       );
       await tester.pumpAndSettle();
-      expect(find.text('请更新至 3.1.4'), findsNothing);
+      expect(find.text('发现新版本 3.1.4'), findsNothing);
       expect(find.byTooltip('刷新今日'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();

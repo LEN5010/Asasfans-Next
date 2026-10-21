@@ -2,21 +2,43 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/config/app_version.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../../core/time/local_date_provider.dart';
 import '../data/operations_repository.dart';
 import '../domain/app_operations.dart';
 
-final operationsRepositoryProvider = Provider<OperationsRepository>(
-  (ref) => OperationsRepository(
+final operationsRepositoryProvider = Provider<OperationsRepository>((ref) {
+  final events = Dio(
+    BaseOptions(
+      baseUrl: ref.watch(appEnvironmentProvider).dynamicApiBaseUrl.toString(),
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
+      headers: {'Accept': 'application/json', 'User-Agent': appUserAgent},
+      followRedirects: false,
+    ),
+  );
+  ref.onDispose(() => events.close(force: true));
+  return OperationsRepository(
     ref.watch(publicApiClientProvider),
     ref.watch(localDatabaseProvider),
-  ),
-);
+    events,
+  );
+});
+
+/// Whether this window is taller than wide, which picks the poster.
+bool get tallWindow {
+  final size =
+      WidgetsBinding.instance.platformDispatcher.views.first.physicalSize;
+  return size.height >= size.width;
+}
 
 final operationsProvider =
     StateNotifierProvider<OperationsController, OperationsState>((ref) {
@@ -40,10 +62,24 @@ class OperationsState {
   final AppOperations data;
   final bool ready, fresh, loading;
   final DateTime now;
-  List<AppOperation> get campaigns =>
-      data.campaigns.where((item) => item.activeAt(now)).toList();
-  List<AppOperation> get announcements =>
-      data.announcements.where((item) => item.activeAt(now)).toList();
+  static String get platform => defaultTargetPlatform.name.toLowerCase();
+  List<AppOperation> get campaigns => data.campaigns
+      .where((item) => item.availableOn(platform) && item.activeAt(now))
+      .toList();
+  List<AppOperation> get announcements => data.announcements
+      .where((item) => item.availableOn(platform) && item.activeAt(now))
+      .toList();
+
+  /// Every announcement served for this platform, ended ones included,
+  /// newest first; scheduled ones appear once they start.
+  List<AppOperation> get announcementHistory =>
+      data.announcements
+          .where(
+            (item) =>
+                item.availableOn(platform) && !now.isBefore(item.startsAt),
+          )
+          .toList()
+        ..sort((a, b) => b.startsAt.compareTo(a.startsAt));
 }
 
 class OperationsController extends StateNotifier<OperationsState> {
@@ -59,6 +95,7 @@ class OperationsController extends StateNotifier<OperationsState> {
   Future<void>? _fetching;
   bool _preloading = false;
   DateTime? _fetchedAt;
+  final _impressions = <String>{};
 
   Future<void> _load() async {
     AppOperations data = const AppOperations();
@@ -126,10 +163,9 @@ class OperationsController extends StateNotifier<OperationsState> {
         state.data.campaigns
             .where(
               (item) =>
-                  item.enabled &&
+                  item.availableOn(OperationsState.platform) &&
                   item.endsAt.isAfter(clock()) &&
-                  item.splashEnabled &&
-                  item.splashImage != null &&
+                  item.splash != null &&
                   !seen('splashOff', item.id),
             )
             .toList()
@@ -138,7 +174,7 @@ class OperationsController extends StateNotifier<OperationsState> {
     _preloading = true;
     try {
       _local['image'] = await repository.cacheSplash(
-        upcoming.first,
+        upcoming.first.splash!.pick(tall: tallWindow)!.url,
         _local['image'],
       );
     } catch (_) {
@@ -195,6 +231,24 @@ class OperationsController extends StateNotifier<OperationsState> {
 
   bool collapsed(String id) => seen('collapsed', id);
 
+  bool read(String id) => seen('read', id);
+  int get unread => state.announcements.where((item) => !read(item.id)).length;
+
+  Future<void> markRead(String id) async {
+    if (read(id)) return;
+    await markSeen('read', id);
+    if (mounted) _tick();
+  }
+
+  /// Anonymous counts for the operations page, best effort: a lost report
+  /// changes nothing for the reader. Impressions count once per run.
+  void report(String surface, String itemId, String event) {
+    if (event == 'impression' && !_impressions.add('$surface:$itemId')) return;
+    unawaited(
+      repository.report(surface, itemId, event).catchError((Object _) {}),
+    );
+  }
+
   Future<void> collapse(String id) async {
     await markSeen('collapsed', id);
     if (mounted) _tick();
@@ -212,8 +266,18 @@ class OperationsController extends StateNotifier<OperationsState> {
     _local['splashDay'] = day;
   }
 
-  Future<File?> cachedSplash(AppOperation item) =>
-      repository.cachedSplash(item, _local['image']);
+  /// The poster cached for this window's shape, else the other one.
+  Future<File?> cachedSplash(
+    OperationSplash splash, {
+    required bool tall,
+  }) async {
+    final first = splash.pick(tall: tall)!;
+    final other = splash.pick(tall: !tall)!;
+    return await repository.cachedSplash(first.url, _local['image']) ??
+        (other == first
+            ? null
+            : await repository.cachedSplash(other.url, _local['image']));
+  }
 
   @override
   void dispose() {

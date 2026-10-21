@@ -2,19 +2,34 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../core/network/public_api_client.dart';
 import '../../../core/storage/local_database.dart';
 import '../../../core/storage/storage_providers.dart';
-import '../domain/app_operations.dart';
 
 class OperationsRepository {
-  OperationsRepository(this._api, this._db);
+  OperationsRepository(this._api, this._db, this._events);
   final PublicApiClient _api;
   final LocalDatabase _db;
 
+  /// Posts anonymous counts: no cookie jar, account or device id.
+  final Dio _events;
+
   Future<Map<String, dynamic>> fetch() => _api.get('app/operations');
+
+  Future<void> report(String surface, String itemId, String event) async {
+    await _events.post<Object?>(
+      'app/operations/events',
+      data: {
+        'surface': surface,
+        'itemId': itemId,
+        'event': event,
+        'platform': defaultTargetPlatform.name.toLowerCase(),
+      },
+    );
+  }
 
   Future<Map<String, String>> readLocal() async {
     final rows = await _db.batch([
@@ -39,10 +54,10 @@ class OperationsRepository {
     ], write: true);
   }
 
-  Future<File?> cachedSplash(AppOperation campaign, String? record) async {
-    if (record == null || campaign.splashImage == null) return null;
+  Future<File?> cachedSplash(Uri image, String? record) async {
+    if (record == null) return null;
     final json = jsonDecode(record) as Map<String, dynamic>;
-    if (json['url'] != campaign.splashImage.toString()) return null;
+    if (json['url'] != image.toString()) return null;
     final name = json['file'] as String;
     if (!RegExp(r'^splash-\d+\.image$').hasMatch(name)) return null;
     final db = File(await resolvePersonalDatabasePath());
@@ -51,9 +66,8 @@ class OperationsRepository {
   }
 
   /// Download for the next launch, never delay entering the application.
-  Future<String> cacheSplash(AppOperation campaign, String? previous) async {
-    if (await cachedSplash(campaign, previous) != null) return previous!;
-    final uri = campaign.splashImage!;
+  Future<String> cacheSplash(Uri uri, String? previous) async {
+    if (await cachedSplash(uri, previous) != null) return previous!;
     final client = Dio(
       BaseOptions(
         connectTimeout: const Duration(seconds: 10),

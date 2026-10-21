@@ -30,6 +30,7 @@ import '../../handoff/presentation/return_entry_tile.dart';
 import '../../preferences/presentation/preferences_controls.dart';
 import '../../account/application/account_providers.dart';
 import '../../account/presentation/local_login_cleanup_tile.dart';
+import '../../operations/application/operations_controller.dart';
 
 /// My own content on this device first: the library entries, what I looked
 /// at recently, then management and settings. No account centre: the app
@@ -106,6 +107,7 @@ class MinePage extends ConsumerWidget {
                 onTap: () => showToolsSheet(context),
               ),
               const _ReleaseLink(),
+              const _AnnouncementLink(),
               _Link(
                 label: '反馈与帮助',
                 icon: Icons.feedback_outlined,
@@ -427,6 +429,23 @@ class _ReleaseLink extends ConsumerWidget {
       },
       highlight: newer != null,
       onTap: check is AsyncLoading ? null : () => checkForUpdates(context, ref),
+    );
+  }
+}
+
+class _AnnouncementLink extends ConsumerWidget {
+  const _AnnouncementLink();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(operationsProvider);
+    final unread = ref.read(operationsProvider.notifier).unread;
+    return _Link(
+      label: '公告',
+      icon: Icons.campaign_outlined,
+      tone: '贝拉',
+      detail: unread == 0 ? null : '$unread 条未读',
+      highlight: unread > 0,
+      onTap: () => context.go('/mine/announcements'),
     );
   }
 }
