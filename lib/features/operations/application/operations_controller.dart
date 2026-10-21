@@ -129,7 +129,8 @@ class OperationsController extends StateNotifier<OperationsState> {
                   item.enabled &&
                   item.endsAt.isAfter(clock()) &&
                   item.splashEnabled &&
-                  item.splashImage != null,
+                  item.splashImage != null &&
+                  !seen('splashOff', item.id),
             )
             .toList()
           ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
@@ -190,6 +191,13 @@ class OperationsController extends StateNotifier<OperationsState> {
     final value = ids.skip(ids.length > 100 ? ids.length - 100 : 0).join('\n');
     await repository.saveLocal(kind, value);
     _local[kind] = value;
+  }
+
+  bool collapsed(String id) => seen('collapsed', id);
+
+  Future<void> collapse(String id) async {
+    await markSeen('collapsed', id);
+    if (mounted) _tick();
   }
 
   String get todayKey {

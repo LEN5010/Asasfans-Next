@@ -129,7 +129,12 @@ class _OperationsHostState extends ConsumerState<OperationsHost> {
       return;
     }
     final item = state.campaigns
-        .where((item) => item.splashEnabled && item.splashImage != null)
+        .where(
+          (item) =>
+              item.splashEnabled &&
+              item.splashImage != null &&
+              !controller.seen('splashOff', item.id),
+        )
         .firstOrNull;
     if (item == null) return;
     try {
@@ -181,6 +186,21 @@ class _OperationsHostState extends ConsumerState<OperationsHost> {
       _splashFile = null;
     });
     _schedule();
+  }
+
+  /// Stops this poster only; later campaigns still get their launch.
+  Future<void> _muteSplash(AppOperation item) async {
+    _closeSplash();
+    try {
+      await ref.read(operationsProvider.notifier).markSeen('splashOff', item.id);
+    } catch (_) {
+      final context = _navigationContext;
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('开屏偏好保存失败')));
+      }
+    }
   }
 
   Future<void> _showImportantUpdate(AppUpdatePolicy policy, String key) async {
@@ -338,9 +358,18 @@ class _OperationsHostState extends ConsumerState<OperationsHost> {
                       Positioned(
                         top: 16,
                         right: 16,
-                        child: FilledButton.tonal(
-                          onPressed: _closeSplash,
-                          child: const Text('跳过'),
+                        child: Row(
+                          spacing: 8,
+                          children: [
+                            FilledButton.tonal(
+                              onPressed: () => _muteSplash(splash),
+                              child: const Text('不再提醒'),
+                            ),
+                            FilledButton.tonal(
+                              onPressed: _closeSplash,
+                              child: const Text('跳过'),
+                            ),
+                          ],
                         ),
                       ),
                       Positioned(

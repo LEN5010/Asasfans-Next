@@ -5,6 +5,7 @@ import 'package:asasfans_next/app/asasfans_app.dart';
 import 'package:asasfans_next/core/time/local_date_provider.dart';
 import 'package:asasfans_next/features/operations/application/operations_controller.dart';
 import 'package:asasfans_next/features/operations/domain/app_operations.dart';
+import 'package:asasfans_next/features/operations/presentation/operation_widgets.dart';
 import 'package:asasfans_next/features/release/domain/app_release.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -132,6 +133,102 @@ void main() {
     },
   );
 
+  testWidgets('muting a launch poster stops only that poster on later days', (
+    tester,
+  ) async {
+    final db = MemoryLocalDatabase();
+    final config = emptyOperations()
+      ..['campaigns'] = [
+        {
+          ..._campaign(),
+          'splashEnabled': true,
+          'splashImageUrl': 'https://len5010.top/poster.png',
+        },
+      ];
+    final repository = OperationsFixture(db, value: config)
+      ..splashFile = File('assets/brand/asasfans.png').absolute;
+    await tester.runAsync(
+      () => repository.saveLocal('cache', jsonEncode(config)),
+    );
+    var now = DateTime.utc(2026, 10, 21, 4);
+    Future<void> launch() async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...offlineTodayOverrides(),
+            currentTimeProvider.overrideWithValue(() => now),
+            operationsRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: const AsasfansApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await launch();
+    expect(find.text('不再提醒'), findsOneWidget);
+    await tester.tap(find.text('不再提醒'));
+    await tester.pumpAndSettle();
+    expect(find.text('跳过'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    now = DateTime.utc(2026, 10, 23, 4);
+    await launch();
+    expect(find.text('跳过'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await db.close();
+  });
+
+  testWidgets('closing the campaign strip keeps a toolbar button', (
+    tester,
+  ) async {
+    final db = MemoryLocalDatabase();
+    final repository = OperationsFixture(
+      db,
+      value: emptyOperations()..['campaigns'] = [_campaign()],
+    );
+    Widget app() => ProviderScope(
+      overrides: [
+        currentTimeProvider.overrideWithValue(
+          () => DateTime.utc(2026, 10, 21),
+        ),
+        operationsRepositoryProvider.overrideWithValue(repository),
+      ],
+      child: const MaterialApp(
+        home: Scaffold(
+          body: Column(children: [CampaignStrip(), CampaignShortcuts()]),
+        ),
+      ),
+    );
+    await tester.pumpWidget(app());
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('查看物料'), findsOneWidget);
+    expect(find.byTooltip('此间共鸣'), findsNothing);
+    await tester.runAsync(() async {
+      await tester.tap(find.byTooltip('收起'));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('查看物料'), findsNothing);
+    expect(find.byTooltip('此间共鸣'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(app());
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('查看物料'), findsNothing);
+    expect(find.byTooltip('此间共鸣'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await db.close();
+  });
+
   test(
     'campaign starts inclusively and expires at Beijing midnight across device zones',
     () {
@@ -236,8 +333,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('此间共鸣'), findsOneWidget);
-      expect(find.text('查看物料'), findsOneWidget);
+      expect(find.text('查看物料'), findsNothing);
       repository.value = {
         ...config,
         'updates': [_policy(platform.name.toLowerCase())],
@@ -253,7 +349,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('请更新至 3.1.4'), findsNothing);
-      expect(find.text('查看物料'), findsOneWidget);
+      expect(find.byTooltip('刷新今日'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();
     },

@@ -215,6 +215,9 @@ class _ContentPageState extends ConsumerState<ContentPage>
         titleIsControl: true,
         controlExtent: ChannelTabs.heightFor(MediaQuery.textScalerOf(context)),
         title: _ChannelStrip(current: _current),
+        actions: [
+          if (_current == ContentChannel.fanart) const CampaignShortcuts(),
+        ],
       ),
       body: ClipRect(
         child: AnimatedBuilder(
@@ -493,9 +496,17 @@ class _FanartFeedState extends ConsumerState<_FanartFeed>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: CampaignCards(compact: true),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: ContentSearchControl.rowWidth,
+                    ),
+                    child: const CampaignStrip(),
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../shared/widgets/app_controls.dart';
-import '../../../shared/widgets/media_image_policy.dart';
 import '../application/operations_controller.dart';
 import '../domain/app_operations.dart';
 
@@ -28,86 +27,99 @@ Future<void> openOperation(
   }
 }
 
-class CampaignCards extends ConsumerWidget {
-  const CampaignCards({this.compact = false, super.key});
-  final bool compact;
+/// The fanart channel's entry to live campaigns: a slim strip that the viewer
+/// can close into a button beside the channel tabs (see [CampaignShortcuts]).
+class CampaignStrip extends ConsumerWidget {
+  const CampaignStrip({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final campaigns = ref.watch(operationsProvider).campaigns;
+    final controller = ref.read(operationsProvider.notifier);
+    final campaigns = ref
+        .watch(operationsProvider)
+        .campaigns
+        .where((item) => item.action != null && !controller.collapsed(item.id))
+        .toList();
     if (campaigns.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
     return Padding(
-      padding: EdgeInsets.only(top: compact ? 8 : 20, bottom: compact ? 8 : 0),
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
       child: Column(
-        spacing: 12,
+        spacing: 8,
         children: [
-          for (final campaign in campaigns)
-            _CampaignCard(item: campaign, compact: compact),
+          for (final item in campaigns)
+            AppCard(
+              padding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AppButton.withIcon(
+                    selected: true,
+                    onPressed: () => openOperation(context, ref, item.action!),
+                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(item.buttonLabel),
+                  ),
+                  AppButton.icon(
+                    tooltip: '收起',
+                    onPressed: () async {
+                      try {
+                        await controller.collapse(item.id);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('收起状态保存失败')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-class _CampaignCard extends ConsumerWidget {
-  const _CampaignCard({required this.item, required this.compact});
-  final AppOperation item;
-  final bool compact;
+/// Closed campaign strips, kept as buttons beside the tabs until they end.
+class CampaignShortcuts extends ConsumerWidget {
+  const CampaignShortcuts({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final action = item.action;
-    return AppCard(
-      padding: EdgeInsets.all(compact ? 16 : 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (!compact && item.bannerImage != null) ...[
-            LayoutBuilder(
-              builder: (context, box) => ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: AspectRatio(
-                  aspectRatio: 2.8,
-                  child: Image(
-                    image: MediaImagePolicy.preview(
-                      item.bannerImage!,
-                      logicalWidth: box.maxWidth,
-                      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-                    ),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          Text(
-            item.title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.primary,
+    final controller = ref.read(operationsProvider.notifier);
+    final campaigns = ref
+        .watch(operationsProvider)
+        .campaigns
+        .where((item) => item.action != null && controller.collapsed(item.id));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 8,
+      children: [
+        for (final item in campaigns)
+          AppButton.icon(
+            tooltip: item.title,
+            filled: true,
+            onPressed: () => openOperation(context, ref, item.action!),
+            icon: Icon(
+              Icons.auto_awesome_outlined,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          if (!compact && item.body.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(item.body, style: theme.textTheme.bodyMedium),
-          ],
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: AppButton.withIcon(
-                selected: true,
-                onPressed: () => openOperation(context, ref, action),
-                icon: const Icon(Icons.arrow_forward),
-                label: Text(item.buttonLabel),
-              ),
-            ),
-          ],
-        ],
-      ),
+      ],
     );
   }
 }

@@ -154,7 +154,6 @@ class _TodayPageState extends ConsumerState<TodayPage> with ResumeWhenVisible {
               slivers: [
                 SliverToBoxAdapter(child: SizedBox(height: padding.top + 16)),
                 box(AppEntrance(child: heading), spaced: false),
-                box(const CampaignCards(), spaced: false),
                 box(const AnnouncementCards(), spaced: false),
                 // What today holds, as a compact card at the top: a few
                 // lines, never a column beside the works for the whole page.
