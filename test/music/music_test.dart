@@ -185,6 +185,14 @@ void main() {
     await handler.playTracks(large, shuffle: true);
     expect(handler.tracks.length, MusicAudioHandler.maxQueue);
     expect(handler.playOrder.toSet(), List.generate(200, (i) => i).toSet());
+    final fullOrder = handler.playOrder;
+    final fullCurrent = handler.current;
+    await handler.enqueue(songs.first, next: true);
+    await handler.enqueue(songs.last);
+    expect(handler.tracks.length, MusicAudioHandler.maxQueue);
+    expect(handler.current, fullCurrent);
+    expect(handler.playOrder, fullOrder);
+    expect(handler.message, '队列已满（最多 200 首）');
     await handler.stop();
     handler.dispose();
     streams.dio.close();

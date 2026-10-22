@@ -155,6 +155,10 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
   }
 
   Future<void> enqueue(MusicTrack track, {bool next = false}) async {
+    if (_tracks.length >= maxQueue) {
+      _say('队列已满（最多 $maxQueue 首）');
+      return;
+    }
     if (_tracks.isEmpty) {
       await playTracks([track]);
       return;

@@ -52,12 +52,13 @@ class MusicPlayerPage extends ConsumerWidget {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final wide = constraints.maxWidth >= 900;
+                    final gutter = constraints.maxWidth < 360 ? 16.0 : 24.0;
                     final player = LayoutBuilder(
                       builder: (context, bounds) => Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 480),
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                            padding: EdgeInsets.fromLTRB(gutter, 8, gutter, 24),
                             child: _PlayerContent(
                               handler: handler,
                               track: track,

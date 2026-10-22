@@ -28,6 +28,7 @@ class _OperationsHostState extends ConsumerState<OperationsHost> {
   final _startup = Stopwatch()..start();
   bool _presenting = false, _splashConsidered = false, _releaseChecked = false;
   final _presentedUpdates = <String>{};
+  final _presentedAnnouncements = <String>{};
   AppOperation? _splash;
   File? _splashFile;
   Timer? _splashTimer;
@@ -92,16 +93,16 @@ class _OperationsHostState extends ConsumerState<OperationsHost> {
         final latest = ref.read(operationsProvider);
         if (_policy(latest)?.requires(currentVersion) ?? false) return;
         final item = latest.announcements
-            .where((item) => item.important && !controller.read(item.id))
+            .where(
+              (item) =>
+                  item.important &&
+                  !controller.read(item.id) &&
+                  !_presentedAnnouncements.contains(item.id),
+            )
             .firstOrNull;
         if (item == null) break;
         final context = _navigationContext;
         if (context == null || !context.mounted) return;
-        try {
-          await controller.markRead(item.id);
-        } catch (_) {
-          return;
-        }
         if (mounted &&
             context.mounted &&
             item.activeAt(controller.clock()) &&
@@ -109,6 +110,7 @@ class _OperationsHostState extends ConsumerState<OperationsHost> {
                 .read(operationsProvider)
                 .announcements
                 .any((current) => current.id == item.id)) {
+          _presentedAnnouncements.add(item.id);
           await showAnnouncement(context, ref, item);
         }
         if (!mounted) return;

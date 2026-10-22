@@ -30,6 +30,7 @@ class OperationsFixture extends OperationsRepository {
   bool offline = false;
   bool failCacheWrites = false;
   bool failSeenWrites = false;
+  bool failReadWrites = false;
   File? splashFile;
   @override
   Future<File?> cachedSplash(Uri image, String? record) async => splashFile;
@@ -45,6 +46,9 @@ class OperationsFixture extends OperationsRepository {
     }
     if (failSeenWrites && key == 'updates') {
       throw StateError('mark unavailable');
+    }
+    if (failReadWrites && key == 'read') {
+      throw StateError('read mark unavailable');
     }
     return super.saveLocal(key, value);
   }

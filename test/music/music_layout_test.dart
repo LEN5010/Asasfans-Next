@@ -85,6 +85,15 @@ Widget _app(Widget home, {List<MusicTrack>? tracks, double textScale = 2}) =>
     );
 
 void main() {
+  testWidgets('player controls fit a 320 wide phone', (tester) async {
+    tester.view.physicalSize = const Size(320, 693);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(const MusicPlayerPage()));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('music page, favorites and player fit 360 wide at 2x text', (
     tester,
   ) async {

@@ -58,12 +58,48 @@ Map<String, dynamic> _notice(String id, {List<String> platforms = const []}) =>
 
 Map<String, dynamic> _policy([String platform = 'android']) => {
   'platform': platform,
-  'recommendedVersion': '3.1.4',
-  'minimumVersion': '3.1.4',
+  'recommendedVersion': '3.1.5',
+  'minimumVersion': '3.1.5',
   'message': '更新后继续使用',
 };
 
 void main() {
+  testWidgets(
+    'important announcements still open when saving read marks fails',
+    (tester) async {
+      final db = MemoryLocalDatabase();
+      final repository = OperationsFixture(
+        db,
+        value: emptyOperations()
+          ..['announcements'] = [
+            {..._notice('n1'), 'important': true},
+          ],
+      )..failReadWrites = true;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...offlineTodayOverrides(),
+            currentTimeProvider.overrideWithValue(
+              () => DateTime.utc(2026, 10, 21),
+            ),
+            operationsRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: const AsasfansApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('关闭'), findsOneWidget);
+      expect(find.text('正文 n1'), findsWidgets);
+      await tester.tap(find.text('关闭'));
+      await tester.pumpAndSettle();
+      expect(find.text('关闭'), findsNothing);
+      expect(repository.events, ['announcement:n1:impression']);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await db.close();
+    },
+  );
+
   testWidgets(
     'optional update stays dismissible when its preference cannot be saved',
     (tester) async {
@@ -89,10 +125,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('发现新版本 3.1.4'), findsOneWidget);
+      expect(find.text('发现新版本 3.1.5'), findsOneWidget);
       await tester.tap(find.text('稍后'));
       await tester.pumpAndSettle();
-      expect(find.text('发现新版本 3.1.4'), findsNothing);
+      expect(find.text('发现新版本 3.1.5'), findsNothing);
       expect(find.text('更新偏好保存失败'), findsOneWidget);
       expect(repository.events, [
         'update:android:impression',
@@ -261,7 +297,7 @@ void main() {
       expect(item.activeAt(DateTime.parse('2026-10-31T16:00:00Z')), isFalse);
       final policy = AppUpdatePolicy.fromJson(_policy());
       expect(policy.requires(AppVersion.tryParse('3.1.3')!), isTrue);
-      expect(policy.requires(AppVersion.tryParse('3.1.4')!), isFalse);
+      expect(policy.requires(AppVersion.tryParse('3.1.5')!), isFalse);
       expect(policy.requires(AppVersion.tryParse('3.2.0')!), isFalse);
     },
   );
@@ -456,13 +492,13 @@ void main() {
         () => widgetRef.read(operationsProvider.notifier).refresh(),
       );
       await tester.pumpAndSettle();
-      expect(find.text('发现新版本 3.1.4'), findsOneWidget);
+      expect(find.text('发现新版本 3.1.5'), findsOneWidget);
       repository.value = config;
       await tester.runAsync(
         () => widgetRef.read(operationsProvider.notifier).refresh(),
       );
       await tester.pumpAndSettle();
-      expect(find.text('发现新版本 3.1.4'), findsNothing);
+      expect(find.text('发现新版本 3.1.5'), findsNothing);
       expect(find.byTooltip('刷新今日'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();
