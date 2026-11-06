@@ -24,7 +24,10 @@ void main() {
         SqlStatement('PRAGMA database_list', [], true),
         SqlStatement('PRAGMA user_version', [], true),
       ]);
-      final file = results.first.single['file']! as String;
+      // ALTER TABLE ... RENAME in the v12 upgrade also opens the temp schema.
+      final file =
+          results.first.singleWhere((row) => row['name'] == 'main')['file']!
+              as String;
       expect(file, expectedFile);
       expect(file, endsWith(path.join('asasfans_flutter', 'personal.sqlite3')));
       expect(results.last.single['user_version'], SqliteExecutor.schemaVersion);
