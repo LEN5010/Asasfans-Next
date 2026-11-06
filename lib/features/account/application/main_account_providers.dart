@@ -9,6 +9,7 @@ import '../../library/application/library_providers.dart';
 import '../domain/main_account.dart';
 import '../data/main_account_api.dart';
 import '../data/main_account_vault.dart';
+import '../data/tappo_api.dart';
 import 'main_account_controller.dart';
 import 'collection_sync_controller.dart';
 
@@ -65,3 +66,25 @@ final collectionSyncProvider =
       controller.schedule(delay: Duration.zero);
       return controller;
     });
+
+final tappoApiProvider = Provider<TappoApi>((ref) {
+  final dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 15),
+      headers: {'Accept': 'application/json', 'User-Agent': appUserAgent},
+      followRedirects: false,
+    ),
+  );
+  ref.onDispose(() => dio.close(force: true));
+  return TappoApi(dio);
+});
+
+/// The signed-in account's AsoulTappo save; null when it has none.
+final tappoProgressProvider = FutureProvider.autoDispose<TappoProgress?>((ref) {
+  final token = ref.watch(
+    mainAccountControllerProvider.select((state) => state.session?.token),
+  );
+  if (token == null) return null;
+  return ref.watch(tappoApiProvider).progress(token);
+});

@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_page_bar.dart';
 import '../application/main_account_providers.dart';
 import '../domain/main_account.dart';
 import 'main_account_tile.dart';
+import 'tappo_card.dart';
 
 enum _Mode { login, register, reset }
 
@@ -152,8 +153,11 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
                   else if (session == null)
                     _card(_signIn(account.busy))
                   else ...[
-                    if (session.user.email != null)
+                    if (session.user.email != null) ...[
                       _card(_accountSummary(session.user, account.busy)),
+                      const SizedBox(height: AppTokens.sectionGap),
+                      const TappoCard(),
+                    ],
                     if (session.user.email == null || _changingEmail) ...[
                       if (session.user.email != null)
                         const SizedBox(height: AppTokens.sectionGap),
