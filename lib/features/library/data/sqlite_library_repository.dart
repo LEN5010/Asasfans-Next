@@ -11,14 +11,17 @@ import '../../music/domain/music_track.dart';
 import '../domain/library_models.dart';
 import '../domain/library_page.dart';
 import 'library_codec.dart';
+import 'cloud_collections.dart';
 
 class SqliteLibraryRepository implements LibraryRepository {
   SqliteLibraryRepository(
     this._db, {
     DateTime Function()? clock,
     this.backgroundDecoding = true,
+    this.owner = 'local',
   }) : _clock = clock ?? DateTime.now;
   final LocalDatabase _db;
+  final String owner;
   final bool backgroundDecoding;
   final DateTime Function() _clock;
   final _changes = StreamController<int>.broadcast();
@@ -180,10 +183,12 @@ class SqliteLibraryRepository implements LibraryRepository {
     LibraryCursor? cursor,
     int limit = 40,
   }) => _page(
-    query: 'folders',
+    query: 'folders:$owner',
     select:
-        'f.id,f.name,(SELECT COUNT(*) FROM collection_items i WHERE i.folder_id=f.id) AS count',
+        'f.id,f.name,(SELECT COUNT(*) FROM collection_items i WHERE i.folder_id=f.id AND i.owner=f.owner) AS count',
     from: 'collection_folders f',
+    where: 'f.owner=?',
+    parameters: [owner],
     order: ['f.created_at', 'f.id'],
     decode: _folder,
     cursor: cursor,
@@ -201,8 +206,8 @@ class SqliteLibraryRepository implements LibraryRepository {
         'collection_items',
         'i.added_at AS at',
         ['-i.added_at', 'i.source', 'i.content_id'],
-        'i.folder_id=?',
-        <Object?>[query.folderId],
+        'i.folder_id=? AND i.owner=?',
+        <Object?>[query.folderId, owner],
       ),
       LibraryListKind.later => (
         'watch_later',
@@ -220,7 +225,7 @@ class SqliteLibraryRepository implements LibraryRepository {
       ),
     };
     return _page(
-      query: query,
+      query: query.kind == LibraryListKind.collection ? (owner, query) : query,
       select: 'c.source,c.content_id,c.snapshot,$select',
       from:
           '$table i JOIN content_refs c ON c.source=i.source AND c.content_id=i.content_id',
@@ -293,8 +298,8 @@ class SqliteLibraryRepository implements LibraryRepository {
   Future<CollectionFolder?> folder(String id) async {
     final rows = (await _batch([
       SqlStatement(
-        'SELECT f.id,f.name,(SELECT COUNT(*) FROM collection_items i WHERE i.folder_id=f.id) AS count FROM collection_folders f WHERE f.id=?',
-        [id],
+        'SELECT f.id,f.name,(SELECT COUNT(*) FROM collection_items i WHERE i.folder_id=f.id AND i.owner=f.owner) AS count FROM collection_folders f WHERE f.id=? AND f.owner=?',
+        [id, owner],
         true,
       ),
     ])).single;
@@ -304,10 +309,10 @@ class SqliteLibraryRepository implements LibraryRepository {
   @override
   Future<List<CollectionFolder>> folders() async {
     final rows = (await _batch([
-      const SqlStatement(
+      SqlStatement(
         '''SELECT f.id,f.name,COUNT(i.content_id) AS count FROM collection_folders f
-      LEFT JOIN collection_items i ON i.folder_id=f.id GROUP BY f.id ORDER BY f.created_at,f.id''',
-        [],
+      LEFT JOIN collection_items i ON i.folder_id=f.id AND i.owner=f.owner WHERE f.owner=? GROUP BY f.id ORDER BY f.created_at,f.id''',
+        [owner],
         true,
       ),
     ])).single;
@@ -325,11 +330,10 @@ class SqliteLibraryRepository implements LibraryRepository {
   Future<String> createFolder(String name) async {
     final id = _localId();
     await _write([
-      SqlStatement('INSERT INTO collection_folders VALUES(?,?,?)', [
-        id,
-        _folderName(name),
-        _now,
-      ]),
+      SqlStatement(
+        'INSERT INTO collection_folders(owner,id,name,created_at) VALUES(?,?,?,?)',
+        [owner, id, _folderName(name), _now],
+      ),
     ]);
     return id;
   }
@@ -340,10 +344,10 @@ class SqliteLibraryRepository implements LibraryRepository {
       throw const StorageFailure(StorageFailureKind.invalidData);
     }
     await _write([
-      SqlStatement('UPDATE collection_folders SET name=? WHERE id=?', [
-        _folderName(name),
-        id,
-      ]),
+      SqlStatement(
+        'UPDATE collection_folders SET name=? WHERE id=? AND owner=?',
+        [_folderName(name), id, owner],
+      ),
     ]);
   }
 
@@ -353,7 +357,20 @@ class SqliteLibraryRepository implements LibraryRepository {
       throw const StorageFailure(StorageFailureKind.invalidData);
     }
     await _write([
-      SqlStatement('DELETE FROM collection_folders WHERE id=?', [id]),
+      if (owner != 'local')
+        SqlStatement(
+          'INSERT INTO cloud_outbox(owner,key,op,queued_at) '
+          "SELECT DISTINCT owner,${cloudKeySql('i')},'remove',? FROM collection_items i "
+          "WHERE owner=? AND folder_id=? AND source IN ('bilibiliDynamic','doubanTopic') "
+          'AND NOT EXISTS(SELECT 1 FROM collection_items j WHERE j.owner=i.owner AND j.source=i.source '
+          'AND j.content_id=i.content_id AND j.folder_id<>i.folder_id) '
+          'ON CONFLICT(owner,key) DO UPDATE SET op=excluded.op,queued_at=MAX(cloud_outbox.queued_at+1,excluded.queued_at)',
+          [_clock().microsecondsSinceEpoch, owner, id],
+        ),
+      SqlStatement('DELETE FROM collection_folders WHERE id=? AND owner=?', [
+        id,
+        owner,
+      ]),
       _prune,
     ]);
   }
@@ -362,8 +379,8 @@ class SqliteLibraryRepository implements LibraryRepository {
   Future<LibraryItemState> itemState(ContentIdentity identity) async {
     final result = await _batch([
       SqlStatement(
-        'SELECT folder_id FROM collection_items WHERE source=? AND content_id=?',
-        _identity(identity),
+        'SELECT folder_id FROM collection_items WHERE source=? AND content_id=? AND owner=?',
+        [..._identity(identity), owner],
         true,
       ),
       SqlStatement(
@@ -390,24 +407,42 @@ class SqliteLibraryRepository implements LibraryRepository {
     collected
         ? [
             _content(item),
+            if (owner != 'local' && cloudKey(item.identity) != null)
+              _queue(item.identity, 'add'),
             SqlStatement(
-              'INSERT INTO collection_items VALUES(?,?,?,?) ON CONFLICT DO NOTHING',
-              [folderId, ..._identity(item.identity), _now],
+              'INSERT INTO collection_items(owner,folder_id,source,content_id,added_at) VALUES(?,?,?,?,?) ON CONFLICT DO NOTHING',
+              [owner, folderId, ..._identity(item.identity), _now],
             ),
           ]
         : [
             SqlStatement(
-              'DELETE FROM collection_items WHERE folder_id=? AND source=? AND content_id=?',
-              [folderId, ..._identity(item.identity)],
+              'DELETE FROM collection_items WHERE folder_id=? AND source=? AND content_id=? AND owner=?',
+              [folderId, ..._identity(item.identity), owner],
             ),
+            if (owner != 'local' && cloudKey(item.identity) != null)
+              _queue(item.identity, 'remove'),
             _prune,
           ],
   );
+  SqlStatement _queue(ContentIdentity identity, String op) => SqlStatement(
+    "INSERT INTO cloud_outbox(owner,key,op,queued_at) SELECT ?,?,?,? "
+    'WHERE NOT EXISTS(SELECT 1 FROM collection_items WHERE owner=? AND source=? AND content_id=?) '
+    'ON CONFLICT(owner,key) DO UPDATE SET op=excluded.op,queued_at=MAX(cloud_outbox.queued_at+1,excluded.queued_at)',
+    [
+      owner,
+      cloudKey(identity),
+      op,
+      _clock().microsecondsSinceEpoch,
+      owner,
+      ..._identity(identity),
+    ],
+  );
+
   @override
   Future<List<LibraryRecord>> collection(String folderId) => _records(
     '''SELECT c.source,c.content_id,c.snapshot,i.added_at AS at FROM collection_items i
-    JOIN content_refs c ON c.source=i.source AND c.content_id=i.content_id WHERE i.folder_id=? ORDER BY i.added_at DESC,c.source,c.content_id''',
-    [folderId],
+    JOIN content_refs c ON c.source=i.source AND c.content_id=i.content_id WHERE i.folder_id=? AND i.owner=? ORDER BY i.added_at DESC,c.source,c.content_id''',
+    [folderId, owner],
   );
   @override
   Future<void> setLater(ContentSnapshot item, bool saved) => _write(

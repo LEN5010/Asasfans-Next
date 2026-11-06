@@ -53,6 +53,7 @@ Database historicalDatabase(int version) {
       (9, updatesSchemaV9),
       (10, calendarSchemaV10),
       (11, musicSchemaV11),
+      (12, librarySchemaV12),
     ]) {
       if (version < step.$1) break;
       for (final statement in step.$2) {

@@ -79,3 +79,46 @@ final librarySchemaV3 = <String>[
       ${operation == 'UPDATE' ? 'WHEN ${table.value.map((c) => 'OLD.$c IS NOT NEW.$c').join(' OR ')}' : ''}
       BEGIN UPDATE library_meta SET revision=revision+1 WHERE singleton=1; END''',
 ];
+
+/// Each account keeps its own folder tree; content snapshots remain shared.
+final librarySchemaV12 = <String>[
+  """CREATE TABLE collection_folders_v12 (
+    owner TEXT NOT NULL, id TEXT NOT NULL, name TEXT NOT NULL,
+    created_at INTEGER NOT NULL, PRIMARY KEY(owner,id)
+  ) WITHOUT ROWID""",
+  "INSERT INTO collection_folders_v12 SELECT 'local',id,name,created_at FROM collection_folders",
+  """CREATE TABLE collection_items_v12 (
+    owner TEXT NOT NULL, folder_id TEXT NOT NULL, source TEXT NOT NULL,
+    content_id TEXT NOT NULL, added_at INTEGER NOT NULL,
+    PRIMARY KEY(owner,folder_id,source,content_id),
+    FOREIGN KEY(owner,folder_id) REFERENCES collection_folders_v12(owner,id) ON DELETE CASCADE,
+    FOREIGN KEY(source,content_id) REFERENCES content_refs(source,content_id)
+  ) WITHOUT ROWID""",
+  "INSERT INTO collection_items_v12 SELECT 'local',folder_id,source,content_id,added_at FROM collection_items",
+  'DROP TABLE collection_items',
+  'DROP TABLE collection_folders',
+  'ALTER TABLE collection_folders_v12 RENAME TO collection_folders',
+  'ALTER TABLE collection_items_v12 RENAME TO collection_items',
+  'CREATE INDEX folders_page ON collection_folders(owner,created_at,id)',
+  'CREATE INDEX collection_page ON collection_items(owner,folder_id,-added_at,source,content_id)',
+  'CREATE INDEX collection_content_ref ON collection_items(source,content_id)',
+  """CREATE TABLE cloud_outbox (
+    owner TEXT NOT NULL, key TEXT NOT NULL, op TEXT NOT NULL CHECK(op IN ('add','remove')),
+    queued_at INTEGER NOT NULL, PRIMARY KEY(owner,key)
+  ) WITHOUT ROWID""",
+  for (final table in const {
+    'collection_folders': ['owner', 'id', 'name', 'created_at'],
+    'collection_items': [
+      'owner',
+      'folder_id',
+      'source',
+      'content_id',
+      'added_at',
+    ],
+  }.entries)
+    for (final operation in ['INSERT', 'UPDATE', 'DELETE'])
+      """CREATE TRIGGER ${table.key}_${operation.toLowerCase()}_revision
+      AFTER $operation ON ${table.key}
+      ${operation == 'UPDATE' ? 'WHEN ${table.value.map((c) => 'OLD.$c IS NOT NEW.$c').join(' OR ')}' : ''}
+      BEGIN UPDATE library_meta SET revision=revision+1 WHERE singleton=1; END""",
+];

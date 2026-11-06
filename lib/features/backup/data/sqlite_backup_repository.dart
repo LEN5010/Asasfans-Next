@@ -4,48 +4,81 @@ import 'dart:typed_data';
 import '../../../core/storage/local_database.dart';
 import '../domain/personal_backup.dart';
 import 'backup_codec.dart';
+import '../../library/data/cloud_collections.dart';
 
 class SqliteBackupRepository implements BackupRepository {
   SqliteBackupRepository(
     this._db, {
     required this.onCommitted,
+    this.owner = 'local',
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
   final LocalDatabase _db;
+  final String owner;
   final void Function() onCommitted;
   final DateTime Function() _clock;
 
-  // Every SELECT observes the same transaction. The budget predicates prevent
-  // a giant store from first being materialized in memory just to reject it.
-  static final _budget =
-      '''WITH budget AS (SELECT
-    (${BackupCodec.columns.entries.map((entry) => '(SELECT COALESCE(SUM(${entry.value.map((column) => 'COALESCE(length(CAST($column AS BLOB)),0)').join('+')}+512),0) FROM ${entry.key})').join('+')}) AS bytes,
-    (${BackupCodec.columns.keys.map((table) => '(SELECT COUNT(*) FROM $table)').join('+')}) AS rows)
-  ''';
-  static final _preferences =
-      "key IN (${BackupCodec.preferenceKeys.map((_) => '?').join(',')})";
+  (String, List<Object?>) _filter(String table) => switch (table) {
+    'collection_folders' || 'collection_items' => ('owner=?', [owner]),
+    'content_refs' => (
+      'EXISTS(SELECT 1 FROM collection_items i WHERE i.owner=? AND i.source=content_refs.source AND i.content_id=content_refs.content_id) '
+          'OR EXISTS(SELECT 1 FROM watch_later i WHERE i.source=content_refs.source AND i.content_id=content_refs.content_id) '
+          'OR EXISTS(SELECT 1 FROM content_history i WHERE i.source=content_refs.source AND i.content_id=content_refs.content_id) '
+          'OR EXISTS(SELECT 1 FROM playback_progress i WHERE i.source=content_refs.source AND i.content_id=content_refs.content_id) '
+          'OR EXISTS(SELECT 1 FROM playback_bookmarks i WHERE i.source=content_refs.source AND i.content_id=content_refs.content_id)',
+      [owner],
+    ),
+    'preferences' => (
+      "key IN (${BackupCodec.preferenceKeys.map((_) => '?').join(',')})",
+      [...BackupCodec.preferenceKeys],
+    ),
+    _ => ('1', []),
+  };
 
   @override
   Future<Uint8List> export() async {
     final at = _clock().toUtc();
+    final filters = {
+      for (final table in BackupCodec.columns.keys) table: _filter(table),
+    };
+    final budget =
+        'WITH budget AS (SELECT ' +
+        BackupCodec.columns.entries
+            .map(
+              (entry) =>
+                  '(SELECT COALESCE(SUM(${entry.value.map((column) => 'COALESCE(length(CAST($column AS BLOB)),0)').join('+')}+512),0) FROM ${entry.key} WHERE (${filters[entry.key]!.$1}))',
+            )
+            .join('+') +
+        ' AS bytes,' +
+        BackupCodec.columns.keys
+            .map(
+              (table) =>
+                  '(SELECT COUNT(*) FROM $table WHERE (${filters[table]!.$1}))',
+            )
+            .join('+') +
+        ' AS rows) ';
+    final budgetParams = [
+      for (var i = 0; i < 2; i++)
+        for (final table in BackupCodec.columns.keys) ...filters[table]!.$2,
+    ];
     final result = await _db.batch([
-      SqlStatement('$_budget SELECT bytes,rows FROM budget', [], true),
+      SqlStatement('$budget SELECT bytes,rows FROM budget', budgetParams, true),
       for (final entry in BackupCodec.columns.entries)
         SqlStatement(
-          '$_budget SELECT ${entry.value.join(',')} FROM ${entry.key} '
-          'WHERE EXISTS(SELECT 1 FROM budget WHERE bytes<=? AND rows<=?) '
-          '${entry.key == 'preferences' ? 'AND $_preferences' : ''}',
+          '$budget SELECT ${entry.value.join(',')} FROM ${entry.key} '
+          'WHERE (${filters[entry.key]!.$1}) AND EXISTS(SELECT 1 FROM budget WHERE bytes<=? AND rows<=?)',
           [
+            ...budgetParams,
+            ...filters[entry.key]!.$2,
             BackupCodec.maxBytes ~/ 2,
             BackupCodec.maxRows,
-            if (entry.key == 'preferences') ...BackupCodec.preferenceKeys,
           ],
           true,
         ),
     ]);
-    final budget = result.first.single;
-    if ((budget['bytes'] as int) > BackupCodec.maxBytes ~/ 2 ||
-        (budget['rows'] as int) > BackupCodec.maxRows) {
+    final measured = result.first.single;
+    if ((measured['bytes'] as int) > BackupCodec.maxBytes ~/ 2 ||
+        (measured['rows'] as int) > BackupCodec.maxRows) {
       throw const BackupFailure(BackupFailureKind.tooLarge);
     }
     final tables = {
@@ -100,15 +133,19 @@ class SqliteBackupRepository implements BackupRepository {
           WHERE excluded.updated_at>playback_progress.updated_at''',
         _ => 'ON CONFLICT DO NOTHING',
       };
+      final owned =
+          entry.key == 'collection_folders' || entry.key == 'collection_items';
+      final columns = [if (owned) 'owner', ...entry.value];
       for (final row in backup.tables[entry.key]!) {
         commands.add(
           SqlStatement(
-            'INSERT INTO ${entry.key}(${entry.value.join(',')}) VALUES(${entry.value.map((_) => '?').join(',')}) $conflict',
-            entry.value.map((key) => row[key]).toList(),
+            'INSERT INTO ${entry.key}(${columns.join(',')}) VALUES(${columns.map((_) => '?').join(',')}) $conflict',
+            [if (owned) owner, ...entry.value.map((key) => row[key])],
           ),
         );
       }
     }
+    if (owner != 'local') commands.add(CloudCollections.queueCurrent(owner));
     await _db.batch(commands, write: true);
     // Only a committed transaction wakes consumers; a failed import is atomic.
     onCommitted();

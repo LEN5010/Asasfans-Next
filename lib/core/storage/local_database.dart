@@ -115,7 +115,7 @@ Future<SqlResults> _runIsolated(
 /// No importer exists: an unknown database identity is rejected, never reset.
 abstract final class SqliteExecutor {
   static const applicationId = 0x4153464E;
-  static const schemaVersion = 11;
+  static const schemaVersion = 12;
 
   static SqlResults openBatch(
     String path,
@@ -235,6 +235,12 @@ abstract final class SqliteExecutor {
             database.execute(statement);
           }
           database.userVersion = 11;
+        }
+        if (database.userVersion == 11) {
+          for (final statement in librarySchemaV12) {
+            database.execute(statement);
+          }
+          database.userVersion = 12;
         }
         database.execute('COMMIT');
       } catch (_) {
