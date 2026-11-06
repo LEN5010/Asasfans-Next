@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/music/presentation/music_downloads_page.dart';
 import '../../features/music/presentation/music_favorites_page.dart';
 import '../../features/music/presentation/music_page.dart';
 import '../../features/music/presentation/music_player_page.dart';
@@ -116,6 +117,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'favorites',
                     builder: (_, _) => const MusicFavoritesPage(),
                   ),
+                  GoRoute(
+                    path: 'downloads',
+                    builder: (_, _) => const MusicDownloadsPage(),
+                  ),
                 ],
               ),
             ],
@@ -187,11 +192,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         path: 'disclaimer',
                         builder: (_, _) => const DisclaimerPage(),
                       ),
-                      GoRoute(
-                        path: 'account',
-                        builder: (_, _) => const MainAccountPage(),
-                      ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'account',
+                    builder: (_, _) => const MainAccountPage(),
                   ),
                   GoRoute(path: 'about', builder: (_, _) => const AboutPage()),
                   GoRoute(

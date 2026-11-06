@@ -3,10 +3,13 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 class MusicStream {
-  const MusicStream(this.uri, this.gain, this.expiresAt);
+  const MusicStream(this.uri, this.gain, this.expiresAt, {this.type = 'mp3'});
   final Uri uri;
   final double gain;
   final DateTime expiresAt;
+
+  /// The file format, as an extension: AVPlayer picks its decoder by it.
+  final String type;
 }
 
 class MusicStreamRepository {
@@ -51,6 +54,10 @@ class MusicStreamRepository {
         uri,
         (value['gain'] as num?)?.toDouble() ?? 0,
         now.add(const Duration(minutes: 20)),
+        type: switch ('${value['type'] ?? ''}'.toLowerCase()) {
+          final type when RegExp(r'^[a-z0-9]{2,5}$').hasMatch(type) => type,
+          _ => 'mp3',
+        },
       );
     }
   }

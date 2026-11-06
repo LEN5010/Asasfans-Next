@@ -549,6 +549,90 @@ class MusicDockPlayer extends ConsumerWidget {
 }
 
 /// The heart beside a song: kept songs are listed under 收藏的歌.
+/// Saves [track] on this device, saying so when it fails.
+Future<void> downloadMusic(
+  BuildContext context,
+  WidgetRef ref,
+  MusicTrack track,
+) async {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final failure = await ref.read(musicDownloadsProvider).download(track);
+  if (failure != null) {
+    messenger?.showSnackBar(SnackBar(content: Text(failure)));
+  }
+}
+
+/// Removes the saved copy of [track] after asking.
+Future<void> deleteMusicDownload(
+  BuildContext context,
+  WidgetRef ref,
+  MusicTrack track,
+) async {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('删除「${track.title}」的下载？'),
+      actions: [
+        AppButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('取消'),
+        ),
+        AppButton(
+          selected: true,
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('删除'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+  final failure = await ref.read(musicDownloadsProvider).delete(track.id);
+  if (failure != null) {
+    messenger?.showSnackBar(SnackBar(content: Text(failure)));
+  }
+}
+
+/// Download, its progress (a tap cancels), or the saved state (a tap
+/// offers to delete).
+class MusicDownloadButton extends ConsumerWidget {
+  const MusicDownloadButton({super.key, required this.track});
+  final MusicTrack track;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloads = ref.watch(musicDownloadsProvider);
+    final progress = downloads.progressOf(track.id);
+    final colors = Theme.of(context).colorScheme;
+    if (progress != null) {
+      return AppButton.icon(
+        tooltip: '取消下载',
+        onPressed: () => downloads.cancel(track.id),
+        icon: SizedBox.square(
+          dimension: 22,
+          child: CircularProgressIndicator(
+            value: progress == 0 ? null : progress,
+            strokeWidth: 2.5,
+          ),
+        ),
+      );
+    }
+    final saved = downloads.of(track.id) != null;
+    return AppButton.icon(
+      tooltip: saved ? '已下载，点按删除' : '下载到本机',
+      onPressed: !downloads.loaded
+          ? null
+          : saved
+          ? () => unawaited(deleteMusicDownload(context, ref, track))
+          : () => unawaited(downloadMusic(context, ref, track)),
+      icon: Icon(
+        saved ? Icons.download_done_rounded : Icons.download_rounded,
+        color: saved ? colors.primary : null,
+      ),
+    );
+  }
+}
+
 class MusicFavoriteButton extends ConsumerWidget {
   const MusicFavoriteButton({super.key, required this.track});
   final MusicTrack track;
@@ -599,6 +683,9 @@ class MusicSongTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final saved = ref.watch(
+      musicDownloadsProvider.select((d) => d.of(track.id) != null),
+    );
     // [tile] is the card itself, which the menu is placed against.
     Widget content(BuildContext tile, MenuController menu) => LayoutBuilder(
       builder: (context, constraints) {
@@ -661,6 +748,15 @@ class MusicSongTile extends ConsumerWidget {
                       LayoutBuilder(
                         builder: (context, line) => Row(
                           children: [
+                            if (saved) ...[
+                              Icon(
+                                Icons.download_done_rounded,
+                                size: 14,
+                                color: colors.primary,
+                                semanticLabel: '已下载',
+                              ),
+                              const SizedBox(width: 3),
+                            ],
                             Flexible(
                               child: Text(
                                 track.singers,
@@ -829,6 +925,31 @@ class _SongMenu extends ConsumerWidget {
         onPressed: () =>
             unawaited(openMusicSearch(context, ref, track, replay: true)),
         child: const Text('搜这天的录播'),
+      ),
+      Consumer(
+        builder: (context, ref, _) {
+          final downloads = ref.watch(musicDownloadsProvider);
+          final progress = downloads.progressOf(track.id);
+          if (progress != null) {
+            return MenuItemButton(
+              leadingIcon: const Icon(Icons.close),
+              onPressed: () => downloads.cancel(track.id),
+              child: Text('取消下载 ${(progress * 100).round()}%'),
+            );
+          }
+          final saved = downloads.of(track.id) != null;
+          return MenuItemButton(
+            leadingIcon: Icon(
+              saved ? Icons.delete_outline : Icons.download_rounded,
+            ),
+            onPressed: !downloads.loaded
+                ? null
+                : saved
+                ? () => unawaited(deleteMusicDownload(context, ref, track))
+                : () => unawaited(downloadMusic(context, ref, track)),
+            child: Text(saved ? '删除下载' : '下载到本机'),
+          );
+        },
       ),
     ],
     // A context below the anchor, whose render object is the card.

@@ -9,13 +9,21 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart' as audio;
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 
+import '../data/music_download_store.dart';
 import '../data/music_stream_repository.dart';
 import '../domain/music_track.dart';
 
 /// A runtime-only queue. Signed stream URLs never enter media metadata or disk.
 class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
-  MusicAudioHandler(this._streams);
+  MusicAudioHandler(
+    this._streams, {
+    MusicDownload? Function(String id)? offline,
+  }) : _offline = offline ?? _none;
   final MusicStreamRepository _streams;
+
+  /// A saved copy of a song, played instead of its stream.
+  final MusicDownload? Function(String id) _offline;
+  static MusicDownload? _none(String _) => null;
   audio.AudioPlayer? _engine;
   audio.AudioPlayer get _player => _engine!;
   audio.AndroidLoudnessEnhancer? _enhancer;
@@ -257,26 +265,39 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
     bool stale() => generation != _generation || _disposed;
     for (var attempt = 0; attempt < 2; attempt++) {
       MusicStream? stream;
+      // A saved copy first; should it fail to open, the stream is the retry.
+      final saved = attempt == 0 ? _offline(song.id) : null;
       try {
         _ready ??= _initialize();
         await _ready;
         await _engine?.pause();
         if (stale()) return null;
-        final order = playOrder;
-        await _streams.prefetch(
-          order.skip(order.indexOf(_index)).take(3).map((i) => _tracks[i].id),
-        );
-        stream = await _streams.resolve(song.id);
+        if (saved == null) {
+          final order = playOrder;
+          await _streams.prefetch(
+            order
+                .skip(order.indexOf(_index))
+                .take(3)
+                .map((i) => _tracks[i].id)
+                .where((id) => _offline(id) == null),
+          );
+          stream = await _streams.resolve(song.id);
+        }
       } on Object {
         if (stale()) return null;
         if (_initFailed || attempt == 1) return _Open.failed;
         continue;
       }
       if (stale()) return null;
-      if (stream == null) return _Open.unavailable;
+      if (saved == null && stream == null) return _Open.unavailable;
       try {
-        _gain = stream.gain;
-        await _player.setUrl(stream.uri.toString(), initialPosition: at);
+        if (saved != null) {
+          _gain = saved.gain;
+          await _player.setFilePath(saved.path, initialPosition: at);
+        } else {
+          _gain = stream!.gain;
+          await _player.setUrl(stream.uri.toString(), initialPosition: at);
+        }
         if (stale()) return null;
         await _applyLoudness();
         if (resume) {
@@ -289,7 +310,7 @@ class MusicAudioHandler extends BaseAudioHandler with ChangeNotifier {
         return _Open.playing;
       } on Object {
         if (stale()) return null;
-        _streams.invalidate(song.id);
+        if (saved == null) _streams.invalidate(song.id);
       }
     }
     return _Open.unavailable;

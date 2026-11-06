@@ -1,12 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../shared/widgets/app_controls.dart';
 import '../../../shared/widgets/app_page_bar.dart';
-import '../../../shared/widgets/member_tone.dart';
 import '../application/main_account_providers.dart';
 import '../domain/main_account.dart';
+import 'main_account_tile.dart';
 
 enum _Mode { login, register, reset }
 
@@ -33,6 +35,11 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
   bool _changingEmail = false;
   String? _notice;
   String? _formError;
+  bool _showPassword = false;
+
+  /// Seconds before another code may be requested.
+  int _cooldown = 0;
+  Timer? _ticker;
 
   @override
   void initState() {
@@ -48,6 +55,7 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
 
   @override
   void dispose() {
+    _ticker?.cancel();
     for (final controller in [
       _account,
       _username,
@@ -97,6 +105,23 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
     if (await action() && mounted) setState(done);
   }
 
+  void _startCooldown() {
+    _ticker?.cancel();
+    _cooldown = 60;
+    _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return timer.cancel();
+      setState(() => _cooldown--);
+      if (_cooldown <= 0) timer.cancel();
+    });
+  }
+
+  void _switch(_Mode mode) => setState(() {
+    _mode = mode;
+    _resetSent = false;
+    _notice = null;
+    _formError = null;
+  });
+
   bool _matching() {
     if (_password.text == _confirm.text) return true;
     setState(() => _formError = '两次输入的密码不一致');
@@ -107,21 +132,23 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
   Widget build(BuildContext context) {
     final account = ref.watch(mainAccountControllerProvider);
     final session = account.session;
-    final error = _formError ?? account.error;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const AppPageBar(title: Text('用户')),
+      appBar: const AppPageBar(title: Text('账号')),
       body: Builder(
         builder: (context) => Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
+            constraints: const BoxConstraints(maxWidth: 460),
             child: AutofillGroup(
               child: ListView(
-                padding: pageInsets(context, top: 4),
+                padding: pageInsets(context, top: 8),
                 children: [
                   if (account.loading)
-                    const Center(child: CircularProgressIndicator())
+                    const Padding(
+                      padding: EdgeInsets.only(top: 48),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
                   else if (session == null)
                     _card(_signIn(account.busy))
                   else ...[
@@ -133,13 +160,6 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
                       _card(_bindEmail(session.user, account.busy)),
                     ],
                   ],
-                  if (account.busy)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 12),
-                      child: LinearProgressIndicator(minHeight: 2),
-                    ),
-                  if (error != null) _message(error, isError: true),
-                  if (_notice != null) _message(_notice!),
                 ],
               ),
             ),
@@ -150,114 +170,192 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
   }
 
   Widget _card(List<Widget> children) => AppCard(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < children.length; index++) ...[
-          if (index > 0) const SizedBox(height: 12),
+          if (index > 0) const SizedBox(height: 14),
           children[index],
         ],
       ],
     ),
   );
 
-  Widget _message(String text, {bool isError = false}) => Padding(
-    padding: const EdgeInsets.only(top: 12),
-    child: Text(
-      text,
-      style: TextStyle(
-        color: isError ? Theme.of(context).colorScheme.error : null,
-      ),
-    ),
+  /// The failure or the last confirmation, inside the form it belongs to.
+  Widget? _message() {
+    final account = ref.read(mainAccountControllerProvider);
+    final error = _formError ?? account.error;
+    final text = error ?? _notice;
+    if (text == null) return null;
+    final colors = Theme.of(context).colorScheme;
+    final color = error != null ? colors.error : colors.onSurfaceVariant;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(
+            error != null ? Icons.error_outline : Icons.check_circle_outline,
+            size: 18,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _title(String text) => Text(
+    text,
+    style: Theme.of(
+      context,
+    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
   );
 
   Widget _field(
     TextEditingController controller,
-    String label, {
+    String label,
+    IconData icon, {
     bool secret = false,
     TextInputType? keyboard,
     Iterable<String>? autofill,
     int? maxLength,
+    Widget? trailing,
   }) => TextField(
     controller: controller,
-    obscureText: secret,
+    obscureText: secret && !_showPassword,
     keyboardType: keyboard,
     autofillHints: autofill,
     maxLength: maxLength,
     inputFormatters: keyboard == TextInputType.number
         ? [FilteringTextInputFormatter.digitsOnly]
         : null,
-    decoration: InputDecoration(labelText: label, counterText: ''),
+    decoration: InputDecoration(
+      hintText: label,
+      counterText: '',
+      prefixIcon: Icon(icon, size: 20),
+      suffixIcon: secret
+          ? AppButton.icon(
+              tooltip: _showPassword ? '隐藏密码' : '显示密码',
+              onPressed: () => setState(() => _showPassword = !_showPassword),
+              icon: Icon(
+                _showPassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+            )
+          : trailing == null
+          ? null
+          : Padding(padding: const EdgeInsets.only(right: 6), child: trailing),
+    ),
   );
 
-  Widget _primary(String label, VoidCallback? onPressed) => Align(
-    alignment: Alignment.centerLeft,
-    child: AppButton(selected: true, onPressed: onPressed, child: Text(label)),
+  /// A code field with its send button inside, counting down after a send.
+  Widget _codeField(bool busy, bool sent, VoidCallback send) => _field(
+    _code,
+    '邮箱验证码',
+    Icons.pin_outlined,
+    keyboard: TextInputType.number,
+    maxLength: 6,
+    trailing: TextButton(
+      style: TextButton.styleFrom(
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.inputRadius - 4),
+        ),
+      ),
+      onPressed: busy || _cooldown > 0 ? null : send,
+      child: Text(
+        _cooldown > 0
+            ? '$_cooldown 秒'
+            : sent
+            ? '重新发送'
+            : '发送验证码',
+      ),
+    ),
+  );
+
+  /// The form's one main action, the width of the form.
+  Widget _primary(String label, bool busy, VoidCallback onPressed) => SizedBox(
+    height: 48,
+    child: FilledButton(
+      onPressed: busy ? null : onPressed,
+      child: busy
+          ? const SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+    ),
+  );
+
+  Widget _link(String label, VoidCallback? onPressed) => Center(
+    child: AppButton(onPressed: onPressed, child: Text(label)),
   );
 
   List<Widget> _signIn(bool busy) {
     final controller = ref.read(mainAccountControllerProvider);
+    final message = _message();
     if (_mode == _Mode.reset) {
       return [
-        Text('重设密码', style: Theme.of(context).textTheme.titleMedium),
-        _field(_account, '用户名或邮箱', autofill: [AutofillHints.username]),
-        if (!_resetSent)
-          _primary(
-            '发送验证码',
-            busy
-                ? null
-                : () => _act(
-                    () => controller.requestPasswordReset(_account.text.trim()),
-                    () {
-                      _resetSent = true;
-                      _notice = '如果该账号已绑定邮箱，验证码已发送到邮箱';
-                    },
-                  ),
-          )
-        else ...[
-          _field(_code, '验证码', keyboard: TextInputType.number, maxLength: 6),
-          _field(
-            _password,
-            '新密码',
-            secret: true,
-            autofill: [AutofillHints.newPassword],
-          ),
-          _field(_confirm, '确认新密码', secret: true),
-          _primary(
-            '重设密码',
-            busy
-                ? null
-                : () {
-                    if (!_matching()) return;
-                    _act(
-                      () => controller.confirmPasswordReset(
-                        _account.text.trim(),
-                        _code.text.trim(),
-                        _password.text,
-                      ),
-                      () {
-                        _clearSecrets();
-                        _resetSent = false;
-                        _mode = _Mode.login;
-                        _notice = '密码已重设，请用新密码登录';
-                      },
-                    );
-                  },
-          ),
-        ],
-        Align(
-          alignment: Alignment.centerLeft,
-          child: AppButton(
-            onPressed: () => setState(() {
-              _mode = _Mode.login;
-              _resetSent = false;
-              _notice = null;
-              _formError = null;
-            }),
-            child: const Text('返回登录'),
+        _title('重设密码'),
+        _field(
+          _account,
+          '用户名或邮箱',
+          Icons.person_outline,
+          autofill: [AutofillHints.username],
+        ),
+        _codeField(
+          busy,
+          _resetSent,
+          () => _act(
+            () => controller.requestPasswordReset(_account.text.trim()),
+            () {
+              _resetSent = true;
+              _startCooldown();
+              _notice = '如果该账号已绑定邮箱，验证码已发送到邮箱';
+            },
           ),
         ),
+        _field(
+          _password,
+          '新密码',
+          Icons.lock_outline,
+          secret: true,
+          autofill: [AutofillHints.newPassword],
+        ),
+        _field(_confirm, '确认新密码', Icons.lock_outline, secret: true),
+        ?message,
+        _primary('重设密码', busy, () {
+          if (!_matching()) return;
+          _act(
+            () => controller.confirmPasswordReset(
+              _account.text.trim(),
+              _code.text.trim(),
+              _password.text,
+            ),
+            () {
+              _clearSecrets();
+              _resetSent = false;
+              _mode = _Mode.login;
+              _notice = '密码已重设，请用新密码登录';
+            },
+          );
+        }),
+        _link('返回登录', busy ? null : () => _switch(_Mode.login)),
       ];
     }
     final register = _mode == _Mode.register;
@@ -266,106 +364,83 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
         values: const [_Mode.login, _Mode.register],
         labelOf: (mode) => mode == _Mode.login ? '登录' : '注册',
         selected: _mode,
-        onChanged: busy
-            ? null
-            : (mode) => setState(() {
-                _mode = mode;
-                _formError = null;
-              }),
+        onChanged: busy ? null : _switch,
       ),
       if (register) ...[
-        _field(_username, '用户名', autofill: [AutofillHints.newUsername]),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: _field(
-                _email,
-                '邮箱',
-                keyboard: TextInputType.emailAddress,
-                autofill: [AutofillHints.email],
-              ),
-            ),
-            const SizedBox(width: 8),
-            AppButton(
-              onPressed: busy
-                  ? null
-                  : () {
-                      final email = _email.text.trim();
-                      _act(() => controller.sendRegistrationCode(email), () {
-                        _signupSentTo = email;
-                        _notice = '验证码已发送到 $email';
-                      });
-                    },
-              child: Text(_signupSentTo == null ? '发送验证码' : '重新发送'),
-            ),
-          ],
+        _field(
+          _username,
+          '用户名',
+          Icons.person_outline,
+          autofill: [AutofillHints.newUsername],
         ),
-        _field(_code, '邮箱验证码', keyboard: TextInputType.number, maxLength: 6),
+        _field(
+          _email,
+          '邮箱',
+          Icons.mail_outline,
+          keyboard: TextInputType.emailAddress,
+          autofill: [AutofillHints.email],
+        ),
+        _codeField(busy, _signupSentTo != null, () {
+          final email = _email.text.trim();
+          _act(() => controller.sendRegistrationCode(email), () {
+            _signupSentTo = email;
+            _startCooldown();
+            _notice = '验证码已发送到 $email';
+          });
+        }),
         _field(
           _password,
           '密码',
+          Icons.lock_outline,
           secret: true,
           autofill: [AutofillHints.newPassword],
         ),
-        _field(_confirm, '确认密码', secret: true),
-        _primary(
-          '注册',
-          busy
-              ? null
-              : () {
-                  if (!_matching()) return;
-                  _act(
-                    () => controller.register(
-                      _username.text.trim(),
-                      _email.text.trim(),
-                      _code.text.trim(),
-                      _password.text,
-                      _chooseImport,
-                    ),
-                    () {
-                      _clearSecrets();
-                      _signupSentTo = null;
-                    },
-                  );
-                },
-        ),
+        _field(_confirm, '确认密码', Icons.lock_outline, secret: true),
+        ?message,
+        _primary('注册', busy, () {
+          if (!_matching()) return;
+          _act(
+            () => controller.register(
+              _username.text.trim(),
+              _email.text.trim(),
+              _code.text.trim(),
+              _password.text,
+              _chooseImport,
+            ),
+            () {
+              _clearSecrets();
+              _signupSentTo = null;
+            },
+          );
+        }),
       ] else ...[
-        _field(_account, '用户名或邮箱', autofill: [AutofillHints.username]),
+        _field(
+          _account,
+          '用户名或邮箱',
+          Icons.person_outline,
+          autofill: [AutofillHints.username],
+        ),
         _field(
           _password,
           '密码',
+          Icons.lock_outline,
           secret: true,
           autofill: [AutofillHints.password],
         ),
-        Wrap(
-          spacing: 8,
-          children: [
-            AppButton(
-              selected: true,
-              onPressed: busy
-                  ? null
-                  : () => _act(
-                      () => controller.login(
-                        _account.text.trim(),
-                        _password.text,
-                        _chooseImport,
-                      ),
-                      _clearSecrets,
-                    ),
-              child: const Text('登录'),
+        ?message,
+        _primary(
+          '登录',
+          busy,
+          () => _act(
+            () => controller.login(
+              _account.text.trim(),
+              _password.text,
+              _chooseImport,
             ),
-            AppButton(
-              onPressed: busy
-                  ? null
-                  : () => setState(() {
-                      _mode = _Mode.reset;
-                      _formError = null;
-                    }),
-              child: const Text('忘记密码'),
-            ),
-          ],
+            _clearSecrets,
+          ),
         ),
+        _link('忘记密码', busy ? null : () => _switch(_Mode.reset)),
       ],
     ];
   }
@@ -373,116 +448,103 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
   List<Widget> _bindEmail(MainUser user, bool busy) {
     final controller = ref.read(mainAccountControllerProvider);
     final replacing = user.email != null;
-    void send(String email) => _act(
-      () => controller.sendEmailCode(
-        email,
-        currentPassword: replacing ? _password.text : null,
-      ),
-      () {
-        _codeSentTo = email;
-        _notice = '验证码已发送';
-      },
-    );
+    final message = _message();
+    void send() {
+      final email = _email.text.trim();
+      _act(
+        () => controller.sendEmailCode(
+          email,
+          currentPassword: replacing ? _password.text : null,
+        ),
+        () {
+          _codeSentTo = email;
+          _startCooldown();
+          _notice = '验证码已发送到 $email，10 分钟内有效';
+        },
+      );
+    }
+
     return [
-      Text(
-        replacing ? '更换邮箱' : '绑定邮箱',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      if (!replacing) Text('账号 ${user.username} 需要绑定邮箱，用于找回密码。'),
-      if (_codeSentTo == null) ...[
-        _field(
-          _email,
-          '邮箱',
-          keyboard: TextInputType.emailAddress,
-          autofill: [AutofillHints.email],
-        ),
-        if (replacing)
-          _field(
-            _password,
-            '当前密码',
-            secret: true,
-            autofill: [AutofillHints.password],
-          ),
-        _primary('发送验证码', busy ? null : () => send(_email.text.trim())),
-      ] else ...[
-        Text('验证码已发送到 $_codeSentTo，10 分钟内有效。'),
-        _field(_code, '验证码', keyboard: TextInputType.number, maxLength: 6),
-        Wrap(
-          spacing: 8,
-          children: [
-            AppButton(
-              selected: true,
-              onPressed: busy
-                  ? null
-                  : () => _act(
-                      () => controller.verifyEmail(
-                        _code.text.trim(),
-                        _chooseImport,
-                      ),
-                      () {
-                        _clearSecrets();
-                        _codeSentTo = null;
-                        _changingEmail = false;
-                        _notice = '邮箱已绑定';
-                      },
-                    ),
-              child: const Text('完成绑定'),
-            ),
-            AppButton(
-              onPressed: busy ? null : () => send(_codeSentTo!),
-              child: const Text('重新发送'),
-            ),
-            AppButton(
-              onPressed: busy
-                  ? null
-                  : () => setState(() {
-                      _codeSentTo = null;
-                      _notice = null;
-                    }),
-              child: const Text('换一个邮箱'),
-            ),
-          ],
-        ),
-      ],
+      _title(replacing ? '更换邮箱' : '绑定邮箱'),
       if (!replacing)
-        Align(
-          alignment: Alignment.centerLeft,
-          child: AppButton(
-            onPressed: busy ? null : controller.logout,
-            child: const Text('退出登录'),
-          ),
+        Text(
+          '账号 ${user.username} 需要绑定邮箱，用于同步收藏和找回密码。',
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
+      _field(
+        _email,
+        '邮箱',
+        Icons.mail_outline,
+        keyboard: TextInputType.emailAddress,
+        autofill: [AutofillHints.email],
+      ),
+      if (replacing)
+        _field(
+          _password,
+          '当前密码',
+          Icons.lock_outline,
+          secret: true,
+          autofill: [AutofillHints.password],
+        ),
+      _codeField(busy, _codeSentTo != null, send),
+      ?message,
+      _primary(
+        '完成绑定',
+        busy,
+        () => _act(
+          () => controller.verifyEmail(_code.text.trim(), _chooseImport),
+          () {
+            _clearSecrets();
+            _codeSentTo = null;
+            _changingEmail = false;
+            _notice = '邮箱已绑定';
+          },
+        ),
+      ),
+      if (!replacing) _link('退出登录', busy ? null : controller.logout),
     ];
   }
 
   List<Widget> _accountSummary(MainUser user, bool busy) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final controller = ref.read(mainAccountControllerProvider);
     final sync = ref.watch(collectionSyncProvider);
-    final status = sync == null
-        ? null
+    final (icon, status) = sync == null
+        ? (null, null)
         : sync.busy
-        ? '正在同步收藏…'
-        : sync.error ??
-              (sync.syncedAt == null
-                  ? null
-                  : sync.unknownCount > 0
-                  ? '${sync.unknownCount} 项收藏等待云端收录'
-                  : '收藏已同步');
+        ? (Icons.sync, '正在同步收藏…')
+        : sync.error != null
+        ? (Icons.error_outline, sync.error)
+        : sync.syncedAt == null
+        ? (null, null)
+        : sync.unknownCount > 0
+        ? (Icons.cloud_queue, '${sync.unknownCount} 项收藏等待云端收录')
+        : (Icons.cloud_done_outlined, '收藏已同步');
+    final message = _changingEmail ? null : _message();
     return [
       Row(
         children: [
-          const ToneBadge(icon: Icons.person_outline, member: '嘉然'),
-          const SizedBox(width: 14),
+          AccountAvatar(name: user.username, size: 56),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.username, style: theme.textTheme.titleMedium),
+                Text(
+                  user.username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 Text(
                   user.email!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -491,34 +553,54 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
         ],
       ),
       if (status != null)
-        Text(
-          status,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: sync?.error != null ? theme.colorScheme.error : null,
-          ),
+        Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: sync?.error != null
+                  ? colors.error
+                  : colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                status,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: sync?.error != null
+                      ? colors.error
+                      : colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ),
-      Wrap(
-        spacing: 8,
-        runSpacing: 4,
+      ?message,
+      _primary('同步收藏', sync == null || sync.busy, () => sync?.sync()),
+      Row(
+        spacing: 10,
         children: [
-          AppButton.withIcon(
-            icon: const Icon(Icons.sync),
-            label: const Text('同步收藏'),
-            selected: true,
-            onPressed: sync == null || sync.busy ? null : sync.sync,
+          Expanded(
+            child: AppButton(
+              tonal: true,
+              selected: _changingEmail,
+              onPressed: busy
+                  ? null
+                  : () => setState(() {
+                      _changingEmail = !_changingEmail;
+                      _codeSentTo = null;
+                      _notice = null;
+                      _formError = null;
+                    }),
+              child: Text(_changingEmail ? '取消更换' : '更换邮箱'),
+            ),
           ),
-          AppButton(
-            onPressed: busy
-                ? null
-                : () => setState(() {
-                    _changingEmail = !_changingEmail;
-                    _codeSentTo = null;
-                  }),
-            child: Text(_changingEmail ? '取消更换邮箱' : '更换邮箱'),
-          ),
-          AppButton(
-            onPressed: busy ? null : controller.logout,
-            child: const Text('退出登录'),
+          Expanded(
+            child: AppButton(
+              tonal: true,
+              onPressed: busy ? null : controller.logout,
+              child: const Text('退出登录'),
+            ),
           ),
         ],
       ),

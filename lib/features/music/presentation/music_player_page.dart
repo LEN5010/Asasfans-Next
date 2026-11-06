@@ -199,6 +199,7 @@ class _PlayerContent extends ConsumerWidget {
                 ),
               ),
             ),
+            MusicDownloadButton(track: track),
             MusicFavoriteButton(track: track),
           ],
         ),

@@ -116,6 +116,9 @@ class _MusicPageState extends ConsumerState<MusicPage> {
       musicAudioHandlerProvider.select((h) => h.current?.id),
     );
     final kept = ref.watch(musicFavoriteIdsProvider).valueOrNull?.length;
+    final downloaded = ref.watch(
+      musicDownloadsProvider.select((d) => d.loaded ? d.items.length : null),
+    );
     final theme = Theme.of(context);
     return Scaffold(
       // The shell's backdrop shows through the main pages.
@@ -146,6 +149,18 @@ class _MusicPageState extends ConsumerState<MusicPage> {
                         [narrow ? '收藏' : '收藏的歌', ?kept?.toString()].join(' '),
                       ),
                     ),
+                    if (narrow)
+                      AppButton.icon(
+                        tooltip: '已下载',
+                        onPressed: () => context.go('/music/downloads'),
+                        icon: const Icon(Icons.download_done_rounded),
+                      )
+                    else
+                      AppButton.withIcon(
+                        onPressed: () => context.go('/music/downloads'),
+                        icon: const Icon(Icons.download_done_rounded, size: 18),
+                        label: Text(['已下载', ?downloaded?.toString()].join(' ')),
+                      ),
                     MusicStudioButton(compact: narrow),
                   ],
                 ),

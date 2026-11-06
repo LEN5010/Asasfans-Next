@@ -35,7 +35,7 @@ import '../../operations/application/operations_controller.dart';
 
 /// My own content on this device first: the library entries, what I looked
 /// at recently, then management and settings. The dynamic_asoul account
-/// lives under settings.
+/// leads, under the title.
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});
 
@@ -164,6 +164,8 @@ class MinePage extends ConsumerWidget {
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              bounded(_contentWidth, const MainAccountCard()),
               const SizedBox(height: AppTokens.sectionGap - 8),
               bounded(
                 _contentWidth,
@@ -529,8 +531,6 @@ class SettingsPage extends StatelessWidget {
           child: ListView(
             padding: pageInsets(context, top: 4),
             children: [
-              const AppCard(padding: EdgeInsets.zero, child: MainAccountTile()),
-              const SizedBox(height: AppTokens.sectionGap),
               const _Group(title: '外观与首页', children: [PreferencesControls()]),
               const SizedBox(height: AppTokens.sectionGap),
               _Group(
