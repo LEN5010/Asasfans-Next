@@ -33,6 +33,33 @@ class MusicPlayerPage extends ConsumerWidget {
           onPressed: () => Navigator.maybePop(context),
           icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
         ),
+        actions: [
+          // A wide window shows the queue beside the player instead.
+          if (track != null &&
+              MediaQuery.sizeOf(context).width -
+                      MediaQuery.paddingOf(context).horizontal <
+                  900)
+            AppButton.icon(
+              tooltip: '播放队列',
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (context) => SizedBox(
+                  height: MediaQuery.sizeOf(context).height * .72,
+                  child: SafeArea(
+                    child: Consumer(
+                      builder: (context, ref, _) => _QueuePanel(
+                        handler: ref.watch(musicAudioHandlerProvider),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.queue_music_rounded),
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: DecoratedBox(
         decoration: BoxDecoration(
@@ -62,7 +89,6 @@ class MusicPlayerPage extends ConsumerWidget {
                             child: _PlayerContent(
                               handler: handler,
                               track: track,
-                              wide: wide,
                               availableHeight: bounds.maxHeight - 32,
                             ),
                           ),
@@ -117,12 +143,10 @@ class _PlayerContent extends ConsumerWidget {
   const _PlayerContent({
     required this.handler,
     required this.track,
-    required this.wide,
     required this.availableHeight,
   });
   final MusicAudioHandler handler;
   final MusicTrack track;
-  final bool wide;
   final double availableHeight;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -192,11 +216,11 @@ class _PlayerContent extends ConsumerWidget {
         const SizedBox(height: 12),
         MusicProgress(handler: handler),
         const SizedBox(height: 8),
+        // Symmetric around the play button so it sits on the centre line.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             MusicShuffleButton(handler: handler),
-            MusicRepeatButton(handler: handler),
             AppButton.icon(
               tooltip: '上一首',
               onPressed: handler.skipToPrevious,
@@ -208,28 +232,7 @@ class _PlayerContent extends ConsumerWidget {
               onPressed: handler.skipToNext,
               icon: const Icon(Icons.skip_next_rounded, size: 36),
             ),
-            if (wide)
-              const SizedBox(width: 48)
-            else
-              AppButton.icon(
-                tooltip: '播放队列',
-                onPressed: () => showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  showDragHandle: true,
-                  builder: (context) => SizedBox(
-                    height: MediaQuery.sizeOf(context).height * .72,
-                    child: SafeArea(
-                      child: Consumer(
-                        builder: (context, ref, _) => _QueuePanel(
-                          handler: ref.watch(musicAudioHandlerProvider),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                icon: const Icon(Icons.queue_music_rounded),
-              ),
+            MusicRepeatButton(handler: handler),
           ],
         ),
         const SizedBox(height: 16),

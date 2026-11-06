@@ -92,6 +92,10 @@ void main() {
     await tester.pumpWidget(_app(const MusicPlayerPage()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    expect(
+      tester.getCenter(find.byType(MusicPlayButton)).dx,
+      closeTo(160, .5),
+    );
   });
 
   testWidgets('music page, favorites and player fit 360 wide at 2x text', (
