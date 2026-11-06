@@ -28,6 +28,7 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
   final _confirm = TextEditingController();
   final _code = TextEditingController();
   String? _codeSentTo;
+  String? _signupSentTo;
   bool _resetSent = false;
   bool _changingEmail = false;
   String? _notice;
@@ -274,12 +275,33 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
       ),
       if (register) ...[
         _field(_username, '用户名', autofill: [AutofillHints.newUsername]),
-        _field(
-          _email,
-          '邮箱',
-          keyboard: TextInputType.emailAddress,
-          autofill: [AutofillHints.email],
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: _field(
+                _email,
+                '邮箱',
+                keyboard: TextInputType.emailAddress,
+                autofill: [AutofillHints.email],
+              ),
+            ),
+            const SizedBox(width: 8),
+            AppButton(
+              onPressed: busy
+                  ? null
+                  : () {
+                      final email = _email.text.trim();
+                      _act(() => controller.sendRegistrationCode(email), () {
+                        _signupSentTo = email;
+                        _notice = '验证码已发送到 $email';
+                      });
+                    },
+              child: Text(_signupSentTo == null ? '发送验证码' : '重新发送'),
+            ),
+          ],
         ),
+        _field(_code, '邮箱验证码', keyboard: TextInputType.number, maxLength: 6),
         _field(
           _password,
           '密码',
@@ -293,16 +315,17 @@ class _MainAccountPageState extends ConsumerState<MainAccountPage> {
               ? null
               : () {
                   if (!_matching()) return;
-                  final email = _email.text.trim();
                   _act(
                     () => controller.register(
                       _username.text.trim(),
-                      email,
+                      _email.text.trim(),
+                      _code.text.trim(),
                       _password.text,
+                      _chooseImport,
                     ),
                     () {
                       _clearSecrets();
-                      _codeSentTo = email;
+                      _signupSentTo = null;
                     },
                   );
                 },

@@ -34,9 +34,22 @@ class FakeMainApi implements MainAccountApi {
   Completer<List<CloudFavorite>>? pull;
   @override
   Future<MainSession> login(String account, String password) async => issued;
+  String? signupTo;
   @override
-  Future<MainSession> register(String username, String password) async =>
-      unbound;
+  Future<void> sendRegistrationCode(String email) async => signupTo = email;
+  @override
+  Future<MainSession> register(
+    String username,
+    String email,
+    String code,
+    String password,
+  ) async {
+    if (email != signupTo || code != '123456') {
+      throw const MainAccountFailure('邮箱验证码不正确或已过期');
+    }
+    return MainSession('token', MainUser('a', username, email: email));
+  }
+
   @override
   Future<void> sendEmailCode(
     String token,
@@ -110,22 +123,52 @@ void main() {
       expect(prompts, 1);
     },
   );
+  test('registration by email code switches collections at once', () async {
+    final db = MemoryLocalDatabase();
+    addTearDown(db.close);
+    final api = FakeMainApi(), vault = MemoryMainAccountVault();
+    final controller = MainAccountController(api, vault, db);
+    addTearDown(controller.dispose);
+    await controller.restore();
+    expect(await controller.sendRegistrationCode('alice@example.com'), isTrue);
+    expect(
+      await controller.register(
+        'alice',
+        'alice@example.com',
+        '000000',
+        'pw',
+        () async => false,
+      ),
+      isFalse,
+    );
+    expect(controller.error, contains('验证码'));
+    expect(
+      await controller.register(
+        'alice',
+        'alice@example.com',
+        '123456',
+        'pw',
+        () async => false,
+      ),
+      isTrue,
+    );
+    expect(vault.session?.user.email, 'alice@example.com');
+    expect(await CloudCollections(db, 'a').initialized(), isTrue);
+  });
   test(
-    'a new account keeps the visitor library until its email is verified',
+    'an account without email keeps the visitor library until it is verified',
     () async {
       final db = MemoryLocalDatabase();
       addTearDown(db.close);
-      final api = FakeMainApi(), vault = MemoryMainAccountVault();
+      final api = FakeMainApi()..issued = unbound,
+          vault = MemoryMainAccountVault();
       final controller = MainAccountController(api, vault, db);
       addTearDown(controller.dispose);
       await controller.restore();
-      expect(
-        await controller.register('alice', 'alice@example.com', 'pw'),
-        isTrue,
-      );
-      expect(api.sentTo, 'alice@example.com');
+      expect(await controller.login('alice', 'pw', () async => true), isTrue);
       expect(controller.session?.user.email, isNull);
       expect(await CloudCollections(db, 'a').initialized(), isFalse);
+      expect(await controller.sendEmailCode('alice@example.com'), isTrue);
       expect(await controller.verifyEmail('000000', () async => true), isFalse);
       expect(controller.error, contains('验证码'));
       expect(await controller.verifyEmail('123456', () async => false), isTrue);

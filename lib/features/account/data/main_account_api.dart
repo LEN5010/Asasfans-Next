@@ -8,7 +8,15 @@ import '../../content/data/dynamic_fanart_repository.dart';
 abstract interface class MainAccountApi {
   /// [account] is a username or a verified email address.
   Future<MainSession> login(String account, String password);
-  Future<MainSession> register(String username, String password);
+
+  /// Mails a sign-up code to [email]; [register] then creates the account with it verified.
+  Future<void> sendRegistrationCode(String email);
+  Future<MainSession> register(
+    String username,
+    String email,
+    String code,
+    String password,
+  );
 
   /// Sends a code to a new address; replacing a verified one needs [currentPassword].
   Future<void> sendEmailCode(
@@ -86,11 +94,25 @@ class HttpMainAccountApi implements MainAccountApi {
     {'username': account, 'password': password},
   );
   @override
-  Future<MainSession> register(String username, String password) =>
-      _credentials('auth/native/register', {
-        'username': username,
-        'password': password,
-      });
+  Future<void> sendRegistrationCode(String email) async {
+    await _request(
+      'auth/register/code',
+      body: {'client_id': 'asasfans', 'email': email},
+    );
+  }
+
+  @override
+  Future<MainSession> register(
+    String username,
+    String email,
+    String code,
+    String password,
+  ) => _credentials('auth/native/register', {
+    'username': username,
+    'email': email,
+    'code': code,
+    'password': password,
+  });
   @override
   Future<void> sendEmailCode(
     String token,
@@ -114,7 +136,10 @@ class HttpMainAccountApi implements MainAccountApi {
           as String;
   @override
   Future<void> requestPasswordReset(String account) async {
-    await _request('auth/password-reset/request', body: {'account': account});
+    await _request(
+      'auth/password-reset/request',
+      body: {'client_id': 'asasfans', 'account': account},
+    );
   }
 
   @override

@@ -80,14 +80,23 @@ class MainAccountController extends ChangeNotifier {
     '登录未完成，请重试',
   );
 
-  /// Creates the account and sends the first code to [email].
-  Future<bool> register(String username, String email, String password) =>
-      _run(() async {
-        final issued = await api.register(username, password);
-        await vault.write(issued);
-        session = issued;
-        await api.sendEmailCode(issued.token, email);
-      }, '注册未完成，请重试');
+  Future<bool> sendRegistrationCode(String email) =>
+      _run(() => api.sendRegistrationCode(email), '验证码发送失败，请重试');
+
+  /// The account is created with [email] already verified, so collections switch at once.
+  Future<bool> register(
+    String username,
+    String email,
+    String code,
+    String password,
+    ImportChoice chooseImport,
+  ) => _run(
+    () async => _accept(
+      await api.register(username, email, code, password),
+      chooseImport,
+    ),
+    '注册未完成，请重试',
+  );
 
   Future<bool> sendEmailCode(String email, {String? currentPassword}) => _run(
     () => api.sendEmailCode(
