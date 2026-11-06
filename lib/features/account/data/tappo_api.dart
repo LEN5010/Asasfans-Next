@@ -29,9 +29,10 @@ class TappoApi {
   final Dio dio;
 
   static final base = Uri.parse('https://len5010.top/tappo/');
-  static final downloads = Uri.parse(
-    'https://github.com/LEN5010/AsoulTappo/releases',
-  );
+
+  /// The main site's download page, which also serves the installer from
+  /// China; GitHub is one of its sources.
+  static final downloads = Uri.parse('https://len5010.top/download?app=tappo');
 
   Future<Map<String, dynamic>> _get(String path, String token) async {
     final response = await dio.get<Map<String, dynamic>>(
