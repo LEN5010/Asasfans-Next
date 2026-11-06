@@ -8,6 +8,8 @@ import 'library_page.dart';
 /// No Android legacy-import dependency or compatibility bridge is involved.
 abstract interface class LibraryRepository {
   Stream<int> get changes;
+  Stream<int> get collectionChanges;
+  void notifyCloudCommit();
   Stream<int> get subscriptionChanges;
 
   /// Notify readers only after a separate backup transaction has committed.

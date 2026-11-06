@@ -41,22 +41,19 @@ class SqliteBackupRepository implements BackupRepository {
     final filters = {
       for (final table in BackupCodec.columns.keys) table: _filter(table),
     };
-    final budget =
-        'WITH budget AS (SELECT ' +
-        BackupCodec.columns.entries
-            .map(
-              (entry) =>
-                  '(SELECT COALESCE(SUM(${entry.value.map((column) => 'COALESCE(length(CAST($column AS BLOB)),0)').join('+')}+512),0) FROM ${entry.key} WHERE (${filters[entry.key]!.$1}))',
-            )
-            .join('+') +
-        ' AS bytes,' +
-        BackupCodec.columns.keys
-            .map(
-              (table) =>
-                  '(SELECT COUNT(*) FROM $table WHERE (${filters[table]!.$1}))',
-            )
-            .join('+') +
-        ' AS rows) ';
+    final bytes = BackupCodec.columns.entries
+        .map(
+          (entry) =>
+              '(SELECT COALESCE(SUM(${entry.value.map((column) => 'COALESCE(length(CAST($column AS BLOB)),0)').join('+')}+512),0) FROM ${entry.key} WHERE (${filters[entry.key]!.$1}))',
+        )
+        .join('+');
+    final rows = BackupCodec.columns.keys
+        .map(
+          (table) =>
+              '(SELECT COUNT(*) FROM $table WHERE (${filters[table]!.$1}))',
+        )
+        .join('+');
+    final budget = 'WITH budget AS (SELECT $bytes AS bytes,$rows AS rows) ';
     final budgetParams = [
       for (var i = 0; i < 2; i++)
         for (final table in BackupCodec.columns.keys) ...filters[table]!.$2,

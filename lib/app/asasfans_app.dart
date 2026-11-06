@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../features/account/application/main_account_providers.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -48,6 +49,7 @@ class _AsasfansAppState extends ConsumerState<AsasfansApp> {
         (state) => (state.ready, state.values.appearance, state.values.glass),
       ),
     );
+    ref.watch(collectionSyncProvider);
     final runtime = ref.watch(glassRuntimeProvider);
     return MaterialApp.router(
       title: 'Asasfans Next',

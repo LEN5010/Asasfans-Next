@@ -10,7 +10,7 @@ String? cloudKey(ContentIdentity identity) => switch (identity.source) {
 };
 
 ContentIdentity? cloudIdentity(String key) {
-  final match = RegExp(r'^(bili|douban):([0-9]{1,20})$').firstMatch(key);
+  final match = RegExp(r'^(bili|douban):([1-9][0-9]{0,31})$').firstMatch(key);
   return match == null
       ? null
       : ContentIdentity(
@@ -76,9 +76,9 @@ class CloudCollections {
     [DateTime.now().microsecondsSinceEpoch, owner],
   );
 
-  Future<List<SqlRow>> pending() async => (await db.batch([
+  Future<List<SqlRow>> pending({bool all = false}) async => (await db.batch([
     SqlStatement(
-      'SELECT key,op,queued_at FROM cloud_outbox WHERE owner=? ORDER BY queued_at,key LIMIT 200',
+      'SELECT key,op,queued_at FROM cloud_outbox WHERE owner=? ORDER BY queued_at,key ${all ? '' : 'LIMIT 200'}',
       [owner],
       true,
     ),
@@ -106,8 +106,9 @@ class CloudCollections {
     for (final item in remote) {
       if (cloudIdentity(item.key) != null) {
         final previous = unique[item.key];
-        if (previous == null || previous.snapshot == null)
+        if (previous == null || previous.snapshot == null) {
           unique[item.key] = item;
+        }
       }
     }
     for (final item in unique.values) {

@@ -7,10 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'sqlite_fixture.dart';
 import 'account_fixture.dart';
+import 'package:asasfans_next/features/account/application/main_account_providers.dart';
 import 'operations_fixture.dart';
 
 /// Personal features share one disposable DB, never the application directory.
 List<Override> offlineLibrary({Override? account}) => [
+  collectionOwnerProvider.overrideWithValue('local'),
+  mainCredentialVaultProvider.overrideWith((ref) => MemoryMainAccountVault()),
+  collectionSyncProvider.overrideWith((ref) => null),
   offlineOperations(),
   account ?? offlineAccount(),
   localDatabaseProvider.overrideWith((ref) {

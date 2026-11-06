@@ -30,11 +30,12 @@ import '../../handoff/presentation/return_entry_tile.dart';
 import '../../preferences/presentation/preferences_controls.dart';
 import '../../account/application/account_providers.dart';
 import '../../account/presentation/local_login_cleanup_tile.dart';
+import '../../account/presentation/main_account_tile.dart';
 import '../../operations/application/operations_controller.dart';
 
 /// My own content on this device first: the library entries, what I looked
-/// at recently, then management and settings. No account centre: the app
-/// has no accounts, only local data.
+/// at recently, then management and settings. The dynamic_asoul account
+/// lives under settings.
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});
 
@@ -528,6 +529,8 @@ class SettingsPage extends StatelessWidget {
           child: ListView(
             padding: pageInsets(context, top: 4),
             children: [
+              const AppCard(padding: EdgeInsets.zero, child: MainAccountTile()),
+              const SizedBox(height: AppTokens.sectionGap),
               const _Group(title: '外观与首页', children: [PreferencesControls()]),
               const SizedBox(height: AppTokens.sectionGap),
               _Group(

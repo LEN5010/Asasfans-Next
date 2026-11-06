@@ -9,6 +9,7 @@ import '../../preferences/application/preferences_controller.dart';
 import '../data/backup_files.dart';
 import '../data/sqlite_backup_repository.dart';
 import '../domain/personal_backup.dart';
+import '../../account/application/main_account_providers.dart';
 
 final backupFilesProvider = Provider<BackupFiles>(
   (ref) => PlatformBackupFiles(),
@@ -19,6 +20,7 @@ final backupRepositoryProvider = Provider<BackupRepository>((ref) {
   return SqliteBackupRepository(
     ref.watch(localDatabaseProvider),
     clock: ref.watch(currentTimeProvider),
+    owner: ref.watch(collectionOwnerProvider),
     onCommitted: () {
       library.notifyExternalCommit();
       unawaited(preferences.reloadAfterExternalWrite());

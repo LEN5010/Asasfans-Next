@@ -90,7 +90,7 @@ class DynamicFanartRepository implements FanartRepository {
     }
     final total = json['total'];
     return FanartPage(
-      items: List.unmodifiable(items.map((raw) => _decodeItem(raw, baseUrl))),
+      items: List.unmodifiable(items.map((raw) => decodeItem(raw, baseUrl))),
       snapshotId: snapshot['id'] as String,
       nextCursor: next as String?,
       prevCursor: prev as String?,
@@ -101,7 +101,7 @@ class DynamicFanartRepository implements FanartRepository {
   static bool _isCursor(Object? value) =>
       value == null || (value is String && value.isNotEmpty);
 
-  static FanartItem _decodeItem(Object? raw, Uri baseUrl) {
+  static FanartItem decodeItem(Object? raw, Uri baseUrl) {
     if (raw is! Map) throw const ApiFailure(ApiFailureKind.invalidResponse);
     final id = raw['sourceDynamicId'];
     if (id is! String || id.isEmpty) {

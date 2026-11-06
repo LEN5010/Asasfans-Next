@@ -1,3 +1,4 @@
+import '../../features/account/presentation/main_account_page.dart';
 import '../../features/rules/presentation/rules_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -185,6 +186,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       GoRoute(
                         path: 'disclaimer',
                         builder: (_, _) => const DisclaimerPage(),
+                      ),
+                      GoRoute(
+                        path: 'account',
+                        builder: (_, _) => const MainAccountPage(),
                       ),
                     ],
                   ),

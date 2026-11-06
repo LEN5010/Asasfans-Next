@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:asasfans_next/features/account/domain/main_account.dart';
 import 'package:asasfans_next/features/account/application/account_controller.dart';
 import 'package:asasfans_next/features/account/application/account_providers.dart';
 import 'package:asasfans_next/features/account/domain/bili_account.dart';
@@ -59,3 +60,18 @@ Override offlineAccount({MemoryAccountVault? vault}) =>
       unawaited(controller.restore());
       return controller;
     });
+
+class MemoryMainAccountVault implements MainCredentialVault {
+  MainSession? session;
+  @override
+  Future<MainSession?> read() async => session;
+  @override
+  Future<void> write(MainSession value) async {
+    session = value;
+  }
+
+  @override
+  Future<void> clear() async {
+    session = null;
+  }
+}

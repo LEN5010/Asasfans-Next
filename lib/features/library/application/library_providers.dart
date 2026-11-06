@@ -10,11 +10,13 @@ import '../data/sqlite_library_repository.dart';
 import '../domain/library_models.dart';
 import '../domain/library_page.dart';
 import 'library_pager.dart';
+import '../../account/application/main_account_providers.dart';
 
 final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
   final repository = SqliteLibraryRepository(
     ref.watch(localDatabaseProvider),
     clock: ref.watch(currentTimeProvider),
+    owner: ref.watch(collectionOwnerProvider),
   );
   ref.onDispose(() => unawaited(repository.close()));
   return repository;

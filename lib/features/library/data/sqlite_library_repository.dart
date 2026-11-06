@@ -25,12 +25,17 @@ class SqliteLibraryRepository implements LibraryRepository {
   final bool backgroundDecoding;
   final DateTime Function() _clock;
   final _changes = StreamController<int>.broadcast();
+  final _collectionChanges = StreamController<int>.broadcast();
   final _subscriptionChanges = StreamController<int>.broadcast();
   int _revision = 0;
   bool _closed = false;
   int get _now => _clock().toUtc().millisecondsSinceEpoch;
   @override
   Stream<int> get changes => _changes.stream;
+  @override
+  Stream<int> get collectionChanges => _collectionChanges.stream;
+  @override
+  void notifyCloudCommit() => _notify();
   @override
   Stream<int> get subscriptionChanges => _subscriptionChanges.stream;
   void _notify() {
@@ -40,7 +45,10 @@ class SqliteLibraryRepository implements LibraryRepository {
   @override
   void notifyExternalCommit() {
     _notify();
-    if (!_closed) _subscriptionChanges.add(_revision);
+    if (!_closed) {
+      _subscriptionChanges.add(_revision);
+      _collectionChanges.add(_revision);
+    }
   }
 
   @override
@@ -48,6 +56,7 @@ class SqliteLibraryRepository implements LibraryRepository {
     if (!_closed) {
       _closed = true;
       await _changes.close();
+      await _collectionChanges.close();
       await _subscriptionChanges.close();
     }
   }
@@ -111,10 +120,12 @@ class SqliteLibraryRepository implements LibraryRepository {
   Future<void> _write(
     List<SqlStatement> commands, {
     bool subscriptions = false,
+    bool collections = false,
   }) async {
     await _batch(commands, write: true);
     _notify();
     if (subscriptions && !_closed) _subscriptionChanges.add(_revision);
+    if (collections && !_closed) _collectionChanges.add(_revision);
   }
 
   Future<LibraryPage<T>> _page<T>({
@@ -372,7 +383,7 @@ class SqliteLibraryRepository implements LibraryRepository {
         owner,
       ]),
       _prune,
-    ]);
+    ], collections: true);
   }
 
   @override
@@ -423,6 +434,7 @@ class SqliteLibraryRepository implements LibraryRepository {
               _queue(item.identity, 'remove'),
             _prune,
           ],
+    collections: true,
   );
   SqlStatement _queue(ContentIdentity identity, String op) => SqlStatement(
     "INSERT INTO cloud_outbox(owner,key,op,queued_at) SELECT ?,?,?,? "

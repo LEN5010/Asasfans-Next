@@ -281,6 +281,10 @@ void main() {
         const SqlStatement(
           "INSERT INTO content_refs VALUES('bilibiliDynamic','huge',zeroblob(18000000),1)",
         ),
+        // Exports carry only referenced snapshots.
+        const SqlStatement(
+          "INSERT INTO watch_later(source,content_id,added_at) VALUES('bilibiliDynamic','huge',1)",
+        ),
       ], write: true);
       await expectLater(backup.export(), invalid(BackupFailureKind.tooLarge));
     },
