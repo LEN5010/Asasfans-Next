@@ -256,13 +256,6 @@ class _NovelFiltersState extends ConsumerState<_NovelFilters> {
                       query.copyWith(scope: NovelSearchScope.all),
                     ),
                   ),
-                if (query.rating != NovelRatingFilter.all)
-                  (
-                    label: query.rating.label,
-                    remove: () => widget.onChanged(
-                      query.copyWith(rating: NovelRatingFilter.all),
-                    ),
-                  ),
                 for (final character in query.characters)
                   (
                     label: character.wire,
@@ -313,7 +306,6 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final facets = ref.watch(novelFacetsProvider).valueOrNull;
     return AppFilterPanel(
       title: '筛选小说',
       embedded: widget.embedded,
@@ -359,17 +351,6 @@ class _NovelFilterPanelState extends ConsumerState<_NovelFilterPanel> {
                   ),
                 ),
             ],
-          ),
-        ),
-        AppFilterSection(
-          title: '分级',
-          child: AppSegments<NovelRatingFilter>(
-            values: NovelRatingFilter.values,
-            selected: _draft.rating,
-            labelOf: (value) => facets == null
-                ? value.label
-                : '${value.label} ${facets.count(value)}',
-            onChanged: (value) => _change(_draft.copyWith(rating: value)),
           ),
         ),
         AppFilterSection(
@@ -463,10 +444,6 @@ class _NovelCard extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (item.isR18) ...[
-                      const SizedBox(width: 8),
-                      const NovelR18Badge(),
-                    ],
                   ],
                 ),
                 if (item.characters.isNotEmpty) ...[

@@ -129,45 +129,42 @@ void main() {
       tester,
     ) async {
       final repository = await pump(tester, width);
-      final rating = find.byType(AppSegments<NovelRatingFilter>);
-      final r18 = find.descendant(
-        of: rating,
-        matching: find.textContaining('R18'),
-      );
-      expect(rating, findsNothing);
+      final scope = find.byType(AppSegments<NovelSearchScope>);
+      final titleScope = find.descendant(of: scope, matching: find.text('标题'));
+      expect(scope, findsNothing);
 
       await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
       // The same panel, titled, in a sheet or inline.
       expect(find.text('筛选小说'), findsOneWidget);
       await tester.tap(find.widgetWithText(AppButton, '嘉然'));
-      await tester.tap(r18);
+      await tester.tap(titleScope);
       await tester.pumpAndSettle();
       expect(repository.queries, [const NovelQuery()]);
       await tester.tap(find.text('取消'));
       await tester.pumpAndSettle();
-      expect(rating, findsNothing);
+      expect(scope, findsNothing);
 
       await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
-        NovelRatingFilter.all,
+        tester.widget<AppSegments<NovelSearchScope>>(scope).selected,
+        NovelSearchScope.all,
       );
       expect(
         tester.widget<AppButton>(find.widgetWithText(AppButton, '嘉然')).selected,
         isFalse,
       );
       await tester.tap(find.widgetWithText(AppButton, '嘉然'));
-      await tester.tap(r18);
+      await tester.tap(titleScope);
       await tester.pumpAndSettle();
       expect(repository.queries.length, 1);
       await tester.tap(find.text('应用筛选'));
       await tester.pumpAndSettle();
       expect(repository.queries.length, 2);
-      expect(repository.queries.last.rating, NovelRatingFilter.nsfw);
+      expect(repository.queries.last.scope, NovelSearchScope.title);
       expect(repository.queries.last.characters, {NovelCharacter.diana});
-      expect(rating, findsNothing);
+      expect(scope, findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -176,49 +173,46 @@ void main() {
     'inline novel draft follows search and clear, resize never applies',
     (tester) async {
       final repository = await pump(tester, 800);
-      final rating = find.byType(AppSegments<NovelRatingFilter>);
-      final r18 = find.descendant(
-        of: rating,
-        matching: find.textContaining('R18'),
-      );
+      final scope = find.byType(AppSegments<NovelSearchScope>);
+      final titleScope = find.descendant(of: scope, matching: find.text('标题'));
       await tester.tap(find.byTooltip('筛选与排序'));
       await tester.pumpAndSettle();
-      await tester.tap(r18);
+      await tester.tap(titleScope);
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '新的搜索');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
       expect(repository.queries.last, const NovelQuery(keyword: '新的搜索'));
       expect(
-        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
-        NovelRatingFilter.all,
+        tester.widget<AppSegments<NovelSearchScope>>(scope).selected,
+        NovelSearchScope.all,
       );
 
-      await tester.tap(r18);
+      await tester.tap(titleScope);
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('清除小说筛选'));
       await tester.pumpAndSettle();
       expect(repository.queries.last, const NovelQuery());
       expect(
-        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
-        NovelRatingFilter.all,
+        tester.widget<AppSegments<NovelSearchScope>>(scope).selected,
+        NovelSearchScope.all,
       );
 
-      await tester.tap(r18);
+      await tester.tap(titleScope);
       await tester.pumpAndSettle();
       final committed = repository.queries.length;
       tester.view.physicalSize = const Size(400, 900);
       await tester.pumpAndSettle();
-      expect(rating, findsNothing);
+      expect(scope, findsNothing);
       tester.view.physicalSize = const Size(800, 900);
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await tester.pumpAndSettle();
       expect(
-        tester.widget<AppSegments<NovelRatingFilter>>(rating).selected,
-        NovelRatingFilter.all,
+        tester.widget<AppSegments<NovelSearchScope>>(scope).selected,
+        NovelSearchScope.all,
       );
-      for (final text in ['角色', '分级', '搜索范围', '排序', '应用筛选']) {
+      for (final text in ['角色', '搜索范围', '排序', '应用筛选']) {
         await tester.ensureVisible(find.text(text));
       }
       await tester.tap(find.text('取消'));

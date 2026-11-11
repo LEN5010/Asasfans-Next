@@ -147,13 +147,6 @@ class _NovelReader extends StatelessWidget {
               ),
             ),
           ),
-          if (work.isR18) ...[
-            const SizedBox(width: 8),
-            const Padding(
-              padding: EdgeInsets.only(top: 6),
-              child: NovelR18Badge(),
-            ),
-          ],
         ],
       ),
       const SizedBox(height: 8),
@@ -372,31 +365,6 @@ class _LinkTile extends ConsumerWidget {
       ),
     ),
   );
-}
-
-class NovelR18Badge extends StatelessWidget {
-  const NovelR18Badge({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: colors.errorContainer,
-        shape: const StadiumBorder(),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Text(
-          'R18',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: colors.onErrorContainer,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class NovelCharacterTags extends StatelessWidget {

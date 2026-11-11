@@ -22,12 +22,6 @@ final novelFeedControllerProvider = Provider.autoDispose<NovelFeedController>((
   return controller;
 });
 
-/// Archive-wide rating counts for the filter chips. A failure only hides the
-/// counts; it never blocks the list.
-final novelFacetsProvider = FutureProvider.autoDispose<NovelFacets>(
-  (ref) => ref.watch(novelRepositoryProvider).facets(),
-);
-
 /// One work by Douban topic id, cancelled when the reader closes.
 final novelDetailProvider = FutureProvider.autoDispose
     .family<NovelDetail, String>((ref, sourceTid) {
